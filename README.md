@@ -19,3 +19,13 @@ python3 -m unittest discover -s mint_follower_demo/tests
 
 本轮同步本机安全整改与回归测试；Humble依赖尚未整体迁至Jazzy，
 离线测试不代表仿真或实机验收。旧so101_ws、so101-ros2-arm远端仍归档保留历史。
+
+## Colab 数字孪生实验
+
+先用现有 MuJoCo 模型在 Colab CPU 上做离线物理实验，回收视频、轨迹与指标：
+
+```bash
+python3 experiments/colab-twin/run_colab.py --session so101-twin
+```
+
+详见 [实验说明](experiments/colab-twin/README.md) 和 [当前计划](plans/colab-digital-twin-20261001/task_plan.md)。毕业设计、答辩与中期报告副本放在本机 `local-documents/`，文档正文和实验输出均被 `.gitignore` 排除。

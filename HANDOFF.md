@@ -92,7 +92,21 @@ limit old_min-old_max -> 586-3146
 
 如果 limit 没变成 `586-3146`，说明舵机内部限位没有写入成功。如果 limit 正确但 final 仍不接近 586，再查扭矩、供电、机械阻力。
 
-## 主从晃动和卡顿优化
+## 2026-07-22 主从低延迟修复
+
+静态参数分析表明旧参数 `12Hz + 12raw/周期 + alpha 0.35` 将普通关节限制在约 `144raw/s`，可能造成大幅跟随滞后；当前硬件根因未实测。本次修改：
+
+- 默认控制改为 `30Hz` / `48raw`，滤波提高到 `0.75`，并缩小死区。
+- 修复页面 `max_step_raw` 被 `teleop_step_raw_by_joint` 静默覆盖的问题；页面明确传值时对六轴生效。
+- 主臂仍每周期读取，从臂仍每周期同步写六轴；从臂反馈读取和夹爪额外确认写降为 `5Hz`。
+- API 新增 `timing` 指标，页面运行状态显示实际 Hz 和控制循环耗时。
+- 新增无硬件回归测试，覆盖步长优先级和反馈降频。
+
+真机首次验证应从小幅、低负载动作开始；如果实际 Hz 明显低于 30，根据 `leader_read_ms/write_ms/follower_read_ms` 继续定位串口瓶颈。
+
+## 历史：主从晃动和卡顿优化
+
+> 以下 `12Hz/12raw` 是 2026-06-23 的历史记录，已被 2026-07-22 低延迟参数取代。
 
 已完成优化提交：
 
@@ -143,10 +157,12 @@ mint_follower_demo/config/serial_config.json
   "dry_run": false,
   "monitor_mode": false,
   "backend": "native_posix",
-  "teleop_frequency_hz": 12.0,
-  "teleop_max_step_raw": 12.0,
-  "teleop_deadband_raw": [4, 4, 4, 4, 4, 6],
-  "teleop_smoothing_alpha": 0.35,
+  "teleop_frequency_hz": 30.0,
+  "teleop_feedback_frequency_hz": 5.0,
+  "teleop_gripper_rewrite_frequency_hz": 5.0,
+  "teleop_max_step_raw": 48.0,
+  "teleop_deadband_raw": [2, 2, 2, 1, 2, 3],
+  "teleop_smoothing_alpha": 0.75,
   "recording_smoothing_passes": 1
 }
 ```
@@ -221,3 +237,7 @@ teleop_frequency_hz
 
 - 如果动作太慢，再逐步加大，不要一次恢复到 20Hz/24raw。
 - 如果夹爪再次不闭合，不要先怀疑录制动作，先看舵机内部 limit 是否同步到 `586-3146`。
+
+## 2026-10-01 实验平台与待办
+
+数字孪生先用 `experiments/colab-twin/` 的 Colab CPU/MuJoCo 实验入口，平台运行不等于真机同步或抓取验收。主从迟钝仍按 `plans/teleop-latency-20260922/` 暂缓；数字孪生计划见 `plans/colab-digital-twin-20261001/`。个人材料只在被忽略的 `local-documents/` 保存。

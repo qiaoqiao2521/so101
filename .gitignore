@@ -21,3 +21,16 @@ target/
 dist/
 .omx/
 .vscode/
+
+# Local thesis documents and experiment outputs (never upload or commit).
+/local-documents/
+/experiments/colab-twin/output/
+/experiments/colab-twin/bundle.zip
+.omo/
+/魏宇阳-毕设-*.docx
+/中期报告正文.md
+
+# Historical handoff contains local credentials; retain the original locally.
+/docs/HARDOFF_2026-06-26.md
+# Local motor readings and provisional calibration notes.
+/docs/SO101_MOTOR_TO_URDF_MAPPING_2026-06-27.md
