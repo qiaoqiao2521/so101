@@ -9,9 +9,9 @@
 ## Constraints
 ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。workspaces/so101_ws的Git无有效HEAD，保留历史备份。
 ## Current State
-2026-09-15本机跟随器/ROS工作区/场景归入本目录，旧路径兼容。公开总仓已同步（e5c0168），本机Git历史未整合。导入不再初始化硬件Runtime，回归测试使用合成数据；部署仍需本地配置和标定。
+2026-09-15本机跟随器/ROS工作区/场景归入本目录，旧路径兼容。2026-10-01 Colab CPU / MuJoCo 3.3.7 的六秒合成轨迹、无头渲染和结果回收已实际通过，尚无自主规划验收。本机旧Git基线仍保留，发布通过独立delivery工作树串行整合。导入不再初始化硬件Runtime，回归测试使用合成数据；部署仍需本地配置和标定。
 ## Current Priority
-2026-10-01：按答辩后的方向，先用 Colab CLI 建立 SO101 数字孪生实验平台。当前从现有 MuJoCo 模型、合成关节轨迹和无头渲染开始；视觉、自主规划与真机同步后续逐步接入。两个方案中的第二方案待用户定义。
+2026-10-01 用户指定：运动自主规划以 **MuJoCo 为核心**，收敛为一条主线。在已有 Colab CPU 平台上接入位置 IK、OMPL RRTConnect、MuJoCo 碰撞检查、轨迹执行和统一评估；先完成给定目标与障碍的自主到达，再扩展抓放与视觉。已有 MoveIt/OMPL 配置、轨迹导出和评估字段作为续接资产；Gazebo 保留为后续本地 ROS 联调模块。AGY 的只读咨询也推荐这一方向，算法接入尚未实施。
 
 2026-09-22：主从跟随迟钝已完成静态/离线诊断；用户当前不便使用实体机械臂，后续采样与修复标记为待处理。不自动连接硬件、启动跟随或调整限幅，等用户明确继续后再开展。
 ## Knowledge Map
@@ -19,4 +19,4 @@ README.md；mint_follower_demo/SECURITY.md；workspaces/so101_ws/AGENTS.md；doc
 
 主从迟钝待办：`plans/teleop-latency-20260922/task_plan.md`；已有证据：同目录 `REPORT.md`。
 
-数字孪生实验：`experiments/colab-twin/README.md`；当前计划：`plans/colab-digital-twin-20261001/task_plan.md`。毕业设计与答辩材料位于被 Git 排除的 `local-documents/`，只保留在本机。
+运动规划路线：`docs/MUJOCO_MOTION_PLANNING.md`；选择依据：`docs/DECISIONS.md`。数字孪生实验：`experiments/colab-twin/README.md`；当前计划：`plans/colab-digital-twin-20261001/task_plan.md`。毕业设计、答辩材料和原始 Agent 咨询位于被 Git 排除的 `local-documents/`，只保留在本机。

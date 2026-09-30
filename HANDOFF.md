@@ -241,3 +241,5 @@ teleop_frequency_hz
 ## 2026-10-01 实验平台与待办
 
 数字孪生先用 `experiments/colab-twin/` 的 Colab CPU/MuJoCo 实验入口，平台运行不等于真机同步或抓取验收。主从迟钝仍按 `plans/teleop-latency-20260922/` 暂缓；数字孪生计划见 `plans/colab-digital-twin-20261001/`。个人材料只在被忽略的 `local-documents/` 保存。
+
+用户随后指定运动自主规划以 MuJoCo 为核心，AGY 咨询也推荐 Python IK/OMPL 主线。下一步从 `docs/MUJOCO_MOTION_PLANNING.md` 的模型/TCP/碰撞与位置 IK 验收开始；现有 Colab 脚本仍是合成轨迹。旧 MoveIt/RRTConnect 有源码与历史日志，MTC 核心源码及逐轮证据缺失，不能按旧 summary 宣称可复跑。Gazebo 保留用于后续本地 ROS 联调。

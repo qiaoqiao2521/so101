@@ -2,7 +2,7 @@
 
 ## Current
 
-文档归档与方案一 Colab CPU 实验平台完成；修正后的一命令运行成功并回收结果、释放会话。第二方案待用户说明。
+文档归档与 Colab CPU 基础平台完成；修正后的一命令运行成功并回收结果、释放会话。用户已选择运动自主规划以 MuJoCo 为核心，单主线整理和实际 AGY 咨询完成；算法接入待开始，当前仍为合成轨迹。
 
 ## Done
 
@@ -15,10 +15,13 @@
 - 四项资源清理失败路径测试通过；已有四项 teleop 回归、静态布局和前端语法检查通过。
 - 本轮创建的全部 Colab CPU 会话均已释放；无 GPU 或真机操作。
 - 两份历史修订 DOCX 和中期 Markdown 从远端副本保存在被忽略的 local-documents/prior-revisions，后续停止追踪，不重写历史。
+- 完成本地 SO101 多工程/快照与有界历史核查；确认完整 MoveIt/RRTConnect 代码、缺失 MTC 源码和零字节逐轮证据。
+- 实际调用 AGY 原生CLI单次只读咨询；采纳 MuJoCo + Python IK/OMPL 主方向。原始响应仅保留在被忽略的 local-documents。
+- 整理 PROJECT / README / ARCHITECTURE / DECISIONS / 规划路线与现有计划，明确组件职责、复用资产、Gazebo/Colab边界和三步正反例验收。
 
 ## Remaining
 
-方案二定义、视觉、自主规划与真机状态同步后续接续。源码交付通过既有 master 的非强制推送，版本由 Git 记录。
+S2 模型/TCP/坐标/碰撞与位置 IK 隔离验收；S3 全局避障；S4 时间参数化、执行与小批量评估。后续接触抓放、视觉与真机同步保持未完成。交付通过既有 master 非强制推送，版本由 Git 记录。
 
 ## Issues / Handoff
 
@@ -32,6 +35,8 @@ ROS/MES、Gazebo、真实 YOLO 与真机闭环保留原工作区任务状态；�
 
 旧 `docs/SO101_MOTOR_TO_URDF_MAPPING_2026-06-27.md` 含现场舵机读数与临时映射，按项目“标定留本地”规则精确忽略并保留。其 wrist_roll 符号描述内部不一致，简化公式漏 scale；根 Codex 若恢复标定工作须核对当前源码与现场数据，不直接采用这份报告。其余两篇 Gazebo 历史报告已加历史边界，不作为当前运行验收。
 
+MTC缺失核心和零字节逐轮产物留作待恢复历史，不从summary重造并冒充原件。根Codex从原生MJCF接续自主规划；规划与执行实例分开，碰撞检查必须覆盖路段。现场 `so101_gz_scene/{reality_map.yaml,calibration.yaml,calibration_report.txt}` 继续保留本机并精确忽略。
+
 ## Next
 
-先完成方案一实验平台；收到方案二定义后比较两方案，不自行扩展成另一平台。
+根Codex从 `../../docs/MUJOCO_MOTION_PLANNING.md` 的第一步开始：确认TCP/坐标/五轴限位与现存碰撞几何，隔离验证位置IK及不可达目标。现有运行命令暂不变；不以本轮文档整理宣称自主规划已通过。
