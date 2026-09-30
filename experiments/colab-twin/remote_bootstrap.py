@@ -23,5 +23,8 @@ for entry in manifest["files"]:
     actual = hashlib.sha256((root / entry["path"]).read_bytes()).hexdigest()
     if actual != entry["sha256"]:
         raise ValueError(f"Bundle hash mismatch: {entry['path']}")
-sys.argv = [str(root / "run_experiment.py")]
+config = json.loads((root / "experiment_config.json").read_text())
+sys.path.insert(0, str(root))
+sys.argv = [str(root / "run_experiment.py"), "--mode", config["mode"],
+            "--episodes", str(config["episodes"]), "--seed", str(config["seed"])]
 _ = runpy.run_path(sys.argv[0], run_name="__main__")

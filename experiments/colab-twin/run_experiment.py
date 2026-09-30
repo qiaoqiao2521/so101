@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Offline SO101 physics baseline; never connects to hardware."""
+"""Offline SO101 motion planning and physics baseline; no hardware connection."""
+import argparse
 import csv
+import ctypes.util
 import hashlib
 import json
 import math
@@ -10,7 +12,7 @@ import platform
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile, ZIP_DEFLATED
 
-os.environ.setdefault("MUJOCO_GL", "osmesa")
+os.environ.setdefault("MUJOCO_GL", "osmesa" if ctypes.util.find_library("OSMesa") else "egl")
 
 import imageio.v2 as imageio
 import mujoco
@@ -25,15 +27,13 @@ def synthetic_target(time_s: float, initial: np.ndarray) -> np.ndarray:
     return target
 
 
-def main() -> None:
+def baseline(source: Path, output: Path) -> None:
     root = Path(__file__).resolve().parent
-    output = root / "output"
-    output.mkdir(exist_ok=True)
-    source = root / "models" / "so101.xml"
+    output.mkdir(parents=True, exist_ok=True)
     scene = ET.parse(source)
     tree = scene.getroot()
     # Rewrite only the experiment copy; keep the original model unchanged.
-    tree.find("compiler").set("meshdir", str(root / "models" / "assets"))
+    tree.find("compiler").set("meshdir", str(source.parent / "assets"))
     ET.SubElement(tree, "option", timestep="0.002", gravity="0 0 -9.81")
     visual = ET.SubElement(tree, "visual")
     ET.SubElement(visual, "headlight", diffuse="0.8 0.8 0.8", ambient="0.4 0.4 0.4")
@@ -120,6 +120,27 @@ def main() -> None:
         for name in ["trajectory.csv", "preview.png", "simulation.mp4", "report.json", "scene.xml"]:
             archive.write(output / name, name)
     print(json.dumps(report, indent=2))
+
+
+def main() -> None:
+    root = Path(__file__).resolve().parent
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--mode", choices=["planning", "baseline"], default="planning")
+    parser.add_argument("--episodes", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--model", type=Path)
+    parser.add_argument("--output", type=Path, default=root / "output")
+    parser.add_argument("--no-render", action="store_true")
+    args = parser.parse_args()
+    source = args.model or root / "models" / "so101.xml"
+    if not source.exists() and args.model is None:
+        source = root.parents[1] / "workspaces/so101_ws/src/so101_mujoco/models/so101.xml"
+    if args.mode == "baseline":
+        baseline(source.resolve(), args.output.resolve())
+    else:
+        from planning_experiment import main as planning_main
+        planning_main(source.resolve(), args.output.resolve(), episodes=args.episodes,
+                      seed=args.seed, render=not args.no_render)
 
 
 if __name__ == "__main__":

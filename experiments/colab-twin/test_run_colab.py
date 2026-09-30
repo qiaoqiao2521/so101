@@ -40,7 +40,7 @@ class LifecycleTests(unittest.TestCase):
             with patch.object(run_colab, "__file__", str(root / "run_colab.py")), \
                  patch.object(Path, "home", return_value=root), \
                  patch.object(run_colab.subprocess, "run", side_effect=fake_run), \
-                 patch("sys.argv", ["run_colab.py", "--session", "test-session"]):
+                 patch("sys.argv", ["run_colab.py", "--session", "test-session", "--mode", "baseline"]):
                 if new_fails or exec_fails or stop_fails:
                     with self.assertRaises(subprocess.CalledProcessError):
                         run_colab.main()
@@ -61,6 +61,17 @@ class LifecycleTests(unittest.TestCase):
 
     def test_release_failure_preserves_recovery_state(self):
         self.exercise(stop_fails=True)
+
+    def test_planning_acceptance_rejects_tracking_failure(self):
+        with self.assertRaises(RuntimeError):
+            run_colab.validate_report({"status": "motion_planning_passed", "frames": 100}, "planning", 20)
+
+    def test_seed_overflow_rejected_before_allocating(self):
+        with patch("sys.argv", ["run_colab.py", "--seed", str(0xFFFFFFFF)]), \
+             patch.object(run_colab.subprocess, "run") as command:
+            with self.assertRaises(SystemExit):
+                run_colab.main()
+            command.assert_not_called()
 
 
 if __name__ == "__main__":

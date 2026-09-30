@@ -1,38 +1,52 @@
-# SO101 Colab 仿真实验平台
+# SO101 Colab 运动规划实验
 
-运动自主规划的 MuJoCo 主平台：复用现有 SO101 模型，在 Colab CPU 上跑离线物理实验，下载视频、轨迹和指标。当前仅完成合成轨迹基线；后续依次接入位置 IK、OMPL RRTConnect、MuJoCo 碰撞检查与轨迹执行。视觉、物理抓放和真机状态同步在自主到达验收后展开。
+复用 SO101 原生模型，在 Colab CPU 完成“目标位置与静态盒子 → Mink 位置 IK → OMPL RRTConnect 绕行 → MuJoCo 物理执行 → 视频和指标回收”。本地真实模型与 20 轮 ±3 mm 目标扰动已通过；Colab CPU / OSMesa 20轮通过，可见场景与视频回收已复验通过。视觉、接触抓放和真机同步继续作为后续任务。
 
-已有算法、缺失历史、Gazebo/Colab 可行性和验收顺序见 [规划路线](../../docs/MUJOCO_MOTION_PLANNING.md)。本目录的脚本和 requirements 本轮没有增加规划库，运行结果仍代表基础实验。
+## 运行
 
-## 一次运行
-
-前提：本机 `colab` CLI 可用且已完成用户登录；`colab sessions` 能成功返回。当前开发机 CLI 为 0.6.0，按其实际 `--help` 验证参数。
+前提：本机 `colab` CLI 已登录且 `colab sessions` 成功。开发机 CLI 0.6.0，当前不要求 GPU。
 
 ```bash
-python3 experiments/colab-twin/run_colab.py --session so101-twin
+python3 experiments/colab-twin/run_colab.py --session so101-planning --episodes 20 --seed 0
+# 保留原六秒合成轨迹基线
+python3 experiments/colab-twin/run_colab.py --session so101-baseline --mode baseline
 ```
 
-脚本只分配 CPU，不要求 GPU；成功与失败都调用 `colab stop` 释放本次会话，使用本机缓存下的独立 session config，不干预其他会话。正常释放后删除这份 config；释放失败则保留并打印精确接续命令。若进程被强制杀死或机器断电，应在 `colab sessions` 中检查遗留会话，使用 `~/.cache/so101-colab/run-*/sessions.json` 对应配置接续释放。
+本地安装固定依赖后，可运行相同实验。没有 OSMesa 时默认 EGL；已有环境变量 `MUJOCO_GL` 优先。
 
-输出位于本目录 `output/`，被根 `.gitignore` 排除：
+```bash
+python3 -m venv /tmp/so101-planning-venv
+/tmp/so101-planning-venv/bin/pip install -r experiments/colab-twin/requirements.txt
+/tmp/so101-planning-venv/bin/python experiments/colab-twin/run_experiment.py --episodes 20 --no-render --output experiments/colab-twin/output/local
+cd experiments/colab-twin
+/tmp/so101-planning-venv/bin/python -m unittest discover -p 'test_*.py'
+```
 
-- `simulation.mp4`：6 秒、25 fps 的 640×480 无头渲染。
-- `trajectory.csv`：时间、六轴目标与实际弧度、末端米坐标、接触数。
-- `report.json`：模型哈希、依赖版本、关节跟踪 RMSE、运动跨度和验收边界。
-- `preview.png`、`scene.xml`、`results.zip`：预览、派生场景和可回收结果包。
+规划输入是 [planning_scenario.json](planning_scenario.json)：六轴起点、三维目标 m、静态盒子中心与半尺寸 m。规划只改变前五个臂关节，夹爪指令固定 0.35 rad；没有人工绕行 waypoint。MuJoCo 3.3.7 / Mink 1.1.0 / OMPL 2.0.1 已固定。
 
-## 模型和数据边界
+## 结果和验收
 
-模型来自仓库 `workspaces/so101_ws/src/so101_mujoco/models/so101.xml` 和其完整的 13 个 STL。上游来源为 [TheRobotStudio/SO-ARM100](https://github.com/TheRobotStudio/SO-ARM100)，打包保留现有 Apache-2.0 许可证，manifest 对每个文件记录 SHA256。原模型文件不修改；实验副本增加工作台和静态方块。
+云端每次结果保存到本目录 `output/planning-<时间>-<随机后缀>/`，不覆盖以前实验；全部由 `.gitignore` 排除。
 
-旧 `models/scene.xml` 引用了不存在的 `so101_new_calib.xml`，本实验直接读取有效 `so101.xml`。`src/SO-ARM100/Simulation/SO101/assets/` 本机副本为零字节，禁止改用该目录打包。
+| 文件 | 内容 |
+| --- | --- |
+| `simulation.mp4` / `preview.png` | 640×480、25fps 主绕障物理执行与预览 |
+| `trajectory.csv` | 每20ms时间、六轴实际/指令rad、实际TCP m和接触数 |
+| `planning.json` | IK残差、被挡直接路径、OMPL精确路径及离散验证 |
+| `benchmark.json` | 逐轮目标、规划/执行结果、失败原因、误差统计和负例 |
+| `report.json` | 版本、模型SHA、最终误差、碰撞/限位、批次验收及边界 |
+| `scene.xml` / `results.zip` | 派生场景与完整结果包；场景引用对应运行环境的模型资源目录 |
 
-上传采用明确文件清单，只含实验脚本、依赖、模型、网格和许可证。`local-documents/`、凭据、现场标定、录制、日志、ROS 构建和其他工作区内容都不进入上传包。
+通过条件：主正例直接路径被挡但找到精确路径；物理末端误差 ≤1cm、20ms检查无无效碰撞样本、限位超出 ≤0.01rad；请求的批次全部通过；不可达和封闭场景必须拒绝；视频存在。`run_colab.py` 下载后再次检查这些结果。失败不会退回合成扫掠或直线路径。
 
-## 本阶段验收
+路径每段按5D欧氏步长≤0.025rad检查。派生场景补底座网格，并显式排除相邻装配；非相邻自碰保留。libccd距离是近似凸包模型指标，不是实物安全间隙，离散采样不是连续碰撞保证。命令速度≤0.4rad/s，未保证拐角加速度、真实电机力矩或抓取。详细证据与边界见 [规划说明](../../docs/MUJOCO_MOTION_PLANNING.md)。
 
-验证六关节/六执行器、受限合成轨迹、有限状态、关节限位、末端实际移动和无头渲染。接触数与跟踪误差是观测值，不等于避障或抓取验收。初始轨迹只是小幅关节空间扫掠，`run_experiment.py` 的 `synthetic_target(time_s, initial)` 是后续定义业务实验动作的位置（单位为弧度）。
+## 模型、上传和资源边界
 
-这是数字孪生实验基础，尚未验证真实机械臂参数、视觉识别、碰撞自由规划、抓取成功或实机同步。不把已有 ROS Humble 语义当作 Jazzy 移植完成。
+源模型 [so101.xml](../../workspaces/so101_ws/src/so101_mujoco/models/so101.xml) 与13份完整STL哈希保持不变。上游 [TheRobotStudio/SO-ARM100](https://github.com/TheRobotStudio/SO-ARM100) 的 Apache-2.0 许可证随包保存。旧 `models/scene.xml` include名称错误；旧 `src/SO-ARM100/Simulation/SO101/assets/` 为零字节，不用于实验。
 
-接口依据：[Google Colab CLI](https://github.com/googlecolab/google-colab-cli)；CPU 无头渲染依据：[MuJoCo 官方可视化文档](https://mujoco.readthedocs.io/en/stable/programming/visualization.html)。
+上传采用明确清单：模型、13STL、许可证、脚本、依赖与公开配置；manifest记录每个文件SHA256。个人材料、现场标定、凭据、录制、日志和ROS构建不进入包。脚本不调用跟随器Runtime、ROS或串口。
+
+每次云端运行用 `~/.cache/so101-colab/run-*/sessions.json` 的独立状态。成功或失败都尝试 `colab stop`；正常释放后删状态，失败保留并打印恢复命令。强制终止/断电后的接续owner为根Codex，按该配置检查并释放遗留会话。
+
+接口参考：[Colab CLI](https://github.com/googlecolab/google-colab-cli)、[MuJoCo可视化](https://mujoco.readthedocs.io/en/stable/programming/visualization.html)。

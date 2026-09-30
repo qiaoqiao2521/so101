@@ -22,10 +22,10 @@ python3 -m unittest discover -s mint_follower_demo/tests
 
 ## Colab 数字孪生实验
 
-运动自主规划以 MuJoCo 为核心，复用已有 SO101 模型与 OMPL 规划经验。当前已跑通 Colab CPU 的合成轨迹和无头渲染；自主目标与避障尚待接入。平台入口回收视频、轨迹与指标：
+运动自主规划以 MuJoCo 为核心，复用已有 SO101 模型与 OMPL 规划经验。位置 IK、OMPL 自动绕障、MuJoCo 物理执行已接入，本地与Colab CPU 20/20轮通过，可见场景与视频回收已复验通过；保留原合成轨迹基线。平台入口回收视频、轨迹与指标：
 
 ```bash
-python3 experiments/colab-twin/run_colab.py --session so101-twin
+python3 experiments/colab-twin/run_colab.py --session so101-planning --episodes 20 --seed 0
 ```
 
 详见 [自主规划路线与既有资产](docs/MUJOCO_MOTION_PLANNING.md)、[选择依据](docs/DECISIONS.md)、[实验说明](experiments/colab-twin/README.md) 和 [当前计划](plans/colab-digital-twin-20261001/task_plan.md)。毕业设计、答辩与中期报告副本放在本机 `local-documents/`，个人文档、原始咨询和实验输出均被 `.gitignore` 排除。

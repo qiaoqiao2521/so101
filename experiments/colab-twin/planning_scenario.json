@@ -1,0 +1,22 @@
+{
+  "description": "Synthetic position-only SO101 obstacle-routing fixture; values are simulation inputs, not physical calibration.",
+  "initial_qpos": [0.0, 0.0, 0.0, 0.0, 0.0, 0.35],
+  "target_xyz": [0.2292967714159328, -0.2966469906570136, 0.22646874461625607],
+  "obstacles": [
+    {
+      "name": "routing_box",
+      "pos": [0.346, -0.17, 0.226],
+      "size": [0.035, 0.035, 0.045],
+      "rgba": [0.9, 0.25, 0.15, 1.0]
+    }
+  ],
+  "seed": 0,
+  "clearance_margin_m": 0.002,
+  "resolution_rad": 0.025,
+  "units": {
+    "initial_qpos": "radians in canonical joint order; gripper fixed at 0.35",
+    "target_xyz": "metres in the model world frame",
+    "obstacle_pos": "metres in the model world frame",
+    "obstacle_size": "box half extents in metres"
+  }
+}
