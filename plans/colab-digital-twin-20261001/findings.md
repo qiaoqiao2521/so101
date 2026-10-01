@@ -1,5 +1,11 @@
 # Findings
 
+## 2026-10-01 学习会审补充
+
+当前抓放trajectory.json不含arm qpos/qvel/ctrl，仅有物体和接触诊断；20ms诊断与40ms视频没有训练帧索引。固定搬运成功不证明任意扰动恢复。ACT官方固定版本支持无图像ENV状态、无视觉backbone；imitation有正式MLP-BC实现但整包依赖较多。本机原规划venv无Torch/LeRobot等学习依赖；两个模型均未训练或测内存。
+
+AGY首轮CLI SUCCESS/exit0和原生done仍是部分正文；定向复核完整完成后改选状态ACT。ZCODE第一次取消无正文，短提示流式补取取得GLM-5.3-Flash实际完整回答、0工具事件，保留MLP先行意见；成功请求28063tokens不包含失败请求/AGY完整可归属用量。原始资料被Git忽略。详细可定位来源、引用锚修正和不采用的无依据结论见[learning-review.md](learning-review.md)。
+
 - 对应开发根为 `/home/muqiao/dev/ros2/projects/so101`；旧 so101-win7 路径是兼容链接。
 - 六份文档复制到被忽略的 `local-documents/graduation-20260629/`。本地 manifest 保存文件名、大小与 SHA256，manifest 也被忽略。
 - 历史来源：Codex session `019ef2b7-61a2-7ce3-8789-665ed12b303b`，6 月 29 日答辩反思和 DOCX 转换；不把旧助手声明当本次执行证据。

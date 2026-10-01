@@ -2,6 +2,10 @@
 
 ## Current
 
+2026-10-01：真实AGY/CODEX/ZCODE方向会审完成。首轮独立判断，只请AGY追加一次针对模型顺序的复核；保留ZCODE状态MLP先行的分歧。根Codex建议同步数据/专家恢复→小配置无图像ACT→纯策略抓放→单相机视觉；4GB内存与训练效果未验证。原始响应、超时和引用核验在被忽略的local-documents/decision-consultation-20261001/；可发布会审见[learning-review.md](learning-review.md)。
+
+本轮只完成会审、数据与验收约定，没有安装学习依赖、训练模型、改仿真代码或分配GPU。既有41项物理抓放检查不扩张为学习验收。下一步owner根Codex，最短入口是grasp_episode.py的advance记录和独立学习环境最小batch预检；S7b/S7c/S7d均未开始。保护原规划环境、自由物体动力学和原仓库index，现场遗留继续按原交接保留。
+
 文档归档与 Colab CPU 基础平台完成；修正后的一命令运行成功并回收结果、释放会话。用户已选择运动自主规划以 MuJoCo 为核心，单主线整理和实际 AGY 咨询完成；位置IK、OMPL全局绕障和物理执行已接入，本地29项测试与真实Colab CPU20轮通过；修正了默认隐藏group3环境几何的显示问题，可见场景最终复验与视频回收已通过。
 
 ## Done
