@@ -187,6 +187,10 @@ class CollisionChecker:
         if not math.isfinite(gripper) or not math.isfinite(margin_m) or margin_m < 0:
             raise ValueError("Fixed gripper and nonnegative clearance margin must be finite")
         self.model, self.gripper, self.margin_m = model, float(gripper), float(margin_m)
+        # libccd on MuJoCo 3.3.7 can return false penetration for a large
+        # box/mesh with distmax=1m. Query only the local clearance range.
+        # Distances beyond this cap are saturated, not measured clearances.
+        self.distance_cap_m = max(.1, self.margin_m + .05)
         self.data = mujoco.MjData(model)
         self.bounds = np.array(model.jnt_range[:5], copy=True)
         if not np.all(model.jnt_limited) or not model.jnt_range[5, 0] <= gripper <= model.jnt_range[5, 1]:
@@ -257,7 +261,7 @@ class CollisionChecker:
         mujoco.mj_forward(self.model, self.data)
         nearest_distance, nearest_pair = float("inf"), None
         for first, second in self.pairs:
-            distance = float(mujoco.mj_geomDistance(self.model, self.data, first, second, 1.0, None))
+            distance = float(mujoco.mj_geomDistance(self.model, self.data, first, second, self.distance_cap_m, None))
             if not math.isfinite(distance):
                 invalid["reason"] = "nonfinite_geometry_distance"
                 return invalid

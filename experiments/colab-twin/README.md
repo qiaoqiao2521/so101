@@ -80,3 +80,19 @@ python experiments/colab-twin/preview_grasp_workcell.py
 模型实测：自由物体在重力下落定于料盘底，并出现真实pick_floor接触；夹爪由原位置执行器从约0.25到0.80rad实际开合。无weld/adhesion/物体跟随机械臂的动画绑定，物体在开合预览中未抬起。报告grasp_success/lift_success为null；这轮验收仅为模型、支撑接触和机械开合，抓取/抬起尚待验证。加入自由物体后nq=13、nu=6，旧固定六坐标CollisionChecker不适用于整个新模型，未强行复用到抓取规划。下一步从jaw/object对位及实际接触进入，再验收物体抬升和放置。
 
 建模实现见 [grasp_workcell.py](grasp_workcell.py) 与 [preview_grasp_workcell.py](preview_grasp_workcell.py)。物体质量/摩擦只是公开仿真假设；自由关节和接触语义参考[MuJoCo 3.3.7 XML](https://mujoco.readthedocs.io/en/3.3.7/XMLreference.html#body-freejoint)。
+
+### 单臂绕障接触夹取（本地）
+
+```bash
+python experiments/colab-twin/grasp_episode.py --render
+```
+
+复用原生SO101网格，增加橙色静态障碍；起点在蓝盘上方，直接关节插值被挡，OMPL精确路径绕行到红盘，再垂直接近、闭爪、抬升并保持。规划用移除自由物体的六轴副本，执行一直保留同一个13坐标物理状态，只给位置执行器发送目标。物体没有焊接、吸附或动画附着；此入口使用SciPy求解指间中心/垂直夹持姿态，已有位置到达入口仍使用Mink。
+
+原夹爪整网格凸包不适合指尖/小物体接触；派生模型添加8×12×16mm指尖接触垫，替换仅两块指爪凸包与目标的接触，其余机械臂/环境碰撞保留。夹爪力矩上限0.15Nm、接触垫摩擦1.0、物体10g均为实验假设，未经实物标定。保留原始MJCF/STL和原夹爪开合预览入口。
+
+2026-10-01本地实测：直接路径被挡，绕行精确解通过；抬升约38.7mm、双指正接触力持续1.48s；2ms逐步障碍接触为0，20ms实际关节碰撞检查无无效采样。空夹物理负例失败，38项测试通过。这是单场景仿真接触夹持验收，尚未完成放置、动态障碍重规划或实体夹取。
+
+每次输出到独立UUID目录，视频、近景、report/trajectory及派生MJCF均被Git忽略。`--empty-close`是负例入口：reset时把物体移离夹持位置，正常执行相同关节动作，应该返回失败。视频用`--render`启用；已有目录拒绝覆盖。
+
+距离查询使用至少0.1m的局部范围，大于该范围的距离被截断，不能当作实测间隙。这样规避MuJoCo3.3.7/libccd在大桌面盒子、1m查询范围下的假穿透；真实中间障碍拒绝和既有碰撞测试继续通过。
