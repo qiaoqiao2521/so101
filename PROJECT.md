@@ -24,3 +24,11 @@ README.md；mint_follower_demo/SECURITY.md；workspaces/so101_ws/AGENTS.md；doc
 运动规划路线：`docs/MUJOCO_MOTION_PLANNING.md`；选择依据：`docs/DECISIONS.md`。数字孪生实验：`experiments/colab-twin/README.md`；当前计划：`plans/colab-digital-twin-20261001/task_plan.md`。毕业设计、答辩材料和原始 Agent 咨询位于被 Git 排除的 `local-documents/`，只保留在本机。
 
 GR00T / LIBERO 扩展（2026-10-01）：`experiments/gr00t-libero/README.md` 与 `plans/gr00t-libero-20261001/task_plan.md`。最后一次尝试（第六次）已按用户指令完成并停止。L4 上官方 GR00T frozen 安装通过，LIBERO 依赖实际进入 Python 3.12 client venv，环境错位问题已在云端修复；随后导入 Matplotlib 因继承的 `module://matplotlib_inline.backend_inline` 后端不可用而失败。失败归档已回收并通过清单/哈希核验，模型加载与策略回合未启动。远端 worker 已结束，执行连接仍未返回；根 Agent 对唯一控制进程发送 SIGTERM，新的有界清理路径实际保存报告并成功 unassign，最终 active_assignments=0。子进程现固定 `MPLBACKEND=agg`，本地无头 PNG 绘制通过；该后端修正尚未云端复验。此轮不再分配 GPU，后续云端尝试需用户新的明确指令。 保持 MuJoCo 主线；Panda 实验不代表 SO101 策略迁移。
+
+## 2026-10-01 单臂夹取建模
+
+用户指定先建模、改善场景，并纠正主从为现实系统；本轮只有一台从臂。找到本地BLD-001建模说明、主从场景生成器和动作模板；当前工程无其记载的Blender/GLB成品，LightArmPreview.vue与leader专属STL为零字节。复用完整的原生从臂13STL，新增grasp_workcell.py/preview_grasp_workcell.py及动态物体/夹爪检查。
+
+新模型包含工作台、开放红/蓝料盘、相机支架、自由物体；生成1280×720三视图与100帧/4秒机械开合视频。原模型SHA仍d75253eb568e8a7214db9c631ab7bed4217f608a26f7276ebe9a7636cac82580。物体18×18×16mm、10g；实测中心z从0.012m落定至0.009784m，真实pick_floor接触。夹爪实际范围0.250019–0.799997rad，预览期间物体抬升约0；grasp_success/lift_success=null，尚未夹取成功。视频独立全量解码通过，34项回归检查通过。派生MJCF可编辑，原模型不改；无实体或云端操作。
+
+结果保存在Git忽略的experiments/colab-twin/output/grasp-model-72f103318b2a4cf78c7b89f317ee53ed/。原场景建模说明只用于布局参考，仿真坐标和物理参数不当作实物标定；现场模板不复制发布。后续owner根Codex：先对位/接触建模，再以物体抬升与持续夹持验收；已有静态规划入口及遗留交接保留。

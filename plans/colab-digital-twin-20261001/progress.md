@@ -72,3 +72,11 @@ MTC缺失核心和零字节逐轮产物留作待恢复历史，不从summary重�
 逐轮结果保存在本机被忽略的 experiments/colab-twin/output/staged-c5a0f2e203cf4453a7b501d6f8f4e62b/。最终候选代码与交付代码逐字一致；原始report SHA256 4ef35b169995ae9ef9db9dae1d929c4466f47863489ebdea90d6947ba5237c3c；MP4 SHA256 a41ef5e2bbcb2f9f77a4b9e9d43aa7322f8544a7d666395ce50d9b01cac9a885。渲染结果目录与既有批次隔离保留，视频/日志不入Git。
 
 本次公开范围仅新入口/测试、README/PROJECT、实验说明与已有三份计划。按基线核验并保护canonical index和独立README入口；既有旧树/现场数据的接续责任继续归根Codex，沿用本文件Issues/Handoff。GR00T仍按用户“最后一次”保持停止；主线后续从此单回合入口进入，接触抓放/视觉/动态反馈需另行收敛验收。
+
+## 2026-10-01 单臂夹取建模
+
+用户指定先建模、改善场景，并纠正主从为现实系统；本轮只有一台从臂。找到本地BLD-001建模说明、主从场景生成器和动作模板；当前工程无其记载的Blender/GLB成品，LightArmPreview.vue与leader专属STL为零字节。复用完整的原生从臂13STL，新增grasp_workcell.py/preview_grasp_workcell.py及动态物体/夹爪检查。
+
+新模型包含工作台、开放红/蓝料盘、相机支架、自由物体；生成1280×720三视图与100帧/4秒机械开合视频。原模型SHA仍d75253eb568e8a7214db9c631ab7bed4217f608a26f7276ebe9a7636cac82580。物体18×18×16mm、10g；实测中心z从0.012m落定至0.009784m，真实pick_floor接触。夹爪实际范围0.250019–0.799997rad，预览期间物体抬升约0；grasp_success/lift_success=null，尚未夹取成功。视频独立全量解码通过，34项回归检查通过。派生MJCF可编辑，原模型不改；无实体或云端操作。
+
+结果保存在Git忽略的experiments/colab-twin/output/grasp-model-72f103318b2a4cf78c7b89f317ee53ed/。原场景建模说明只用于布局参考，仿真坐标和物理参数不当作实物标定；现场模板不复制发布。后续owner根Codex：先对位/接触建模，再以物体抬升与持续夹持验收；已有静态规划入口及遗留交接保留。

@@ -66,3 +66,17 @@ python experiments/colab-twin/run_staged.py
 每次云端运行用 `~/.cache/so101-colab/run-*/sessions.json` 的独立状态。成功或失败都尝试 `colab stop`；正常释放后删状态，失败保留并打印恢复命令。强制终止/断电后的接续owner为根Codex，按该配置检查并释放遗留会话。
 
 接口参考：[Colab CLI](https://github.com/googlecolab/google-colab-cli)、[MuJoCo可视化](https://mujoco.readthedocs.io/en/stable/programming/visualization.html)。
+
+## 单臂夹取工位建模
+
+2026-10-01用户明确只需一台从臂，主从留在现实系统。复用原SO101网格和关节，不复制现场动作模板或标定。按本地BLD-001桌面工位说明的布局思路，新增单臂派生MJCF：0.9×0.7m工作台、开放取/放料盘、相机支架，以及18×18×16mm、10g自由运动绿色物体。桌面顶面转为原生MuJoCo base z=0；这是一组仿真fixture，不是实物测量坐标。
+
+```bash
+python experiments/colab-twin/preview_grasp_workcell.py
+```
+
+使用现成requirements环境，仅本机执行。每次生成独立的 `output/grasp-model-<UUID>/workcell.xml`、总览/俯视/夹爪近景PNG、4秒夹爪开合视频和报告。前述路径均被Git忽略。原MJCF/STL保持不变；没有Blender依赖。现存BLD-001提示词有内容，但其记载的Blender/GLB/OBJ成品在当前工程中不存在；LightArmPreview.vue和原leader专属STL为空文件，不能冒称已复原成品。动作模板只作为接续资产，本轮不执行现场动作或连接串口。
+
+模型实测：自由物体在重力下落定于料盘底，并出现真实pick_floor接触；夹爪由原位置执行器从约0.25到0.80rad实际开合。无weld/adhesion/物体跟随机械臂的动画绑定，物体在开合预览中未抬起。报告grasp_success/lift_success为null；这轮验收仅为模型、支撑接触和机械开合，抓取/抬起尚待验证。加入自由物体后nq=13、nu=6，旧固定六坐标CollisionChecker不适用于整个新模型，未强行复用到抓取规划。下一步从jaw/object对位及实际接触进入，再验收物体抬升和放置。
+
+建模实现见 [grasp_workcell.py](grasp_workcell.py) 与 [preview_grasp_workcell.py](preview_grasp_workcell.py)。物体质量/摩擦只是公开仿真假设；自由关节和接触语义参考[MuJoCo 3.3.7 XML](https://mujoco.readthedocs.io/en/3.3.7/XMLreference.html#body-freejoint)。
