@@ -84,3 +84,24 @@ AGY 首轮“数分钟训练”“视觉 ACT 极高概率 OOM”“SB3/CleanRL �
 ## 用户后续收敛与实测实现
 
 用户确认将保留分歧收敛为相同数据的ACT/MLP资源双探针，不引入独立MLP训练框架。已实现[分层入口](../../experiments/colab-twin/run_learning.py)与[运行契约](../../experiments/colab-twin/LEARNING.md)，正常/物理起点扰动恢复/空夹失败档案保留。两候选资源通过，官方小配置ACT进入单轨迹限时训练；纯策略碰撞停机尚未通过，因此20+20和视觉保持not_run。此前“待预检”的记录属于会审当时的状态，最新验证以progress为准。
+
+## 2026-10-01：AGY 对起步偏差与恢复采集的实际审核
+
+审查对象为提交 `5c41ca0d28fba1f20609c84a72a8de6a9625c8b0`，基线 `16fb76e84495d517c35a79dba08687f4c5ffa4fc`。实际调用本机AGY CLI，使用既有默认模型；未用Codex子Agent代替AGY。AGY会话为 `11ef62ca-91ac-414d-b850-1a1b6225f170`。首轮240s print timeout返回空响应，虽然CLI报SUCCESS，也记为未完成；随后仅要求基于已读材料收束结论，24.563s返回完整意见，无追加工具调用。CLI同时提示禁用slash expansion时plan标志不生效，故只读性质以实际工具与文件核对为据。
+
+通过TraceMesh选定会话阅读器核对，原生记录完整解码：23次run_command、19次view_file，42份工具结果均完成。工具实际读取本次diff、相关源码和指定产物，计算报告/档案哈希，并独立运行一次 `test_recovery_collection.py`：3项通过、0.092s。根Codex另行运行相同3项检查：通过、0.090s。原生最终正文与CLI响应逐字一致，审查时20份源码/文档SHA未变化。没有新训练或物理回合；150项全测与既有物理结果是此前产物，不是本次重跑。
+
+AGY的审核判定：实现和数据记录边界通过本次审查，未发现确定的新伪标签、终点恢复或专家接管后门；纯学习策略完整抓放仍未通过。主要保留意见是接近末端与持物搬运恢复样本不足；全速度屏蔽候选失败不支持其作为默认修复；统计拟合集与权重训练集需要分别保留来源。
+
+| 判断 | 可核对来源 | 根Codex的采用边界 |
+| --- | --- | --- |
+| 接近段恢复采集真实且标签隔离 | [前缀校验及物理注入](../../experiments/colab-twin/grasp_episode.py)、[真实档案检查](../../experiments/colab-twin/test_recovery_collection.py)；v5四档案600帧前缀排除，独立重放2372步误差0 | 证明这四条采集/重放成立，不能证明起步泛化充分 |
+| 当前采集入口缺少持物纠正 | `grasp_episode.py:366`反应式控制仅approach；`:468-476`前缀要求无接触/抬升且最多5s；四v5源均为同一策略轨迹的不同前缀 | 采用覆盖不足的保留意见；已有完整后段专家示范，每条v5含1170帧transport，缺的是从实际载物偏差状态出发的专门纠正 |
+| 最强策略真实抓起但盘外释放 | `output/policy-recovery-v5-qvel-masked-chunk16-nearest-20261001/report.json`：grasp=true、hold17.56s、place=false；release-probe记录第1760拍/35.2s新chunk开爪，35.4s丢块 | S7d保持未完成；专家重放、测试及局部输入替换均不代替任务验收 |
+| 速度与归一化来源仍需辨析 | `output/v5-qvel-masked-physical-audit-20261001/release-probe.json`及`support-clamp-probe.json`；`output/policy-recovery-v5-qvel-masked-origin-verified-20261001/report.json` | 输入敏感性不是唯一原因；四份统计源为nominal/startup-plus/startup-minus/approach，不能统称四份名义数据 |
+
+表内 `output/` 路径均相对 `experiments/colab-twin/`，数据、权重及原始审核继续Git忽略。重要证据SHA：当前gate报告 `87af27ca8770117c7ed94eb9cc6c3920d986de02c684ccb234152f40bc2bd1e8`；最强候选报告 `f1a7236638fc2b3903e014edc2edd8938ab9a35407690cf34311da3f3f54cfa9`；独立重放报告 `848502e34d6b963732ce788b57fa5cffaf292ea7d0187a4421c0f94b3e2ab7a6`。完整审核响应JSON SHA `01fe03ad190f894a50c9d64c10cda07f5a29f4f073f9752c5ae80143d6e8be45`，原生公开块读回SHA `09a066d62de3e41a44600ff7e26444e6a746f7c0c69fe9b680b0a587c73c7735`。本地原文与调用审计保存在 `local-documents/agent-consultations/20261001-agy-startup-review/`。
+
+保留分歧：AGY将起步覆盖称为“充分”，当前四条同源前缀与一次固定场景不能支持此泛化结论，突破起步也不能单独归功于新增数据。全mask失败只说明该候选失败，不能单独归因为丢失动量感知；归一化输入置零与原始物体速度置零也不是同一干预。AGY建议在第1500～1760拍才启用EMA/软饱和，本轮不采用：时间门控超出现行策略输入契约，且某一种滤波失败不能证伪所有速度相关原因。精确范围clip只被离线开爪反例否定，未做物理rollout。重新fit八档案统计可成为独立候选，但需配套重新训练/验证，不能直接换冻结权重的输入与动作解码尺度。
+
+本轮只完成审核与记录，未实施上述候选。根Codex接续的最短检查保持为：先核对接近末端/持物偏离状态与现有正例的覆盖，再验证一条真实专家纠正能否完成物理抓放和raw64独立重放；通过后才有界训练并重过相同纯策略单回合。20+20、视觉、Colab及实体均未新增。

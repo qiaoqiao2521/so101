@@ -165,7 +165,7 @@ v5采集只执行无接触策略前缀1/2/4/5s（50/100/200/250拍，20ms，最�
 
 双速度屏蔽ACT保持八训练档案、原四v4归一化统计和fresh Adam，lr2e-4；6657step/6epoch/120.017s后按wall上限停止，allocated87.053/reserved96MiB。权重SHA `84a4ef58d139be647a46f29c5be774325cd43e367ac89c3fa0f3d954c157e59d`，`output/policy-recovery-v5-all-velocity-masked-fit-20261001/`；chunk16+nearest在14.20s发生pick_floor与moving_jaw碰撞保护，未抬升。不是OOM，也未修改物理速度或接触/限位标准。该候选不替代已真实抓起的robot-only-mask候选。
 
-同四v4数据、相同输入屏蔽和原统计的MLP CPU对照：37801step/65epoch/45.001s，`output/reactive-v4-all-velocity-masked-mlp-fit-20261001/`；nearest回合15.92s actuator限位停止，无抓放。它是诊断对照，不是ACT资源失败后自动选择的新主线。仅限时拟合和平均误差不能证明局部控制精度与恢复泛化。
+同四v4数据、相同输入屏蔽和原统计的MLP CPU对照：37801step/65epoch/45.001s，`output/reactive-v4-all-velocity-masked-mlp-fit-20261001/`；nearest回合真实抓起并保持1.64s，15.92s actuator限位停止，完整抓放未通过。它是诊断对照，不是ACT资源失败后自动选择的新主线。仅限时拟合和平均误差不能证明局部控制精度与恢复泛化。
 
 精确训练观察范围clip探针保留全部18224有效训练输入，但bad-release jaw .401425→.309138仍开，16项未来动作全开；不实现此adapter，不追加阈值猜测。来源`output/v5-qvel-masked-physical-audit-20261001/support-clamp-probe.json`。
 
@@ -176,3 +176,9 @@ v5采集只执行无接触策略前缀1/2/4/5s（50/100/200/250拍，20ms，最�
 最短接续owner根Codex：先复核该候选在接近末端/载物搬运的实际状态覆盖，必要时单独采集一条真实偏差后的专家纠正，再过同一纯策略单回合。已提出但**未实现/未采集**的最薄载物入口为：从该候选NPZ前1000拍（20s）真实逐拍执行、全部排除训练标签；actual双指持续抬持门槛通过后，仅离线调用现有plan_transport生成纠正，独立raw64重放通过后才训练。不得恢复NPZ终点qpos、定时强开爪或将专家接管当作策略成功；现有approach前缀≤5s限制继续保留。该方向也需先验真，不能以增加预算替代覆盖证据。
 
 最终完整150项测试通过，无跳过（40.177s）；包括真实规划/抓放正负例、四v5档案与独立重放绑定、遮罩/初始化/保存重载和单回合止损边界。日志`output/final-all-velocity-single-gate-tests-20261001.log`。默认旧absolute、全速度输入、单步执行保持兼容；本轮试验选项均显式记录。数据/权重/审计/log仍Git忽略。canonical现场22项tracked遗留按S7交接保留，根Codex不改变其旧索引/原模型或发布现场配置。
+
+### S7d AGY 实际审核完成
+
+按用户要求，实际AGY审查提交 `5c41ca0` 并引用本地源码及产物；原生会话 `11ef62ca-91ac-414d-b850-1a1b6225f170` 完整读回，与最终CLI正文一致。首轮超时空响应不算完成，一次无工具收束后才记完成。AGY和根Codex各独立执行3项真实恢复档案检查通过，本轮未重跑150全测、训练或物理回合。
+
+AGY认可本次实现/记录边界，但完整策略抓放未通过；提出接近末端/持物实际偏差纠正覆盖不足。根Codex保留“起步覆盖充分”、速度唯一因果与按固定拍数滤波等分歧；四份旧统计合法继承不等于已证明漂移故障。具体引用、采用范围及未采用建议见[本次审核记录](learning-review.md#2026-10-01agy-对起步偏差与恢复采集的实际审核)。S7d/S7e状态不变；下一步owner根Codex，先覆盖证据再有界实验。
