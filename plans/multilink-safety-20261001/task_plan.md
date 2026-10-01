@@ -21,4 +21,4 @@ CapMesh `inventory/community-alternatives.md` robotics-arm entry recommends exis
 
 ## Status
 
-Local simulation deployment passed: isolated runtime, 41 checks, actual RGB-D tracking gates and paired physical contact trials with decoded videos. Static blocking remains an incomplete task; outward retreat resumes and reaches the goal without contact. Source/scope review and branch-only delivery are closing. Official code release, complete perception, VLA and hardware remain outside this deployment.
+Local simulation deployment complete: isolated runtime, 41 checks, actual RGB-D tracking gates and paired physical contact trials with decoded videos. Static blocking remains an incomplete task; outward retreat resumes and reaches the goal without contact. Source/scope review and branch-only delivery passed; implementation commit `cc01580` was read back from GitHub. Official code release, complete perception, VLA and hardware remain outside this deployment.

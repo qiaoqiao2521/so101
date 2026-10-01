@@ -4,6 +4,8 @@
 
 Independent safety deployment, base `16fb76e`, branch `codex/multilink-safety-20261001`. Old learning checkout and canonical Git/index are protected. Root Codex owns integration and publication.
 
+Local deployment and independent branch delivery complete. Implementation commit `cc015807ca1cbb55295f185e22170800bebc9d8f` was pushed to `qiaoqiao2521/so101`; GitHub ref was read back with the same SHA. No merge into the active training branch or PR was performed. Keep this working deployment checkout for review.
+
 ## Done
 
 Verified original paper and AEGIS equations/license; author algorithm code is not yet released. Separate worktree and CPU environment are deployed through `./so101.sh safety`.
@@ -14,7 +16,7 @@ Final `--render`: static blocking off/on contact samples 9424/0 (neither reaches
 
 ## Remaining
 
-Scoped commit/push verification, then user review. Future work: complete obstacle geometry/perception, diverse physical scenarios, VLA integration and hardware braking. Previous learning work remains with the original Agent.
+No remaining work for this bounded local deployment. Future work: complete obstacle geometry/perception, diverse physical scenarios, VLA integration and hardware braking. Previous learning work remains with the original Agent.
 
 ## Issues and next
 
