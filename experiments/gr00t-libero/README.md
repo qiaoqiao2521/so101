@@ -55,6 +55,8 @@ output/hf-tools/bin/python run_colab.py --gpu-minutes 45
 
 bootstrap 在全新 `/content/gr00t-colab` 工作目录中使用固定 GR00T / LIBERO 源码；clone、checkout、submodule 都启用 `GIT_LFS_SKIP_SMUDGE=1`。uv 固定 0.11.15，安装到临时工具目录并调用 `bootstrap-tools/bin/uv`，避开 Colab 自定义 Python 的 `ensurepip`；官方模型环境仍执行 `uv sync --frozen --python 3.12`，LIBERO client 使用官方独立环境。先记录 OS/Python/磁盘，再检查 GPU、EGL、FFmpeg 4–7 与 preflight。官方 LIBERO setup 会删除 `~/.libero`，因此存在既有配置的 VM 会被拒绝。
 
+bootstrap 仅在子进程环境清除继承的 `UV_SYSTEM_PYTHON`、`UV_PYTHON`、`UV_PROJECT_ENVIRONMENT` 和 `VIRTUAL_ENV`，再设置 `UV_SYSTEM_PYTHON=0`，避免官方 client setup 向系统 Python 安装依赖；报告仅记录清除的变量名。文件 Contents HTTP 请求默认连接/读取超时为 10/25 秒，保留显式超时覆盖，诊断只输出 host、method、固定 phase、status、异常类型和耗时。SIGTERM 进入有界清理并保存报告，清理期间忽略重复 TERM；SIGKILL 或主机崩溃仍需用私有会话身份恢复。
+
 本机输出位于 `output/colab/<UUID>/`；远端仅打包阶段报告、脱敏日志和本轮视频，产物清单必须完整覆盖 ZIP 结果文件，下载后核对精确文件集合、大小与 SHA256；缺失清单或额外文件会被拒绝。HF 凭据经权限 0600 的临时文件传递，消费后删除，仅子进程环境使用；不进入参数、源码、报告或 ZIP。会话身份信息留在私有输出中，禁止提交、分享整个 output 或原始请求日志。释放失败时保留私有会话状态供接续；实际 `unassign` 返回成功才记为 `runtime_released=true`，`stop` 命令退出 0 本身不构成释放证据。
 
 `seed=0` 仅用于官方 client 的随机 reset；没有加载 benchmark 固定初始状态，也没有固定模型 server RNG。单回合不能证明官方 benchmark 成功率或跨运行确定性。必须分别检查本机 delivery 的 `runtime_released`、bootstrap 的阶段状态、policy report 的 `gr00t_rollout_completed` 和终态 `task_success`，并查看本轮视频。`completed` 还要求本轮视频非空、哈希一致且 FFmpeg 全量解码通过；这项验收规则不等于真实 GPU 回合已通过。
@@ -63,7 +65,10 @@ bootstrap 在全新 `/content/gr00t-colab` 工作目录中使用固定 GR00T / L
 
 - 第二次尝试实际分配 L4，显存 **23034 MiB**，apt/EGL/FFmpeg 阶段通过；bootstrap 因 `ensurepip` 失败停止，策略未运行。该会话已实际 `unassign` 成功释放。原始本机报告 SHA256：`76569625e9063f6e1d40da7b830c1d40712c91f5a72e91d72707f3db69ffef1f`。
 - 随后把 uv bootstrap 改为临时目录 pip target 安装，二进制路径 `bin/uv` 已用实际安装核实。第四次尝试随后因 Colab 通信超时结束（本机 delivery `status=failed`、`error_type=TimeoutExpired`），实际 `unassign` 成功，`runtime_released=true`。没有回收到 bootstrap 报告、视频或 policy 结果，远端阶段未知；本机 `gr00t_rollout_completed=false`、`task_success=null`，不能宣称 uv 修复已在 GPU 初始化流程中通过。原始本机报告 SHA256：`fa51fd267b209f21b5564b5a0f4b05070452bc1c0ba64e8a8e06170cd14899b2`。
-- 当前结论：**HF 权限实测成功，策略闭环未完成，Colab 通信超时，运行时已释放**。本轮没有可核验的远端终止阶段、episode 长度或视频；任务成功为未知。最终只读查询确认 `active_assignments=0`。root 已停止继续分配，并补充超时诊断与分配 POST 丢响应时按精确 notebook hash 恢复会话的路径；该恢复路径仅有离线故障注入边界检查，尚无 live 验证。最短接续仍为上述一次 L4 单回合命令，条件是 Colab 通信稳定；无需等待 HF 审批。
+- 最新第五次尝试实际取得 L4 **23034 MiB**，通过系统依赖、uv 0.11.15 安装及官方 GR00T `uv sync --frozen --python 3.12`（128.988 秒）。官方 LIBERO setup 在 109.027 秒后失败：日志显示 uv 向系统 Python 3.13 安装，而 client Python 3.12 缺少 `gymnasium`。继承的系统安装覆盖是推断原因，未采集原始变量值。控制进程退出 143，原因未知；已手动回收原始 bootstrap 报告及完整、通过清单核验的 ZIP。
+- 在原 45 分钟预算内复用同一 L4 上传环境隔离修复，Contents PUT 在 25.485 秒后发生 `ReadTimeout` （无 HTTP status），远端修复 worker 未启动。实际 `unassign` 成功，最终只读查询 `active_assignments=0`；这轮没有收到额度不足响应，但账户余额未核验。没有模型加载、policy episode、episode 长度或视频，`gr00t_rollout_completed=false`、`task_success=null`。
+- 原始 bootstrap 报告 SHA256：`bc2fa5472f4fb0ed386249e74bc3357f6abd89941e09f5be6a2727bf997dadea`；回收 ZIP SHA256：`a0ff39e90d56f84be0e24ff4e1be47b7e4a956781280257acf97459fe9030a0d`；手动恢复的本机 delivery 报告 SHA256：`a2cdfd56fdf3c1d72d2e31f4c70271a5264f3c3a0ac793a8c9a52262d7fb0fa5`。原始报告与归档保留不改写，私有产物不入 Git。
+- 当前结论：**GR00T frozen 依赖已在 L4 安装通过；LIBERO setup 修复及策略闭环待云端验证；运行时已释放**。27 项离线检查通过，真实 uv 0.11.15 无网络探针确认清除继承覆盖后依赖安装到激活的 venv。该本地探针和 SIGTERM 故障注入不代表云端 LIBERO 或退出清理已通过。最短接续为上述一次 L4 单回合命令，需稳定通信、LIBERO setup 成功及真实策略报告/视频；无需等待 HF 审批。
 
 ### 现成 GPU 的手动入口
 
@@ -90,7 +95,7 @@ python3 run_rollout.py --gr00t-root output/upstream/Isaac-GR00T --download-model
 
 GPU 每轮 `report.json` 中 `gr00t_rollout_completed=true` 只表示官方策略闭环执行结束；**任务是否完成必须另看 `task_success`**。退出 0 可以对应 `task_success=false`。退出 1 为设置/执行失败，退出 2 为已知前置条件阻碍。GPU 路径目前未完成真实策略验证，不能据此宣称任务通过。
 
-Colab wrapper 的 portable `test_colab.py` 只做离线生命周期、日志、临时凭据和产物边界检查；19 项通过，加上原有 5 项报告/源码检查，共 24 项。未安装可选 Colab SDK 时，仅真实 StateStore 检查跳过。它不分配 GPU，也不代表真实回合通过。
+Colab wrapper 的 portable `test_colab.py` 只做离线生命周期、日志、临时凭据和产物边界检查；22 项通过，加上原有 5 项报告/源码检查，共 27 项。未安装可选 Colab SDK 时，仅真实 StateStore 检查跳过。它不分配 GPU，也不代表真实回合通过。
 
 CPU setup 从固定源码 tar 生成逐文件 SHA256 manifest；复用和 smoke 都核验源码、模型资产、文件增删（仅排除生成的 pycache/egg-info），失败时停止。必要检查：`python3 -m unittest discover -s . -p 'test_*.py'`。实际环境验证报告和图像留在本机 ignored output，不提交运行时日志或模型。
 

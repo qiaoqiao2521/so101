@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,10 @@ from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parent
 PUBLIC_FILES = ("common.py", "preflight.py", "run_rollout.py", "upstream.json", "remote_bootstrap.py")
+
+
+class TerminationRequested(Exception):
+    """Enter the normal failure/report/owned-runtime cleanup path on SIGTERM."""
 
 
 def recover(archive: Path, destination: Path) -> dict:
@@ -106,7 +111,15 @@ def main() -> int:
 
     remote_token = "/content/.gr00t-private/hf-token"
     local_token = state / "hf-token"
+    previous_sigterm_handler = signal.getsignal(signal.SIGTERM)
+    sigterm_handler_installed = False
+
+    def request_termination(signum, frame):
+        raise TerminationRequested()
+
     try:
+        signal.signal(signal.SIGTERM, request_termination)
+        sigterm_handler_installed = True
         bundle = output / "experiment.zip"
         with ZipFile(bundle, "w") as archive:
             for name in PUBLIC_FILES:
@@ -184,16 +197,25 @@ def main() -> int:
     except Exception as error:
         report["error_type"] = type(error).__name__
     finally:
-        local_token.unlink(missing_ok=True)
-        if owned:
-            try:
-                stopped = call("stop", "-s", session, timeout=120, cleanup=True)
-                report["runtime_released"] = stopped["unassign_completed"]
-                if report["runtime_released"]:
-                    shutil.rmtree(state)
-            except Exception as error:
-                report["cleanup_error_type"] = type(error).__name__
-        (output / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+        # A second SIGTERM must not interrupt the already bounded stop/report
+        # cleanup. SIGKILL cannot be handled; persistent owned identity remains
+        # the recovery route for that case and for process/host crashes.
+        if sigterm_handler_installed:
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        try:
+            local_token.unlink(missing_ok=True)
+            if owned:
+                try:
+                    stopped = call("stop", "-s", session, timeout=120, cleanup=True)
+                    report["runtime_released"] = stopped["unassign_completed"]
+                    if report["runtime_released"]:
+                        shutil.rmtree(state)
+                except Exception as error:
+                    report["cleanup_error_type"] = type(error).__name__
+            (output / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+        finally:
+            if sigterm_handler_installed:
+                signal.signal(signal.SIGTERM, previous_sigterm_handler)
     print(json.dumps({key: report[key] for key in ("status", "runtime_released", "gr00t_rollout_completed", "task_success")}), flush=True)
     print("Report: " + str(output / "report.json"), flush=True)
     return 0 if report["status"] == "completed" and report["runtime_released"] else 1

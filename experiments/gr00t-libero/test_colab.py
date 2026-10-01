@@ -21,6 +21,7 @@ import io
 import json
 import logging
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import tempfile
@@ -156,7 +157,7 @@ class SafeCLIContracts(unittest.TestCase):
     def invoke_fake(self, action, *, argv=None, state_store=None, assignment=None,
                     request_error=None, state_module=None, assign_error=None,
                     lookup_result=None, lookup_observer=None, unassign_observer=None,
-                    assign_observer=None):
+                    assign_observer=None, contents_module=None):
         package = types.ModuleType('colab_cli')
         common = types.ModuleType('colab_cli.common')
         common.state = types.SimpleNamespace(_history=None, config_path=None,
@@ -203,15 +204,19 @@ class SafeCLIContracts(unittest.TestCase):
         client.Client = Client
         common.state.client = Client()
         commands = types.ModuleType('colab_cli.commands')
+        contents = contents_module or types.ModuleType('colab_cli.contents')
+        if contents_module is None:
+            contents.requests = types.SimpleNamespace(request=lambda *a, **k: self.fail('Unexpected contents transport'))
         session = types.ModuleType('colab_cli.commands.session')
         run = types.ModuleType('colab_cli.commands.run')
-        package.cli, package.common = cli, common
+        package.cli, package.common, package.contents = cli, common, contents
         commands.session, commands.run = session, run
         cli.main = lambda: action(cli, common, client, session, run)
         if state_module is None:
             state_module = types.ModuleType('colab_cli.state')
             state_module.SessionState = types.SimpleNamespace
         fake_modules = {'colab_cli': package, 'colab_cli.cli': cli,
+                        'colab_cli.contents': contents,
                         'colab_cli.common': common, 'colab_cli.client': client,
                         'colab_cli.state': state_module,
                         'colab_cli.commands': commands,
@@ -423,6 +428,76 @@ class SafeCLIContracts(unittest.TestCase):
                 self.assertNotIn('FICTIONAL_GET_TOKEN', text)
                 self.assertNotIn('unrelated-untyped-endpoint', text)
 
+    def test_contents_timeout_is_scoped_and_forwarded(self):
+        calls = []
+        def transport(method, url, **kwargs):
+            calls.append((method, kwargs))
+            return types.SimpleNamespace(status_code=200)
+        original = types.SimpleNamespace(request=transport)
+        contents = types.ModuleType('colab_cli.contents')
+        contents.requests = original
+        def action(*args):
+            self.assertIsNot(contents.requests, original)
+            self.assertIs(original.request, transport, 'Global requests callable must remain untouched')
+            contents.requests.request('GET', 'https://runtime.example.invalid/api/contents/report.json',
+                                      params={'content': '1'})
+            contents.requests.request('PUT', 'https://runtime.example.invalid/api/contents/test.json',
+                                      timeout=(2, 3), json={'content': 'synthetic'})
+        with patch.object(safe_cli.time, 'monotonic', side_effect=[1.0, 2.0, 3.0, 3.25]):
+            code, report, _ = self.invoke_fake(
+                action, argv=['colab_safe_cli.py', 'download', '-s', 'fictional-session'],
+                contents_module=contents)
+        self.assertEqual(code, 0)
+        self.assertEqual(calls[0][1]['timeout'], (10, 25))
+        self.assertEqual(calls[0][1]['params'], {'content': '1'})
+        self.assertEqual(calls[1][1]['timeout'], (2, 3))
+        self.assertEqual(report['contents_request']['phase'], 'contents_put')
+        self.assertEqual(report['contents_request']['elapsed_s'], 0.25)
+        self.assertEqual(report['contents_request']['status_code'], 200)
+        self.assertNotIn('request_failure', report)
+        self.assertIs(contents.requests, original)
+        self.assertIs(original.request, transport)
+
+    def test_contents_errors_record_only_safe_transport_metadata(self):
+        marker = 'FICTIONAL_CONTENTS_SECRET_DO_NOT_DISPLAY'
+        unsafe_url = ('https://fictional-user:' + marker + '@runtime.example.invalid/'
+                      'api/contents/report.json?colab-runtime-proxy-token=' + marker)
+        for error_name in ('ConnectTimeout', 'ReadTimeout', 'HTTPError', 'HTTPStatusResponse'):
+            with self.subTest(error_name=error_name):
+                error_class = type('HTTPError' if error_name == 'HTTPStatusResponse' else error_name,
+                                   (Exception,), {})
+                error = error_class(unsafe_url + marker)
+                error.response = types.SimpleNamespace(status_code=403, text=marker)
+                def transport(method, url, **kwargs):
+                    if error_name == 'HTTPStatusResponse':
+                        return types.SimpleNamespace(status_code=403, text=marker)
+                    raise error
+                original = types.SimpleNamespace(request=transport)
+                contents = types.ModuleType('colab_cli.contents')
+                contents.requests = original
+                def action(*args):
+                    contents.requests.request('GET', unsafe_url,
+                                              params={'colab-runtime-proxy-token': marker})
+                    # SDK's raise_for_status occurs after requests.request.
+                    raise error
+                with patch.object(safe_cli.time, 'monotonic', side_effect=[10.0, 12.5]):
+                    code, report, text = self.invoke_fake(
+                        action, argv=['colab_safe_cli.py', 'download', '-s', 'fictional-session'],
+                        contents_module=contents)
+                self.assertEqual(code, 1)
+                diagnostic = report['request_failure']
+                self.assertEqual(diagnostic['host'], 'runtime.example.invalid')
+                self.assertEqual(diagnostic['method'], 'GET')
+                self.assertEqual(diagnostic['phase'], 'contents_get')
+                self.assertEqual(diagnostic['status_code'], 403)
+                self.assertEqual(diagnostic['elapsed_s'], 2.5)
+                self.assertEqual(diagnostic['type'], None if error_name == 'HTTPStatusResponse' else error_name)
+                for forbidden in (marker, 'fictional-user', 'api/contents',
+                                  'colab-runtime-proxy-token', '?', 'https://'):
+                    self.assertNotIn(forbidden, text)
+                self.assertIs(contents.requests, original)
+                self.assertIs(original.request, transport)
+
 
 class ParentAcceptanceContracts(unittest.TestCase):
     def invoke_parent(self, deadline=False, release=True, scenario=None):
@@ -437,9 +512,13 @@ class ParentAcceptanceContracts(unittest.TestCase):
             clock = [0.0]
             stopped = []
             live_downloads = []
+            termination_sent = [False]
             class Process:
                 returncode = None
                 def poll(self):
+                    if scenario == 'sigterm' and not termination_sent[0]:
+                        termination_sent[0] = True
+                        signal.raise_signal(signal.SIGTERM)
                     return self.returncode
                 def communicate(self, **kwargs):
                     return '', None
@@ -452,7 +531,7 @@ class ParentAcceptanceContracts(unittest.TestCase):
             process = Process()
             def spawn(*args, **kwargs):
                 clock[0] = 61.0 if deadline else 0.0
-                process.returncode = None if deadline or scenario == 'poll_retry' else 0
+                process.returncode = None if deadline or scenario in {'poll_retry', 'sigterm'} else 0
                 return process
             def sleep(seconds):
                 clock[0] += seconds
@@ -465,6 +544,14 @@ class ParentAcceptanceContracts(unittest.TestCase):
                     self.assertEqual(Path(argv[-2]).stat().st_mode & 0o777, 0o600)
                     self.assertNotIn(fake_hf.get_token(), ' '.join(map(str, argv)))
                 if verb == 'stop':
+                    if scenario == 'sigterm':
+                        self.assertTrue(termination_sent[0])
+                        self.assertEqual(process.returncode, -15)
+                        self.assertEqual(signal.getsignal(signal.SIGTERM), signal.SIG_IGN)
+                        self.assertEqual(kwargs['timeout'], 120)
+                        # A second genuine in-process SIGTERM during cleanup
+                        # must not interrupt the bounded release/report path.
+                        signal.raise_signal(signal.SIGTERM)
                     stopped.append(True)
                     response['unassign_completed'] = release
                 if verb == 'upload' and scenario == 'malformed_cli':
@@ -554,6 +641,26 @@ class ParentAcceptanceContracts(unittest.TestCase):
         self.assertEqual(report['failed_colab_command']['error_type'], 'MissingSafeCLIResult')
         self.assertTrue(report['runtime_released'])
         self.assertFalse(state_exists)
+
+    def test_sigterm_enters_cleanup_and_restores_previous_handler(self):
+        previous = signal.getsignal(signal.SIGTERM)
+        original_calls = []
+        def original_handler(signum, frame):
+            original_calls.append(signum)
+            raise AssertionError('Prior handler must be overridden until cleanup ends')
+        signal.signal(signal.SIGTERM, original_handler)
+        try:
+            code, report, state_exists = self.invoke_parent(scenario='sigterm')
+            self.assertEqual(code, 1)
+            self.assertEqual(report['status'], 'failed')
+            self.assertEqual(report['error_type'], 'TerminationRequested')
+            self.assertTrue(report['runtime_released'])
+            self.assertFalse(state_exists)
+            self.assertNotIn('cleanup_error_type', report)
+            self.assertEqual(original_calls, [])
+            self.assertIs(signal.getsignal(signal.SIGTERM), original_handler)
+        finally:
+            signal.signal(signal.SIGTERM, previous)
 
 
 if __name__ == '__main__':

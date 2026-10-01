@@ -11,6 +11,7 @@ from pathlib import Path
 import stat
 import subprocess
 import sys
+import time
 import uuid
 from urllib.parse import urlparse
 
@@ -21,6 +22,47 @@ class PrivateScopeError(RuntimeError):
 
 class RecoveryUnconfirmed(RuntimeError):
     pass
+
+
+class _ContentsRequestsProxy:
+    """Replace only contents.py's module binding, never the requests module.
+
+    The 10s connect/25s read limits fit the parent's 45s polling ceiling for
+    an ordinary request. They are per-operation timeouts, not a total deadline;
+    the parent still enforces the overall command and experiment deadlines.
+    """
+
+    def __init__(self, original, result):
+        self.original = original
+        self.result = result
+
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault("timeout", (10, 25))
+        started = time.monotonic()
+        safe_method = method.upper() if method.upper() in {"GET", "PUT", "DELETE"} else "OTHER"
+        diagnostic = {"host": urlparse(url).hostname, "method": safe_method,
+                      "phase": {"GET": "contents_get", "PUT": "contents_put",
+                                "DELETE": "contents_delete"}.get(safe_method, "contents_other"),
+                      "type": None, "status_code": None, "elapsed_s": None}
+        try:
+            response = self.original.request(method, url, **kwargs)
+        except BaseException as error:
+            diagnostic["type"] = type(error).__name__
+            status = getattr(getattr(error, "response", None), "status_code", None)
+            diagnostic["status_code"] = status if type(status) is int else None
+            diagnostic["elapsed_s"] = round(max(0, time.monotonic() - started), 3)
+            self.result["request_failure"] = diagnostic
+            self.result["contents_request"] = dict(diagnostic)
+            raise
+        status = getattr(response, "status_code", None)
+        diagnostic["status_code"] = status if type(status) is int else None
+        diagnostic["elapsed_s"] = round(max(0, time.monotonic() - started), 3)
+        self.result["contents_request"] = diagnostic
+        if type(status) is int and status >= 400:
+            # Preserve native 404/raise_for_status handling. This records the
+            # HTTP response fact without inventing an exception type.
+            self.result["request_failure"] = dict(diagnostic)
+        return response
 
 
 def _option(arguments, *names):
@@ -116,6 +158,8 @@ def load_intent(config, name):
 def main() -> int:
     logging.disable(sys.maxsize)
     result = {"exit_code": 0, "error_type": None, "unassign_completed": False}
+    contents_module = None
+    contents_original = None
     # Native commands sometimes echo exception URLs before handling them. Keep
     # those strings in memory and expose only a fixed classification.
     sink = io.StringIO()
@@ -155,6 +199,11 @@ def main() -> int:
 
             Client._issue_request = request
             command = _command(sys.argv[1:])
+            if command in {"upload", "download", "ls", "rm"}:
+                from colab_cli import contents
+                contents_module = contents
+                contents_original = contents.requests
+                contents.requests = _ContentsRequestsProxy(contents_original, result)
             scope = _scope(sys.argv[1:]) if command in {"new", "stop"} else None
             if command == "new":
                 from colab_cli.state import SessionState
@@ -246,6 +295,9 @@ def main() -> int:
             result.update(exit_code=130, error_type="KeyboardInterrupt")
         except BaseException as error:
             result.update(exit_code=1, error_type=type(error).__name__)
+        finally:
+            if contents_module is not None:
+                contents_module.requests = contents_original
     if result["exit_code"]:
         message = sink.getvalue().lower()
         categories = (("quota", "quota"), ("not available", "gpu_unavailable"),

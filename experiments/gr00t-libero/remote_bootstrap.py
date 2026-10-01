@@ -151,9 +151,14 @@ class Bootstrap:
             "hardware_connected": False,
         }
         self.env = os.environ.copy()
-        for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HF_DEBUG"):
+        removed_uv = [key for key in ("UV_SYSTEM_PYTHON", "UV_PYTHON",
+                                      "UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV")
+                      if key in self.env]
+        self.report["inherited_uv_settings_removed"] = removed_uv
+        for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HF_DEBUG", *removed_uv):
             self.env.pop(key, None)
         self.env.update(
+            UV_SYSTEM_PYTHON="0",
             GIT_LFS_SKIP_SMUDGE="1", GIT_TERMINAL_PROMPT="0",
             DEBIAN_FRONTEND="noninteractive", PIP_DISABLE_PIP_VERSION_CHECK="1",
             MUJOCO_GL="egl", PYOPENGL_PLATFORM="egl", DS_BUILD_OPS="0",
