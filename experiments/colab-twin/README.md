@@ -24,6 +24,22 @@ cd experiments/colab-twin
 
 规划输入是 [planning_scenario.json](planning_scenario.json)：六轴起点、三维目标 m、静态盒子中心与半尺寸 m。规划只改变前五个臂关节，夹爪指令固定 0.35 rad；没有人工绕行 waypoint。MuJoCo 3.3.7 / Mink 1.1.0 / OMPL 2.0.1 已固定。
 
+## 本地主线逐层单回合
+
+在已安装 [requirements.txt](requirements.txt) 固定直接依赖的 Python 环境运行：
+
+```bash
+python experiments/colab-twin/run_staged.py --render
+# 不检查渲染时省略 --render
+python experiments/colab-twin/run_staged.py
+```
+
+该入口只运行本机 CPU 仿真，不连接 Colab、GR00T、ROS或串口。依赖层逐项检查指定版本并实际导入 native bindings；第二层加载原SO101模型及障碍，真实reset并推进10步；第三层复用Mink IK和OMPL求解，要求直接路径被挡、精确绕行及独立路段复检；第四层复用独立MuJoCo位置伺服执行实例，验收实际TCP、20ms碰撞样本和关节限位。第三层没有神经模型推理，第四层尚无动态重规划。
+
+每次在 `output/staged-<UUID>/` 创建新目录，保存 `report.json`、`planning.json`、`execution.json`、`trajectory.csv` 和派生场景；`--render` 额外保存视频和预览。报告逐层记录 `not_run/running/passed/failed`，只有前层通过才运行后层。缺失依赖/安装版本不符会在第一层停止；不会自动安装、分配云端资源或退回合成轨迹。`servo_episode_completed` 与 `task_success` 分开记录，任务误差超过1cm、碰撞样本无效或限位超出0.01rad会拒绝。
+
+2026-10-01本机单回合四层均通过：reset10步/0.02s；主路线113点；执行7546步/15.092s；TCP误差0.549mm，碰撞无效采样0，限位超出0。756行轨迹全部有限且时间递增，末行TCP独立复算误差一致；378帧视频完整解码且场景障碍可见。32项测试通过（原29项与3项阶段停止边界），系统Python缺失依赖的真实CLI负例退出1，后续三层均未执行。单静态fixture的一个回合不能扩大为抓放、视觉、动态避障或真机验收。
+
 ## 结果和验收
 
 云端每次结果保存到本目录 `output/planning-<时间>-<随机后缀>/`，不覆盖以前实验；全部由 `.gitignore` 排除。
