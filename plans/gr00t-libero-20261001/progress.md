@@ -4,6 +4,6 @@
 
 User authorized existing paid Colab quota, and will apply for Cosmos model access. Current host has no usable CUDA driver and no running Chrome session to submit that application. No model credentials were read or copied; no GPU runtime has been created.
 
-Five boundary tests, syntax and documentation links passed. Review fixes protect LFS download scope, per-run artifacts and unchanged source/asset content. Scoped public delivery is being prepared.
+Five boundary tests, syntax and documentation links passed. Review fixes protect LFS download scope, per-run artifacts and unchanged source/asset content. Public code was committed and pushed to qiaoqiao2521/so101 on codex/colab-twin-20261001 (implementation commit 6bf7722).
 
-Remaining: publish valid experiment files, then policy episode after access and authentication. Resume owner: root Codex. Entry: experiments/gr00t-libero/README.md and the user's HF access confirmation. The HF model and login page were reachable again after the user's transient CloudFront 403; access approval remains unconfirmed. Existing paid Colab small-sample authorization persists.
+Remaining: one policy episode after access and authentication. Resume owner: root Codex. Entry: experiments/gr00t-libero/README.md and the user's HF access confirmation. The HF model and login page were reachable again after the user's transient CloudFront 403; access approval remains unconfirmed. Existing paid Colab small-sample authorization persists.
