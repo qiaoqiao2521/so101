@@ -4,7 +4,7 @@
 
 User selected this fork to deploy the safety layer independently while another Agent owns state-policy training. Work in branch `codex/multilink-safety-20261001`, based on published `16fb76e`; preserve the old dirty training and canonical trees. Reuse SO101 MuJoCo geometry and interfaces. First target is local simulation; hardware remains unavailable and no serial device will be driven.
 
-The author's official project currently says Code coming soon. Implement an explicitly named paper adaptation, using the published barrier equations and AEGIS provenance. Do not claim the author system, π₀.₅ timing or paper collision rates were reproduced.
+The author's official project currently says Code coming soon. The Agent proceeded with its own adaptation without agreement to change the requested scope. The user rejected that substitution; the original official-deployment objective is not complete. Do not continue the adaptation.
 
 ## Plan and acceptance
 
@@ -21,4 +21,4 @@ CapMesh `inventory/community-alternatives.md` robotics-arm entry recommends exis
 
 ## Status
 
-Local simulation deployment complete: isolated runtime, 41 checks, actual RGB-D tracking gates and paired physical contact trials with decoded videos. Static blocking remains an incomplete task; outward retreat resumes and reaches the goal without contact. Source/scope review and branch-only delivery passed; implementation commit `cc01580` was read back from GitHub. Official code release, complete perception, VLA and hardware remain outside this deployment.
+Stopped after user rejection; adaptation unadopted and official deployment incomplete. Local experimental checks and branch publication happened, but do not fulfill the requested outcome. Preserve independent code/output for traceability; do not merge into the mainline or continue expansion. Previous learning work remains with its original owner.

@@ -2,9 +2,11 @@
 
 ## Current
 
+用户已否决无官方源码时自行适配；停止扩展，未采纳、未合入主线。官方方法部署未完成。以下 Done 记录只保留实际做过的局部实验和发布证据，不代表用户目标完成。
+
 Independent safety deployment, base `16fb76e`, branch `codex/multilink-safety-20261001`. Old learning checkout and canonical Git/index are protected. Root Codex owns integration and publication.
 
-Local deployment and independent branch delivery complete. Implementation commit `cc015807ca1cbb55295f185e22170800bebc9d8f` was pushed to `qiaoqiao2521/so101`; GitHub ref was read back with the same SHA. No merge into the active training branch or PR was performed. Keep this working deployment checkout for review.
+The unadopted local adaptation was published in an isolated branch. Implementation commit `cc015807ca1cbb55295f185e22170800bebc9d8f` was pushed to `qiaoqiao2521/so101`; GitHub ref was read back with the same SHA. No merge into the active training branch or PR was performed. Preserve the code and outputs for traceability.
 
 ## Done
 
@@ -16,7 +18,7 @@ Final `--render`: static blocking off/on contact samples 9424/0 (neither reaches
 
 ## Remaining
 
-No remaining work for this bounded local deployment. Future work: complete obstacle geometry/perception, diverse physical scenarios, VLA integration and hardware braking. Previous learning work remains with the original Agent.
+Official deployment remains unfulfilled because the author runtime is unavailable. Do not continue this adaptation or schedule follow-up without a new user direction. Previous learning work remains with the original Agent.
 
 ## Issues and next
 
