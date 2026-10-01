@@ -29,3 +29,7 @@ python3 experiments/colab-twin/run_colab.py --session so101-planning --episodes 
 ```
 
 详见 [自主规划路线与既有资产](docs/MUJOCO_MOTION_PLANNING.md)、[选择依据](docs/DECISIONS.md)、[实验说明](experiments/colab-twin/README.md) 和 [当前计划](plans/colab-digital-twin-20261001/task_plan.md)。毕业设计、答辩与中期报告副本放在本机 `local-documents/`，个人文档、原始咨询和实验输出均被 `.gitignore` 排除。
+
+## GR00T / LIBERO 策略实验
+
+用户选定的扩展实验复用官方 GR00T N1.7 / LIBERO。独立 CPU 环境已实际完成 reset、10 个物理步和双相机检查；官方策略的 GPU 回合仍等待 Cosmos 模型权限。LIBERO 使用 Panda，这项环境验证不代表 SO101 策略迁移或任务成功。入口见 [实验说明](experiments/gr00t-libero/README.md) 和 [接续计划](plans/gr00t-libero-20261001/task_plan.md)，下载、模型和报告全部排除在 Git 之外。

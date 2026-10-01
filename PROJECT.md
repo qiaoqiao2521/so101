@@ -20,3 +20,5 @@ README.md；mint_follower_demo/SECURITY.md；workspaces/so101_ws/AGENTS.md；doc
 主从迟钝待办：`plans/teleop-latency-20260922/task_plan.md`；已有证据：同目录 `REPORT.md`。
 
 运动规划路线：`docs/MUJOCO_MOTION_PLANNING.md`；选择依据：`docs/DECISIONS.md`。数字孪生实验：`experiments/colab-twin/README.md`；当前计划：`plans/colab-digital-twin-20261001/task_plan.md`。毕业设计、答辩材料和原始 Agent 咨询位于被 Git 排除的 `local-documents/`，只保留在本机。
+
+GR00T / LIBERO 扩展（2026-10-01）：`experiments/gr00t-libero/README.md` 与 `plans/gr00t-libero-20261001/task_plan.md`。固定官方版本，CPU 环境真实 reset/step/双相机已验证；GPU 策略待 HF 权限与兼容 Colab GPU，已有付费额度小样本授权。保持 MuJoCo 主线；Panda 实验不代表 SO101 策略迁移。

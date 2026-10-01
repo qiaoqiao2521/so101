@@ -1,0 +1,18 @@
+# Environment smoke only; torch CPU is installed separately by setup_cpu.py.
+# robosuite/bddl match LIBERO; MuJoCo/NumPy match GR00T's LIBERO setup pins.
+numpy==1.26.4
+mujoco==3.3.1
+robosuite==1.4.0
+bddl==1.0.1
+gym==0.25.2
+easydict==1.13
+cloudpickle==3.1.1
+PyYAML==6.0.2
+Pillow==11.3.0
+matplotlib==3.9.4
+numba==0.65.1
+llvmlite==0.47.0
+scipy==1.15.3
+opencv-python==4.10.0.84
+termcolor==3.3.0
+future==1.0.0

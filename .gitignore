@@ -39,3 +39,6 @@ dist/
 /so101_gz_scene/reality_map.yaml
 /so101_gz_scene/calibration.yaml
 /so101_gz_scene/calibration_report.txt
+
+# GR00T source, dependencies, models and private experiment evidence
+/experiments/gr00t-libero/output/

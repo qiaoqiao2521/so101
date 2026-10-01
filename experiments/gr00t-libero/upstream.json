@@ -1,0 +1,20 @@
+{
+  "gr00t_repository": "https://github.com/NVIDIA/Isaac-GR00T",
+  "gr00t_revision": "51d4c89f72fda44cbf77285c6a8114b52676b8a1",
+  "libero_repository": "https://github.com/Lifelong-Robot-Learning/LIBERO",
+  "libero_revision": "8f1084e3132a39270c3a13ebe37270a43ece2a01",
+  "checkpoint_repository": "nvidia/GR00T-N1.7-LIBERO",
+  "checkpoint_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+  "checkpoint_subdirectory": "libero_10",
+  "checkpoint_include": [
+    "libero_10/config.json",
+    "libero_10/embodiment_id.json",
+    "libero_10/model-*.safetensors",
+    "libero_10/model.safetensors.index.json",
+    "libero_10/processor_config.json",
+    "libero_10/statistics.json"
+  ],
+  "backbone_repository": "nvidia/Cosmos-Reason2-2B",
+  "backbone_revision_observed": "9ce19a195e423419c349abfc86fd07178b230561",
+  "default_task": "KITCHEN_SCENE3_turn_on_the_stove_and_put_the_moka_pot_on_it"
+}
