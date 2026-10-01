@@ -32,4 +32,4 @@ python3 experiments/colab-twin/run_colab.py --session so101-planning --episodes 
 
 ## GR00T / LIBERO 策略实验
 
-用户选定的扩展实验复用官方 GR00T N1.7 / LIBERO。独立 CPU 环境已实际完成 reset、10 个物理步和双相机检查；HF CLI 授权与 Cosmos gated 配置下载已验证。最新 Colab L4 尝试通过系统依赖、uv 安装及官方 GR00T frozen 依赖安装，随后 LIBERO 依赖进入错误 Python 环境；同一运行时的修复上传遇到 HTTP ReadTimeout。运行时已释放，最终会话数为 0。环境隔离、文件超时诊断和 SIGTERM 清理修复通过 27 项离线检查，云端修复及策略闭环仍待验证。LIBERO 使用 Panda，尚未证明 SO101 策略迁移或任务成功。入口见 [实验说明](experiments/gr00t-libero/README.md) 和 [接续计划](plans/gr00t-libero-20261001/task_plan.md)，下载、模型、凭据及报告全部排除在 Git 之外。
+用户选定的扩展实验复用官方 GR00T N1.7 / LIBERO。CPU reset/物理步/双相机与 HF gated 配置访问已验证。最后一次尝试（第六次）已按用户指令完成并停止。L4 上官方 GR00T frozen 安装通过，LIBERO 依赖实际进入 Python 3.12 client venv，环境错位问题已在云端修复；随后导入 Matplotlib 因继承的 `module://matplotlib_inline.backend_inline` 后端不可用而失败。失败归档已回收并通过清单/哈希核验，模型加载与策略回合未启动。远端 worker 已结束，执行连接仍未返回；根 Agent 对唯一控制进程发送 SIGTERM，新的有界清理路径实际保存报告并成功 unassign，最终 active_assignments=0。子进程现固定 `MPLBACKEND=agg`，本地无头 PNG 绘制通过；该后端修正尚未云端复验。此轮不再分配 GPU，后续云端尝试需用户新的明确指令。 LIBERO 使用 Panda，尚未证明 SO101 策略迁移或任务成功。入口见 [实验说明](experiments/gr00t-libero/README.md) 和 [接续计划](plans/gr00t-libero-20261001/task_plan.md)，下载、模型、凭据及报告全部排除在 Git 之外。

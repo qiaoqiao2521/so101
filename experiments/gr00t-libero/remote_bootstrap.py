@@ -161,6 +161,7 @@ class Bootstrap:
             UV_SYSTEM_PYTHON="0",
             GIT_LFS_SKIP_SMUDGE="1", GIT_TERMINAL_PROMPT="0",
             DEBIAN_FRONTEND="noninteractive", PIP_DISABLE_PIP_VERSION_CHECK="1",
+            MPLBACKEND="agg",
             MUJOCO_GL="egl", PYOPENGL_PLATFORM="egl", DS_BUILD_OPS="0",
             HF_HOME=str(WORK / "hf-home"), HF_HUB_VERBOSITY="error",
             HF_HUB_DISABLE_PROGRESS_BARS="1", TRANSFORMERS_VERBOSITY="error",

@@ -55,7 +55,7 @@ output/hf-tools/bin/python run_colab.py --gpu-minutes 45
 
 bootstrap 在全新 `/content/gr00t-colab` 工作目录中使用固定 GR00T / LIBERO 源码；clone、checkout、submodule 都启用 `GIT_LFS_SKIP_SMUDGE=1`。uv 固定 0.11.15，安装到临时工具目录并调用 `bootstrap-tools/bin/uv`，避开 Colab 自定义 Python 的 `ensurepip`；官方模型环境仍执行 `uv sync --frozen --python 3.12`，LIBERO client 使用官方独立环境。先记录 OS/Python/磁盘，再检查 GPU、EGL、FFmpeg 4–7 与 preflight。官方 LIBERO setup 会删除 `~/.libero`，因此存在既有配置的 VM 会被拒绝。
 
-bootstrap 仅在子进程环境清除继承的 `UV_SYSTEM_PYTHON`、`UV_PYTHON`、`UV_PROJECT_ENVIRONMENT` 和 `VIRTUAL_ENV`，再设置 `UV_SYSTEM_PYTHON=0`，避免官方 client setup 向系统 Python 安装依赖；报告仅记录清除的变量名。文件 Contents HTTP 请求默认连接/读取超时为 10/25 秒，保留显式超时覆盖，诊断只输出 host、method、固定 phase、status、异常类型和耗时。SIGTERM 进入有界清理并保存报告，清理期间忽略重复 TERM；SIGKILL 或主机崩溃仍需用私有会话身份恢复。
+bootstrap 仅在子进程环境清除继承的 `UV_SYSTEM_PYTHON`、`UV_PYTHON`、`UV_PROJECT_ENVIRONMENT` 和 `VIRTUAL_ENV`，再设置 `UV_SYSTEM_PYTHON=0`，避免官方 client setup 向系统 Python 安装依赖；同时固定 `MPLBACKEND=agg`，隔离 notebook 绘图后端。报告仅记录清除的变量名。文件 Contents HTTP 请求默认连接/读取超时为 10/25 秒，保留显式超时覆盖，诊断只输出 host、method、固定 phase、status、异常类型和耗时。SIGTERM 进入有界清理并保存报告，清理期间忽略重复 TERM；SIGKILL 或主机崩溃仍需用私有会话身份恢复。
 
 本机输出位于 `output/colab/<UUID>/`；远端仅打包阶段报告、脱敏日志和本轮视频，产物清单必须完整覆盖 ZIP 结果文件，下载后核对精确文件集合、大小与 SHA256；缺失清单或额外文件会被拒绝。HF 凭据经权限 0600 的临时文件传递，消费后删除，仅子进程环境使用；不进入参数、源码、报告或 ZIP。会话身份信息留在私有输出中，禁止提交、分享整个 output 或原始请求日志。释放失败时保留私有会话状态供接续；实际 `unassign` 返回成功才记为 `runtime_released=true`，`stop` 命令退出 0 本身不构成释放证据。
 
@@ -68,7 +68,13 @@ bootstrap 仅在子进程环境清除继承的 `UV_SYSTEM_PYTHON`、`UV_PYTHON`�
 - 最新第五次尝试实际取得 L4 **23034 MiB**，通过系统依赖、uv 0.11.15 安装及官方 GR00T `uv sync --frozen --python 3.12`（128.988 秒）。官方 LIBERO setup 在 109.027 秒后失败：日志显示 uv 向系统 Python 3.13 安装，而 client Python 3.12 缺少 `gymnasium`。继承的系统安装覆盖是推断原因，未采集原始变量值。控制进程退出 143，原因未知；已手动回收原始 bootstrap 报告及完整、通过清单核验的 ZIP。
 - 在原 45 分钟预算内复用同一 L4 上传环境隔离修复，Contents PUT 在 25.485 秒后发生 `ReadTimeout` （无 HTTP status），远端修复 worker 未启动。实际 `unassign` 成功，最终只读查询 `active_assignments=0`；这轮没有收到额度不足响应，但账户余额未核验。没有模型加载、policy episode、episode 长度或视频，`gr00t_rollout_completed=false`、`task_success=null`。
 - 原始 bootstrap 报告 SHA256：`bc2fa5472f4fb0ed386249e74bc3357f6abd89941e09f5be6a2727bf997dadea`；回收 ZIP SHA256：`a0ff39e90d56f84be0e24ff4e1be47b7e4a956781280257acf97459fe9030a0d`；手动恢复的本机 delivery 报告 SHA256：`a2cdfd56fdf3c1d72d2e31f4c70271a5264f3c3a0ac793a8c9a52262d7fb0fa5`。原始报告与归档保留不改写，私有产物不入 Git。
-- 当前结论：**GR00T frozen 依赖已在 L4 安装通过；LIBERO setup 修复及策略闭环待云端验证；运行时已释放**。27 项离线检查通过，真实 uv 0.11.15 无网络探针确认清除继承覆盖后依赖安装到激活的 venv。该本地探针和 SIGTERM 故障注入不代表云端 LIBERO 或退出清理已通过。最短接续为上述一次 L4 单回合命令，需稳定通信、LIBERO setup 成功及真实策略报告/视频；无需等待 HF 审批。
+- 第五次尝试结论：**GR00T frozen 依赖已在 L4 安装通过；LIBERO setup 修复及策略闭环待云端验证；运行时已释放**。27 项离线检查通过，真实 uv 0.11.15 无网络探针确认清除继承覆盖后依赖安装到激活的 venv。该本地探针和 SIGTERM 故障注入不代表云端 LIBERO 或退出清理已通过。最短接续为上述一次 L4 单回合命令，需稳定通信、LIBERO setup 成功及真实策略报告/视频；无需等待 HF 审批。
+
+### 最后一次尝试与停止边界
+
+最后一次尝试（第六次）已按用户指令完成并停止。L4 上官方 GR00T frozen 安装通过，LIBERO 依赖实际进入 Python 3.12 client venv，环境错位问题已在云端修复；随后导入 Matplotlib 因继承的 `module://matplotlib_inline.backend_inline` 后端不可用而失败。失败归档已回收并通过清单/哈希核验，模型加载与策略回合未启动。远端 worker 已结束，执行连接仍未返回；根 Agent 对唯一控制进程发送 SIGTERM，新的有界清理路径实际保存报告并成功 unassign，最终 active_assignments=0。子进程现固定 `MPLBACKEND=agg`，本地无头 PNG 绘制通过；该后端修正尚未云端复验。此轮不再分配 GPU，后续云端尝试需用户新的明确指令。
+
+原始本机 delivery 报告 SHA256：`690066e3bdfd9aa81b16f9cf018867ddab15a7d569a7aa95d07eec145b5ed5c5`；原始 bootstrap 报告：`e1111c048a5695f719d73436b62910c369b5fe06e4c4860819f3c89936899771`；回收 ZIP：`c5469e7243c40a05bae68120abc7dfd7c29b211ca25678196d5abb17c56e9126`。原报告保持不变；本机 `TerminationRequested` 是根 Agent 在已确认远端安装失败后的主动收尾，不是远端失败原因。没有策略 episode、视频或任务成功证据。
 
 ### 现成 GPU 的手动入口
 
