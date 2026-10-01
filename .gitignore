@@ -42,3 +42,4 @@ dist/
 
 # GR00T source, dependencies, models and private experiment evidence
 /experiments/gr00t-libero/output/
+/experiments/multilink-safety/output/

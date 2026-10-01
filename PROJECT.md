@@ -14,6 +14,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 ## Current Priority
 
+2026-10-01 用户 fork 指定独立接入 Multi-Link Safety Filtering，优先部署本地 SO101 MuJoCo 安全层。分支 `codex/multilink-safety-20261001` 独立工作树复用模型；原状态策略训练由另一任务继续，未混入本分支。作者源码暂未公开，采用明确标注的关节空间 CBF 适配；首轮不连接实体、不分配云端 GPU。入口与保护边界见 [安全层实验](experiments/multilink-safety/README.md)，验收进度见 [独立计划](plans/multilink-safety-20261001/progress.md)。
+
 2026-10-01 用户进一步指定：有限资源下接续“MuJoCo仿真→自动示范→扰动恢复→模型训练→仿真策略闭环”，WASD不作为训练数据源；要求真实AGY/CODEX/ZCODE有引用讨论。实际会审完成，保留MLP与无图像ACT的顺序分歧。根Codex建议先补同步数据和专家恢复，再预检小配置状态ACT；模型选择尚无本机训练证据，不算已交付策略。详见[学习会审与接续门槛](plans/colab-digital-twin-20261001/learning-review.md)。训练依赖使用独立环境，保留已通过的规划环境；不重新分配GR00T/Isaac云端GPU。
 
 2026-10-01 用户指定：运动自主规划以 **MuJoCo 为核心**，收敛为一条主线。在已有 Colab CPU 平台上接入位置 IK、OMPL RRTConnect、MuJoCo 碰撞检查、轨迹执行和统一评估；先完成给定目标与障碍的自主到达，再扩展抓放与视觉。已有 MoveIt/OMPL 配置、轨迹导出和评估字段作为续接资产；Gazebo 保留为后续本地 ROS 联调模块。AGY 的只读咨询也推荐这一方向。五轴位置到达及单场景静态障碍接触抓取、搬运、释放落定已实现；扰动批次、视觉和实体同步继续留作下一阶段。

@@ -2,6 +2,8 @@
 
 一个机械臂一个项目：本机最新跟随器、ROS/MoveIt/仿真、Java MES 与场景工具。
 
+独立的多连杆 CPU 安全过滤实验：`./so101.sh safety --check`、`./so101.sh safety --render`。复用本地 SO101 MuJoCo 模型，用五椭球与 CBF-QP 过滤实际关节动作；官方源码尚未发布，此处为论文本地适配。详见 [部署、范围与验收](experiments/multilink-safety/README.md)。
+
 ```bash
 ./so101.sh check
 ./so101.sh help

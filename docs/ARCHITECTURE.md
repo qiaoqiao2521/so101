@@ -1,5 +1,7 @@
 # SO101 architecture
 
+多连杆安全实验由 `so101.sh safety` 进入独立 CPU Python 环境。它读取同一 MuJoCo 模型的实际 FK/Jacobian，以五个保守碰撞包络约束前五关节速度，再输出六维位置目标；夹爪仅在已覆盖的连续开合区间内允许执行。OSQP 无解、证书不足、无效/过期感知均停止并锁存；不回退原动作。实际物理推进由调用者负责，采样伺服没有连续安全保证。RGB-D 可见点跟踪与使用障碍真值的成对接触实验分别验收，默认拒绝可见点包络充当完整障碍。详见 [接口与范围](../experiments/multilink-safety/README.md)、[来源与适配](../experiments/multilink-safety/SOURCES.md)。
+
 跟随器Web应用位于mint_follower_demo，项目根由实际文件位置解析；默认ROS场景与workspace路径均在本项目内。场景工具从自身位置解析动作和映射文件，不再绑定个人桌面目录。
 
 so101.sh是统一入口，check为纯静态检查，follower启动应用但不执行旧start.sh的fuser/权限修改逻辑。Humble基础环境保留原语义；没有在本轮替换为Jazzy或启动仿真。

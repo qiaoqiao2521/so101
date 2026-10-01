@@ -1,0 +1,9 @@
+# CPU-only local safety runtime; no VLA weights or training dependencies.
+numpy==2.2.6
+scipy==1.15.3
+mujoco==3.3.7
+osqp==1.0.4
+opencv-python-headless==4.11.0.86
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+ompl==2.0.1
