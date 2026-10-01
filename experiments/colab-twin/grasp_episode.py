@@ -163,9 +163,11 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
     camera.lookat[:] = [.22, -.025, .15]
     camera.distance, camera.azimuth, camera.elevation = 1.08, 132, -27
     writer = None
+    closeup_writer = None
     if render:
         import imageio.v2 as imageio
         writer = imageio.get_writer(output / 'obstacle-grasp.mp4', fps=25, codec='libx264', quality=8)
+        closeup_writer = imageio.get_writer(output / 'grasp-closeup.mp4', fps=25, codec='libx264', quality=8)
     rows, step_count, obstacle_contact_steps = [], 0, 0
     def advance(stage, ctrl, steps):
         nonlocal step_count, obstacle_contact_steps
@@ -189,6 +191,12 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
             if render and step_count % 20 == 0:
                 renderer.update_scene(data, camera=camera)
                 writer.append_data(renderer.render())
+                if stage in ('close', 'lift', 'hold'):
+                    detail = mujoco.MjvCamera()
+                    detail.lookat[:] = [.24, -.13, .06]
+                    detail.distance, detail.azimuth, detail.elevation = .43, 140, -20
+                    renderer.update_scene(data, camera=detail)
+                    closeup_writer.append_data(renderer.render())
     def move(stage, points, jaw):
         points = np.asarray(points)
         lengths = np.linalg.norm(np.diff(points, axis=0), axis=1)
@@ -219,6 +227,8 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
     finally:
         if writer is not None:
             writer.close()
+        if closeup_writer is not None:
+            closeup_writer.close()
         if renderer is not None:
             renderer.close()
     metrics = grasp_acceptance(rows, baseline_z)
