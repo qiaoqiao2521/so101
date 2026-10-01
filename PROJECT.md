@@ -21,4 +21,4 @@ README.md；mint_follower_demo/SECURITY.md；workspaces/so101_ws/AGENTS.md；doc
 
 运动规划路线：`docs/MUJOCO_MOTION_PLANNING.md`；选择依据：`docs/DECISIONS.md`。数字孪生实验：`experiments/colab-twin/README.md`；当前计划：`plans/colab-digital-twin-20261001/task_plan.md`。毕业设计、答辩材料和原始 Agent 咨询位于被 Git 排除的 `local-documents/`，只保留在本机。
 
-GR00T / LIBERO 扩展（2026-10-01）：`experiments/gr00t-libero/README.md` 与 `plans/gr00t-libero-20261001/task_plan.md`。固定官方版本，CPU 环境真实 reset/step/双相机已验证；GPU 策略待 HF 权限与兼容 Colab GPU，已有付费额度小样本授权。保持 MuJoCo 主线；Panda 实验不代表 SO101 策略迁移。
+GR00T / LIBERO 扩展（2026-10-01）：`experiments/gr00t-libero/README.md` 与 `plans/gr00t-libero-20261001/task_plan.md`。固定官方版本，CPU 环境真实 reset/step/双相机已验证；官方 HF CLI 授权和 Cosmos gated 配置下载已实际通过，已有付费额度小样本授权。Colab 第二次尝试分配 L4 23034 MiB 并通过 apt/EGL/FFmpeg，ensurepip 失败后会话实际释放；uv bootstrap 已改为临时工具目录，第四次尝试因 Colab 通信超时结束，实际释放成功，没有 bootstrap 报告、视频或策略结果；uv 修复的 GPU 验证和策略闭环仍未完成。最终只读查询 active_assignments=0；当前接续条件为通信稳定，非等待 HF 审批。保持 MuJoCo 主线；Panda 实验不代表 SO101 策略迁移。

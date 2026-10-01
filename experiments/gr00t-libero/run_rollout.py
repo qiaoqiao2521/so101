@@ -34,7 +34,14 @@ def parse_result(text: str) -> dict:
             "episode_lengths": lengths, "episode_infos": infos}
 
 
-def logged_command(argv: list[str], log: Path, env: dict, cwd: Path, timeout: int) -> None:
+def logged_command(argv: list[str], log: Path, env: dict, cwd: Path, timeout: int,
+                   authenticated_download: bool = False) -> None:
+    if authenticated_download:
+        result = subprocess.run(argv, cwd=cwd, env=env, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL, timeout=timeout)
+        write_report(log, {"kind": "authenticated_model_download", "exit_code": result.returncode})
+        result.check_returncode()
+        return
     with log.open("w") as stream:
         subprocess.run(argv, cwd=cwd, env=env, stdout=stream, stderr=subprocess.STDOUT,
                        check=True, timeout=timeout)
@@ -72,7 +79,7 @@ def download_models(root: Path, work: Path, lock: dict, env: dict, run_dir: Path
         [str(hf), "download", lock["checkpoint_repository"], "--revision",
          lock["checkpoint_revision"], "--include", *lock["checkpoint_include"],
          "--local-dir", str(work / "checkpoints")],
-        run_dir / "download-checkpoint.log", env, root, 1800,
+        run_dir / "download-checkpoint.log", env, root, 1800, authenticated_download=True,
     )
     # GR00T's official server uses the backbone's main ref. Download into our own
     # cache, verify its exact resolved revision, then serve offline. If main has
@@ -80,7 +87,7 @@ def download_models(root: Path, work: Path, lock: dict, env: dict, run_dir: Path
     logged_command(
         [str(hf), "download", lock["backbone_repository"], "--revision", "main",
          "--cache-dir", str(work / "hf-cache")],
-        run_dir / "download-backbone.log", env, root, 1800,
+        run_dir / "download-backbone.log", env, root, 1800, authenticated_download=True,
     )
     cache = work / "hf-cache" / "models--nvidia--Cosmos-Reason2-2B"
     actual = (cache / "refs/main").read_text().strip()
@@ -121,6 +128,8 @@ def run(args: argparse.Namespace, report: dict) -> int:
             report.update(status="blocked", blockers=["pinned_models_missing_use_download_models"])
             return 2
         download_models(root, work, lock, env, run_dir)
+    env.pop("HF_TOKEN", None)
+    env.pop("HUGGING_FACE_HUB_TOKEN", None)
     env.update(HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", MUJOCO_GL="egl",
                PYOPENGL_PLATFORM="egl")
     # Isolate LIBERO configuration without modifying ~/.libero.
@@ -201,6 +210,8 @@ def main() -> int:
               "gr00t_rollout_completed": False, "task_success": None,
               "versions": load_lock(), "run_id": args.run_dir.name,
               "seed": args.seed, "max_episode_steps": 720, "n_action_steps": 8,
+              "seed_scope": "client_env_only", "server_rng": "unseeded",
+              "initial_state_scope": "seeded_reset_not_benchmark_fixed_initial_state",
               "execution_horizon": 8,
               "n_envs": 1, "n_episodes": 1}
     start = time.monotonic()

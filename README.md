@@ -32,4 +32,4 @@ python3 experiments/colab-twin/run_colab.py --session so101-planning --episodes 
 
 ## GR00T / LIBERO 策略实验
 
-用户选定的扩展实验复用官方 GR00T N1.7 / LIBERO。独立 CPU 环境已实际完成 reset、10 个物理步和双相机检查；官方策略的 GPU 回合仍等待 Cosmos 模型权限。LIBERO 使用 Panda，这项环境验证不代表 SO101 策略迁移或任务成功。入口见 [实验说明](experiments/gr00t-libero/README.md) 和 [接续计划](plans/gr00t-libero-20261001/task_plan.md)，下载、模型和报告全部排除在 Git 之外。
+用户选定的扩展实验复用官方 GR00T N1.7 / LIBERO。独立 CPU 环境已实际完成 reset、10 个物理步和双相机检查；HF CLI 授权与 Cosmos gated 配置下载已验证。Colab L4 的系统依赖阶段通过，策略回合仍受云端通信超时阻碍，最终会话清单为 0。单回合入口和恢复路径已接入；LIBERO 使用 Panda，尚未证明 SO101 策略迁移或任务成功。入口见 [实验说明](experiments/gr00t-libero/README.md) 和 [接续计划](plans/gr00t-libero-20261001/task_plan.md)，下载、模型、凭据及报告全部排除在 Git 之外。
