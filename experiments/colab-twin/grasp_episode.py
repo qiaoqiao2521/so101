@@ -28,12 +28,13 @@ PINCH_POINT = np.array([.006, 0, -.094])
 PAD_NAMES = ('pad_gripper', 'pad_moving_jaw')
 
 
-def build_contact_scene(source: Path, output: Path):
+def build_contact_scene(source: Path, output: Path, *, jaw_force_cap_nm=.15, noslip_iterations=0):
     """Refine only finger/target contact; keep hulls for all arm/world checks."""
     _, path = build_workcell(source, output)
     tree = ET.parse(path)
     root = tree.getroot()
     world = root.find('worldbody')
+    root.find('option').set('noslip_iterations', str(noslip_iterations))
     for geom in world.iter('geom'):
         if geom.get('contype') == '1' or geom.get('class') == 'collision':
             geom.set('conaffinity', '3')
@@ -53,7 +54,7 @@ def build_contact_scene(source: Path, output: Path):
                       type='box', pos=numbers(pos), size=numbers(size), mass='0',
                       contype='2', conaffinity='2', group='0', friction='1 .005 .0001',
                       solref='.004 1', rgba='.10 .12 .14 1')
-    root.find('actuator')[-1].set('forcerange', '-.15 .15')
+    root.find('actuator')[-1].set('forcerange', numbers([-jaw_force_cap_nm, jaw_force_cap_nm]))
     ET.SubElement(world, 'geom', name='approach_obstacle', type='box',
                   pos=numbers(OBSTACLE['pos']), size=numbers(OBSTACLE['size']),
                   contype='1', conaffinity='3', group='0', rgba='.78 .39 .12 1')
@@ -121,16 +122,23 @@ def grasp_acceptance(rows, baseline_z):
     duration = held[-1]['time_s'] - held[0]['time_s'] if len(held) == len(hold) and len(held) > 1 else 0.0
     return {'grasp_success': duration >= 1.0, 'lift_success': duration >= 1.0,
             'hold_duration_s': duration,
-            'final_lift_m': rows[-1]['object_z_m'] - baseline_z if rows else 0,
+            'final_lift_m': hold[-1]['object_z_m'] - baseline_z if hold else 0,
             'obstacle_contact_samples': sum(r['obstacle_contact'] for r in rows),
             'invalid_arm_samples': sum(not r['arm_valid'] for r in rows),
             'finite_state': bool(rows) and all(r['finite_state'] for r in rows)}
 
 
-def run_episode(source, output, *, render=False, seed=0, empty_close=False):
+def run_episode(source, output, *, render=False, seed=0, empty_close=False, place=False, noslip_iterations=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    model, rig, path = build_contact_scene(Path(source), output)
+    from placement import plan_transport, placement_acceptance, object_inside_tray
+    if noslip_iterations is None:
+        noslip_iterations = 10 if place else 0
+    if not isinstance(noslip_iterations, int) or isinstance(noslip_iterations, bool) or noslip_iterations < 0:
+        raise ValueError('noslip_iterations must be a nonnegative integer')
+    jaw_cap = .15
+    closed_ctrl = .015
+    model, rig, path = build_contact_scene(Path(source), output, jaw_force_cap_nm=jaw_cap, noslip_iterations=noslip_iterations)
     start = solve_pinch_ik(rig, np.array([.24, .14, .06]))
     approach = solve_pinch_ik(rig, np.array([.24, -.13, .06]), start)
     down = solve_pinch_ik(rig, np.array([.24, -.13, .019]), approach)
@@ -169,8 +177,13 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
         writer = imageio.get_writer(output / 'obstacle-grasp.mp4', fps=25, codec='libx264', quality=8)
         closeup_writer = imageio.get_writer(output / 'grasp-closeup.mp4', fps=25, codec='libx264', quality=8)
     rows, step_count, obstacle_contact_steps = [], 0, 0
+    lost_carry_samples = 0
+    transport_report = None
+    delivery_writer = None
+    if render and place:
+        delivery_writer = imageio.get_writer(output/'transport-place.mp4', fps=25, codec='libx264', quality=8)
     def advance(stage, ctrl, steps):
-        nonlocal step_count, obstacle_contact_steps
+        nonlocal step_count, obstacle_contact_steps, lost_carry_samples
         for index in range(steps):
             data.ctrl[:] = ctrl(index / max(1, steps-1))
             mujoco.mj_step(model, data)
@@ -180,14 +193,21 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
             if step_count % 10 == 0:
                 names = [(model.geom(c.geom1).name, model.geom(c.geom2).name) for c in data.contact]
                 forces = grasp_contacts(model, data)
+                if stage == 'transport':
+                    lost_carry_samples = lost_carry_samples+1 if min(forces.values()) < .02 else 0
                 rows.append({'time_s': float(data.time), 'stage': stage,
                              'object_z_m': float(data.xpos[object_id, 2]),
                              'object_xyz_m': data.xpos[object_id].tolist(),
+                             'object_speed_m_s': float(np.linalg.norm(data.qvel[6:9])),
+                             'in_place_tray': bool(object_inside_tray(data.xmat[object_id].reshape(3,3), data.xpos[object_id])),
+                             'place_floor_contact': any('target_collision' in p and 'place_floor' in p for p in names),
                              'tip_forces_n': list(forces.values()),
                              'floor_contact': any('target_collision' in p and ('pick_floor' in p or 'worktable' in p) for p in names),
                              'obstacle_contact': any('approach_obstacle' in p for p in names),
                              'arm_valid': checker.evaluate(data.qpos[:6], require_fixed_gripper=False)['valid'],
                              'finite_state': bool(np.all(np.isfinite(data.qpos)) and np.all(np.isfinite(data.qvel)))})
+            if lost_carry_samples >= 5:
+                raise RuntimeError('Payload lost during transport; execution stopped')
             if render and step_count % 20 == 0:
                 renderer.update_scene(data, camera=camera)
                 writer.append_data(renderer.render())
@@ -197,6 +217,12 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
                     detail.distance, detail.azimuth, detail.elevation = .43, 140, -20
                     renderer.update_scene(data, camera=detail)
                     closeup_writer.append_data(renderer.render())
+                if delivery_writer is not None and stage in ('transport', 'lower', 'release', 'retreat', 'settle'):
+                    detail = mujoco.MjvCamera()
+                    detail.lookat[:] = [.23, .025, .09]
+                    detail.distance, detail.azimuth, detail.elevation = .66, 132, -27
+                    renderer.update_scene(data, camera=detail)
+                    delivery_writer.append_data(renderer.render())
     def move(stage, points, jaw):
         points = np.asarray(points)
         lengths = np.linalg.norm(np.diff(points, axis=0), axis=1)
@@ -215,34 +241,54 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False):
         advance('ready', lambda t: np.r_[start, .5], 500)
         move('approach', planned['path'], .5)
         move('descend', [approach, down], .5)
-        advance('close', lambda t: np.r_[down, .015], 3000)
-        move('lift', [down, lift], .015)
-        advance('hold', lambda t: np.r_[lift, .015], 750)
+        advance('close', lambda t: np.r_[down, closed_ctrl], 3000)
+        move('lift', [down, lift], closed_ctrl)
+        advance('hold', lambda t: np.r_[lift, closed_ctrl], 750)
+        if place and grasp_acceptance(rows, baseline_z)['grasp_success']:
+            paths, transport_report = plan_transport(model, rig, data, closed_checker, solve_ik=solve_pinch_ik, pinch_point=PINCH_POINT)
+            for index, route in enumerate(paths):
+                move('lower' if index==len(paths)-1 else 'transport', route, closed_ctrl)
+            release_pose = paths[-1][-1]
+            advance('release', lambda t: np.r_[release_pose, .5], 3000)
+            retreat_check = validate_joint_path([release_pose, start], checker.is_valid, .01)
+            if not retreat_check['valid']:
+                raise RuntimeError('Open-jaw retreat collides with workcell')
+            move('retreat', [release_pose, start], .5)
+            advance('settle', lambda t: np.r_[start, .5], 750)
         if render:
             import imageio.v2 as imageio
-            camera.lookat[:] = [.24, -.13, .06]
+            camera.lookat[:] = [.24, .14 if place else -.13, .06]
             camera.distance, camera.azimuth, camera.elevation = .43, 140, -20
             renderer.update_scene(data, camera=camera)
-            imageio.imwrite(output/'grasp_detail.png', renderer.render())
+            imageio.imwrite(output/('placed_detail.png' if place else 'grasp_detail.png'), renderer.render())
     finally:
+        (output/'trajectory.json').write_text(json.dumps(rows)+'\n')
         if writer is not None:
             writer.close()
         if closeup_writer is not None:
             closeup_writer.close()
+        if delivery_writer is not None:
+            delivery_writer.close()
         if renderer is not None:
             renderer.close()
     metrics = grasp_acceptance(rows, baseline_z)
     metrics['obstacle_contact_steps'] = obstacle_contact_steps
+    if place:
+        metrics.update(placement_acceptance(rows))
     success = all((metrics['grasp_success'], metrics['finite_state'],
                    metrics['obstacle_contact_steps']==0, metrics['invalid_arm_samples']==0))
+    if place:
+        success = success and metrics['place_success']
     report = {'status': 'passed' if success else 'failed', 'kind': 'so101_obstacle_contact_grasp',
               'metrics': metrics, 'direct_approach': direct, 'planning': planned,
+              'place_requested': place, 'transport_planning': transport_report,
               'descent_validation': descent, 'ascent_validation': ascent,
               'baseline_object_z_m': baseline_z, 'simulation_seconds': float(data.time),
               'free_target': True, 'weld_count': int(model.neq), 'arm_count': 1,
               'source_sha256': hashlib.sha256(Path(source).read_bytes()).hexdigest(),
-              'assumptions': {'contact_pads_m': [ .008, .012, .016], 'jaw_force_cap_nm': .15,
+              'assumptions': {'contact_pads_m': [ .008, .012, .016], 'jaw_force_cap_nm': jaw_cap,
                               'target_mass_kg': .01, 'friction': 1.0, 'minimum_lift_m': .025,
+                              'noslip_iterations': noslip_iterations,
                               'collision_sampling_s': .02, 'planner_edge_resolution_rad': .015},
               'empty_close_negative': empty_close}
     (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
@@ -255,13 +301,14 @@ def main():
     parser.add_argument('--source', type=Path, default=Path(__file__).resolve().parents[2]/'workspaces/so101_ws/src/so101_mujoco/models/so101.xml')
     parser.add_argument('--output', type=Path, default=Path(__file__).parent/'output'/f'grasp-{uuid.uuid4().hex}')
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--place', action='store_true', help='Transport to blue tray, release and retreat')
     parser.add_argument('--empty-close', action='store_true')
     args = parser.parse_args()
     if args.output.exists():
         print(json.dumps({'status': 'failed', 'error': 'Output already exists; choose a fresh directory'}))
         return 1
     try:
-        report = run_episode(args.source, args.output, render=args.render, empty_close=args.empty_close)
+        report = run_episode(args.source, args.output, render=args.render, empty_close=args.empty_close, place=args.place)
     except Exception as error:
         # Preserve failed setup/planning evidence; never overwrite a prior run.
         failure = {'status': 'failed', 'error_type': type(error).__name__, 'error': str(error)}
