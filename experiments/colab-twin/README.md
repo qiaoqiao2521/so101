@@ -19,7 +19,7 @@ python3 -m venv /tmp/so101-planning-venv
 /tmp/so101-planning-venv/bin/pip install -r experiments/colab-twin/requirements.txt
 /tmp/so101-planning-venv/bin/python experiments/colab-twin/run_experiment.py --episodes 20 --no-render --output experiments/colab-twin/output/local
 cd experiments/colab-twin
-/tmp/so101-planning-venv/bin/python -m unittest discover -p 'test_*.py'
+/tmp/so101-planning-venv/bin/python -m unittest test_collision_scene test_grasp_episode test_grasp_workcell test_joint_planner test_placement test_planning_execution test_position_ik test_run_colab test_staged
 ```
 
 规划输入是 [planning_scenario.json](planning_scenario.json)：六轴起点、三维目标 m、静态盒子中心与半尺寸 m。规划只改变前五个臂关节，夹爪指令固定 0.35 rad；没有人工绕行 waypoint。MuJoCo 3.3.7 / Mink 1.1.0 / OMPL 2.0.1 已固定。
@@ -110,3 +110,9 @@ python experiments/colab-twin/grasp_episode.py --place --render
 2026-10-01本地实测：载物途中双指持续接触，障碍接触0、20ms机械臂碰撞/限位无无效样本；最终物体中心(.238656,.139144,.009921)m，距蓝盘中心约1.6mm。松爪后双指接触力0，物体整体在盘内、真实place_floor支撑、平移速度接近0，撤离后稳定1.48s。41项测试通过：实际完整正例、关闭Noslip后滑落即停的负例、缺少底面支撑/超出盘边/仍被夹住/速度未稳定等拒绝边界。
 
 `transport-place.mp4`为固定机位972帧/38.88s/1280×720搬运放置过程；`placed_detail.png`为最终近景。原总览、夹取近景、轨迹、报告和派生MJCF也分轮保存并被Git忽略。掉落超过100ms即停止，失败时保留已执行轨迹；这是固定单场景验收，扰动批次、动态障碍、实体模型标定和真机仍待验证。
+
+## 状态学习与可止损管线
+
+同一HDF5数据适配官方小配置ACT/裸Torch MLP，独立学习环境、5步显存探针、限时单回合训练与纯策略物理验收，见[LEARNING.md](LEARNING.md)。采集正反例及原动作回放先于训练；数据、权重和运行报告继续排除出Git。状态学习尚未通过纯策略抓放验收。
+
+完整含学习测试使用独立learning环境：`python -m unittest discover -s experiments/colab-twin -p "test_*.py"`（从仓库根运行）。规划环境不要求Torch/h5py。

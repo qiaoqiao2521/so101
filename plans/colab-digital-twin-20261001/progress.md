@@ -106,3 +106,23 @@ MTC缺失核心和零字节逐轮产物留作待恢复历史，不从summary重�
 本机忽略目录`experiments/colab-twin/output/place-421c289686894ea6836e38fb04922a02/`保存派生MJCF、轨迹、报告、近景及全部视频。transport-place.mp4为972帧1280×720/25fps/38.88s，全量严格解码通过；总览也全量解码通过。固定镜头中段确认绿色方块在指尖绕障、红盘为空，最终近景确认蓝盘内方块与张开撤离的夹爪。原模型/index保持，不涉及云端GPU或实体。
 
 下一步owner根Codex：按需求选择扰动批次或视觉输入；Noslip/摩擦/接触垫未经实物标定，固定内侧Cartesian路线不是通用动态障碍规划器。曾滑落失败的结果与部分轨迹仍留/tmp供诊断，关闭Noslip负例为稳定复现入口，执行损失接触≥100ms即停止。既有现场数据/旧树遗留继续按本计划保护与交接。
+
+## S7 数据解耦、资源微基准与物理止损（2026-10-01）
+
+用户以同一数据双探针收敛ACT/MLP分歧。实现learning_data/env/models/probe、train_state_policy、replay_learning_data、evaluate_state_policy、run_learning及独立边界测试。HDF5字段为state6/env30→absolute action6，另存实际executed_action、next_obs、时钟和invalid标签；固定2ms物理/20ms控制。专家用实际接触推进闭爪/释放；模型不接收阶段或时钟。原动作与状态保留float64，网络适配为float32；没有修改原MJCF/STL或已有规划环境。
+
+采集共保留6次尝试（4成功、2失败）：首次float32正常采集因释放条件过严失败；修正后float32正常/恢复成功，空夹负例超时失败；raw64正常/恢复再次成功。最新分层入口选择raw64两正例＋保留空夹负例，共7887转换，其中6291训练候选、10扰动无效标签。恢复前真实执行±.02rad内的关节指令0.2s，再从实际q与物体位置重新IK/OMPL求解；第一纠正样本严格接续扰动结果。只有固定布局、起点扰动，未覆盖路线中段的误差分布，也未拟合DART噪声。
+
+原float32回放：3133步物理抓放通过、关节误差1.91e-6rad、时间误差0；释放落盘附近角速度/接触力严格环境逐帧匹配失败，未放宽门槛。修正raw64存储与forward节拍后，独立回放与完整入口内回放均通过，state/env/time最大差全部0。
+
+完整入口实际运行：`experiments/colab-twin/output/learning-gates-20261001/report.json`，退出码1，status=stopped。data、data_replay、resource、sanity_training通过；sanity_task失败；evaluation/vision=not_run。最新ACT五步compute0.10799s，allocated117.585MiB/reserved146MiB；MLP0.00569s、17.531/22MiB。RTX3050 Laptop物理4096MiB，CUDA可用区域3761.75MiB，两者分别记录。独立学习环境Torch2.7.1+cu126、NumPy2.2.6/h5py3.14.0，72包依赖检查通过；空环境cu126配方dry-run解析71包通过，上游默认cu128源需用--no-sources排除。
+
+最新单轨迹ACT：3133帧，5000step、第26epoch、118.97s训练；chunk归一化L1=0.03301、首动作MAE=0.01085rad，GPU allocated117.585/reserved150MiB。权重SHA256 `2984659b93b016dfa9caf99f20633a592237a736fedbd026747d420edf71e8f5`；CPU重载最大预测差3.576e-7。仅正常单轨迹限时诊断，没有held-out或恢复训练，尚未完整过拟合。
+
+纯策略回合只加载初始快照，所有控制由ACT输出，无IK/OMPL/stage/专家动作回退；0.36s后真实碰到障碍，SafetyStop按失败计数。并未将离线loss或资源通过写成抓放成功。第一轮原始档案模型同样0.52s碰撞停止。两次失败轨迹与权重都在ignored output保留，后续40回合及视觉无消耗。
+
+可恢复交接owner为根Codex。最短入口：独立learning-venv运行LEARNING.md采集/回放/run_learning命令；当前checkpoint位于`output/learning-gates-20261001/sanity_training/policy.pt`。先检查开始几步预测与真实状态偏离、专家路径起步标签和接近段恢复覆盖，必要时追加一项有界诊断；不把下一步变成扩大GPU、批量长训或视觉。只通过数据回放不能证明策略泛化或实机可靠性。未完成的状态闭环在S7d保留明确失败门槛。
+
+收尾验证：独立learning环境完整86项测试通过（含原规划/抓放真实正负例、数据精度与时序、chunk断点/归一化/重载、物理事件验收、假exit0止损）；Markdown相对链接和diff检查按提交范围验证。数据、权重、原始会审、日志与pip环境清单继续Git忽略。
+
+旧树交接复核：canonical仍有22项tracked变动，包含322行app.py改动、静态界面、现场配置/录制/业务登录记录，以及个人文档迁出；旧HEAD/索引保持。HANDOFF/SECURITY解释主从计时及认证边界，teleop-latency计划明确等待硬件恢复。不能把现场日志/标定与个人原件提交到public远端；产品硬件参数验收仍缺，未用这次学习suite冒充。owner根Codex保留该树，最短恢复入口为plans/teleop-latency-20260922/task_plan.md、REPORT.md及mint_follower_demo/tests，用户恢复硬件任务前不驱动设备。已验证的仿真学习成果由独立delivery分支交付并同步可用源码，受保护树不重置、不清理、不覆盖。

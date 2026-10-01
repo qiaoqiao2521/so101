@@ -1,0 +1,22 @@
+# Dedicated Python 3.12 environment. Preserve the independent planning venv.
+# Example setup from the repository root (command-scoped Python isolation):
+# SO101_LEARNING_VENV="${XDG_CACHE_HOME:-$HOME/.cache}/so101-colab/learning-venv"
+# uv venv --python 3.12 "$SO101_LEARNING_VENV"
+# env -u PYTHONPATH -u PYTHONHOME uv pip install --python "$SO101_LEARNING_VENV/bin/python" torch==2.7.1+cu126 torchvision==0.22.1+cu126 --index-url https://download.pytorch.org/whl/cu126
+# env -u PYTHONPATH -u PYTHONHOME uv pip install --no-sources --python "$SO101_LEARNING_VENV/bin/python" -r experiments/colab-twin/requirements-learning.txt
+# The pinned upstream checkout's tool.uv.sources defaults to cu128; --no-sources
+# preserves the explicit, locally tested cu126 wheel selection above.
+torch==2.7.1+cu126
+torchvision==0.22.1+cu126
+numpy==2.2.6
+h5py==3.14.0
+# Keep simulator versions aligned without inheriting a future NumPy pin from
+# the separate planning/data environment (official LeRobot requires NumPy<2.3).
+mujoco==3.3.7
+mink==1.1.0
+ompl==2.0.1
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+scipy==1.18.1
+# The experiment imports official ACT only; do not install training/hardware extras.
+lerobot @ git+https://github.com/huggingface/lerobot.git@e0d50211ef236143ae867228662b7dfaba554f02

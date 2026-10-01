@@ -128,7 +128,8 @@ def grasp_acceptance(rows, baseline_z):
             'finite_state': bool(rows) and all(r['finite_state'] for r in rows)}
 
 
-def run_episode(source, output, *, render=False, seed=0, empty_close=False, place=False, noslip_iterations=None):
+def run_episode(source, output, *, render=False, seed=0, empty_close=False, place=False, noslip_iterations=None,
+                record_dataset=False, control_period_s=.02, perturb_rad=0.0):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     from placement import plan_transport, placement_acceptance, object_inside_tray
@@ -165,7 +166,29 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
     for _ in range(500):
         mujoco.mj_step(model, data)
     object_id = model.body('grasp_target').id
+    mujoco.mj_forward(model, data)
     baseline_z = float(data.xpos[object_id, 2])
+    recorder = monitor = None
+    recovery_report = None
+    ticks = round(control_period_s/model.opt.timestep)
+    if ticks < 1 or not np.isclose(ticks*model.opt.timestep, control_period_s):
+        raise ValueError('Control period must be integral physics steps')
+    if not 0 <= perturb_rad <= .0872665:
+        raise ValueError('Perturbation must lie between 0 and 5 degrees')
+    if record_dataset:
+        from learning_data import EpisodeRecorder
+        from learning_env import observe, PhysicalTaskMonitor
+        monitor = PhysicalTaskMonitor(baseline_z)
+        metadata = {'control_period_s': control_period_s, 'physics_dt_s': float(model.opt.timestep),
+                    'seed': seed, 'model_sha256': hashlib.sha256(Path(source).read_bytes()).hexdigest(),
+                    'scene_configuration': {'jaw_force_cap_nm': jaw_cap, 'noslip_iterations': noslip_iterations,
+                                            'baseline_object_z_m': baseline_z, 'obstacle': OBSTACLE},
+                    'initial_snapshot': {'qpos': data.qpos.tolist(), 'qvel': data.qvel.tolist(),
+                                         'ctrl': data.ctrl.tolist(), 'time_s': float(data.time),
+                                         'qacc_warmstart': data.qacc_warmstart.tolist()},
+                    'angular_velocity_frame': 'MuJoCo free-joint local rotational velocity',
+                    'collection_kind': 'bounded perturbation and expert replanning; not fitted DART noise'}
+        recorder = EpisodeRecorder(output/'expert.h5', metadata)
     renderer = mujoco.Renderer(model, height=720, width=1280) if render else None
     camera = mujoco.MjvCamera()
     camera.lookat[:] = [.22, -.025, .15]
@@ -182,15 +205,27 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
     delivery_writer = None
     if render and place:
         delivery_writer = imageio.get_writer(output/'transport-place.mp4', fps=25, codec='libx264', quality=8)
-    def advance(stage, ctrl, steps):
+    def advance(stage, ctrl, steps, *, label_valid=True, perturbation=False):
         nonlocal step_count, obstacle_contact_steps, lost_carry_samples
+        if recorder is not None:
+            steps = int(np.ceil(steps/ticks))*ticks
         for index in range(steps):
-            data.ctrl[:] = ctrl(index / max(1, steps-1))
+            if recorder is None or index % ticks == 0:
+                if recorder is not None:
+                    obs_before = observe(model, data)
+                command = np.asarray(ctrl(index / max(1, steps-1)), dtype=float)
+                data.ctrl[:] = command
             mujoco.mj_step(model, data)
             step_count += 1
             obstacle_id = model.geom('approach_obstacle').id
             obstacle_contact_steps += int(any(obstacle_id in (c.geom1, c.geom2) for c in data.contact))
+            if recorder is not None and (index+1) % ticks == 0:
+                obs_after = observe(model, data)
+                recorder.append(obs_before, command, command, obs_after,
+                                label_valid=label_valid, stage=stage, perturbation=perturbation)
             if step_count % 10 == 0:
+                if recorder is not None and (index+1) % ticks != 0:
+                    mujoco.mj_forward(model, data)
                 names = [(model.geom(c.geom1).name, model.geom(c.geom2).name) for c in data.contact]
                 forces = grasp_contacts(model, data)
                 if stage == 'transport':
@@ -206,6 +241,10 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
                              'obstacle_contact': any('approach_obstacle' in p for p in names),
                              'arm_valid': checker.evaluate(data.qpos[:6], require_fixed_gripper=False)['valid'],
                              'finite_state': bool(np.all(np.isfinite(data.qpos)) and np.all(np.isfinite(data.qvel)))})
+                if monitor is not None:
+                    measured = monitor.update(rows[-1])
+                    if measured['failure_reason']:
+                        raise RuntimeError('Physical acceptance stopped: '+measured['failure_reason'])
             if lost_carry_samples >= 5:
                 raise RuntimeError('Payload lost during transport; execution stopped')
             if render and step_count % 20 == 0:
@@ -236,20 +275,76 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
             alpha = (distance-cumulative[segment])/max(lengths[segment], 1e-12)
             return np.r_[points[segment]+alpha*(points[segment+1]-points[segment]), jaw]
         advance(stage, ctrl, max(1000, int(np.ceil(total*1.875/.3/.002))))
-        advance(stage, lambda t: np.r_[points[-1], jaw], 300)
+        advance(stage, lambda t: np.r_[points[-1], jaw], 50 if recorder is not None else 300)
     try:
-        advance('ready', lambda t: np.r_[start, .5], 500)
+        if recorder is None:
+            advance('ready', lambda t: np.r_[start, .5], 500)
+        if recorder is not None and perturb_rad:
+            before = observe(model, data)
+            if max(grasp_contacts(model, data).values()) > .02:
+                raise RuntimeError('Perturbation requires a contact-free approach')
+            offset = np.random.default_rng(seed).uniform(-perturb_rad, perturb_rad, 5)
+            displaced = data.qpos[:5].copy()+offset
+            checked = validate_joint_path([data.qpos[:5].copy(), displaced], checker.is_valid, .005)
+            if not checked['valid']:
+                raise RuntimeError('Bounded perturbation rejected by collision/limit guard')
+            advance('perturbation', lambda t: np.r_[displaced, .5], round(.2/model.opt.timestep),
+                    label_valid=False, perturbation=True)
+            after = observe(model, data)
+            actual_start = data.qpos[:5].copy()
+            current_xyz = data.xpos[object_id].copy()
+            approach = solve_pinch_ik(rig, np.r_[current_xyz[:2], .06], actual_start)
+            down = solve_pinch_ik(rig, np.r_[current_xyz[:2], .019], approach)
+            lift = solve_pinch_ik(rig, np.r_[current_xyz[:2], .06], down)
+            planned = plan_joint_path(actual_start, approach, checker.bounds, checker.is_valid,
+                                      seed=seed, timeout_s=10, resolution_rad=.015)
+            if planned['status'] != 'solved':
+                raise RuntimeError('Expert failed to replan from actual perturbed state')
+            descent = validate_joint_path([approach, down], checker.is_valid, .015)
+            ascent = validate_joint_path([down, lift], closed_checker.is_valid, .015)
+            if not descent['valid'] or not ascent['valid']:
+                raise RuntimeError('Perturbed recovery grasp legs rejected')
+            recovery_report = {'kind': 'physical_joint_command_then_expert_replan',
+                               'requested_offset_rad': offset.tolist(),
+                               'actual_displacement_rad': (after['observation.state']-before['observation.state']).tolist(),
+                               'planning_start_rad': actual_start.tolist(),
+                               'object_xyz_at_replan_m': current_xyz.tolist(),
+                               'perturbation_labels_used': False}
         move('approach', planned['path'], .5)
         move('descend', [approach, down], .5)
-        advance('close', lambda t: np.r_[down, closed_ctrl], 3000)
+        if recorder is None:
+            advance('close', lambda t: np.r_[down, closed_ctrl], 3000)
+        else:
+            # Actual dual contact, rather than a hidden six-second stage clock,
+            # triggers lifting. The clock only limits a failed grasp attempt.
+            for _ in range(round(6/control_period_s)):
+                advance('close', lambda t: np.r_[down, closed_ctrl], ticks)
+                if min(grasp_contacts(model, data).values()) > .02 and abs(data.qvel[5]) < .05:
+                    break
+            else:
+                raise RuntimeError('No stable dual-finger contact before close timeout')
         move('lift', [down, lift], closed_ctrl)
-        advance('hold', lambda t: np.r_[lift, closed_ctrl], 750)
-        if place and grasp_acceptance(rows, baseline_z)['grasp_success']:
+        if recorder is None:
+            advance('hold', lambda t: np.r_[lift, closed_ctrl], 750)
+        elif not place:
+            advance('hold', lambda t: np.r_[lift, closed_ctrl], 750)
+        grasp_ready = (min(grasp_contacts(model, data).values()) > .02 and
+                       data.xpos[object_id, 2]-baseline_z >= .025)
+        if place and (grasp_ready if recorder is not None else grasp_acceptance(rows, baseline_z)['grasp_success']):
             paths, transport_report = plan_transport(model, rig, data, closed_checker, solve_ik=solve_pinch_ik, pinch_point=PINCH_POINT)
             for index, route in enumerate(paths):
                 move('lower' if index==len(paths)-1 else 'transport', route, closed_ctrl)
             release_pose = paths[-1][-1]
-            advance('release', lambda t: np.r_[release_pose, .5], 3000)
+            if recorder is None:
+                advance('release', lambda t: np.r_[release_pose, .5], 3000)
+            else:
+                for _ in range(round(6/control_period_s)):
+                    advance('release', lambda t: np.r_[release_pose, .5], ticks)
+                    if (grasp_contacts(model, data)['pad_moving_jaw'] < .02 and data.qpos[5] > .45
+                            and rows[-1]['place_floor_contact']):
+                        break
+                else:
+                    raise RuntimeError('Release failed before timeout')
             retreat_check = validate_joint_path([release_pose, start], checker.is_valid, .01)
             if not retreat_check['valid']:
                 raise RuntimeError('Open-jaw retreat collides with workcell')
@@ -261,6 +356,11 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
             camera.distance, camera.azimuth, camera.elevation = .43, 140, -20
             renderer.update_scene(data, camera=camera)
             imageio.imwrite(output/('placed_detail.png' if place else 'grasp_detail.png'), renderer.render())
+    except Exception as error:
+        if recorder is not None:
+            recorder.finalize({'passed': False, 'error_type': type(error).__name__, 'error': str(error),
+                               'recovery': recovery_report, 'physical_acceptance': monitor.report()})
+        raise
     finally:
         (output/'trajectory.json').write_text(json.dumps(rows)+'\n')
         if writer is not None:
@@ -275,10 +375,17 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
     metrics['obstacle_contact_steps'] = obstacle_contact_steps
     if place:
         metrics.update(placement_acceptance(rows))
+    if monitor is not None and place:
+        metrics.update(monitor.report())
+        metrics['lift_success'] = metrics['grasp_success']
+        metrics['maximum_lift_m'] = max((r['object_z_m']-baseline_z for r in rows), default=0)
+        metrics['final_lift_m'] = rows[-1]['object_z_m']-baseline_z if rows else 0
     success = all((metrics['grasp_success'], metrics['finite_state'],
                    metrics['obstacle_contact_steps']==0, metrics['invalid_arm_samples']==0))
     if place:
         success = success and metrics['place_success']
+    if monitor is not None and place:
+        success = success and metrics['passed']
     report = {'status': 'passed' if success else 'failed', 'kind': 'so101_obstacle_contact_grasp',
               'metrics': metrics, 'direct_approach': direct, 'planning': planned,
               'place_requested': place, 'transport_planning': transport_report,
@@ -290,7 +397,10 @@ def run_episode(source, output, *, render=False, seed=0, empty_close=False, plac
                               'target_mass_kg': .01, 'friction': 1.0, 'minimum_lift_m': .025,
                               'noslip_iterations': noslip_iterations,
                               'collision_sampling_s': .02, 'planner_edge_resolution_rad': .015},
-              'empty_close_negative': empty_close}
+              'empty_close_negative': empty_close, 'learning_dataset': recorder is not None,
+              'expert_recovery': recovery_report}
+    if recorder is not None:
+        recorder.finalize({'passed': bool(success), 'metrics': metrics, 'recovery': recovery_report})
     (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
     (output/'trajectory.json').write_text(json.dumps(rows)+'\n')
     return report
@@ -303,12 +413,17 @@ def main():
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--place', action='store_true', help='Transport to blue tray, release and retreat')
     parser.add_argument('--empty-close', action='store_true')
+    parser.add_argument('--record-dataset', action='store_true')
+    parser.add_argument('--control-period-s', type=float, default=.02)
+    parser.add_argument('--perturb-rad', type=float, default=0.0)
     args = parser.parse_args()
     if args.output.exists():
         print(json.dumps({'status': 'failed', 'error': 'Output already exists; choose a fresh directory'}))
         return 1
     try:
-        report = run_episode(args.source, args.output, render=args.render, empty_close=args.empty_close, place=args.place)
+        report = run_episode(args.source, args.output, render=args.render, empty_close=args.empty_close, place=args.place,
+                             record_dataset=args.record_dataset, control_period_s=args.control_period_s,
+                             perturb_rad=args.perturb_rad)
     except Exception as error:
         # Preserve failed setup/planning evidence; never overwrite a prior run.
         failure = {'status': 'failed', 'error_type': type(error).__name__, 'error': str(error)}

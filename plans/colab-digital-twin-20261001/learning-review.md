@@ -80,3 +80,7 @@ AGY 首轮“数分钟训练”“视觉 ACT 极高概率 OOM”“SB3/CleanRL �
 - [O8：LeRobot 仿真采集→训练→评估教程](https://huggingface.co/docs/lerobot/main/en/il_sim)（Panda示例，不是本项目SO101验收）。
 
 本方案延续 Obsidian `Wiki/自动化开发范式与智能体协作.md` 的“按当前任务选择验收依据”：工具回复证明意见来源，源码证明支持分支，实跑才能证明本机模型行为。接触垫、摩擦和 Noslip 仍为未标定假设，仿真学习结果不等于真实机械臂迁移。[O7]
+
+## 用户后续收敛与实测实现
+
+用户确认将保留分歧收敛为相同数据的ACT/MLP资源双探针，不引入独立MLP训练框架。已实现[分层入口](../../experiments/colab-twin/run_learning.py)与[运行契约](../../experiments/colab-twin/LEARNING.md)，正常/物理起点扰动恢复/空夹失败档案保留。两候选资源通过，官方小配置ACT进入单轨迹限时训练；纯策略碰撞停机尚未通过，因此20+20和视觉保持not_run。此前“待预检”的记录属于会审当时的状态，最新验证以progress为准。
