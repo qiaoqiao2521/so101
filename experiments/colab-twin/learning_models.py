@@ -6,6 +6,7 @@ No hub access, image backbone, expert solver or simulator is used here.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from collections import deque
 import hashlib
 import inspect
 from pathlib import Path
@@ -19,6 +20,11 @@ LEROBOT_REVISION = "e0d50211ef236143ae867228662b7dfaba554f02"
 STATE = "observation.state"
 ENV_STATE = "observation.environment_state"
 ACTION = "action"
+ACTION_ENCODINGS = ("absolute", "arm_delta")
+ACTION_ENCODING_SEMANTICS = {
+    "absolute": "absolute_joint_position_target_rad",
+    "arm_delta": "joint_delta_arm_absolute_gripper",
+}
 
 
 @dataclass(frozen=True)
@@ -35,6 +41,11 @@ class ModelSpec:
     dim_feedforward: int = 1024
     use_vae: bool = True
     dropout: float = 0.1
+    action_encoding: str = "absolute"
+
+    def __post_init__(self):
+        if self.action_encoding not in ACTION_ENCODINGS:
+            raise ValueError(f"Unknown action encoding {self.action_encoding!r}")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -97,32 +108,93 @@ def build_policy(spec: ModelSpec, device: str = "cpu") -> nn.Module:
 
 class StateNormalizer:
     """Fit only caller-selected training rows; persist the exact statistics."""
-    def __init__(self, stats: dict[str, dict[str, list[float]]]):
+    def __init__(self, stats: dict[str, dict[str, list[float]]],
+                 action_encoding: str = "absolute", velocity_scale_floor: float = 0.0,
+                 robot_velocity_mask: bool = False, object_velocity_mask: bool = False):
+        if action_encoding not in ACTION_ENCODINGS:
+            raise ValueError(f"Unknown action encoding {action_encoding!r}")
+        if not np.isfinite(velocity_scale_floor) or velocity_scale_floor < 0:
+            raise ValueError("Velocity scale floor must be finite and nonnegative")
+        if not isinstance(robot_velocity_mask, bool):
+            raise ValueError("Robot velocity mask must be an explicit boolean")
+        if not isinstance(object_velocity_mask, bool):
+            raise ValueError("Object velocity mask must be an explicit boolean")
         self.stats = stats
+        self.action_encoding = action_encoding
+        self.velocity_scale_floor = float(velocity_scale_floor)
+        self.robot_velocity_mask = robot_velocity_mask
+        self.object_velocity_mask = object_velocity_mask
+
+    @staticmethod
+    def _anchor_for(values: np.ndarray, anchor: np.ndarray | None) -> np.ndarray:
+        if anchor is None:
+            raise ValueError("Arm-delta actions require the current raw joint-state anchor")
+        anchor = np.asarray(anchor, dtype=np.float64)
+        if values.shape[-1] != 6 or anchor.shape[-1:] != (6,) or not np.isfinite(anchor).all():
+            raise ValueError("Action and finite joint-state anchor must have six coordinates")
+        # A chunk is anchored to its current observation, never to future states.
+        if values.ndim == 3 and anchor.ndim == 2:
+            anchor = anchor[:, None, :]
+        try:
+            return np.broadcast_to(anchor, values.shape)
+        except ValueError as error:
+            raise ValueError("Joint-state anchor cannot broadcast to actions") from error
+
+    def encoded_actions(self, values: np.ndarray, anchor: np.ndarray | None = None) -> np.ndarray:
+        encoded = np.asarray(values, dtype=np.float64).copy()
+        if self.action_encoding == "arm_delta":
+            encoded[..., :5] -= self._anchor_for(encoded, anchor)[..., :5]
+        return encoded
 
     @classmethod
-    def fit(cls, rows: dict[str, np.ndarray]) -> "StateNormalizer":
+    def fit(cls, rows: dict[str, np.ndarray], action_encoding: str = "absolute",
+            velocity_scale_floor: float = 0.0, robot_velocity_mask: bool = False,
+            object_velocity_mask: bool = False) -> "StateNormalizer":
+        result = cls({}, action_encoding, velocity_scale_floor, robot_velocity_mask, object_velocity_mask)
         stats = {}
         for key in (STATE, ENV_STATE, ACTION):
             values = np.asarray(rows[key], dtype=np.float64)
             if values.ndim != 2 or not len(values) or not np.isfinite(values).all():
                 raise ValueError(f"Invalid finite training matrix for {key}")
+            if key == ACTION:
+                values = result.encoded_actions(values, rows[STATE])
             # Near-constant columns use unit scale rather than amplifying tiny
             # physical jitter; this matters for fixed obstacles/target poses.
             scale = values.std(axis=0)
             scale[scale < 1e-4] = 1.0
+            if key == ENV_STATE and velocity_scale_floor:
+                # The first six environment coordinates are robot qvel, rad/s.
+                # Fit only these training rows, with an explicit physical floor.
+                scale[:6] = np.maximum(values.std(axis=0)[:6], velocity_scale_floor)
             stats[key] = {"mean": values.mean(axis=0).tolist(), "std": scale.tolist()}
-        return cls(stats)
+        result.stats = stats
+        return result
 
-    def normalize(self, key: str, values: np.ndarray) -> np.ndarray:
+    def normalize(self, key: str, values: np.ndarray, anchor: np.ndarray | None = None) -> np.ndarray:
         stat = self.stats[key]
-        return ((np.asarray(values) - np.asarray(stat["mean"])) /
-                np.asarray(stat["std"])).astype(np.float32)
+        values = np.asarray(values)
+        # Validate before masking, so a sensor NaN never becomes a safe zero.
+        if not np.isfinite(values).all():
+            raise ValueError(f"Nonfinite observation/action cannot be normalized: {key}")
+        values = self.encoded_actions(values, anchor) if key == ACTION else values
+        normalized = ((values - np.asarray(stat["mean"])) /
+                      np.asarray(stat["std"])).astype(np.float32)
+        if not np.isfinite(normalized).all():
+            raise ValueError(f"Nonfinite normalized observation/action: {key}")
+        if key == ENV_STATE and self.robot_velocity_mask:
+            normalized[..., :6] = 0
+        if key == ENV_STATE and self.object_velocity_mask:
+            normalized[..., 13:19] = 0
+        return normalized
 
-    def action_radians(self, tensor: torch.Tensor) -> np.ndarray:
+    def action_radians(self, tensor: torch.Tensor, anchor: np.ndarray | None = None) -> np.ndarray:
+        """Decode to absolute joint targets; raw current q is needed for arm_delta."""
         stat = self.stats[ACTION]
         values = tensor.detach().cpu().numpy()
-        return values * np.asarray(stat["std"]) + np.asarray(stat["mean"])
+        actions = values * np.asarray(stat["std"]) + np.asarray(stat["mean"])
+        if self.action_encoding == "arm_delta":
+            actions[..., :5] += self._anchor_for(actions, anchor)[..., :5]
+        return actions
 
 
 def load_policy_checkpoint(path: str, device: str = "cpu"):
@@ -130,24 +202,43 @@ def load_policy_checkpoint(path: str, device: str = "cpu"):
     data = torch.load(path, map_location="cpu", weights_only=True)
     if data.get("format") != "so101-state-policy-v1":
         raise ValueError("Unsupported policy checkpoint format")
-    spec = ModelSpec(**data["model_spec"])
+    spec_data = dict(data["model_spec"])
+    encoding = data.get("action_encoding", spec_data.get("action_encoding", "absolute"))
+    if "action_encoding" in spec_data and spec_data["action_encoding"] != encoding:
+        raise ValueError("Checkpoint and model action encodings differ")
+    spec_data.setdefault("action_encoding", encoding)
+    spec = ModelSpec(**spec_data)
     policy = build_policy(spec, device)
     policy.load_state_dict(data["state_dict"])
     policy.eval()
-    return policy, StateNormalizer(data["normalization"]), data
+    options = data.get("normalization_options", {})
+    return policy, StateNormalizer(data["normalization"], encoding,
+                                   options.get("velocity_scale_floor_rad_s", 0.0),
+                                   options.get("robot_velocity_mask", False),
+                                   options.get("object_velocity_mask", False)), data
 
 
 class StatePolicyRunner:
     """Simulation-facing adapter: current physical observation -> radian target.
 
-ACT predicts a chunk but executes its first action (n_action_steps=1), then
-observes again next control tick. No stage, clock, expert or hidden replay input.
+Default: ACT predicts a chunk but executes its first action, then reobserves.
+The optional execution ablation decodes a chunk once at its current-q anchor
+and caches absolute commands. No stage, clock, expert or hidden replay input.
 """
-    def __init__(self, policy, normalizer, metadata, device):
+    def __init__(self, policy, normalizer, metadata, device, *, execute_chunk_steps: int = 1):
         self.policy, self.normalizer, self.metadata = policy, normalizer, metadata
         self.device = device
+        spec = metadata["model_spec"]
+        if (isinstance(execute_chunk_steps, bool) or not isinstance(execute_chunk_steps, int)
+                or not 1 <= execute_chunk_steps <= spec.get("chunk_size", 1)):
+            raise ValueError("Execute chunk steps must be an integer from one through chunk_size")
+        if spec.get("model") == "mlp" and execute_chunk_steps != 1:
+            raise ValueError("MLP only supports executing one action per observation")
+        self.execute_chunk_steps = execute_chunk_steps
+        self._absolute_actions = deque()
 
     def reset(self) -> None:
+        self._absolute_actions.clear()
         self.policy.reset()
 
     @torch.no_grad()
@@ -160,12 +251,30 @@ observes again next control tick. No stage, clock, expert or hidden replay input
                 raise ValueError(f"Expected finite {key} with shape {(width,)}")
             normalized = self.normalizer.normalize(key, values)
             batch[key] = torch.from_numpy(normalized[None]).to(self.device)
-        action = self.normalizer.action_radians(self.policy.select_action(batch))[0]
+        anchor = np.asarray(observation[STATE])[None].copy()
+        if self.execute_chunk_steps == 1:
+            prediction = self.policy.select_action(batch)
+            if prediction.shape != (1, spec["action_dim"]) or not torch.isfinite(prediction).all():
+                raise RuntimeError("Policy returned a nonfinite/malformed joint target")
+            action = self.normalizer.action_radians(prediction, anchor=anchor)[0]
+        else:
+            if not self._absolute_actions:
+                prediction = self.policy.predict_action_chunk(batch)
+                if (prediction.shape != (1, spec["chunk_size"], spec["action_dim"])
+                        or not torch.isfinite(prediction).all()):
+                    raise RuntimeError("Policy returned a nonfinite/malformed action chunk")
+                # Decode ALL queued residuals against this one raw-q snapshot.
+                # A later tick must not add its changed q to a cached residual.
+                actions = self.normalizer.action_radians(prediction, anchor=anchor)[0]
+                if not np.isfinite(actions).all():
+                    raise RuntimeError("Decoded action chunk is nonfinite")
+                self._absolute_actions.extend(action.copy() for action in actions[:self.execute_chunk_steps])
+            action = self._absolute_actions.popleft()
         if action.shape != (spec["action_dim"],) or not np.isfinite(action).all():
             raise RuntimeError("Policy returned a nonfinite/malformed joint target")
         return action
 
 
-def load_policy(path: str, device: str = "cpu") -> StatePolicyRunner:
+def load_policy(path: str, device: str = "cpu", *, execute_chunk_steps: int = 1) -> StatePolicyRunner:
     policy, normalizer, metadata = load_policy_checkpoint(path, device)
-    return StatePolicyRunner(policy, normalizer, metadata, device)
+    return StatePolicyRunner(policy, normalizer, metadata, device, execute_chunk_steps=execute_chunk_steps)

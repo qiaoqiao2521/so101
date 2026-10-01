@@ -126,3 +126,53 @@ MTC缺失核心和零字节逐轮产物留作待恢复历史，不从summary重�
 收尾验证：独立learning环境完整86项测试通过（含原规划/抓放真实正负例、数据精度与时序、chunk断点/归一化/重载、物理事件验收、假exit0止损）；Markdown相对链接和diff检查按提交范围验证。数据、权重、原始会审、日志与pip环境清单继续Git忽略。
 
 旧树交接复核：canonical仍有22项tracked变动，包含322行app.py改动、静态界面、现场配置/录制/业务登录记录，以及个人文档迁出；旧HEAD/索引保持。HANDOFF/SECURITY解释主从计时及认证边界，teleop-latency计划明确等待硬件恢复。不能把现场日志/标定与个人原件提交到public远端；产品硬件参数验收仍缺，未用这次学习suite冒充。owner根Codex保留该树，最短恢复入口为plans/teleop-latency-20260922/task_plan.md、REPORT.md及mint_follower_demo/tests，用户恢复硬件任务前不驱动设备。已验证的仿真学习成果由独立delivery分支交付并同步可用源码，受保护树不重置、不清理、不覆盖。
+
+## S7d 起步偏差与接近恢复（2026-10-01 接续）
+
+用户要求先检查起步预测偏差和接近段恢复数据覆盖，再过一个纯策略抓放回合；本轮不启动20+20或视觉。实现CPU有界diagnose_state_policy.py，支持旧absolute与arm_delta checkpoint，起步1/16/50帧/逐阶段动作误差、速度归一化、保存在线前20步覆盖和有界近邻标签检查。报告保存模型/数据/源码hash与官方ACT来源；阶段仍只用于审计。
+
+旧absolute首步pan/elbow/wrist错误约-.02448/-.01543/+.00988rad，下一拍速度pan/elbow约-1.178/-1.061rad/s；专家正常command-q只有几毫弧度。内部动作编码改为五轴arm_delta+absolute gripper，chunk未来目标均锚当前起点q，执行还原absolute；训练only qvel尺度下限.1rad/s，确定性noVAE/dropout0。默认absolute/原行为兼容，编码/归一化选项随checkpoint保存，官方ACT源不改。
+
+首个5000step/82.81s候选：arm第一拍maxerror .000187rad，物理首动作MAE .001474rad（gripper占主要误差），GPUallocated87.05/reserved96MiB。但纯策略39.94s限位停止，物体仍留红盘；诊断发现gripper首command .50719，20拍actualq漂到.55210、qvel约.16rad/s，旧有恢复未覆盖这种偏离。该失败和权重保留，不因运行更久宣称通过。
+
+采集v3专家：reference_route固定已通过路线，验证modelSHA/start/goal/wholepath；去掉学习端点固定等待，用下降几何触发闭爪、物体在蓝盘且z<.0145m时释放，无速度条件导致的反复闭爪。nominal＋startup±.006rad/20ms＋approach35%处+.002rad/20ms共4成功回合，12378frame/12375valid。扰动真实推进，保留非零速度，第一valid command是actualq制动，再从当前q/object重求IK并验证连接/剩余路径。startup首validpan速度+.263833/-.263756，approach+.047732rad/s；前一nextobs和第一validobs/state/env/time逐项一致。3项真实artifact测试全部通过无skip；独立v3startupplus原动作3061步state/env/time最大差全部0，抓放通过，无安全停止。
+
+关键采样默认1兼容全量permutation；显式5倍覆盖每episode前50帧、invalid间隙后首6valid帧、jaw跳变附近±8帧，不跨episode/间隙且union不叠乘。v3四正例有界ACTfit：34509step/45epoch/600.002s，按wall上限停止，551748draw/12375unique，critical实际68204draw；dim256/chunk16模型3711494参数，allocated87.053/reserved96MiB。首动作MAE .000258rad，arm五轴MAE约.000019–.000105rad，gripper .001244rad；完整chunk归一化L1 .18112，未完整过拟合。权重 `output/state-delta-recovery-fit-20261001/policy.pt`。这些是四条固定布局训练轨迹的拟合，不是held-out或扰动恢复通过。
+
+同权重默认首动作执行（每20ms重新推理）纯策略907周期/18.14s后腕关节axis3目标1.65816687超过1.65806上限，actualq1.65801771，未抓起物体。已增加SafetyStop的失败command/越界轴/时间诊断，不放宽限位。起步jaw .499759→.498278→.459505→.413686，qvel偏差放大；不是4GB OOM。报告位于ignored `output/policy-v3-baseline-20261001` 与 `v3-online-audit-20261001`。
+
+`run_learning.py --sanity-only`明确只验一个回合，成功状态passed_single_episode_gate；默认仍保留完整入口。`--train-recovery`可显式纳入全部合格正例，负例只留审计；actionencoding/qvelfloor/VAE/dropout/weights/lr参数已转发。8项入口CPU边界测试通过。随后完成下述显式有界v4/v5训练诊断；单回合尚未通过，20+20/视觉保持未运行，owner根Codex。
+
+### S7d 接续：反应式接近、策略前缀恢复与有界训练
+
+v4只将approach改为actualq路径投影＋.006rad前视，每拍.005rad验边；后续下降/载物路线仍时间minimum-jerk。四专家正例9404帧/9401valid，起步前.38s arm位移L2 .153997rad。nominal2350步/startup-plus2351步独立raw64重放state/env/time差均0并完成抓放。产物：ignored `experiments/colab-twin/output/reactive-v4-{nominal,startup-plus,startup-minus,approach}-20261001/`、`reactive-v4-independent-replay-20261001/`及`reactive-v4-startup-plus-independent-replay-20261001/`（后两者同一output根）。
+
+四档案ACT有界fit13491step/240.013s，输出`output/reactive-v4-state-fit-20261001/policy.pt`，权重SHA `d0142fecc159f3390a9cbeeb350ff83f0ab4518eab540e24480824fc7eb213d8`；归一化fit四份训练行。默认/chunk16/chunk16+nearest纯策略9.74/10.22/10.22s腕限位停止，无抬升；报告为同output根`policy-reactive-v4-{baseline,chunk16,chunk16-nearest}-20261001/`。同四档案MLP 8000step/8.234s，训练`reactive-v4-mlp-first-action-probe-20261001/`；纯策略`policy-reactive-v4-mlp-probe-20261001/`16.08s盘壁碰撞，`policy-reactive-v4-mlp-nearest-20261001/`9.92s桌面碰撞。均保留原权重/失败轨迹，不称通过。
+
+v5采集只执行无接触策略前缀1/2/4/5s（50/100/200/250拍，20ms，最多250拍且≤5s），逐拍限位/碰撞/接触与command偏移检查后，以actualq制动、fresh IK接回参考路线。来源`output/policy-reactive-v4-chunk16-nearest-20261001/attempt-000-nominal/policy-transitions.npz`，SHA `20db559734f7ae635ed1e8a43c788ba294c693e3b4f4bdd2646b6cac8831e21e`；四正例`output/policy-recovery-v5-prefix{50,100,200,250}-20261001/`共9423帧/8823valid，600前缀帧全部排除训练。独立`output/policy-recovery-v5-independent-replay-20261001/report.json`2372步state/env/time差均0，真实抓放通过，3项artifact测试全部通过无skip。仅证明这些偏移后专家恢复及精确重放，不宣称完整DART或硬件可靠性。
+
+八档案18224valid行在`output/policy-recovery-v5-state-fit-20261001/`以v4权重初始化，保持原四训练档案归一化，fresh Adam/new counters，lr2e-4；预算120s/7000step/200epoch，实际7000step/7epoch/109.024s。新权重SHA `26268fb563824fb0fe4268a46faa55e1b798b12386e550989b766ae8aba04472`，CPU重载差5.54e-8rad，allocated87.053/reserved96MiB。`output/policy-recovery-v5-baseline-20261001/report.json`10.48s腕目标越下限，无抬升/抓放；训练集拟合未提供held-out证据。可运行的采集/八档案接续模板与[官方ACT/DART引用](../../experiments/colab-twin/LEARNING.md)已补充；raw HDF5/NPZ/权重/日志均Git忽略。
+
+离线定向探针固定q/其他env，只将六轴qvel由专家值替成在线值，转角腕target−q从+.002804变为-.004647rad（专家+.005230rad），`output/v5-qvel-causal-audit-20261001/`已归档。显式`--mask-robot-velocity`在训练/推理一致屏蔽归一化env[0:6]，原始数组/统计与实际动力学不改，有限性先拒绝，选项随checkpoint持久化、旧缺省false；初始化允许显式增加、不允许静默取消。入口透传两屏蔽标志及init-checkpoint，11项入口边界/透传测试通过；这不是当前整套测试或物理验收通过。
+
+`output/policy-recovery-v5-qvel-masked-fit-20261001/`从v5权重26268初始化，同八档案、原四训练归一化继承、fresh Adam，3886step/4epoch/120.039s按wall上限停止，allocated87.053/reserved96MiB，输出SHA `08de5fc1d29ca6849b614f0fa5ed6b6852b1785c60af9e0be61f517eb00ccc24`。同output根`policy-recovery-v5-qvel-masked-baseline-20261001/`18.64s料盘底碰撞，无抬升；`policy-recovery-v5-qvel-masked-chunk8-nearest-20261001/`52s料盘底碰撞，无抬升；`policy-recovery-v5-qvel-masked-chunk16-nearest-20261001/`实际抓起并保持17.56s，35.2s在蓝盘外开爪、35.4s丢块，完整抓放失败。
+
+`output/v5-qvel-masked-physical-audit-20261001/release-probe.json`在1760拍fresh chunk边界核对raw模型预测；实际姿态/其他env不动，仅将物体速度替为几何近邻训练值，jaw .401425→.017844，原始速度置零探针.018514。物体线/角速度归一化近邻差L2 105.745/134.035，4/6轴越训练范围；名义真释放反例零原始速度仍开爪。证据支持局部输入敏感性，不能以离线改输入宣称任务修复。
+
+新增`--mask-object-velocity`只屏蔽归一化env[13:19]线速度3＋局部角速度3，与robot flag独立；训练/推理/保存重载共用适配器，旧默认false、初始化from/to明确，实际速度和物理监测保持。下一项同八档案、robot mask保持、额外object mask的有界fit及纯策略结果待根Codex填写；没有创建载物collector或新增数据。根Codex接续最终实验/整体验证，本节不预报完整单回合通过；20+20/视觉未运行，无新云端或实体动作。
+
+### S7d 本轮止损与可恢复交接
+
+双速度屏蔽ACT保持八训练档案、原四v4归一化统计和fresh Adam，lr2e-4；6657step/6epoch/120.017s后按wall上限停止，allocated87.053/reserved96MiB。权重SHA `84a4ef58d139be647a46f29c5be774325cd43e367ac89c3fa0f3d954c157e59d`，`output/policy-recovery-v5-all-velocity-masked-fit-20261001/`；chunk16+nearest在14.20s发生pick_floor与moving_jaw碰撞保护，未抬升。不是OOM，也未修改物理速度或接触/限位标准。该候选不替代已真实抓起的robot-only-mask候选。
+
+同四v4数据、相同输入屏蔽和原统计的MLP CPU对照：37801step/65epoch/45.001s，`output/reactive-v4-all-velocity-masked-mlp-fit-20261001/`；nearest回合15.92s actuator限位停止，无抓放。它是诊断对照，不是ACT资源失败后自动选择的新主线。仅限时拟合和平均误差不能证明局部控制精度与恢复泛化。
+
+精确训练观察范围clip探针保留全部18224有效训练输入，但bad-release jaw .401425→.309138仍开，16项未来动作全开；不实现此adapter，不追加阈值猜测。来源`output/v5-qvel-masked-physical-audit-20261001/support-clamp-probe.json`。
+
+归一化来源核对：robot-mask权重学过八档案，统计值实际逐项等于v4四档案。`output/policy-recovery-v5-qvel-masked-origin-verified-20261001/`仅更正来源归属，权重/统计/掩码逐项不变；保留原权重，未覆盖。初始化实现将权重训练来源与统计拟合来源分别保存，验证统计来源属于原训练集合。最终双maskcheckpoint明确记录四档案的统计来源。
+
+当前单回合状态为**未通过**，S7d/S7e保持未完成；20+20、视觉、Colab/实体均未运行。最强物理候选仍是`output/policy-recovery-v5-qvel-masked-fit-20261001/policy.pt`＋chunk16＋nearest（八正例仅用于固定标签支持），真实grasp/17.56s hold后蓝盘外提前释放。模型评测无IK/OMPL/stage/专家兜底。
+
+最短接续owner根Codex：先复核该候选在接近末端/载物搬运的实际状态覆盖，必要时单独采集一条真实偏差后的专家纠正，再过同一纯策略单回合。已提出但**未实现/未采集**的最薄载物入口为：从该候选NPZ前1000拍（20s）真实逐拍执行、全部排除训练标签；actual双指持续抬持门槛通过后，仅离线调用现有plan_transport生成纠正，独立raw64重放通过后才训练。不得恢复NPZ终点qpos、定时强开爪或将专家接管当作策略成功；现有approach前缀≤5s限制继续保留。该方向也需先验真，不能以增加预算替代覆盖证据。
+
+最终完整150项测试通过，无跳过（40.177s）；包括真实规划/抓放正负例、四v5档案与独立重放绑定、遮罩/初始化/保存重载和单回合止损边界。日志`output/final-all-velocity-single-gate-tests-20261001.log`。默认旧absolute、全速度输入、单步执行保持兼容；本轮试验选项均显式记录。数据/权重/审计/log仍Git忽略。canonical现场22项tracked遗留按S7交接保留，根Codex不改变其旧索引/原模型或发布现场配置。

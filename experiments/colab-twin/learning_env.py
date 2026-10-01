@@ -139,7 +139,12 @@ class StateWorkcell:
             raise SafetyStop('Nonfinite or malformed policy command')
         bounds = self.model.actuator_ctrlrange
         if np.any(command < bounds[:, 0]) or np.any(command > bounds[:, 1]):
-            raise SafetyStop('Policy command exceeds actuator limits')
+            raise SafetyStop('Policy command exceeds actuator limits',
+                             {'action': command.tolist(), 'actuator_bounds': bounds.tolist(),
+                              'violating_axes': np.flatnonzero((command < bounds[:, 0]) |
+                                                               (command > bounds[:, 1])).tolist(),
+                              'observation.state': self.data.qpos[:6].tolist(),
+                              'time_s': float(self.data.time)})
         # Match collection: copy a refreshed before-boundary, then hold a target.
         observe(self.model, self.data)
         self.data.ctrl[:] = command
@@ -147,7 +152,9 @@ class StateWorkcell:
             mujoco.mj_step(self.model, self.data)
             obstacle = self.model.geom('approach_obstacle').id
             if any(obstacle in (c.geom1, c.geom2) for c in self.data.contact):
-                raise SafetyStop('Obstacle contact during physical step')
+                raise SafetyStop('Obstacle contact during physical step',
+                                 {'action': command.tolist(), 'observation.state': self.data.qpos[:6].tolist(),
+                                  'time_s': float(self.data.time)})
         obs = observe(self.model, self.data)
         row = diagnostics(self.model, self.data, self.checker)
         if not row['finite_state'] or not row['arm_valid']:

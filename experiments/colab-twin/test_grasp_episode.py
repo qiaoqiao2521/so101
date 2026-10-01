@@ -8,17 +8,39 @@ import mujoco
 import numpy as np
 
 from grasp_episode import (PAD_NAMES, build_contact_scene, grasp_acceptance,
-                           run_episode, solve_pinch_ik)
+                           load_policy_prefix, run_episode, solve_pinch_ik)
 from collision_scene import CollisionChecker
 
 SOURCE = Path(__file__).resolve().parents[2]/'workspaces/so101_ws/src/so101_mujoco/models/so101.xml'
 
 
 class ContactGraspTests(unittest.TestCase):
+    def test_policy_prefix_preserves_cadence_and_duration_limit(self):
+        initial = {'observation.state': np.zeros(6),
+                   'observation.environment_state': np.zeros(30)}
+        values = {key: np.repeat(value[None], 250, axis=0) for key, value in initial.items()}
+        values.update(action=np.ones((250, 6), dtype=np.float32),
+                      timestamp=1+np.arange(250)*.02,
+                      next_timestamp=1+np.arange(1, 251)*.02)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'prefix.npz'
+            np.savez(path, **values)
+            np.testing.assert_array_equal(load_policy_prefix(path, 250, .02, initial), values['action'])
+            with self.assertRaisesRegex(ValueError, 'five seconds'):
+                load_policy_prefix(path, 250, .04, initial)
+            with self.assertRaisesRegex(ValueError, 'control period'):
+                load_policy_prefix(path, 50, .04, initial)
+            values['timestamp'][20] += .02
+            values['next_timestamp'][20] += .02
+            np.savez(path, **values)
+            with self.assertRaisesRegex(ValueError, 'control period'):
+                load_policy_prefix(path, 50, .02, initial)
+
     def test_actual_obstacle_grasp_and_empty_close_negative(self):
         original = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
         with tempfile.TemporaryDirectory() as folder:
-            positive = run_episode(SOURCE, Path(folder)/'positive')
+            # A non-recording 30ms period must not validate unused 200ms noise.
+            positive = run_episode(SOURCE, Path(folder)/'positive', control_period_s=.03)
             self.assertEqual(positive['status'], 'passed', positive['metrics'])
             self.assertFalse(positive['direct_approach']['valid'])
             self.assertTrue(positive['planning']['exact_solution'])

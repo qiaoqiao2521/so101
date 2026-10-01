@@ -1,9 +1,14 @@
 """Evaluation boundary tests; physical grasp/place evidence is a separate gate."""
 import unittest
+from unittest.mock import patch
+import hashlib
+from pathlib import Path
+import tempfile
 
 import numpy as np
 
 from evaluate_state_policy import (EvaluationLimits, can_inject_perturbation,
+                                   fit_gripper_projection, project_gripper,
                                    run_attempt, summarize_attempts)
 from learning_data import POLICY_OBSERVATION_KEYS
 
@@ -208,6 +213,108 @@ class PolicyAcceptanceTests(unittest.TestCase):
             self.limits(perturb_duration_s=.021).validate(.02)
         with self.assertRaisesRegex(ValueError, "five degrees"):
             self.limits(perturb_rad=.1).validate(.02)
+
+    def projection_fixture(self, labels, *, mask=None, passed=True, eligible=True, mode="clip", wrong_hash=False):
+        actions = np.zeros((len(labels), 6))
+        actions[:, 5] = labels
+        episode = {"action": actions, "label_valid": np.ones(len(labels), dtype=bool) if mask is None else np.array(mask),
+                   "report": {"passed": passed}, "eligible_for_training": eligible}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "expert.h5"
+            path.write_bytes(b"mocked audited episode")
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            metadata = {"train_dataset_sha256": ["wrong" if wrong_hash else digest]}
+            with patch("evaluate_state_policy.load_episode", return_value=episode):
+                return fit_gripper_projection([path], metadata, mode)
+
+    def test_gripper_bounds_fit_only_valid_positive_checkpoint_training_labels(self):
+        config = self.projection_fixture([.015, np.nan, .5], mask=[True, False, True])
+        self.assertEqual(config["minimum_rad"], .015)
+        self.assertEqual(config["maximum_rad"], .5)
+        self.assertEqual(config["valid_label_frame_count"], 2)
+        with self.assertRaisesRegex(ValueError, "hashes"):
+            self.projection_fixture([.015, .5], wrong_hash=True)
+        for flags in ({"eligible": False}, {"passed": False}):
+            with self.subTest(flags=flags), self.assertRaisesRegex(ValueError, "positive eligible"):
+                self.projection_fixture([.015, .5], **flags)
+
+    def test_gripper_interval_projection_changes_only_jaw_and_preserves_raw_action(self):
+        raw = np.array([4., -4., .2, .3, .4, .8])
+        original = raw.copy()
+        projected, changed = project_gripper(raw, {"minimum_rad": .015, "maximum_rad": .5})
+        self.assertTrue(changed)
+        np.testing.assert_array_equal(projected[:5], original[:5])
+        np.testing.assert_array_equal(raw, original)
+        self.assertEqual(projected[5], .5)
+        raw[5] = -.2
+        self.assertEqual(project_gripper(raw, {"minimum_rad": .015, "maximum_rad": .5})[0][5], .015)
+        for invalid in (np.full(6, np.nan), np.full(6, np.inf), np.zeros(5)):
+            with self.assertRaises(ValueError):
+                project_gripper(invalid, {"minimum_rad": .015, "maximum_rad": .5})
+
+    def test_nearest_projection_uses_exact_two_training_labels_and_records_tie(self):
+        config = self.projection_fixture([.015, .5, .015], mode="nearest")
+        self.assertEqual(config["allowed_labels_rad"], [.015, .5])
+        self.assertEqual(config["tie_rule"], "lower_label_at_exact_midpoint")
+        raw = np.arange(6, dtype=float)
+        raw[5] = config["midpoint_rad"]
+        projected, _ = project_gripper(raw, config)
+        self.assertEqual(projected[5], .015)
+        np.testing.assert_array_equal(projected[:5], raw[:5])
+        raw[5] = config["midpoint_rad"] + 1e-6
+        self.assertEqual(project_gripper(raw, config)[0][5], .5)
+        for labels in ([.5], [.015, .25, .5]):
+            with self.subTest(labels=labels), self.assertRaisesRegex(ValueError, "exactly two"):
+                self.projection_fixture(labels, mode="nearest")
+
+    def test_clip_and_nearest_are_distinct_for_observed_early_closing_targets(self):
+        clip = self.projection_fixture([.015, .5])
+        nearest = self.projection_fixture([.015, .5], mode="nearest")
+        targets = [.499759, .498278, .459505, .413686, .39474]
+        for target in targets:
+            raw = np.r_[np.arange(5), target]
+            clipped, changed = project_gripper(raw, clip)
+            binary, projected = project_gripper(raw, nearest)
+            self.assertFalse(changed)
+            self.assertTrue(projected)
+            self.assertEqual(clipped[5], target)
+            self.assertEqual(binary[5], .5)
+            np.testing.assert_array_equal(binary[:5], raw[:5])
+
+    def test_projection_attempt_keeps_raw_executed_commands_and_counts_stopped_tick(self):
+        config = {"minimum_rad": .015, "maximum_rad": .5}
+        policy = Policy(np.r_[np.full(5, .3), .7])
+        result, transitions = run_attempt(Environment(), policy, Monitor(pass_at=3), seed=3,
+                                          perturbed=False, limits=self.limits(), gripper_projection=config)
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["action_audit"]["gripper_projection_count"], 3)
+        self.assertEqual(result["action_audit"]["gripper_projection_rate"], 1.)
+        self.assertTrue(all(row["projected"] for row in transitions))
+        np.testing.assert_array_equal(transitions[0]["raw_action"], policy.action)
+        self.assertEqual(transitions[0]["policy_action"][5], .5)
+        self.assertEqual(transitions[0]["action"][5], .5)
+        summary = summarize_attempts([result])
+        self.assertEqual(summary["action_audit"]["finite_policy_command_count"], 3)
+        self.assertEqual(summary["action_audit"]["raw_action_max_rad_per_joint"][5], .7)
+        stopped, completed = run_attempt(Environment(exception=SafetyStop("joint limit")), policy,
+                                         Monitor(pass_at=1), seed=3, perturbed=False,
+                                         limits=self.limits(), gripper_projection=config)
+        self.assertEqual(completed, [])
+        self.assertFalse(stopped["passed"])
+        self.assertEqual(stopped["last_command"]["raw_action"][5], .7)
+        self.assertEqual(stopped["last_command"]["action"][5], .5)
+        self.assertEqual(stopped["action_audit"]["finite_policy_command_count"], 1)
+
+    def test_nonfinite_action_is_rejected_before_projection_and_never_reaches_physics(self):
+        env = Environment()
+        result, transitions = run_attempt(env, Policy(np.full(6, np.inf)), Monitor(pass_at=1), seed=3,
+                                          perturbed=False, limits=self.limits(),
+                                          gripper_projection={"minimum_rad": .015, "maximum_rad": .5})
+        self.assertEqual(result["failure_reason"], "invalid_policy_action")
+        self.assertTrue(result["safety_stop"])
+        self.assertEqual(env.actions, [])
+        self.assertEqual(transitions, [])
+        self.assertEqual(result["action_audit"]["gripper_projection_count"], 0)
 
 
 class PhysicalMonitorTests(unittest.TestCase):

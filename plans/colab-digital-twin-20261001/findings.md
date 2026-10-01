@@ -75,3 +75,37 @@ MuJoCo3.3.7/libccd在worktable盒子和collision_shoulder_2距离查询distmax=1
 - 固定等待6秒闭爪使瞬时状态对应不同专家阶段。学习采集改以双指接触/夹爪速度推进、时间仅作失败超时；释放先确认活动指松开和盘底承托，固定指完全离开要等待撤离。
 - 官方状态ACT本机反传约118MiB allocated，4GB不是本次阻碍；120秒内离线动作误差下降但纯策略0.36s碰撞停止。故数据、资源、回归、真实任务必须独立验收，后层not_run。
 - 连续动作chunk不能跨invalid扰动帧或episode；专家stage/time不得成为策略输入。动作源仍是实际重规划纠正，不是扰动执行命令。
+
+## 起步与接近恢复诊断（2026-10-01）
+
+旧绝对ACT首步pan误差约-.02448rad，而专家arm指令与actualq的95%偏移仅约.0023–.0035rad；下一拍pan/elbow速度达到-1.178/-1.061rad/s，远超专家接近速度。旧恢复执行.2s后才采纠正，首valid速度接近零，不能覆盖起步失稳。根因证据支持先改变动作尺度与恢复时机，不能把4GB显存当作这次失败原因。
+
+内部arm_delta、qvel尺度下限.1、关闭VAE/dropout的5000step诊断：首步arm最大误差.000187rad，首动作arm五轴MAE约.000022–.000188rad；但夹爪首步预测.50719而标签.5，20步实际漂至.55210，后续shoulder漂到下限附近。纯策略39.94s仍未抓起物体，限位停止；误差改善不等于过门槛。保存于ignored `output/state-delta-sanity-20261001`、`policy-delta-sanity-20261001`、`delta-first-audit-20261001`。
+
+专家下降终点若静止后才闭爪，相近观测会因隐藏阶段收到不同jaw标签。新版在实际下降/下降放置运动中触发jaw切换；释放门槛按实测终点高度校准为14.5mm，去掉自由落体期间会重新闭爪的速度条件。四份v3实际成功，共12378帧/12375有效标签，jaw切换均在descend/lower，后续reclose=0。有界近邻k16、标准化L2半径.001、动作冲突门槛.05rad未发现冲突；这不证明观测充分性。
+
+v3起点±.006rad/20ms恢复首valid pan速度+.263833/-.263756rad/s，接近35%处+.002rad/20ms首valid pan速度.047732rad/s。扰动最后nextobs与首valid状态/环境/时间逐字段相同，brake target等actualq。startup-plus独立3061步原动作回放state/env/time最大差0并完成抓放，3项真实产物测试全部通过无skip。覆盖仍限固定布局和这三类小扰动，尚不覆盖旧失稳的高速状态。
+
+同v3权重的三项有界执行消融都没有过门槛：16步chunk90s超时、nearest夹爪10.38s腕限位、两者组合90s超时；全部未抬升物体。nearest将夹爪固定到训练两标签后仍腕漂移，说明误闭爪不是唯一根因。使用新chunk日志时，诊断把fresh inference与缓存动作区别标注，投影/扰动也与raw模型输出分开，不能拿不同执行语义误报适配器错误。
+
+v3前.2s actual pan仅变化1.49e-9rad/wristflex5.08e-12，但命令由隐藏t逐步改变；前50个float32观测仍50unique，因此不是严格重复输入不可学的证明。它支持起步信号过弱的假设。v4只把approach改actual投影lookahead（.006rad），firstarm command-q为[+.002318,-.001471,-.000947,-.004806,-.002511]，前.38s实际arm位移L2 .153997rad；后续仍timed。4份成功采集共9404帧/9401valid，包含startup多轴±[.002,.001,-.001,.001,0]以及approach35%处[.002,-.001,.001,.001,0]，实际推进20ms。nominal2350步/startupplus2351步独立CPU回放全state/env/time差0，真实抓放与3项恢复artifact测试通过。尚不能据此宣称新学习策略已通过。
+
+### v4/v5 有界诊断与剩余门槛
+
+以下路径均相对`experiments/colab-twin/output/`，整个目录Git忽略。v4专家档案为`reactive-v4-{nominal,startup-plus,startup-minus,approach}-20261001/expert.h5`；独立重放为`reactive-v4-independent-replay-20261001/report.json`和`reactive-v4-startup-plus-independent-replay-20261001/report.json`。仅approach反应式，descend/lift/transport/lower仍依赖时间minimum-jerk，不扩展成全任务反应式专家。
+
+`reactive-v4-state-fit-20261001/report.json`记录四档案ACT 13491step/240.013s（wall上限240s），arm_delta、qvel下限.1、noVAE/dropout0、关键行5倍采样；归一化只fit这四份训练行，未用held-out。权重SHA `d0142fecc159f3390a9cbeeb350ff83f0ab4518eab540e24480824fc7eb213d8`。纯策略`policy-reactive-v4-{baseline,chunk16,chunk16-nearest}-20261001/report.json`分别9.74/10.22/10.22s腕限位停止，全部未抓起。`reactive-v4-mlp-first-action-probe-20261001/report.json`同四档案三层MLP 8000step/8.234s，权重SHA `ac880325022a2a0d7e009bd0540ab3ce5d08e2181f9761b9c60fc112d74c7f4b`；`policy-reactive-v4-mlp-probe-20261001/report.json`16.08s盘壁碰撞、`policy-reactive-v4-mlp-nearest-20261001/report.json`9.92s桌面碰撞。更小网络同样未打通物理闭环。
+
+v5从`policy-reactive-v4-chunk16-nearest-20261001/attempt-000-nominal/policy-transitions.npz`取真实策略action前50/100/200/250拍，源SHA `20db559734f7ae635ed1e8a43c788ba294c693e3b4f4bdd2646b6cac8831e21e`。`policy-recovery-v5-prefix{50,100,200,250}-20261001/expert.h5`四份专家恢复正例，共9423帧/8823valid；各档invalid前缀数恰为N，executed_action精确等于NPZ float32动作转double，训练排除600前缀帧。首valid观测精确接续前一nextobs，actualq制动且pan速度分别.043567/.049191/.044557/.033647rad/s。来源、哈希与恢复状态已保存；不是给专家标签加噪声。`policy-recovery-v5-independent-replay-20261001/report.json`独立2372步重放state/env/time差均0，抓放通过，3项真实artifact检查通过无skip；仍不等于纯策略成功或完整[DART](https://proceedings.mlr.press/v78/laskey17a.html)复现。
+
+`policy-recovery-v5-state-fit-20261001/report.json`以v4四份＋v5四份18224valid行有界接续：lr2e-4、7000step/7epoch/109.024s，预算120s/7000step。初始化权重为上列v4 SHA，归一化沿用该checkpoint的原四训练档案统计；fresh Adam及新采样计数，不恢复优化器，不重算八档案统计。输出权重SHA `26268fb563824fb0fe4268a46faa55e1b798b12386e550989b766ae8aba04472`，CPU重载绝对rad差5.54e-8；allocated87.053MiB/reserved96MiB，无held-out证据。`policy-recovery-v5-baseline-20261001/report.json`纯策略10.48s腕目标越下限，未抬升/抓放。数据回放、离线拟合与策略执行仍分别判定；[官方ACT来源及运行契约](../../experiments/colab-twin/LEARNING.md)保持固定。
+
+定向离线因果探针固定q与其他env，只替换六轴qvel为在线值，转角处腕target−q由+.002804变为-.004647rad（专家+.005230rad），默认及chunk执行均出现反向预测。支持qvel输入敏感性假设，不证明只屏蔽速度即可成功；`v5-qvel-causal-audit-20261001/`已归档。
+
+随后仅增加训练/推理一致robot qvel屏蔽，`policy-recovery-v5-qvel-masked-fit-20261001/report.json`从v5权重接续同八档案，原四训练归一化沿d014→26268权重链继承，fresh Adam；3886step/4epoch/120.039s，allocated87.053/reserved96MiB，输出SHA `08de5fc1d29ca6849b614f0fa5ed6b6852b1785c60af9e0be61f517eb00ccc24`。`policy-recovery-v5-qvel-masked-{baseline,chunk8-nearest}-20261001/report.json`分别18.64/52s料盘底碰撞，无抬升；`policy-recovery-v5-qvel-masked-chunk16-nearest-20261001/report.json`真实抓起并持续持有17.56s，但35.2s首次开爪时物体(.177743,.087811,.048516)m仍在蓝盘外，35.4s判定payload_lost。策略真抓起与完整抓放失败分别记录，未更改计数或验收条件。
+
+`v5-qvel-masked-physical-audit-20261001/release-probe.json`在fresh chunk边界1760拍核对保存raw_action，排除缓存动作比较错误。固定实际q及其他env，仅替换物体速度为几何近邻训练值，首jaw由.401425变为.017844；原始物体速度置零为.018514。actual对该近邻的归一化L2差：线速度105.745、角速度134.035，4/6轴越训练全范围，支持速度输入敏感性。名义真释放帧2060原jaw .3713、原始速度置零后.4573，仍开爪；运输反例仍闭爪。这些是离线局部替换，不能保证在线闭环或唯一根因，源码/权重/数据SHA与初始不可变probe均保留。
+
+新增显式`--mask-object-velocity`只对归一化env[13:19]（线速度3/局部角速度3）置零；已有robot mask[0:6]独立保持。训练与推理共用适配器，原统计/原始数组/动作/实际动力学不改，有限性先检查，旧默认false，初始化from/to持久化且不可静默取消。物理监测仍用原data.qvel，包含静稳/支撑释放速度与全qvel有限性检查。下一项同八档案有界物体速度消融结果待验；载物恢复collector仅有只读方案、未创建源码/数据。完整单回合门槛未过，20+20/视觉/云端/实体验收均未新增。
+
+本轮最终物理结果：robot-only-mask ACT有真实抓取/17.56s hold，但盘外提前释放；新增object-mask ACT 120s限时拟合后14.2s底部碰撞，MLP同输入CPU对照也限位失败；完整单回合仍未通过。精确观察范围clamp无法修正提前开爪，故不接入代码。150项完整测试仅证明实现及数据层边界。源、失败证据、归一化来源核对和最短接续边界见progress.md末节。下一项应区分接近末端/持物实际状态覆盖与候选控制精度，不能凭平均loss下降或局部counterfactual宣布恢复机制已解决。
