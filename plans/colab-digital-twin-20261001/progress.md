@@ -251,3 +251,35 @@ S7d-single已通过，S7d批次/S7e视觉继续未完成，20正常＋20扰动�
 后续建议（尚未执行）：保持MuJoCo状态ACT五轴＋学习夹爪和原控制/安全约定，用已有grasp_episode短前接触prefix接口覆盖脉冲结束后的actual-state重新对准，用held离线入口补盘外持续持物闭爪标签。先选少量不同方向/失效类型，前缀保持invalid，专家从真实受扰状态重新求解；每条完整抓放与独立raw64回放通过后才纳入有界微调。此做法参考[DART原论文](https://proceedings.mlr.press/v78/laskey17a.html)的纠偏示范思路，未实现其噪声分布优化，不宣称完整算法复现。原20..39若用于训练则转为已见诊断集，正式复验另留未参与纠正的新扰动种子；旧正常基线检查退化。没有新增模型架构、GPU任务、实体或视觉。
 
 当前S7d-single仍通过，S7d批次执行完成但任务门槛未通过，S7e未开始；owner根Codex。下一次需用户确定是否采用上述小批纠正＋有界微调方向；本次交付为统计复核、解释纠正及项目状态同步。40轮全部产物、17轮失败和v11权重保留，既有现场22项变动/index/原MJCF继续受保护。
+
+
+### 2026-10-02 T1 持物防误开爪执行完成、候选未晋级
+
+本轮仅执行用户先选的T1，未启动T2接近采集、T3五轴微调、T4批次或视觉。复用现有held离线采集器，真实执行旧v11失败回合的开爪前prefix，从实际持物位姿记录完整专家抓放；没有人工将失败切片改为成功档案。三个prefix全部NaN/invalid，首valid是actual五轴q制动＋闭爪`.015`，实际速度和观测时序连续保留。
+
+| 已见seed / prefix | raw / valid / invalid | 专家完整抓放 | 独立raw64回放 |
+| --- | --- | --- | --- |
+| 22 / 1344拍 | 2437 / 1093 / 1344 | [通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed22-20261002/report.json) | [2437步通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed22-20261002-replay/report.json) |
+| 24 / 1264拍 | 2431 / 1167 / 1264 | [通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed24-20261002/report.json) | [2431步通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed24-20261002-replay/report.json) |
+| 36 / 1200拍 | 2299 / 1099 / 1200 | [通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed36-20261002/report.json) | [2299步通过](../../experiments/colab-twin/output/policy-correction-v12-t1-held-seed36-20261002-replay/report.json) |
+
+三次state/env/time逐帧最大差均0，均`learned_policy_evaluated=false`。新3份7167raw/3359valid/3808invalid，加原15为[18份清单](../../experiments/colab-twin/output/policy-correction-v12-t1-training-datasets-20261002.json)、44897raw/28863valid/16034invalid。新valid只来自成功纠正，原policy prefix命令不作专家标签。边界是按旧float32 NPZ指令真实重执行的actual-state，不restore旧终点；相对旧保存观测有微小重执行差异，以新actual连续状态和raw64自身精确回放为准。
+
+[精确训练参数](../../experiments/colab-twin/output/policy-correction-v12-t1-training-arguments-20261002.json)与[训练报告](../../experiments/colab-twin/output/policy-correction-v12-t1-gripper-fit-20261002/report.json)：从同一v10 arm `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743678b52abab57e6`冻结72个ACT状态tensor，仍arm14/原四归一化/robot-only mask；夹爪8608参数从随机初始化、fresh Adam，仅用18成功档案拟合额外输入统计，CPU6000step/8.200103s（total11.291198s）。夹爪训练集chunk accuracy99.9478%、first-action99.9792%，范围仅训练行，不能当纯策略抓放或泛化成功。组合候选SHA `f2f87facc42d878652434f67252830550b3b2c58c9308da829a4744cd3802189`；没有继续训练五轴。
+
+四轮均复用原reference reset、chunk16、固定训练标签nearest及原安全/成功阈值；策略只读state6/env30，不调用IK/OMPL/专家或stage/time，三次脉冲均3.02s实际注入10拍。精确[四轮argv](../../experiments/colab-twin/output/policy-correction-v12-t1-probe-arguments-20261002.json)保留。
+
+| 回合 | 完整抓放 / 仿真时间 | 真实持物时长 | 结果与误开核对 |
+| --- | --- | ---: | --- |
+| seed22扰动 | [失败 / 18.12s](../../experiments/colab-twin/output/policy-correction-v12-t1-probe-seed22-20261002/report.json) | 1.10s | 17.94s盘外高位开爪，比旧26.88s更早8.94s；18.12s失物，无安全停止 |
+| seed24扰动 | [失败 / 53.58s](../../experiments/colab-twin/output/policy-correction-v12-t1-probe-seed24-20261002/report.json) | 18.30s | 抓起后开爪命令0，仍在蓝盘y负壁/活动爪.996281mm触发原1mm保护；外层safety_stop计失败 |
+| seed36扰动 | [失败 / 90.00s](../../experiments/colab-twin/output/policy-correction-v12-t1-probe-seed36-20261002/report.json) | 75.32s | 抓起后开爪命令0，物体已在蓝盘XY范围但z47.174mm、无盘底支撑，闭爪悬持直到仿真超时 |
+| seed0正常 | [通过 / 48.40s](../../experiments/colab-twin/output/policy-correction-v12-t1-nominal-20261002/report.json) | 25.06s | 2420拍，释放后真实盘底支撑/零双指力/静稳1s，无安全停止；仅一次固定正常回归 |
+
+[开爪与指令离线核对](../../experiments/colab-twin/output/v12-t1-opening-analysis-20261002.json)区分“盘外高位、当前双指接触且无支撑”的开爪与正常盘内释放；阈值仅用于审计，未进入在线策略。22的jaw指令首次与v11分叉在12.90s、arm在13.12s；虽然权重不变，夹爪改变实际接触后五轴轨迹也会改变。24/36在旧失物时点之后继续闭爪，表明这两轮早开未再出现，却不等于完成放置。22的新开爪前物体(.231762,-.131157,.055779)m、双指约1.397N；不能说T1已彻底消除误开，或宣称理论恢复率已提升。
+
+新增[3项真实artifact测试](../../experiments/colab-twin/output/policy-correction-v12-t1-artifact-test-result-20261002.json)exit0/0skip，绑定新3份HDF及seed36独立回放；另外两份回放由实际报告和[独立Codex审计](../../experiments/colab-twin/output/v12-t1-independent-audit-20261002.json)核验。源码无变化，因此没有重跑全套212；旧212/11份绑定仍只证明当时范围。汇总及哈希见[本轮报告](../../experiments/colab-twin/output/v12-t1-gates-20261002/report.json)。数据、权重、日志、原始咨询和审计均被Git忽略，本节链接为本机证据。
+
+结论：T1-data与冻结训练执行完成，但已见扰动抓放0/3、正常仅1/1；**T1任务目标未通过，v12不替代v11基线**。v11既有正常20/20、扰动3/20不变，不将两版混算新批次。Seeds40..59未读取、采集或执行；没有新的20+20/85%或视觉晋级证据。本轮独立助手均为Codex，不冒充新AGY/ZCODE审核。
+
+最短接续owner根Codex：保留v11及全部新数据/失败候选，先在已见种子检查接近到抓起的开闭边界、盘壁接近及高位下降的actual-state标签覆盖；再单独启动T2/T3有界纠正和微调。不得靠延长本次90s、强开/强关爪规则或放宽1mm保护跳过门槛。T4先固定候选后才使用留出Seeds40..59，本轮不触碰该集合。

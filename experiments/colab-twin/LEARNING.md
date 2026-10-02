@@ -162,9 +162,21 @@ python experiments/colab-twin/train_gripper_classifier.py --dataset \
 
 ## 当前实测
 
+### 2026-10-02 T1：持物纠正数据通过，夹爪候选未晋级
+
+新补seed22/24/36三个真实held纠正，原prefix全部NaN/invalid，actual首valid五轴制动＋闭爪；专家完整抓放和各自raw64回放双通过，state/env/time最大差均0。新增7167raw/3359valid/3808invalid，合并[18份清单](output/policy-correction-v12-t1-training-datasets-20261002.json)为44897raw/28863valid/16034invalid。精确采集、回放与计数见[progress本节](../../plans/colab-digital-twin-20261001/progress.md#2026-10-02-t1-持物防误开爪执行完成候选未晋级)。
+
+[CPU夹爪训练](output/policy-correction-v12-t1-gripper-fit-20261002/report.json)6000step/8.200s，冻结同v10 arm72个状态tensor及原四归一化，arm仍14档案；仅8608参数夹爪从随机初始化、fresh Adam和18份有效行的新额外输入统计重训。新组合SHA `f2f87facc42d878652434f67252830550b3b2c58c9308da829a4744cd3802189`。state6/env30、robot-only mask、chunk16/nearest、1mm保护和实际成功判据保持，未引入在线阶段、时钟或几何开闭规则。
+
+[三条已见种子与一条正常argv](output/policy-correction-v12-t1-probe-arguments-20261002.json)均已实际执行：seed22在18.12s失物，首次盘外高位开爪17.94s，比旧26.88s更早；seed24抓起后开爪0但53.58s蓝盘壁保护停止；seed36抓起后开爪0但90s高位闭爪超时。完整扰动抓放**0/3**。seed0正常**仅1/1**通过48.40s、hold25.06s、蓝盘静稳1s，比v11慢8.64s。已训练种子不是泛化测试；没有误开也不能替代完成放置。详见[开爪时序](output/v12-t1-opening-analysis-20261002.json)、[独立审计](output/v12-t1-independent-audit-20261002.json)及[本轮汇总](output/v12-t1-gates-20261002/report.json)。
+
+新增[3项真实artifact测试](output/policy-correction-v12-t1-artifact-test-result-20261002.json)通过、0skip，绑定新3份及seed36回放；源码无变动，旧212全测未重跑。本轮助手为Codex，无新的AGY/ZCODE批准。**T1执行完成但候选不替代v11**，旧20/20正常与3/20扰动不混算为新指标。Seeds40..59未使用，T2/T3/T4、视觉/云端/实物未运行；owner根Codex先检查已见接近/放置actual-state覆盖再单独接续。以上output链接均为被Git忽略的本机证据。
+
+### v11批次与更早单回合的历史证据
+
 2026-10-02批次接续：[v11正式40轮报告](output/policy-correction-v11-batch-20261002/report.json)与[执行参数](output/policy-correction-v11-batch-evaluation-arguments-20261002.json)已本地核验，checkpoint仍`f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`。正常20/20，扰动3/20（seed20/25/31）；20次扰动均在实际3.02s连续施加10拍/0.2s、五轴目标偏移各≤0.02rad。总体安全停止5、simulation_time_limit8、payload_lost4；双方≥17/20的门槛未通过，视觉保持not_reached。[独立40轮审计](output/v11-batch-independent-audit-20261002.json)的16项汇总及40轮逐项核验均一致。正常20份NPZ每个字段数组完全相同：seed只采样扰动目标，reset仅复用同一训练参考初态；不写20种场景、独立泛化或吸引域已证明。逐轮wall_s合计309.869s，整进程时长未另记录，不采用“约4.5分钟”的叙述。
 
-失效解释以[实际command/物理核对](output/v11-batch-lost-object-claim-check-20261002.json)为准：seed22/24/36在实际抓起后分别于26.88/25.28/24.00s、物体盘外高位首次预测开爪；seed37抓起后没有开爪command。不能将四轮都认作偏心抓取或物理滑脱。seed21最终物体(.18802,.14002,.04209)m、whole-object盘内false/支撑false，抓起后未输出开爪；策略只有学习state/env与固定训练标签投影，不存在“开爪几何条件”门控。数据先覆盖接近段actual-state纠正与盘外持物闭爪标签，再由实际回放/有界训练定验收；后续方案尚未执行。原批次成为已见诊断集；若用于补标签，下一验收必须另用未参与纠正的新扰动种子，并保留旧正常基线回归。仅借用[DART论文](https://proceedings.mlr.press/v78/laskey17a.html)的噪声示范/纠偏思路，不将固定随机脉冲和有限前缀纠正宣传为完整DART优化。
+失效解释以[实际command/物理核对](output/v11-batch-lost-object-claim-check-20261002.json)为准：seed22/24/36在实际抓起后分别于26.88/25.28/24.00s、物体盘外高位首次预测开爪；seed37抓起后没有开爪command。不能将四轮都认作偏心抓取或物理滑脱。seed21最终物体(.18802,.14002,.04209)m、whole-object盘内false/支撑false，抓起后未输出开爪；策略只有学习state/env与固定训练标签投影，不存在“开爪几何条件”门控。该批次后的建议是先覆盖接近段actual-state纠正与盘外持物闭爪标签，再由实际回放/有界训练定验收；截至该批次结束尚未执行，随后仅执行上文T1。原批次成为已见诊断集；若用于补标签，下一验收必须另用未参与纠正的新扰动种子，并保留旧正常基线回归。仅借用[DART论文](https://proceedings.mlr.press/v78/laskey17a.html)的噪声示范/纠偏思路，不将固定随机脉冲和有限前缀纠正宣传为完整DART优化。
 
 以下v11单回合记录保留批次前的验收快照，当前S7d以本段和[progress](../../plans/colab-digital-twin-20261001/progress.md)末节为准。
 
