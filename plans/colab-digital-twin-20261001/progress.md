@@ -462,3 +462,34 @@ future标签token搬运占53.382%、冻结模型normalized L1误差总量占46.3
 **归因边界与接续。** 本次未达到专家11.02s闭爪及抓取窗口，不能确认chunk1改善抓放，也不能把“仍未通过”解释为chunk尾部不是瓶颈或视觉表征必然失败。目标方向投影20%不是“方向错80%”，专家观测h0误差也不保证偏离后动作有效。当前运行配置不支持此前毫秒级/真实50Hz预期；下一候选应先有界离线拆分预处理、传输、forward与解码耗时，记录实际调用和运行状态，再决定执行调度/运行配置的一项改动，候选尚未执行。不自动延长预算、启动第二回合或重训。
 
 B/S7e任务仍未通过，v11固定正常20/20、旧扰动3/20与S7d未过状态保持；40..59、云端、实体未使用。沿用“按当前任务选择验收依据”，本轮验证为唯一物理回合、独立只读轨迹/计时、输入/源码哈希、文档链接与diff；生产源码未变，不重复声称232项测试覆盖新的物理结果。root负责可恢复接续；全部NPZ/计时/脚本/日志仍Git忽略，公开只交付本轮事实记录，原现场22项/index/README/MJCF保持。
+
+### 2026-10-03 B离线耗时拆分热态原调用约8ms原仿真慢因仍未知
+
+用户授权先做冻结模型离线predict耗时拆分，不启动chunk4/8、延长墙钟或新的抓放回合。唯一诊断读取已保存chunk1帧0/100/200的q6与RGB，以及nominal专家frame550的q6/RGB；只读这些部署输入，不输入env/阶段/时钟/专家动作。保持d4db权重、float32张量、batch1、eval/no_grad、原图像转换/残差锚点/jaw投影与后端默认值；cuDNN allow_tf32=true、matmul allow_tf32=false仅记录，未修改精度/compile/inference_mode/线程。实际PyTorch2.7.1+cu126，进程内getter线程8/8。
+
+[唯一profile报告](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/report.json)SHA `ca20df35faf8a6fdd806e9e02738d2dba8355be872677e3895d54a6ccbd82e4f`；[真实execution](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/execution.json)actual exit0、外层6.3340s/内4.0219s、外层硬timeout120s，无重试。cold1+warm3+12原调用+12仪表+1operator共29前向，新增优化/物理/渲染均0。[原调用与镜像脚本](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/profile_predict.py)SHA `f8d8599a4c26bd3679ebe6fe0989ea026e977743e4c3806d875db80b41ae74dd`，[外层](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/run_profile_once.py)SHA `5ae4191b55fb7ac1ced3a44a97e27ab7c6cb68b37379d442010601947c7f2860`；[独立脚本审查](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/script-review.json)核调用上限、路径、末尾同步与异常/partial保留。
+
+**当前独立离线进程未持续复现402ms。** 首冷原predict400.3743ms，后续三个warm调用8.2854/5.4163/6.2554ms。12次未打点原调用median8.2287/P95 9.2764ms；12次镜像仪表median7.0727ms，12组成对raw/action最大差严格0，初始原raw与已保存旧chunk1首拍差0。仪表后调用反而更短不能视作优化：原先/仪表后固定顺序、GPU热态与事件/钩子投递仍影响时序，输出等值只证明本次输入上算术结果未变。首冷没做阶段打点，不能将400ms定位到某一层；也不能用一次冷启动解释前轮全部250次>20ms。
+
+| 仪表阶段，12次中位数 | Host毫秒 | 同流CUDA Event毫秒 |
+| --- | --- | --- |
+| state归一化CPU / RGB布局CPU | 0.0144 / 0.0249 | — |
+| state张量/H2D / RGB转换/H2D/div255 | 0.0388 / 0.1172 | 0.0574 / 0.1352 |
+| 完整policy forward（含下列子段） | **6.4544** | **6.4732** |
+| ResNet18骨干 | 2.7245 | 2.9271 |
+| Transformer encoder / decoder | 0.9493 / 1.4389 | 0.9712 / 1.4609 |
+| finite检查（含等待） | 0.1064 | 0.1205 |
+| prediction回CPU/numpy（含等待） | **0.0417** | 0.0565 |
+| 解码 / 队列与jaw投影CPU | 0.0476 / 0.0279 | — |
+
+CUDA通常异步，原finite布尔检查已经可能等待GPU，D2H等待不能直接称为传输瓶颈；依据[PyTorch2.7异步执行](https://docs.pytorch.org/docs/2.7/notes/cuda.html#asynchronous-execution)及[Event文档](https://docs.pytorch.org/docs/2.7/generated/torch.cuda.Event.html)。本次按原顺序测量，没有逐段强制sync；CUDA Event对象在call前创建，但record懒初始化/钩子开销计入仪表差异。末尾Event同步仅在完整call后，median0.0230ms另列，不包含在instrumented_host_ms。Event反映流时间跨度及CPU投递间隙/竞争，不是纯kernel忙碌时间。各子段含在policy总段，不能重复相加；表中各自中位数也不是同一条样本的和。
+
+[额外一次operator trace](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/operator-trace.json)输出动作差0、host16.4641ms，开启profiler有开销，不并入baseline。cuDNN卷积21次的self_device归因合计1.2422ms；trace包含真实CUDA kernel及memcpy，排除本轮CPU-only路径。operator GPU归因、CUDA kernel leaf与CPU inclusive时间存在重叠，不混合加总成“总算力”。模型/缓冲完整哈希前后相同、参数grad均None，52份生产Python及全部输入哈希保持。
+
+[保存产物独立核验](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/result-audit-final.json)重算rows统计、核输入/源码哈希和trace设备leaf；12组动作差0与operator差0是运行时断言witness，未保存各对完整动作数组，因此不声称审计者重新计算这些数组或再推理。初审一个CPU `aten::result_type`计数差异保留：trace中父与唯一子同名，安装的Torch profiler_util.py `_remove_dup_nodes`会合并子节点，解释key_averages计数减少；最终补充不修改原trace/report或再调用模型。
+
+[历史计时核对](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/historical-timing-review.json)回源原队列与4500拍报告：旧chunk16实际282次forward，全部恒定400ms需要112.8s，超过旧总27.4108s；只能推出forward平均全包上界97.20ms，不能还原旧median/P95。当前120.4996/5=24.10倍整体慢放；callback98.8825s，其余21.6170s是加载/渲染/物理/监测/保存的综合，不是单独渲染时间。chunk4在同5sim前缀下约24.72s墙钟仅是callback预算外推；300wall约12.45sim、15sim约361.5wall均非实测。当前CLI明确拒绝max-wall-s>120，单设max-simulation-s15不会延长墙钟；15sim最多是抓取前缀，不替代专家约47sim完整抓放。
+
+**尚未定位原仿真持续慢的具体原因。** 本轮组间GPU快照P3/645MHz→P0/1500MHz仅属于本次离线进程，不能拿前次事后P8快照作反事实；同样，当前8/8线程下快调用不证明历史线程相同，也不证明某个设置能修复原慢。[源码路径复核](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/runtime-path-review.json)确认原evaluate在循环前只加载模型/创建renderer一次，循环是capture→predict→physics；每次render绑定已有GLContext并读像素，不是重建context。离线路径没有EGL/渲染/物理循环，下一最小候选是同冻结输入/权重的有界EGL/CUDA路径对照与同步计时，记录实际运行状态；尚未执行，不把上下文切换、功耗或争用写成已证实原因。
+
+本轮采用既有Wiki“按当前任务选择验收依据”，方法资料通过find-docs核官方2.7版本，诊断与结果由Codex独立只读复核，不冒充新AGY/ZCODE讨论。B/S7e仍未过，chunk1实际抓放对照未完成；v11正常20/20与旧扰动3/20、S7d未过、原物理/安全/落定门槛保留。没有新增抓放回合、训练、图像渲染、留出40..59、云端或实体操作；root接续，运行产物/trace/脚本/日志继续Git忽略，原现场22项/index/README/MJCF保持。

@@ -240,3 +240,14 @@ B实际显示资源与能力不同：随机小视觉ACT在4GB卡batch8只需峰�
 - Torchallocated74.934/reserved102MiB仅是allocator峰值；不能代表全卡占用。事后新进程线程/GPU状态只作现状快照，未记录回合内历史，不能确证降频、线程或争用根因。
 
 采用既有“按当前任务选择验收依据”：运行成本、模型输出与物理抓放分别记。37项轨迹和148项计时独立核验不代替抓放通过；[实际来源与局限](progress.md#2026-10-03-b冻结权重chunk1单回合复验因墙钟上限截断)。下一候选先拆分运行耗时，尚未执行；无重训/第二回合/云端/实体/留出，安全和S7d/S7e状态保持。
+
+## 2026-10-03 热态离线调用未复现仿真持续慢回调
+
+- 当前入口已用no_grad，不能当作尚未关闭反传。唯一profile共29前向，首冷400.374ms，12次后续原调用median8.229ms/P95 9.276ms；12仪表median7.073ms，raw/投影动作差0。当前默认线程8/8，也不足以支持“八线程必然导致402ms”。
+- 主机分段median：state归一化0.014ms、RGB CPU重排0.025ms、RGB转换/H2D/255共0.117ms、policy forward6.454ms、finite检查含等待0.106ms、D2H/numpy含等待0.042ms、解码0.048ms。当前热态不存在持久百毫秒回传或格式开销；首冷未分段，不能把它指定到某一层。
+- 同流CUDA Event的forward跨度6.473ms，包含骨干2.927ms/encoder0.971ms/decoder1.461ms及其余工作/投递间隙；不是纯kernel时间，不得将总段与子段相加。仪表尾部同步median0.023ms另列；原先/仪表后顺序和record/hook/lazy初始化会影响时序，仪表更快不是优化证据。
+- operator profiler另占一次原前向，host16.464ms，不属于12次baseline；trace包含真实CUDA kernel，不能当CPU fallback。CPU operator inclusive time、operator GPU归因与leaf kernel会重叠，不能混合求和。
+- 前轮250慢回调均>20ms，本轮仅首cold约400ms，不能以“冷启动”解释全部历史；本轮GPU P3/645MHz→P0/1500MHz仅组间快照，没有反事实或旧历史，不能证明频率是根因。离线无EGL/渲染/物理，优先检查运行路径差异，仍待实证。
+- 旧chunk16是4500 runner/282 forward，总27.41s，forward平均的全包上界97.20ms，不可能全部恒定400ms；旧逐次median未记录。当前整体慢放120.50/5=24.10倍，400/20仅callback近似。chunk4预算须包括渲染/物理/加载等；300wall粗算12.45sim、15sim粗算361.5wall，均非实测且原CLI禁止wall>120。
+
+方法依据[PyTorch2.7异步语义](https://docs.pytorch.org/docs/2.7/notes/cuda.html#asynchronous-execution)与[CUDA Event](https://docs.pytorch.org/docs/2.7/generated/torch.cuda.Event.html)，实际来源见[运行耗时记录](progress.md#2026-10-03-b离线耗时拆分热态原调用约8ms原仿真慢因仍未知)。沿用既有Wiki按任务选择验收范围，不将热态predict<20ms扩大为EGL完整环50Hz或抓放通过；无新训练、物理、渲染、云端或实体。
