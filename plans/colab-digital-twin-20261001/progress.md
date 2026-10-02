@@ -330,3 +330,34 @@ B checkpoint SHA `cd298034a24fced617d2cd635acb89e4f3c46bcff451ef74fd53b2baeb4bd2
 [本轮汇总](../../experiments/colab-twin/output/last-a-to-vision-b-gates-20261002/report.json) SHA `9c1f1ad5d01112c3db30d1a9edb340120326a539f70ea048bbc50404bf9a94e4`绑定A/B各层report、checkpoint与精确argv。**A结束，B数据→训练→仿真管线通过，但B纯视觉抓放未通过；S7d/S7e任务门槛均不改成passed。** 未追加第二次训练、未用40..59、未启动新的20+20，无实体或云端操作。
 
 接续owner根Codex：保留原v11状态成功基线、全部纠正和B失败模型；下一步先针对固定首动作／接触前关键帧核对视觉动作偏差与RGB输入作用，再决定把已有成功恢复档案同步成RGB作小批接续。当前唯一nominal数据不作为未见恢复证据；本轮不自动加时长或降低安全判据。公开交付只含源码与文档，data/weight/log/审核/staging全部Git忽略；原现场22项/index/model仍受保护。
+
+
+### 2026-10-02 B只读几何与RGB依赖诊断完成
+
+本轮只核对冻结的B失败产物、专家档案与权重；没有新训练、物理step、rollout、RGB导出、GPU/云端/实体或留出40..59操作。根Codex[汇总](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/report.json)绑定三项来源与52份未变Python源码。所有脚本、精确参数、图表和审计继续Git忽略；[接触前对齐图](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/pregrasp-timing.png)仅绘制保存数组，两轨迹按各自首次闭爪命令对齐。
+
+**几何与时序。** [FK审计](../../experiments/colab-twin/output/vision-b-pregrasp-audit-20261002/report.json)在独立查询数据上计算原q6的正向运动学，物体XYZ及接触力使用同拍已保存物理诊断，不重新模拟力。两次派生接触模型SHA相同。下列时间均相对reset，几何误差用同拍物体位置；IK参考点不是实际指垫中点：
+
+| 指标 | 冻结B失败回合 | 成功专家nominal |
+| --- | --- | --- |
+| 首次闭爪command | 33.00s | 11.02s |
+| 闭爪前IK参考点－物体XY差 | 4.4937mm | 0.00607mm |
+| 闭爪前IK参考点世界Z | 21.8074mm | 19.7629mm |
+| 固定指／活动指最大已保存法向力 | 27.3059N／0N | 1.4424N／1.6033N |
+| 双指同时超过0.02N的已保存帧 | 0 | 1395 |
+
+B固定指32.38s已有接触，早于33.00s闭爪命令；物体最低中心Z3.3148mm，未抬升。实际jaw首次<0.1rad在35.48s，此时IK参考点世界Z33.8578mm，双指力均0；35.92s首次<0.03rad时参考点已至42.9670mm。相反专家13.40s建立双指接触（当拍实际jaw0.1233rad），后续夹持时实际jaw约0.116rad，随后实抓起。<0.1是诊断阈值，不能作抓取成功判据；目标jaw0.015也不意味着持物时实际关节应达到0.015。
+
+应修正“全程零接触夹空”解释：实际存在固定指接触及物体向下位移，但活动指始终无已保存接触力、未建立双指夹持；闭合与抬升配合值得优先检查。不能称成功抓取后滑脱，也不能单凭参考点三维距离断定唯一根因。[指垫方向审计](../../experiments/colab-twin/output/vision-b-pregrasp-audit-20261002/pad-direction-report.json)显示接触峰值时固定指几何位于物体上侧，但缺少保存的物体四元数、真实接触点和法向，不能进一步证明唯一施力方向或视觉/动力学单一因果。
+
+**固定q6的RGB响应。** [CPU图像探针](../../experiments/colab-twin/output/vision-b-image-dependency-20261002/report.json)取12专家训练帧＋12失败稀疏帧（起步有重复，不是24个独立试验），比较原图/黑图/灰图/固定seed噪声/同场景异时刻图，96组counterfactual pairs。直接predict_action_chunk绕过runner缓存，17次CPU forward含重复/重载，计算1.663s、无优化器；相同CPU预测重载及重复误差0。专家550/551/567帧黑图使首jaw从闭变开，五轴整chunk平均绝对差约0.00454–0.00557rad；专家12帧黑图首jaw共5帧翻转，另2帧是释放时开→闭。实际失败12稀疏帧在四种替图下，首动作及完整16拍jaw类别均未翻转，黑图首动作五轴变化中位数仅5.526e-5rad；但frame2000整chunk五轴平均差0.012068rad，不能说模型完全忽略RGB。
+
+[真实chunk刷新一致性](../../experiments/colab-twin/output/vision-b-image-dependency-20261002/rollout-refresh-consistency.json)中，9个刷新稀疏帧CPU首动作与旧CUDA保存值最大差五轴1.809e-7rad／jaw3.881e-6rad；非刷新帧重新计算的是假设新chunk，不是当时缓存执行动作。黑/灰/噪声属于分布外输入，异时刻真图也与固定q冲突且改变机器人外观，未隔离方块位置。因此可否定所测状态上的严格RGB输出独立性，不能证明方块定位、正确视觉伺服、强视觉依赖或恢复泛化。
+
+**数据候选而非全量开训。** [21档案复核](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/archive-review.json)共52335raw／32480valid／19855invalid，[原解析器准入](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/archive-admission-check.json)全部合格、raw64及2ms/20ms一致；这是原成功记录与解析核对，不是本轮21份新物理零误差回放。21份初始物体XYZ均为(0.24,-0.13,0.00992145)m，许多held/release有效标签从抓起后才开始，不能直接弥补当前抓前失败或宣称多场景覆盖。
+
+建议下一次仅做4份RGB小批：已有nominal2350；新增prefix50起步恢复2350raw/2300valid、v6-450接近下潜2406raw/1956valid、v13-seed23脉冲后接近2352raw/2191valid。总9458raw/8797valid/661invalid，新增RGB导出仅3份。选取理由是先覆盖起步、接近和下潜，不先堆持物/释放标签；这些来自旧状态策略偏差，尚未证明覆盖当前B实际闭合/抬升错误。每份新RGB仍须obs_t对齐、完整原raw64物理回放state/env/time差0、invalid前缀排除且chunk不跨无效段，按完整episode划分，不能把相邻帧当独立留出。此处仅形成候选清单，未导出或再训练；是否改善必须由下一次纯视觉单回合真实抓放判断。
+
+本轮采用既有Wiki/自动化开发范式与智能体协作.md“按当前任务选择验收依据”：RGB输入敏感性、数据准入和实际抓放分别记证据。相关方法来源为[ACT论文](https://arxiv.org/abs/2304.13705)的视觉模仿/action chunking及[离线机器人示范学习研究](https://arxiv.org/abs/2108.03298)的数据质量与评估区分；它们不证明这份SO101候选已能定位或恢复。[独立Codex审计](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/independent-audit.json)只核对本轮冻结产物/源码；[文档审计](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/documentation-audit.json)另核五篇公开变动的链接与事实。两项均不冒充AGY/ZCODE新讨论。
+
+B仍0/1、S7e任务未通过；v11既有20/20正常与3/20旧扰动保留，S7d未通过。生产Python与模型未变，因此未重跑上一轮232项实现/产物测试；本轮验证为真实离线探针、独立复核及文档链接/diff检查。接续owner根Codex：先上述小批RGB准入、有效接触前样本与闭合/抬升标签核对，再唯一有界训练和纯视觉单回合门槛；不预报成功率、不恢复A、不调整安全阈值。

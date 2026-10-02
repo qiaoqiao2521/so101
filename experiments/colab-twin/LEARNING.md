@@ -5,6 +5,8 @@
 
 ## 2026-10-02 当前路线：A止损后启动单相机视觉B
 
+本轮三项只读诊断已完成：B首闭爪33.00s、IK参考点XY偏差4.49mm；固定指接触但活动指全程无接触力，实际合拢时手臂已抬高，未实抓起。固定q6替图确能改变部分输出，尚不能证明方块定位或视觉纠偏。21份成功档案仅1份已有RGB；建议先选起步/接近/下潜4份共8797valid（新增导出3份），不是全量长训。诊断未训练、导出或运行新物理回合，B仍0/1。时间对齐图、精确来源与局限见[最新诊断](../../plans/colab-digital-twin-20261001/progress.md#2026-10-02-b只读几何与rgb依赖诊断完成)。
+
 用户决定最后一次状态五轴接续失败便转B。A三条实际纠正/零误差回放合格，唯一1262step/120.0608s arm训练后组合原v11旧夹爪；正常seed0抓起/持物74.64s，90s超时未放置，首次失败即停止。四个已见扰动探针、20+20和留出40..59未跑，v11原状态基线仍正常20/20、旧扰动3/20；S7d整体未通过。原state格式、统计和权重保留，不将转B作为旧门槛通过。
 
 [learning_vision.py](learning_vision.py) 与 [run_vision_learning.py](run_vision_learning.py) 是复用当前官方LeRobot ACT的薄视觉入口。模型仅接收 `observation.state` 六关节位置与 `observation.images.workcell` 固定相机RGB。原 `environment_state`、物理接触真值、clock和专家stage不进入model；它们只供物理环境和独立验收。动作保持五轴chunk-start残差＋绝对jaw，保存归一化并在同一锚点解码；nearest仅映射到专家训练两jaw值，不读取几何或指定开闭时刻。
