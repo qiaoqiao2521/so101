@@ -493,3 +493,29 @@ CUDA通常异步，原finite布尔检查已经可能等待GPU，D2H等待不能�
 **尚未定位原仿真持续慢的具体原因。** 本轮组间GPU快照P3/645MHz→P0/1500MHz仅属于本次离线进程，不能拿前次事后P8快照作反事实；同样，当前8/8线程下快调用不证明历史线程相同，也不证明某个设置能修复原慢。[源码路径复核](../../experiments/colab-twin/output/vision-b-runtime-profile-20261003/runtime-path-review.json)确认原evaluate在循环前只加载模型/创建renderer一次，循环是capture→predict→physics；每次render绑定已有GLContext并读像素，不是重建context。离线路径没有EGL/渲染/物理循环，下一最小候选是同冻结输入/权重的有界EGL/CUDA路径对照与同步计时，记录实际运行状态；尚未执行，不把上下文切换、功耗或争用写成已证实原因。
 
 本轮采用既有Wiki“按当前任务选择验收依据”，方法资料通过find-docs核官方2.7版本，诊断与结果由Codex独立只读复核，不冒充新AGY/ZCODE讨论。B/S7e仍未过，chunk1实际抓放对照未完成；v11正常20/20与旧扰动3/20、S7d未过、原物理/安全/落定门槛保留。没有新增抓放回合、训练、图像渲染、留出40..59、云端或实体操作；root接续，运行产物/trace/脚本/日志继续Git忽略，原现场22项/index/README/MJCF保持。
+
+### 2026-10-03 B同输入EGL与CUDA静态对照未复现持续慢调用
+
+用户指定下一步核对同输入EGL/CUDA路径，暂不重训或改精度，并保留“完整闭环50Hz尚未验证”。本轮仅静态同输入A-B-A，没有新增物理任务回合。冻结d4db checkpoint、原q6与128×128 uint8存档RGB（旧chunk1初始帧）、batch1、execute1、float32/no_grad、原归一化/解码/jaw投影及后端；进程内线程8/8、cuDNN TF32=true/matmul TF32=false仅记录，没有修改。模型始终使用冻结画面，不把渲染输出替换为新观测。
+
+[唯一报告](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/report.json)SHA `7244b1d460299fa54da99a6cc7e2e4491fc6a3f623d1e8227a61ade670fc532d`；[真实execution](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/execution.json)actual exit0、外层6.5325s/内层4.2950s、硬timeout60s、唯一attempt1/no retry。4次cold-warm+A8+B8+close后A8，共28原predict和28真实model forward；8静态capture、一个renderer、一次显式close。新优化/积分/任务回合0，完整抓放效果没有重新评定。
+
+| 同一冻结输入，每组8次 | Predict中位ms | Predict P95 ms | Predict最大ms |
+| --- | --- | --- | --- |
+| A：尚未创建renderer | 6.4847 | 6.9660 | 7.0383 |
+| B：原静态capture后立即predict | 6.8334 | 7.3294 | 7.4848 |
+| A：renderer.close后 | 6.4120 | 7.1815 | 7.3752 |
+
+B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms/P95 12.9041ms/最大15.1634ms。首次模型调用377.1950ms单列，随后warm7.0870/6.4611/6.5748ms；初次渲染8.1631ms保留在8次render/pair统计中，不计入predict段。静态model/data/renderer设置873.0674ms、close16.6850ms在callback之外，没有摊进各组。B包含原capture内部CPU状态保全检查，计时只用perf_counter；capture返回后仅取主机时间即进入原predict，没有CUDA Event/getter/显式sync、GPU查询、hash或保存插入。每次predict返回后才检查、保存完整动作/输入hash/静态快照，保存的组间空隙不计入callback，也不是实时循环验收。
+
+静态场景直接读取原派生contact-workcell.xml及13原STL，完整snapshot来自原nominal rawHDF，checkpoint本身没有initial_snapshot。恢复qpos13/qvel12/ctrl6/warmstart12/time后只调用一次mj_forward刷新几何与派生量；[官方API](https://mujoco.readthedocs.io/en/3.3.7/APIreference/APIfunctions.html#mj-forward)说明此调用不做时间积分。此次primary、warmstart与其他记录字段前后差也全0，后续八次render和close以forward后快照为基准逐位比较。禁止mj_step/step1/step2与resetData三入口，没有StateWorkcell.reset/step或生成新物理XML。实际GL context类型为mujoco.egl.GLContext；[安装版渲染语义](https://mujoco.readthedocs.io/en/3.3.7/python.html#rendering)及[静态源码协议审查](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/static-protocol-review.json)核close释放GL/Mjr，但global EGL display保留，因此后A不是全新进程或GPU复位。
+
+[内层脚本](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/run_aba.py)SHA `7e0a8adc9e064ecc96d47375841591bee6a033450f59d1a62ce23affc5b67c29`，[唯一外层](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/launch_once.py)SHA `222f6123872e751ad30dbcb2907639a203ed45e05e2f4173d229419830c04b78`。源码协议反馈与根最终AST/SHA核对先于启动，正式脚本审查记录在诊断完成后落盘，保留真实时序，不声称该JSON已在执行前存在。计数由原调用与CPU model prehook记录、禁用积分/reset入口并回源核对；不是native全面调用trace。异常清理结果单列cleanup.json，本次context已释放、error=null；未重试或改原生产文件。
+
+[独立静态数组审计](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/state-pixel-audit.json)SHA `0b865e7331820ae3a2ef77514c7dc87b281dc9b511b8cba504afdbe4bdd07ac5`，actual exit0/0.316s，275项通过。仅stdlib/numpy/h5py读取原产物：从完整raw snapshot核forward前后及8B/close后9字段差全0；8RGB逐位一致且等于冻结存档RGB，最大像素差0；从[28组完整动作](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/actions.npz)独立重算raw/投影动作及旧初始动作差0，并复核group统计、源码/输入SHA、计数和退出。该审计没有新增模型/GL/FK/forward/积分/GPU查询。模型权重/缓冲哈希前后一致、grad均None是本次运行witness，源52和checkpoint/raw/XML/STL文件哈希另独立核对；不通过再次推理“验证”原输出。
+
+[独立调用与结果审查](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/result-audit.json)SHA `cdada7cf69e0d2d76504b0351038fcb945da4c74bc397c20043511e88eb58520`，347项通过：复核完整动作/像素/状态数组、全部统计、artifactSHA、预算及cleanup，不调用模型/GL或物理；与275项静态数组审计是两份独立范围，不合并成新的任务成功次数。[正式脚本记录](../../experiments/colab-twin/output/vision-b-egl-cuda-aba-20261003/script-review-final.json)保留32项代码检查通过与落盘晚于launch的时序，不能包装为未启动状态通过。
+
+**结论只覆盖当前静态路径。** 没有持续复现旧402ms；不能认定已修复历史慢循环，也不能将EGL上下文、GPU频率、线程或调度写成唯一根因。A-B-A有顺序、热态与系统负载混杂，每组仅8次；不将约0.35ms差异解释为因果效应。静态capture+predict<20ms只核两段，未包含真实physics、monitor、调度或保存开销与长时尾延迟，完整闭环50Hz仍未验证。下一候选冻结配置下有界检查真实循环render→predict→physics→monitor与实际调度，尚未执行。
+
+沿用按当前任务选择验收依据；本轮Codex独立只读审核不冒充AGY/ZCODE新会审。B/S7e、chunk1完整抓放、v11正常20/20与旧扰动3/20、S7d未通过状态保持；未使用40..59、云端或实体。原生产源码没有变化，不重复232项测试作为新物理/实时通过证据。root串行接续，全部模型、NPZ、脚本、日志和审计仍Git忽略；公开仅交付本轮事实记录，原现场22项/index/README/MJCF保持。

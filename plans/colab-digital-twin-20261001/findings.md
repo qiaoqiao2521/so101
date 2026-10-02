@@ -251,3 +251,12 @@ B实际显示资源与能力不同：随机小视觉ACT在4GB卡batch8只需峰�
 - 旧chunk16是4500 runner/282 forward，总27.41s，forward平均的全包上界97.20ms，不可能全部恒定400ms；旧逐次median未记录。当前整体慢放120.50/5=24.10倍，400/20仅callback近似。chunk4预算须包括渲染/物理/加载等；300wall粗算12.45sim、15sim粗算361.5wall，均非实测且原CLI禁止wall>120。
 
 方法依据[PyTorch2.7异步语义](https://docs.pytorch.org/docs/2.7/notes/cuda.html#asynchronous-execution)与[CUDA Event](https://docs.pytorch.org/docs/2.7/generated/torch.cuda.Event.html)，实际来源见[运行耗时记录](progress.md#2026-10-03-b离线耗时拆分热态原调用约8ms原仿真慢因仍未知)。沿用既有Wiki按任务选择验收范围，不将热态predict<20ms扩大为EGL完整环50Hz或抓放通过；无新训练、物理、渲染、云端或实体。
+
+## 2026-10-03 静态同输入EGL路径未触发历史慢调用
+
+- 唯一静态A-B-A：同q6/RGB/d4db/batch1/float32/no_grad/default backend/线程8/8，4cold-warm+A8+B8+A8，共28forward。B采用实际mujoco.egl.GLContext，原capture后立即原predict，不夹CUDA Event/getter/sync/status；输入仍冻结RGB，渲染仅作路径变量与证据。
+- 原predict中位A6.4847/B6.8334/A-close6.4120ms；B渲染中位1.1119ms，两段中位7.9350ms、最大15.1634ms。首冷377.1950ms和初次render8.1631ms单列，不能解释历史全部250次慢回调；组序、热态和系统负载仍混杂，不由小幅差异定因果。
+- 原rawHDF完整初态直接装入旧contactXML，仅一次mj_forward不积分；原primary和warmstart此次也逐位未变。8render/close后的9状态字段差0，8画面与存档RGB差0，28raw/投影动作及旧首拍差0；独立275项数组核验通过，原52源码/模型/输入SHA不变。
+- 显式renderer.close释放GL/Mjr context，但全局EGL display可保留；A-close不是全新进程或GPU复位。静态路径未复现持续402ms，不能证明真实循环无EGL影响，也不能锁定context、功耗、线程或调度根因。
+
+[mj_forward官方说明](https://mujoco.readthedocs.io/en/3.3.7/APIreference/APIfunctions.html#mj-forward)与[MuJoCo3.3.7渲染文档](https://mujoco.readthedocs.io/en/3.3.7/python.html#rendering)支持静态设置边界；[实际记录](progress.md#2026-10-03-b同输入egl与cuda静态对照未复现持续慢调用)区分预测、静态渲染和完整物理闭环。没有训练/精度修改/积分/抓放回合；完整50Hz、chunk1抓放和历史慢因仍待验证。

@@ -143,3 +143,11 @@ B首轮实际完成：2350RGB/raw64严格回放通过；batch8完整五次反传
 - [ ] B-runtime-original-cause：本轮热态原调用中位8.229ms，未持续复现前次402ms；根因仍未知，不能标记旧慢已修复。
 
 下一候选同权重/冻结输入下有界对照EGL与CUDA路径，尚未执行。chunk4或延长诊断预算并未启动；原CLI禁止wall>120，15sim不能替代完整抓放。B/S7e与chunk1任务状态不变，owner根Codex，来源见[本轮progress](progress.md#2026-10-03-b离线耗时拆分热态原调用约8ms原仿真慢因仍未知)。
+
+## B同输入EGL/CUDA静态路径对照（2026-10-03）
+
+- [x] B-EGL-CUDA-static：按用户指令冻结d4db/q6/RGB/float32/no_grad/后端/线程，4cold-warm+A8+B8+A8；唯一28前向、8静态render、1次mj_forward/0积分，60s硬限内外层6.532s完成，无重试。
+- [x] B-EGL-CUDA-evidence：原capture→host计时→原predict，渲染图不替换存档输入；完整保存28组raw/action、8RGB与状态数组，独立275项核验差0；没有插入CUDA Event/getter/sync或GPU状态查询。
+- [ ] B-runtime-original-cause：三个原predict组中位6.485/6.833/6.412ms，本次没有持续复现历史402ms，根因仍未知；静态B两段<20ms不等于实际物理闭环50Hz。
+
+本轮不重训、不改精度或推理模式、不追加抓放回合。下一候选冻结配置下有界核对真实循环的物理推进、监测与调度，尚未执行；B/S7e、chunk1抓放及S7d状态不变，owner根Codex。[实际参数、统计和本机证据](progress.md#2026-10-03-b同输入egl与cuda静态对照未复现持续慢调用)。
