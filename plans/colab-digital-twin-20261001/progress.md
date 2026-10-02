@@ -283,3 +283,50 @@ S7d-single已通过，S7d批次/S7e视觉继续未完成，20正常＋20扰动�
 结论：T1-data与冻结训练执行完成，但已见扰动抓放0/3、正常仅1/1；**T1任务目标未通过，v12不替代v11基线**。v11既有正常20/20、扰动3/20不变，不将两版混算新批次。Seeds40..59未读取、采集或执行；没有新的20+20/85%或视觉晋级证据。本轮独立助手均为Codex，不冒充新AGY/ZCODE审核。
 
 最短接续owner根Codex：保留v11及全部新数据/失败候选，先在已见种子检查接近到抓起的开闭边界、盘壁接近及高位下降的actual-state标签覆盖；再单独启动T2/T3有界纠正和微调。不得靠延长本次90s、强开/强关爪规则或放宽1mm保护跳过门槛。T4先固定候选后才使用留出Seeds40..59，本轮不触碰该集合。
+
+
+### 2026-10-02 最后一次A完成、首次正常探针失败，按用户决定转B
+
+用户授权“再来一次机会，不行直接B”。A只执行一次五轴接续，不再重训夹爪。三条真实专家纠正均完成抓放，各独立raw64回放state/env/time最大差严格为0：
+
+| 纠正 | 前缀 / raw / valid / invalid | 独立回放 |
+| --- | --- | --- |
+| v12 seed36盘内高位held | 2000 / 2587 / 587 / 2000 | [2587步通过](../../experiments/colab-twin/output/policy-correction-v13-last-a-held-seed36-20261002-replay/report.json) |
+| v12 seed24安全高位held | 1660 / 2499 / 839 / 1660 | [2499步通过](../../experiments/colab-twin/output/policy-correction-v13-last-a-held-seed24-20261002-replay/report.json) |
+| v11 seed23脉冲后无接触接近 | 161 / 2352 / 2191 / 161 | [2352步通过](../../experiments/colab-twin/output/policy-correction-v13-last-a-approach-seed23-20261002-replay/report.json) |
+
+新增7438raw/3617valid/3821invalid；[21份实际训练清单](../../experiments/colab-twin/output/policy-correction-v13-last-a-training-datasets-20261002.json)共52335raw/32480valid/19855invalid。全部invalid前缀排除训练；held前缀专家标签NaN，原grasp_episode接近前缀保留有限动作但label_valid=false，同样不会学习。首valid保持真实速度与状态，以actual五轴q制动，随后重新解算专家纠正；无终点恢复或自由物体附着。
+
+[唯一五轴训练](../../experiments/colab-twin/output/policy-correction-v13-last-a-arm-fit-20261002/report.json)从v10 `b92adf12…`初始化，fresh Adam、CPU batch64/lr1e-5，1262step/120.0608s优化循环、149.9137s总时间后停止；逐batch检查预算，不能称总进程严格120s。仅五轴动作损失，原四归一化和robot-only速度mask保持。72个ACT状态tensor中71个改变，共享主干允许随arm-only loss训练；这不是T1的72张量冻结。
+
+新[compose_state_policy.py](../../experiments/colab-twin/compose_state_policy.py)显式组合新arm SHA `c8524aee…`与v11旧学习夹爪：新arm训练21档案，旧head仍15档案/原统计/原arm来源，六个head tensor逐项不变。合成SHA `5a9022d4…`；不将head出处改写为新arm全集，保存重载和组合预测严格一致。新增组合及相关训练测试29项通过；独立旧v11重载保持原权重/掩码/统计，不覆盖基线。
+
+按首次失败停止，实际先执行[正常seed0](../../experiments/colab-twin/output/policy-correction-v13-last-a-nominal-20261002/report.json)：4500拍/90s，抓起并持物74.64s，却未释放落定，simulation_time_limit；无安全停止。终点物体(.205991,.122377,.037639)m已在蓝盘XY范围、仍双指悬持、无盘底支撑。仅能判断任务失败，不能据此证明arm唯一因果。已见扰动seeds23/24/36/22四个计划探针均not_run_after_first_failed_probe，20+20未启动、40..59未使用。
+
+[独立Codex审计](../../experiments/colab-twin/output/v13-last-a-independent-audit-20261002.json)92项实际检查全true，SHA `c3a6c4350725d24b2a4338e7d3ec244a7357e9f4573abb280d45b4326adfd1ba`；审计通过仅说明证据一致，A任务失败。**A在此结束，按用户授权正式启动B**。v11状态基线20/20正常、3/20旧扰动保持，S7d整体仍未通过；不把转路线当作状态门槛晋级。
+
+B先执行固定128×128相机RGB同步导出：原nominal2350转换全部渲染，EGL回放专家抓放通过，state/env/time逐帧差0；root实际查看0/587/1175/1762/2349五张sample，工作区完整，方块仅数个像素且接触时可能遮挡，接受有限资源诊断而非鲁棒性证明。图像在obs_t、执行command_t之前生成。实际报告和相机检查见[RGB导出](../../experiments/colab-twin/output/vision-b-rgb-20261002/report.json)与[camera-review](../../experiments/colab-twin/output/vision-b-rgb-20261002/camera-review.json)。后续资源/训练/纯策略结果在下一节填写；不连接实体或云端。
+
+
+### 2026-10-02 B视觉首轮管线完成，纯策略抓放未通过
+
+复用当前LeRobot ACT，小配置随机ResNet18（无下载/预训练）＋state6/RGB，完整六动作损失，不复用state策略的特权env30或阶段/时钟。RGB生产时的旧源码保留在ignored staging中；之后只修复资源/权重绑定，渲染/动作路径未变。导出、资源、训练与评测各自保存实际源码SHA，不将它们误写成全来自同一版本。
+
+| 层级 | 实际结果 | 证据（本机ignored output） |
+| --- | --- | --- |
+| 同步RGB／原始动作物理回放 | 2350帧，EGL；state/env/time最大差0，专家完整抓放通过 | [export](../../experiments/colab-twin/output/vision-b-rgb-20261002/report.json)、[相机检查](../../experiments/colab-twin/output/vision-b-rgb-20261002/camera-review.json) |
+| 本机CUDA五次反传 | batch8，5/5；allocated309.343MiB、reserved332MiB，总3.025s | [resource](../../experiments/colab-twin/output/vision-b-resource-20261002/report.json) |
+| 唯一限时训练与保存重载 | 3438step／120.016s优化、122.731s总时间；同CPU设备推理重载误差0，15001542参数 | [fit](../../experiments/colab-twin/output/vision-b-fit-20261002/report.json) |
+| 纯视觉策略同初态单回合 | **0/1，未实抓起、hold0、未放置**；完成3236拍/64.72s，下一个command推进至64.74s触发原1mm余量保护 | [evaluate](../../experiments/colab-twin/output/vision-b-nominal-20261002/report.json) |
+
+B checkpoint SHA `cd298034a24fced617d2cd635acb89e4f3c46bcff451ef74fd53b2baeb4bd2c9`。模型只接收当前q6与RGB，chunk16每320ms重新推理；nearest仅映射训练两jaw值，没有几何开闭规则或IK/OMPL/专家介入。停止为蓝盘负y侧壁与活动指爪间距0.912153mm，不把保护停机说成已证实接触穿透。物体始终未抬升，终点(.239788,-.130018,.009921)m仍在红盘；不能把手臂走到蓝盘称搬运完成。安全失败command及其新状态在report保留，NPZ只保存3236个已完成的安全转换；最后monitor安全快照false不覆盖外层SafetyStop。
+
+训练日志的L1采样为不同随机minibatch，不能直接当固定测试loss或宣称已近零过拟合。[九帧CPU离线探针](../../experiments/colab-twin/output/vision-b-nine-frame-diagnostic-20261002.json)只在专家训练观测上teacher-force：jaw9/9正确，五轴first-action平均MAE0.000723rad，起步两帧0.002281/0.002196rad；这不等于实际轨迹能抓起，也不证明模型已使用空间视觉。失败轨迹与探针仅提供下一步起步、接触前对准、图像遮挡及有效视觉特征检查入口，不作单一因果归因。
+
+[B独立Codex审计](../../experiments/colab-twin/output/vision-b-independent-audit-20261002.json)81项实际证据检查全true，SHA `eafdd8ae3886ce6cd53c80c6337533ecaa4c3ee940a677efee7388ec0b7226d7`；覆盖原raw/RGB逐行、旧导出版本、新资源/训练源码、资源原文与权重、实际NPZ/失败command及CPU九帧诊断。它不冒充新AGY/ZCODE评审，审计通过也不修改任务失败。
+
+新源码组合8项／视觉适配12项加入全套：[232 tests／0skip／47.896s、actual exit0](../../experiments/colab-twin/output/last-a-vision-b-final-test-result-20261002.json)，前后所有Python源码SHA一致。[精确测试参数](../../experiments/colab-twin/output/last-a-vision-b-final-test-arguments-20261002.json)绑定17份恢复HDF（旧11＋T1新3＋本轮A新3）与接近seed23新独立回放；原四份v4 nominal训练集不在这17个恢复绑定里，另有原物理回放和本轮RGB比对证据。接口/mock测试、真实数据回放、实际反传重载与纯策略物理门槛各自独立。
+
+[本轮汇总](../../experiments/colab-twin/output/last-a-to-vision-b-gates-20261002/report.json) SHA `9c1f1ad5d01112c3db30d1a9edb340120326a539f70ea048bbc50404bf9a94e4`绑定A/B各层report、checkpoint与精确argv。**A结束，B数据→训练→仿真管线通过，但B纯视觉抓放未通过；S7d/S7e任务门槛均不改成passed。** 未追加第二次训练、未用40..59、未启动新的20+20，无实体或云端操作。
+
+接续owner根Codex：保留原v11状态成功基线、全部纠正和B失败模型；下一步先针对固定首动作／接触前关键帧核对视觉动作偏差与RGB输入作用，再决定把已有成功恢复档案同步成RGB作小批接续。当前唯一nominal数据不作为未见恢复证据；本轮不自动加时长或降低安全判据。公开交付只含源码与文档，data/weight/log/审核/staging全部Git忽略；原现场22项/index/model仍受保护。

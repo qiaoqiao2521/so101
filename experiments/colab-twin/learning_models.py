@@ -220,8 +220,12 @@ def load_policy_checkpoint(path: str, device: str = "cpu"):
         from learning_gripper import LearnedGripperPolicy
         if spec.model != "act" or spec.use_vae or spec.dropout != 0:
             raise ValueError("Learned gripper requires a deterministic frozen ACT base")
+        gripper_hashes = data["train_dataset_sha256"]
+        if "composition" in data:
+            from compose_state_policy import validate_composed_policy_metadata
+            gripper_hashes = validate_composed_policy_metadata(data)
         policy = LearnedGripperPolicy(policy, data["learned_gripper_classifier"],
-                                      data["normalization"][ACTION], data["train_dataset_sha256"], device).eval()
+                                      data["normalization"][ACTION], gripper_hashes, device).eval()
     return policy, normalizer, data
 
 

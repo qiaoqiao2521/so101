@@ -1,6 +1,51 @@
-# 有限资源状态学习闭环
+# 有限资源仿真学习闭环
 
 从同一份 MuJoCo 转换数据出发，官方小配置 ACT 与三层 Torch MLP 共用输入、绝对关节动作和归一化适配。MLP 不引入 imitation/SB3；官方 LeRobot 自身的 base 依赖仍须安装。三方会审与原始来源见[learning-review](../../plans/colab-digital-twin-20261001/learning-review.md)。
+
+
+## 2026-10-02 当前路线：A止损后启动单相机视觉B
+
+用户决定最后一次状态五轴接续失败便转B。A三条实际纠正/零误差回放合格，唯一1262step/120.0608s arm训练后组合原v11旧夹爪；正常seed0抓起/持物74.64s，90s超时未放置，首次失败即停止。四个已见扰动探针、20+20和留出40..59未跑，v11原状态基线仍正常20/20、旧扰动3/20；S7d整体未通过。原state格式、统计和权重保留，不将转B作为旧门槛通过。
+
+[learning_vision.py](learning_vision.py) 与 [run_vision_learning.py](run_vision_learning.py) 是复用当前官方LeRobot ACT的薄视觉入口。模型仅接收 `observation.state` 六关节位置与 `observation.images.workcell` 固定相机RGB。原 `environment_state`、物理接触真值、clock和专家stage不进入model；它们只供物理环境和独立验收。动作保持五轴chunk-start残差＋绝对jaw，保存归一化并在同一锚点解码；nearest仅映射到专家训练两jaw值，不读取几何或指定开闭时刻。
+
+RGB在 `obs_t`、执行 `command_t` 之前渲染；相机参数固定，不用物体真值跟随。2ms物理/20ms控制，128×128 uint8 RGB按HDF行保存，加载batch才转CHW float32/255。无效标签过滤后chunk不能跨无效段/回合；完整RGB导出再用原raw64动作实际回放，state/env/time必须逐帧严格一致。渲染只缩小画布/阴影/MSAA缓冲，原物理模型、1mm余量和1s蓝盘落定判据不改。
+
+小模型为随机ResNet18＋ACT dim256/4heads/FF1024/encoder2/decoder2、chunk16、no VAE/dropout0；不下载预训练权重或另装框架。128×128里方块较小、抓取时会遮挡，先验真图像覆盖，不假定视觉天然更容易纠偏。依据：[固定官方ACT源码](https://github.com/huggingface/lerobot/tree/e0d50211ef236143ae867228662b7dfaba554f02/src/lerobot/policies/act)、[ACT原论文](https://arxiv.org/abs/2304.13705)。官方实现提供视觉模仿/动作chunking，不提供当前SO101任务的成功保证。
+
+从本目录分别运行（先使用现有独立环境；各输出必须新目录；以下目录仅为示例）：
+
+```bash
+SO101_TASK_PY=/home/muqiao/.cache/so101-colab/learning-venv/bin/python
+
+env MUJOCO_GL=egl "$SO101_TASK_PY" run_vision_learning.py export \
+  --dataset output/reactive-v4-nominal-20261001/expert.h5 \
+  --output output/vision-demo-rgb --device cpu
+
+# 完整导出和原物理回放通过后，实际查看 report 所列 sample-*.png。
+"$SO101_TASK_PY" run_vision_learning.py microbenchmark \
+  --dataset output/vision-demo-rgb/expert-rgb.h5 \
+  --output output/vision-demo-resource --device cuda
+
+# 只有相机已查看、资源报告通过并绑定当前源码/相机/数据后才训练。
+"$SO101_TASK_PY" run_vision_learning.py fit \
+  --dataset output/vision-demo-rgb/expert-rgb.h5 \
+  --resource-report output/vision-demo-resource/report.json --camera-reviewed \
+  --output output/vision-demo-fit --device cuda
+
+env MUJOCO_GL=egl "$SO101_TASK_PY" run_vision_learning.py evaluate \
+  --dataset output/reactive-v4-nominal-20261001/expert.h5 \
+  --checkpoint output/vision-demo-fit/policy.pt \
+  --output output/vision-demo-nominal --device cuda
+```
+
+本机无OSMesa库，实际EGL渲染通过；export/evaluate分进程，进程退出释放GL后再做资源或训练。资源只试预设batch8五次forward/backward/Adam；OOM或两个峰值任一>3200MiB才最多降一次batch4。不虚称整个启动“10秒”：实际计算、总时间和allocated/reserved各自记录。成功资源报告原文及SHA嵌进checkpoint，加载还核对当前两生产源码、官方源、相机、raw/RGB档案、完整5step witness和峰值；源码改动后旧模型不可静默加载，旧产物仍保留。
+
+训练是fresh Adam/lr1e-4，最多5000step/200epoch/120s优化循环，先到即停止；总时间另含初始化、保存和同设备CPU重载比较。初始模型随机，不承诺单轨迹120s可以过拟合。独立评估最多90s仿真/120s wall，执行chunk16每320ms用新图像推理一次，虽然图像按50Hz采样；不调用IK/OMPL/阶段机/专家，安全停止或超时总计任务失败。训练HDF本身的专家成功、loss下降、保存重载一致都不能代替学习抓放成功。
+
+实际首轮RGB导出2350帧，专家hold25.5s/静稳3.02s，逐帧raw64三项差0；root查看五张sample，独立审核图像、帧号和原raw列全部一致。视觉资源batch8完整5step，总3.025s，allocated309.343MiB/reserved332MiB；CUDA报告总3761.75MiB与物理卡4096MiB分开记录。唯一视觉训练3438step/120.016s、重载差0，但纯策略未实抓起，64.74s蓝盘壁0.912153mm触发原1mm保护，完整任务0/1；232项源码/绑定数据测试通过、0skip。训练与单回合精确结果见[当前progress末节](../../plans/colab-digital-twin-20261001/progress.md)，不能从管线通过推断视觉任务已过。
+
+全部实际argv、HDF、checkpoint、NPZ、图像和日志在Git忽略的output，本机有链接；公开仓库只发布源码与验收记录。接续owner根Codex，原现场22项变动/index/原MJCF保持，无实体/云端操作。
 
 ## 数据及动作契约
 
