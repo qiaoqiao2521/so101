@@ -39,7 +39,9 @@ ZCODE 的“MLP先打通管线”仍是合理反对意见。如果 ACT 的独立
 
 AGY 首轮“数分钟训练”“视觉 ACT 极高概率 OOM”“SB3/CleanRL 自带成熟 BC”缺少本机测量或具体实现出处，不采用。当前 `ctrl` 是绝对关节位置目标；增量动作若被选择必须有明确转换，不能混称。
 
-## 训练数据与恢复约定（待实现）
+## 会审时的训练数据与恢复约定
+
+本节保留会审时的约定；当前已实现的数据字段、守卫版纠正和训练门槛见[运行契约](../../experiments/colab-twin/LEARNING.md)及末尾实测更新，不能将当时“待实现”解释为当前仍缺少采集器。
 
 先定义一个固定控制周期，确保专家与策略评估一致；物理步保留2ms。必须在下发动作前记录 `observation_t`，再执行一个控制周期，记录 `observation_t+1`。不能拿事后物体诊断配事前控制作为训练样本。
 
@@ -105,3 +107,37 @@ AGY的审核判定：实现和数据记录边界通过本次审查，未发现�
 保留分歧：AGY将起步覆盖称为“充分”，当前四条同源前缀与一次固定场景不能支持此泛化结论，突破起步也不能单独归功于新增数据。全mask失败只说明该候选失败，不能单独归因为丢失动量感知；归一化输入置零与原始物体速度置零也不是同一干预。AGY建议在第1500～1760拍才启用EMA/软饱和，本轮不采用：时间门控超出现行策略输入契约，且某一种滤波失败不能证伪所有速度相关原因。精确范围clip只被离线开爪反例否定，未做物理rollout。重新fit八档案统计可成为独立候选，但需配套重新训练/验证，不能直接换冻结权重的输入与动作解码尺度。
 
 本轮只完成审核与记录，未实施上述候选。根Codex接续的最短检查保持为：先核对接近末端/持物偏离状态与现有正例的覆盖，再验证一条真实专家纠正能否完成物理抓放和raw64独立重放；通过后才有界训练并重过相同纯策略单回合。20+20、视觉、Colab及实体均未新增。
+
+## 2026-10-02：审核意见后的实际接续
+
+接近末端、持物与低位松爪覆盖已按实际状态补采。七条guarded正例为450拍接近、1700/1756拍持物、分类策略1800拍持物、v7组合900拍慢抬持物、v8组合2500拍蓝盘边缘持物及v10组合2517拍低位释放，共18903原始转换/7280有效专家标签/11623无效前缀；合并原八条为15条、25504有效/12226无效、37730原始帧。每条均完成专家抓放且独立raw64回放state/env/time差0，报告明确`learned_policy_evaluated=false`。[七条来源与回放证据](findings.md#2026-10-02-接近末端持物纠正与五轴学习)、[离线采集器](../../experiments/colab-twin/collect_policy_recovery.py)、[载物检查](../../experiments/colab-twin/placement.py)。v11沿用冻结v10的14档案五轴ACT，仅夹爪头消费15档案。最新固定训练初态纯策略单回合1/1通过，20+20/视觉未运行；不能把同源前缀或这一单回合称为充分的泛化证据。
+
+v6全模型ACT11.42s碰料盘底、jaw输出行37.88s掉物、独立学习夹爪38.02s撞障、MLP12.94s碰料盘底，全部保留失败。前两者使用旧admission/forward三条，后两者使用前三条guarded；不是严格同数据消融，也不能把“持物更久”换算为完整抓放成功。[逐项报告和训练清单](../../experiments/colab-twin/LEARNING.md#当前实测)。
+
+v7继续采用有界验证：确定性ACT的五轴非padding L1、12档案、lr1e-5、2721step/120.0169s，随后组合独立学习夹爪；未经监督的原ACT夹爪不得直接执行。[五轴训练](../../experiments/colab-twin/output/policy-correction-v7-arm-fit-20261002/report.json)、[夹爪训练](../../experiments/colab-twin/output/policy-correction-v7-decoupled-fit-20261002/report.json)、[梯度及默认行为检查](../../experiments/colab-twin/test_arm_only_training.py)。数据、损失、学习率和夹爪结构同时变化，无法独立归因；该组合也不能简称“原版ACT”。[201项检查55.101s通过](../../experiments/colab-twin/output/late-recovery-v7-final-tests-20261002.log)不等于抓放通过。
+
+实际v7组合chunk16在22.54s腕限位停止（抓起/hold6.06s）、chunk8在11.82s料盘底碰撞（未抓起）、chunk1在90s超时（抓起/hold71.88s但未放置），同权重三项都0/1。[完整窗口诊断](../../experiments/colab-twin/LEARNING.md#当前实测)。限内目标不保证实际关节不越界，保持物体也不等于完成搬运放置；这些失败继续按原安全与任务标准计数。截至v7单回合仍未通过，之后根Codex按以下证据定向接续，没有提前开展20+20或视觉。
+
+之后[冻结旧ACT并重学12条独立夹爪](../../experiments/colab-twin/output/policy-correction-v7-frozen-origin-classifier-single-20261002/report.json)也在21s掉物（hold2.66s）；不能把五轴微调认作所有失败的唯一原因。根Codex据[独立CPU900拍诊断](../../experiments/colab-twin/output/late-recovery-v7-held900-offline-diagnostic-20261002.json)选择安全持物刚成立后的慢抬边界补纠正：实际held1.52s、双指1.419/1.422N、距腕限约.1819rad。物体速度局部替换使离线预测重新靠近专家推进目标，只用于确定采集假设；真实新标签由[actual-state专家抓放](../../experiments/colab-twin/output/policy-correction-v7-held900-guarded-20261002/report.json)和[2362步raw64回放](../../experiments/colab-twin/output/policy-correction-v7-held900-guarded-replay-20261002/report.json)证明，非线上fix。
+
+v8从v7五轴权重接续13档案、batch64/lr1e-5/120s上限；[arm实跑1504step/120.079s](../../experiments/colab-twin/output/policy-correction-v8-arm-fit-20261002/report.json)，allocated110.629MiB/reserved142MiB。[CPU学习夹爪6000step/7.898s](../../experiments/colab-twin/output/policy-correction-v8-decoupled-fit-20261002/report.json)后，[组合纯策略chunk16](../../experiments/colab-twin/output/policy-correction-v8-decoupled-single-20261002/report.json)抓起并持物60.42s，但89.72s蓝盘边缘.8471mm余量保护停止。末条有效物体位置(.20221084,.11643329,.02516980)m已在蓝盘范围，仍无盘底承托或释放；单回合0/1，不写通关。数据与batch同时变化，结果也无法独立归因新增纠正。
+
+第2500拍实际持物边界的安全通道→盘心→降放纠正已[完成专家抓放](../../experiments/colab-twin/output/policy-correction-v8-held2500-guarded-20261002/report.json)并[3242步raw64回放差0](../../experiments/colab-twin/output/policy-correction-v8-held2500-guarded-replay-20261002/report.json)：742有效/2500invalid，准入持物31.94s、双指约1.45N、物体z=.045689m，安全检查保留。现正式纳入第14条，模板同步；v9从v8五轴权重接续14条、batch64/lr1e-5/120s上限，[数据清单](../../experiments/colab-twin/output/policy-correction-v9-training-datasets-20261002.json)与[参数](../../experiments/colab-twin/output/policy-correction-v9-arm-training-arguments-20261002.json)可核对。
+
+[v9 arm仅73step/120.1525s、整体405.6682s](../../experiments/colab-twin/output/policy-correction-v9-arm-fit-20261002/report.json)，5倍关键抽样下4672次抽样/578关键次/4166不同观测起点，占25107有效chunk起点的16.593%；这不是动作标签覆盖。按seed0重建实际抽样并展开chunk16/间隙守卫，监督动作槽74384次含重复，目标源帧并集23501/25107=93.603%；新增742帧档案131起点/713目标。不能写成84%的标签未训练或凭73步唯一归因失败。[完整口径与源码](../../experiments/colab-twin/LEARNING.md#当前实测)。独立夹爪6000step/CPU9.234s覆盖全25107个观测起点，采样与arm独立。[组合纯策略](../../experiments/colab-twin/output/policy-correction-v9-decoupled-single-20261002/report.json)27.08s掉物、hold11.22s、无放置/安全停止，0/1，未通关。
+
+[独立采样重建与策略审核](../../experiments/colab-twin/output/late-recovery-v9-policy-independent-audit-20261002.json)保存上述准确口径，未重跑训练或仿真；它来自Codex审核助手，不是AGY。
+
+v10保持相同14数据和ACT架构，从v8 arm重新初始化，不继承v9的73步；batch64/lr1e-5/120s，[CPU诊断参数](../../experiments/colab-twin/output/policy-correction-v10-arm-training-arguments-20261002.json)保留。[arm实跑1201step/120.067s、整体144.551s](../../experiments/colab-twin/output/policy-correction-v10-arm-cpu-fit-20261002/report.json)，随后[夹爪CPU6000step/7.3647s](../../experiments/colab-twin/output/policy-correction-v10-decoupled-fit-20261002/report.json)。[最终组合纯策略](../../experiments/colab-twin/output/policy-correction-v10-decoupled-single-20261002/report.json)抓起/hold25.06s/未放置，完成52.20s后蓝盘边缘.936503mm低于1mm余量而保护停止，0/1。它是官方ACT五轴＋独立学习夹爪的组合诊断，不能写“官方完整ACT通关”。切CPU是有界吞吐检查，不是OOM或模型架构回退；单点频率读数及设备/步数/数值变化均不足以严格因果归因。
+
+v10后[离线新夹爪预测](../../experiments/colab-twin/output/late-recovery-v10-release-cache-probe-20261002.json)在蓝盘内低位仍全闭爪，提示释放覆盖缺口；原held准入要求抬升≥25mm，无法采低位状态。按[保存诊断选择2517拍](../../experiments/colab-twin/output/late-recovery-v10-release-boundary-selection-20261002.json)，新离线release入口要求历史真实抓起、当前连续双指接触≥1s、完整蓝盘范围、无桌面/盘底承托、z在[.010,.0145)m、速度≤.05m/s及原安全边界。当前接触时钟独立计数、接触中断或支撑即重置，不用历史hold替代。真实前缀重执行后物体(.21463836,.14002259,.01447777)m、当前接触36.46s；首valid动作保持actual五轴q并开爪`.5`，跳过IK/运输，按原守卫承托、撤退、静稳。[397有效纠正专家成功](../../experiments/colab-twin/output/policy-correction-v10-release2517-guarded-20261002/report.json)及[2914步raw64差0](../../experiments/colab-twin/output/policy-correction-v10-release2517-guarded-replay-20261002/report.json)各自通过，2517前缀仍invalid。此离线专家规则未接入在线策略。
+
+v11没有再训练五轴：固定v10 arm SHA `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743678b52abab57e6`（14档案训练），仅按[15档案参数](../../experiments/colab-twin/output/policy-correction-v11-release-training-arguments-20261002.json)重训夹爪。[CPU6000step/7.1017s、整体9.9502s](../../experiments/colab-twin/output/policy-correction-v11-release-classifier-fit-20261002/report.json)，72个ACT状态tensor不变；base输入/动作归一化保持原四档案，夹爪额外统计只fit15份合格训练行。组合SHA `f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`。
+
+[v11纯策略chunk16](../../experiments/colab-twin/output/policy-correction-v11-release-single-20261002/report.json)完成1988周期/39.76仿真秒、hold23.10s、释放并蓝盘内静稳1s，无专家介入或安全停止，单回合1/1通过。观察只有state/env；nearest仅将分类器已经选择的`.0150000114/.5000000092`投影到训练标签`.015/.5`，最大约1.15e-8rad，不按几何/阶段/时钟查询专家动作。验收对象为官方ACT五轴＋独立学习夹爪＋固定执行适配器，不能称官方完整ACT或裸模型通关。初态来自训练nominal，只通过重复性门槛，20+20、扰动恢复率、视觉、Colab及实体标定仍无新增；新增标签与重训同时发生，不单独证明唯一因果。
+
+此前201项全测的[8份产物绑定](../../experiments/colab-twin/output/late-recovery-v7-final-test-arguments-20261002.json)、[12训练集独立审核](../../experiments/colab-twin/output/late-recovery-v7-independent-audit-20261002.json)及后续[14总集数据审核](../../experiments/colab-twin/output/late-recovery-v9-data-audit-20261002.json)保留历史范围。release采集器新增源码后，[212项/41.991s、0 skip、exit0](../../experiments/colab-twin/output/late-recovery-v11-final-test-result-20261002.json)在当前源码通过，前后哈希一致；[本次参数](../../experiments/colab-twin/output/late-recovery-v11-final-test-arguments-20261002.json)绑定11份HDF5（四v5＋七guarded）及release2517回放，四份v4不在该artifact绑定内。不能把测试绑定写成15份或代替物理验收。全部旧失败保留。
+
+[v11独立Codex审核](../../experiments/colab-twin/output/late-recovery-v11-independent-audit-20261002.json)39项全true，SHA `24e341d401479ad57c39a5b2a13609738ca70247b2e3d5dac02d315402f8f565`：独立重算1s真实支撑/松爪/静稳及完整物体蓝盘范围；核对72个ACT tensor不变、arm14/head15、原四归一化及15份夹爪统计误差0、前缀NaN/回放零误差、212源码和11档案绑定。审核仅只读源码/记录和离线算术，没有重跑模型或仿真。[同固定初态可见复跑](../../experiments/colab-twin/output/policy-correction-v11-release-visible-20261002/render-binding.json)也通过，9个NPZ字段数组及全部物理diagnostics与首次逐项完全一致；995帧视频只作可见复验，不能加入20+20或泛化成功率。
+
+本轮新增检查与文档整理来自Codex助手，未发起新的AGY或ZCODE审核。上节AGY的实际会话`11ef62ca-91ac-414d-b850-1a1b6225f170`只审查其注明的旧提交和产物，不能延伸为对本轮release采集器、五轴损失或v7–v11模型的批准。原始报告、日志、HDF5、权重和咨询仍保存在Git忽略目录，仅交付源码与可追溯的结论。

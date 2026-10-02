@@ -186,6 +186,8 @@ def load_initialization_checkpoint(path: Path, *, spec: ModelSpec, control_perio
     path = Path(path)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     data = torch.load(path, map_location="cpu", weights_only=True)
+    if "learned_gripper_classifier" in data:
+        raise ValueError("ACT initialization cannot silently discard a learned gripper; use its explicit base checkpoint")
     if data.get("format") != "so101-state-policy-v1" or data.get("schema_version") != SCHEMA_VERSION:
         raise ValueError("Initialization checkpoint format/schema differs")
     saved_spec = ModelSpec(**data["model_spec"])
@@ -242,6 +244,102 @@ def load_initialization_checkpoint(path: Path, *, spec: ModelSpec, control_perio
     return state_dict, normalization, audit
 
 
+def configure_gripper_head_training(policy):
+    """Train only the official ACT output's jaw row; fresh Adam, no decay."""
+    from lerobot.policies.act.modeling_act import ACTPolicy
+
+    if not isinstance(policy, ACTPolicy):
+        raise ValueError('Gripper-only training requires the official ACTPolicy')
+    head = getattr(getattr(policy, 'model', None), 'action_head', None)
+    if not isinstance(head, torch.nn.Linear) or head.out_features != 6 or head.bias is None:
+        raise ValueError('Gripper-only training requires the six-output official ACT action head')
+    for parameter in policy.parameters():
+        parameter.requires_grad_(False)
+    for parameter in (head.weight, head.bias):
+        parameter.requires_grad_(True)
+        mask = torch.zeros_like(parameter)
+        mask[5] = 1
+        parameter.register_hook(lambda grad, mask=mask: grad * mask)
+    return [head.weight, head.bias], {'mode': 'gripper_head_only', 'output_row': 5,
+                                    'frozen_arm_rows': [0, 1, 2, 3, 4],
+                                    'trainable_coordinates': head.in_features + 1,
+                                    'optimizer': 'fresh Adam; zero weight decay',
+                                    'runtime': 'unchanged ACT; no expert or observation adapter added'}
+
+
+def verify_gripper_head_training(policy, original_state):
+    """Reject any update outside the jaw output row, including other buffers."""
+    current = policy.state_dict()
+    if set(current) != set(original_state):
+        raise RuntimeError('Gripper-only training changed state dictionary keys')
+    for name, value in current.items():
+        before = original_state[name].to(value.device)
+        if name in ('model.action_head.weight', 'model.action_head.bias'):
+            value, before = value[:5], before[:5]
+        if not torch.equal(value, before):
+            raise RuntimeError('Gripper-only training changed frozen state: ' + name)
+    return {'frozen_state_verified': True, 'checked_tensors': len(current),
+            'allowed_changed_tensors': ['model.action_head.weight[5]', 'model.action_head.bias[5]']}
+
+
+def validate_arm_only_training_options(args):
+    """Require an explicit deterministic ACT weight initialization for this probe."""
+    if not getattr(args, "arm_only_loss", False):
+        return
+    if getattr(args, "train_gripper_head_only", False):
+        raise ValueError("Arm-only loss and gripper-head-only training are mutually exclusive")
+    if (args.model != "act" or getattr(args, "init_checkpoint", None) is None
+            or not args.no_vae or args.dropout != 0):
+        raise ValueError("Arm-only loss requires a compatible deterministic ACT initialization, --no-vae and dropout zero")
+
+
+def arm_only_training_loss(policy, batch):
+    """Differentiable official ACT forward, supervised only on valid arm targets.
+
+    No VAE means that action labels cannot enter the model's latent input.
+    All ACT parameters may update, so its raw jaw output is unsupervised and
+    must be replaced by the separate learned gripper before task evaluation.
+    """
+    from lerobot.policies.act.modeling_act import ACTPolicy
+
+    if (not isinstance(policy, ACTPolicy) or policy.config.use_vae
+            or policy.config.dropout != 0):
+        raise ValueError("Arm-only loss requires the official deterministic ACTPolicy")
+    required = {STATE, ENV_STATE, ACTION, "action_is_pad"}
+    if set(batch) != required:
+        raise ValueError("Arm-only loss requires state/environment/action/padding tensors only")
+    target, padding = batch[ACTION], batch["action_is_pad"]
+    if (not isinstance(target, torch.Tensor) or not target.is_floating_point()
+            or target.ndim != 3 or target.shape[1:] != (policy.config.chunk_size, 6)
+            or not len(target) or not torch.isfinite(target).all()):
+        raise ValueError("Arm-only loss requires finite normalized Nxchunkx6 targets")
+    if (not isinstance(padding, torch.Tensor) or padding.dtype != torch.bool
+            or padding.shape != target.shape[:2] or padding.device != target.device):
+        raise ValueError("Arm-only loss requires aligned boolean padding")
+    for key in (STATE, ENV_STATE):
+        values = batch[key]
+        feature = policy.config.input_features.get(key)
+        if (feature is None or not isinstance(values, torch.Tensor)
+                or not values.is_floating_point()
+                or values.shape != (len(target), *feature.shape)
+                or values.device != target.device or not torch.isfinite(values).all()):
+            raise ValueError("Arm-only loss requires finite aligned observations: " + key)
+    valid = ~padding
+    valid_count = int(valid.sum())
+    if not valid_count:
+        raise ValueError("Arm-only loss requires at least one valid target")
+    # predict_action_chunk is no-grad. This is the same differentiable official
+    # model forward used by ACTPolicy.forward; the official source stays intact.
+    prediction = policy.model(batch)[0]
+    if prediction.shape != target.shape or not torch.isfinite(prediction).all():
+        raise RuntimeError("Arm-only ACT produced malformed/nonfinite predictions")
+    loss = (prediction[..., :5] - target[..., :5]).abs()[valid].mean()
+    if not torch.isfinite(loss):
+        raise RuntimeError("Nonfinite arm-only training loss")
+    return loss, {"l1_loss": float(loss.detach()), "training_loss_scope": "arm5_only",
+                  "valid_action_count": valid_count, "valid_arm_coordinate_count": valid_count * 5}
+
+
 def train(args) -> dict:
     started = time.perf_counter()
     report = {"status": "failed", "model": args.model, "schema_version": SCHEMA_VERSION,
@@ -251,6 +349,13 @@ def train(args) -> dict:
                                    "seed": args.seed}}
     policy = None
     try:
+        validate_arm_only_training_options(args)
+        arm_only = bool(getattr(args, "arm_only_loss", False))
+        loss_scope = "arm5_only" if arm_only else "all_action_coordinates"
+        report["training_loss_scope"] = loss_scope
+        report["training_options"]["arm_only_loss"] = arm_only
+        report["gripper_output_scope"] = ("unsupervised; attach the independent learned gripper before task evaluation"
+                                           if arm_only else "included in the training objective")
         if args.device.startswith("cuda") and not torch.cuda.is_available():
             raise RuntimeError("CUDA unavailable; choose --device cpu explicitly")
         torch.set_num_threads(2)
@@ -312,7 +417,20 @@ def train(args) -> dict:
         policy = build_policy(spec, args.device)
         if initialization_state is not None:
             policy.load_state_dict(initialization_state, strict=True)
-        optimizer = torch.optim.Adam(policy.parameters(), lr=args.learning_rate)
+        gripper_only = bool(getattr(args, 'train_gripper_head_only', False))
+        frozen_reference = None
+        if gripper_only:
+            if initialization_state is None or spec.model != 'act' or spec.use_vae or spec.dropout != 0:
+                raise ValueError('Gripper-only probe requires a compatible deterministic ACT initialization')
+            frozen_reference = {name: value.detach().cpu().clone() for name, value in policy.state_dict().items()}
+            parameters, update_scope = configure_gripper_head_training(policy)
+        else:
+            parameters, update_scope = policy.parameters(), {'mode': 'all_parameters'}
+        if arm_only:
+            update_scope.update(training_loss_scope="arm5_only", supervised_action_indices=[0, 1, 2, 3, 4],
+                                excluded_action_indices=[5], raw_gripper_output="unsupervised")
+        report['parameter_update_scope'] = update_scope
+        optimizer = torch.optim.Adam(parameters, lr=args.learning_rate)
         report["model_spec"] = spec.to_dict()
         report["action_encoding"] = spec.action_encoding
         report["action_encoding_semantics"] = ACTION_ENCODING_SEMANTICS[spec.action_encoding]
@@ -353,7 +471,7 @@ def train(args) -> dict:
                          if key != "action_anchor"}
                 policy.train()
                 optimizer.zero_grad(set_to_none=True)
-                loss, metrics = policy(batch)
+                loss, metrics = arm_only_training_loss(policy, batch) if arm_only else policy(batch)
                 if not torch.isfinite(loss):
                     raise RuntimeError("Nonfinite training loss")
                 loss.backward()
@@ -391,6 +509,8 @@ def train(args) -> dict:
                            for key in (STATE, ENV_STATE)}
         with torch.no_grad():
             expected = policy.select_action(reference_batch).detach().cpu()
+        if frozen_reference is not None:
+            update_scope.update(verify_gripper_head_training(policy, frozen_reference))
         checkpoint = {
             "format": "so101-state-policy-v1", "schema_version": SCHEMA_VERSION,
             "model_spec": spec.to_dict(), "normalization": normalization.stats,
@@ -401,6 +521,9 @@ def train(args) -> dict:
                                       "object_velocity_mask": normalization.object_velocity_mask},
             "initialization": initialization, "normalization_source": normalization_source,
             "training_options": report["training_options"],
+            "training_loss_scope": report["training_loss_scope"],
+            "gripper_output_scope": report["gripper_output_scope"],
+            "parameter_update_scope": update_scope,
             "sampling": sample_audit,
             "state_dict": {key: value.detach().cpu() for key, value in policy.state_dict().items()},
             "lerobot_revision": LEROBOT_REVISION if args.model == "act" else None,
@@ -448,6 +571,10 @@ def main() -> int:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--init-checkpoint", type=Path,
                         help="Initialize compatible weights and preserve its training normalization; create a fresh Adam")
+    parser.add_argument("--train-gripper-head-only", action="store_true",
+                        help="Deterministic ACT initialization only: learn jaw output row, verify all other weights frozen")
+    parser.add_argument("--arm-only-loss", action="store_true",
+                        help="Deterministic ACT initialization only: train valid five-axis L1; raw jaw requires a separate learned gripper")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--chunk-size", type=int, default=16)
@@ -478,6 +605,10 @@ def main() -> int:
         parser.error("velocity scale floor must be finite and nonnegative")
     if not np.isfinite(args.critical_sample_weight) or args.critical_sample_weight < 1:
         parser.error("critical sample weight must be finite and at least one")
+    try:
+        validate_arm_only_training_options(args)
+    except ValueError as error:
+        parser.error(str(error))
     if args.output is None:
         args.output = Path(__file__).resolve().parent / "output" / f"state-training-{uuid.uuid4().hex}"
     args.output.mkdir(parents=True, exist_ok=False)

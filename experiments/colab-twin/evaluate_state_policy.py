@@ -317,6 +317,10 @@ def evaluate(args):
         report["uses_training_reference"] = bool(set(reference_hashes) & set(policy.metadata.get("train_dataset_sha256", [])))
         report["checkpoint_sha256"] = hashlib.sha256(args.checkpoint.read_bytes()).hexdigest()
         report["model_spec"] = policy.metadata["model_spec"]
+        report["policy_architecture"] = policy.metadata.get("policy_architecture", {
+            "kind": policy.metadata["model_spec"]["model"],
+            "learned_gripper_classifier": False})
+        report["parameter_update_scope"] = policy.metadata.get("parameter_update_scope")
         report["normalization_options"] = policy.metadata.get("normalization_options", {})
         velocity_mask = report["normalization_options"].get("robot_velocity_mask", False)
         object_velocity_mask = report["normalization_options"].get("object_velocity_mask", False)

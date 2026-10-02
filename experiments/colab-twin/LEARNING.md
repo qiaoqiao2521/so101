@@ -83,6 +83,77 @@ python experiments/colab-twin/train_state_policy.py --dataset \
 
 `--init-checkpoint`只接续权重和原训练归一化，使用fresh Adam、新计数器/采样随机状态，不恢复旧优化器；不在新增八档案上重算归一化。模型配置、动作编码、速度尺度、物理模型、控制周期及官方ACT源码来源须一致；原训练SHA须属于本次合格训练集合，且不得进入validation。未指定初始化时仍只从当前合格训练行fit统计。沿用[固定官方ACT实现](https://github.com/huggingface/lerobot/tree/e0d50211ef236143ae867228662b7dfaba554f02/src/lerobot/policies/act)，不把训练集拟合写成held-out验收。
 
+### 接近末端与持物纠正
+
+[collect_policy_recovery.py](collect_policy_recovery.py) 是独立离线专家采集器，评测不导入它。先从同一初始快照真实执行策略 NPZ 的 `action` 前缀，最多3000拍且≤60s；纠正另限≤60s，整个尝试的wall预算≤120s。原 `grasp_episode.py` 的无接触≤5s入口保持原限制。
+
+`--mode approach`要求无双指接触/抬升、实际夹爪张开、指间中心在目标上方至少35mm且XY偏差≤10mm；600拍源已进入下降/闭爪，不能冒称接近末端。`--mode held`要求当下双指持续抬持≥1s/≥25mm，未丢块、无盘底支撑、无碰撞。前缀全部invalid且专家标签NaN，首valid标签为实测五轴q制动；实际速度和前一next_obs连续保留。
+
+`--mode release`仅用于离线采集低位松爪纠正：要求此前真实抓起、当前连续双指接触≥1s、完整物体在蓝盘内、无桌面/盘底支撑、物体z在[.010,.0145)m、速度≤.05m/s及原安全检查通过。当前接触时钟独立于已被下降重置的抬升时钟，丢失接触或得到支撑均重置；不能用历史hold时长替代。首valid动作保持actual五轴q并开爪`.5`，跳过运输/IK，再验证实际盘底承托、守卫撤退与静稳。[准入与采集](collect_policy_recovery.py)、[反例测试](test_late_policy_recovery.py)。该规则生成专家标签，未接入策略执行。
+
+接近末端重新求hover/descend IK，持物从实际Cartesian位置连接剩余绕障腿；载物查询只操作独立MjData。完成抓放的专家纠正也必须另跑raw64原动作回放，两个报告都通过后才纳入训练。
+
+```bash
+python experiments/colab-twin/collect_policy_recovery.py \
+  --reference experiments/colab-twin/output/reactive-v4-nominal-20261001/expert.h5 \
+  --prefix experiments/colab-twin/output/policy-recovery-v5-qvel-masked-chunk16-nearest-20261001/attempt-000-nominal/policy-transitions.npz \
+  --policy-report experiments/colab-twin/output/policy-recovery-v5-qvel-masked-chunk16-nearest-20261001/report.json \
+  --cycles 1700 --mode held \
+  --output experiments/colab-twin/output/late-held-new
+python experiments/colab-twin/replay_learning_data.py \
+  experiments/colab-twin/output/late-held-new/expert.h5 \
+  --output experiments/colab-twin/output/late-held-new-replay
+```
+
+最新守卫版采集在闭爪下降放置时也验证actualq→command的载物占位连线，直到真实松爪才停止使用夹持占位假设；不是降低碰撞余量或修改执行物体姿态。此前admission/forward档案继续保留，当前训练使用新采集的guarded档案。[采集与下降守卫](collect_policy_recovery.py)、[独立载物查询](placement.py)。
+
+| 当前纠正档案 | 有效专家标签 | 无效策略前缀 | 专家抓放 / raw64独立回放 |
+| --- | ---: | ---: | --- |
+| 450拍接近末端 | 1956 | 450 | [采集通过](output/policy-correction-v6-450-guarded-20261001/report.json) / [2406步回放通过](output/policy-correction-v6-450-guarded-replay-20261001/report.json) |
+| 1700拍持物 | 827 | 1700 | [采集通过](output/policy-correction-v6-1700-guarded-20261001/report.json) / [2527步回放通过](output/policy-correction-v6-1700-guarded-replay-20261001/report.json) |
+| 1756拍持物 | 807 | 1756 | [采集通过](output/policy-correction-v6-1756-guarded-20261001/report.json) / [2563步回放通过](output/policy-correction-v6-1756-guarded-replay-20261001/report.json) |
+| 夹爪分类策略1800拍持物 | 1089 | 1800 | [采集通过](output/policy-correction-v6-classifier1800-guarded-20261001/report.json) / [2889步回放通过](output/policy-correction-v6-classifier1800-guarded-replay-20261001/report.json) |
+| v7组合策略900拍慢抬持物 | 1462 | 900 | [采集通过](output/policy-correction-v7-held900-guarded-20261002/report.json) / [2362步回放通过](output/policy-correction-v7-held900-guarded-replay-20261002/report.json) |
+| v8组合策略2500拍蓝盘边缘持物 | 742 | 2500 | [采集通过](output/policy-correction-v8-held2500-guarded-20261002/report.json) / [3242步回放通过](output/policy-correction-v8-held2500-guarded-replay-20261002/report.json) |
+| v10组合策略2517拍蓝盘内低位松爪 | 397 | 2517 | [采集通过](output/policy-correction-v10-release2517-guarded-20261002/report.json) / [2914步回放通过](output/policy-correction-v10-release2517-guarded-replay-20261002/report.json) |
+
+七份guarded档案共18903原始转换、7280有效标签、11623无效前缀；与原八份档案合并为15条、25504有效/12226无效帧，共37730原始转换。所有七次回放state/env/time最大差均0并完成抓放；报告明确`learned_policy_evaluated=false`。只覆盖上述同场景实际偏差，不证明扰动泛化。v11五轴ACT冻结于v10的14档案训练结果，仅夹爪头消费15档案。表内报告为本机被Git忽略的证据链接，原始数据、权重和日志不入库。
+
+第五条来自[独立CPU只读诊断](output/late-recovery-v7-held900-offline-diagnostic-20261002.json)：保存状态中最早满足持物准入的边界为874拍，实际采集选择900拍并重新核验双指抬持1.52s、力1.419/1.422N、物体z=.037754m，腕实际1.476133rad距限约.1819rad。该边界在慢抬偏离已出现而尚未危险时接入专家。固定其余观测，仅将物体速度换成近邻训练值后，离线新chunk首动作的elbow/wrist残差由约-.000548/+.000304变为-.002936/+.003119rad，接近专家推进目标；这是假设输入上的敏感性反例，未执行、未加入标签，也不是线上修复。真正新增标签来自actual-state专家纠正及独立raw64回放。
+
+第六条真实执行v8前2500拍后，实际持续持物31.94s、双指1.456/1.457N、物体z=.045689m，无安全停止；从蓝盘边缘当前位姿连接安全通道→盘心→降放，742个有效专家转换完成释放并稳定落盘。3242步raw64回放另行通过，原2500拍全部invalid。证明专家可从这处盘边偏离恢复，不等于v9已自主恢复。
+
+第七条选择v10实际2517拍低位边界：[保存诊断的准入选择](output/late-recovery-v10-release-boundary-selection-20261002.json)后重新执行真实前缀，actual物体(.21463836,.14002259,.01447777)m、当前连续双指接触36.46s、双指1.443/1.444N，无支撑/安全停止。原held入口要求抬升≥25mm，无法覆盖这种准备松爪的低位状态。此处397条真实纠正完成开爪、承托和撤退，稳定3.76s；2517条前缀仍invalid，raw64回放2914步差0。此前[固定v10权重的新夹爪预测](output/late-recovery-v10-release-cache-probe-20261002.json)在2500/2592/2600/2609拍均闭爪，提示低位释放标签缺口；这是离线预测，不能单独证明因果或成功。
+
+`train_state_policy.py --train-gripper-head-only --init-checkpoint ... --no-vae --dropout 0`是显式线性夹爪探针：仅官方ACT输出头第5行可变，fresh Adam零weight decay，保存前逐tensor验证其余参数/缓冲区完全不变。相同输入下五轴输出不变，不保证夹爪变化后的实际臂轨迹不变。默认全模型训练保持原行为。
+
+全模型接续未通过接近段，线性夹爪头也未解决提前释放，因此加入显式的[组合探针](train_gripper_classifier.py)：ACT五轴参数不变，纯Torch夹爪分类网络为36→64→64→16×2。它读取base归一化且已经mask的state/env张量，robot qvel六槽仍为零；自己的输入统计仅fit合格训练行。二分类标签只来自专家实际`.015/.5`绝对目标，padding/无效间隙不计loss。模型不读取阶段、时钟，也没有按盘内位置强开爪的手工规则。
+
+组合权重的`learned_gripper_classifier`及`policy_architecture`明确标明独立头、基础ACT来源、两套统计来源及各自训练SHA；旧权重加载不变。旧ACT训练入口拒绝静默丢弃组合头，要求显式选择基础checkpoint。以下是本机守卫版数据的接续模板，输出仍必须新建：
+
+```bash
+python experiments/colab-twin/train_gripper_classifier.py --dataset \
+  experiments/colab-twin/output/reactive-v4-{nominal,startup-plus,startup-minus,approach}-20261001/expert.h5 \
+  experiments/colab-twin/output/policy-recovery-v5-prefix{50,100,200,250}-20261001/expert.h5 \
+  experiments/colab-twin/output/policy-correction-v6-{450,1700,1756}-guarded-20261001/expert.h5 \
+  experiments/colab-twin/output/policy-correction-v6-classifier1800-guarded-20261001/expert.h5 \
+  experiments/colab-twin/output/policy-correction-v7-held900-guarded-20261002/expert.h5 \
+  experiments/colab-twin/output/policy-correction-v8-held2500-guarded-20261002/expert.h5 \
+  experiments/colab-twin/output/policy-correction-v10-release2517-guarded-20261002/expert.h5 \
+  --base-checkpoint experiments/colab-twin/output/policy-correction-v10-arm-cpu-fit-20261002/policy.pt \
+  --device cpu --batch-size 128 --learning-rate .001 --critical-sample-weight 5 \
+  --max-steps 6000 --max-wall-s 60 --max-epochs 200 --seed 0 \
+  --output experiments/colab-twin/output/gripper-classifier-new
+```
+
+分类准确率属于训练拟合；只有独立`evaluate_state_policy.py`实际抓起、搬运、松爪并稳定落盘，才通过单回合门槛。ACT五轴与小夹爪网络组合不能简称“原版ACT已通过”。
+
+### 五轴损失与独立学习夹爪
+
+[train_state_policy.py](train_state_policy.py) 的显式`--arm-only-loss`只对非padding的前五轴计算L1，沿用官方ACT的可微模型forward；不是将整个ACT冻结或只更新五个输出行。前提为兼容ACT初始化、`--no-vae --dropout 0`，不能与`--train-gripper-head-only`同时使用。有限夹爪标签变化不影响五轴损失或参数梯度，NaN/Inf仍先拒绝；未监督的原ACT第六轴必须由独立学习夹爪替换。[梯度及默认分支反例](test_arm_only_training.py)、[夹爪组合边界](test_gripper_classifier.py)。
+
+中间权重仍可保存重载以核验训练一致性，但[StatePolicyRunner](learning_models.py)拒绝缺少`learned_gripper_classifier`的`arm5_only`权重进入策略执行。最终组合继续只使用当前state/env；没有阶段、时钟、IK/OMPL接管或手工盘内开爪规则。默认未启用此选项时仍调用官方`policy(batch)`并监督全部六轴。
+
 ## 纯策略验收与止损
 
 [evaluate_state_policy.py](evaluate_state_policy.py) 只从档案取得初始物理快照，不读取专家动作生成控制。step不调用IK/OMPL，模型输入仅state/env。独立监测器依据真实物体抬升、持续双指接触、盘底支撑、完整物体落入蓝盘、松爪和静稳判定成功。安全停止、掉块、未完整施加指定扰动或超时均计失败，保存全部attempt。相同训练快照回放标为重复性检查，不能当作未见场景泛化。
@@ -90,6 +161,63 @@ python experiments/colab-twin/train_state_policy.py --dataset \
 批量正常与扰动成功率各达到85%才标记视觉候选门槛；视觉仍为独立任务，不能机械冻结状态层就保证成功。当前没有相机数据、视觉训练、云端GPU分配或实体机械臂验收。
 
 ## 当前实测
+
+2026-10-02最新实测：七条guarded纠正与raw64回放通过，合并原八条为15档案。v11冻结v10的14档案五轴ACT，仅用15档案重训学习夹爪；相同训练初始场景的chunk16纯策略完成抓起、搬运、释放及蓝盘内静稳，单回合门槛**1/1通过**，1988控制周期/39.76仿真秒、hold23.10s、静稳1s，无专家介入或安全停止。只通过这一固定训练场景的重复性门槛；20+20、视觉、云端和实物均未新增。此前v6–v10失败完整保留。
+
+| v6候选 | 本次单回合结果 | 使用的新增纠正数据 |
+| --- | --- | --- |
+| 全模型ACT接续 | [11.42s料盘底部碰撞，未抓起](output/policy-correction-v6-single-20261001/report.json) | 450-admission、1700/1756-forward三条 |
+| 仅线性夹爪输出行 | [37.88s掉物；已抓起并持有20.04s](output/policy-correction-v6-gripper-single-20261001/report.json) | 同上三条旧admission/forward数据 |
+| 冻结ACT五轴＋独立学习夹爪 | [38.02s撞障；已抓起并持有20.10s](output/policy-correction-v6-classifier-single-20261001/report.json) | 450/1700/1756三条guarded数据 |
+| 三层MLP | [12.94s料盘底部碰撞，未抓起](output/policy-correction-v6-mlp-single-20261001/report.json) | 同上三条guarded数据 |
+
+四次失败均保留原报告和动作，不能写成严格同数据的架构消融。训练清单可核对[全模型ACT参数](output/policy-correction-v6-training-arguments-20261001.json)、[夹爪输出行参数](output/policy-correction-v6-gripper-training-arguments-20261001.json)、[独立夹爪参数](output/policy-correction-v6-classifier-training-arguments-20261001.json)及[MLP参数](output/policy-correction-v6-mlp-training-arguments-20261001.json)。
+
+v7从已核对来源的旧最佳ACT权重接续，12档案、五轴L1、lr1e-5、关键样本5倍采样、原四档案归一化和fresh Adam；[训练2721步/120.0169s](output/policy-correction-v7-arm-fit-20261002/report.json)，allocated87.053MiB/reserved96MiB，CPU保存重载绝对目标最大差1.11e-7rad。随后[独立夹爪训练6000步/9.8998s](output/policy-correction-v7-decoupled-fit-20261002/report.json)，验证72个基础ACT状态tensor保持不变。数据、训练损失、学习率和夹爪组合同时改变，结果不能独立归因；这两份报告均为`task_acceptance=not_run`，没有held-out证据。[全套201项测试/55.101s通过](output/late-recovery-v7-final-tests-20261002.log)证明实现检查通过，不能替代单回合任务验收。
+
+同一v7组合checkpoint `7fef108267cee7ebfc894fddab55f93b1d52b46a547db0f2090f02e476fecfcd`的三次定向执行诊断均0/1：
+
+| 每次观察后执行的窗口 | 实际物理结果 |
+| --- | --- |
+| 16拍 / 320ms | [22.54s腕限位停止](output/policy-correction-v7-decoupled-single-20261002/report.json)；抓起并持有6.06s，未放置。腕目标1.6579328rad在限内，实际1.6586473rad越过模型上限1.65806rad，安全停止仍计失败 |
+| 8拍 / 160ms | [11.82s料盘底碰撞](output/policy-correction-v7-decoupled-chunk8-single-20261002/report.json)，未抓起 |
+| 1拍 / 20ms | [90s仿真预算超时](output/policy-correction-v7-decoupled-chunk1-single-20261002/report.json)；抓起并持有71.88s，未放置，无安全停止 |
+
+仅改变执行窗口也未过门槛；更频繁观察不保证任务继续推进，持物时长也不是成功替代指标。上述报告均`expert_intervention=false`，模型输入仍仅state/env，未降低碰撞/限位保护或更改物理成功判据。它们来自训练初始快照，不能当作未见场景泛化。
+
+另将旧ACT权重`642f4f...`保持冻结，仅用当时12条训练集合学习新夹爪；组合checkpoint `597a807e5e2c75441c9bc871f918151549ce565e72f3f24ee22ff706801fe512`在[21s掉物](output/policy-correction-v7-frozen-origin-classifier-single-20261002/report.json)，抓起/hold2.66s/未放置。冻结旧五轴也未成功，不能把所有提前掉物单独归因到该次五轴微调；尚未证明唯一失败原因或独立夹爪已解决问题。[对应训练清单](output/policy-correction-v7-frozen-origin-classifier-training-arguments-20261002.json)。
+
+v8的[实际有界训练参数](output/policy-correction-v8-arm-training-arguments-20261002.json)为13档案、五轴损失、初始化v7 arm SHA `58d8b5a8384f044ff39e04c567ca6e174ff2a0715de762f6f70707c879f03f30`、batch64、lr1e-5、120s上限，robot-only mask及归一化保持。[五轴ACT实际1504步/120.079s](output/policy-correction-v8-arm-fit-20261002/report.json)，allocated110.629MiB/reserved142MiB，arm checkpoint SHA `00da58926f51a1408f73f3b5dc4280a895c8ef90de080c21f4a9affef51bdcd5`；[独立夹爪CPU训练6000步/7.898s](output/policy-correction-v8-decoupled-fit-20261002/report.json)，最终组合SHA `0007471daee2fcef19b81b157a3f45f80174b997f804fa582d4e0acbfc047a67`，72个基础ACT状态tensor保持不变。数据与batch同时改变，不能将结果只归因新增纠正。201项/55.101s是此前完整测试结果；本阶段无新源码，不冒充v8重跑或任务验收。
+
+[v8 chunk16纯策略回合](output/policy-correction-v8-decoupled-single-20261002/report.json)0/1：真实抓起并持有60.42s，89.72s时`place_wall_x_-1`与`collision_gripper_1`距离.8471mm触发原1mm余量保护。末条有效物体诊断位置(.20221084,.11643329,.02516980)m、`in_place_tray=true`，但`place_floor_contact=false`，双指仍约1.443/1.441N、夹爪命令仍闭合，未释放或稳定承托。[逐拍诊断](output/policy-correction-v8-decoupled-single-20261002/attempt-000-nominal/diagnostics.json)。进入盘内和持物时长不能替代完整放置验收。
+
+随后从这次回合第2500拍真实持物状态采集“蓝盘边缘安全通道→盘心→降放”的专家纠正，[实际采集参数](output/policy-correction-v8-held2500-collection-arguments-20261002.json)保留。专家抓放和raw64回放双通过后，已纳入第14条及上述模板。v9按[14条固定数据清单](output/policy-correction-v9-training-datasets-20261002.json)和[实际训练参数](output/policy-correction-v9-arm-training-arguments-20261002.json)，从v8 arm `00da58926f51a1408f73f3b5dc4280a895c8ef90de080c21f4a9affef51bdcd5`初始化，batch64/lr1e-5/120s上限。
+
+[v9五轴ACT报告](output/policy-correction-v9-arm-fit-20261002/report.json)实际73step/120.1525s，整体`total_s=405.6682`，wall_time_limit停止，allocated110.629MiB/reserved142MiB；保存arm SHA `3b2183da2a3a5f3e2103dad9d2fc4d863bb57a4482ab18ce530066fa03aea7ac`。5倍关键采样下实际4672次抽样、578次关键抽样；报告`actual_unique_row_count=4166`指不同观测/chunk起点，占25107个有效起点的16.593%，不是监督动作标签覆盖。按seed0的实际73×64抽样重建，并依[make_chunks](train_state_policy.py)的chunk16/invalid间隙/回合边界展开，非padding监督动作槽共74384次（含重复），源目标帧并集23501/25107=93.603%；新742帧纠正档案被抽中131个不同起点，其未来目标并集713帧。不能写成“84%的动作标签没训练”；只能确认本轮73步且尚未遍历全部观测起点，不能据此唯一归因掉物。
+
+[独立采样重建与策略审核](output/late-recovery-v9-policy-independent-audit-20261002.json)保存上述起点/目标两套覆盖口径，4672抽样/578关键抽样与训练报告完全匹配；新742帧档案实际抽141次、131不同起点、713目标帧。该审核只读现有源码/产物，没有重新训练或运行物理仿真。
+
+[独立夹爪CPU6000step/9.234s](output/policy-correction-v9-decoupled-fit-20261002/report.json)实际抽764730次/90585关键次/25107不同观测起点，保持72个ACT状态tensor不变；其采样与训练步数独立于arm。最终组合SHA `efb9735d7a90bcf6e428310247bd82cf9cc2431b7c62b82658cddc001c9c3fa1`。[chunk16纯策略](output/policy-correction-v9-decoupled-single-20261002/report.json)0/1，抓起并持有11.22s，27.08s payload_lost、未放置，无安全停止。原失败完整保留。
+
+v10按[实际CPU训练参数](output/policy-correction-v10-arm-training-arguments-20261002.json)，相同14数据、ACT五轴损失、batch64/lr1e-5/120s上限，初始化仍为v8 arm `00da589...`，不继承v9的73步。[CPU arm实际1201step/120.067s、整体144.551s](output/policy-correction-v10-arm-cpu-fit-20261002/report.json)，76729次抽样/9021关键次/23613不同观测chunk起点，保存重载差0；arm SHA `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743678b52abab57e6`。[独立夹爪CPU6000step/7.3647s](output/policy-correction-v10-decoupled-fit-20261002/report.json)，72个ACT状态tensor保持不变，最终组合SHA `cb8f8774f7cb7a67c06a910ebe5684e39ff0b9042070088fcbd1d73b75f06d48`。
+
+[v10 chunk16纯策略](output/policy-correction-v10-decoupled-single-20261002/report.json)0/1：抓起/持物25.06s/未放置，完成52.20s后`place_wall_x_-1`与`collision_gripper_1`距离.936503mm触发原1mm余量保护。专家介入false，观察仅state/env；该策略是官方ACT五轴与独立学习夹爪的组合诊断，不能称“官方完整ACT已通关”。全部原失败报告和动作保留。
+
+切CPU只做有界吞吐/覆盖诊断；v9无OOM，不是ACT资源门槛失败后切MLP，也不是永久架构选择。单点GPU频率/利用率不能证明v9慢训原因，设备改变与实际完成步数、数值路径变化也阻止严格因果归因。1201步仍在蓝盘边缘失败，本轮不以继续追加同样训练预算或放宽保护作为默认接续。
+
+v10失败后的定向检查发现低位释放覆盖缺口，因此只补上述第15条并重训夹爪，没有再给五轴ACT追加120s预算。按[v11实际参数](output/policy-correction-v11-release-training-arguments-20261002.json)，基础ACT固定为v10 arm SHA `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743678b52abab57e6`（14档案训练）；[夹爪15档案清单](output/policy-correction-v11-training-datasets-20261002.json)包含25504有效行。[CPU夹爪6000step/7.1017s、整体9.9502s](output/policy-correction-v11-release-classifier-fit-20261002/report.json)，72个基础ACT状态tensor完全不变；base输入/动作归一化沿原四档案统计，robot-only mask保留，夹爪额外输入统计仅fit15档案的合格行。组合checkpoint SHA `f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`。
+
+[v11实际纯策略报告](output/policy-correction-v11-release-single-20261002/report.json)及[执行参数](output/policy-correction-v11-release-evaluation-arguments-20261002.json)记录1/1通过：1988周期/39.76s、抓起/hold23.10s/放置/静稳1s，无安全停止。只读当前state/env，expert_intervention=false；初始快照来自训练nominal，非未见场景泛化。固定chunk16每320ms观察一次，五轴残差只在chunk起点解码。学习夹爪自己选择`.015/.5`，nearest适配器仅将`.0150000114/.5000000092`浮点输出投影回训练标签，1988次约1.15e-8rad量级修正，不读取几何、阶段、时间或专家动作决定开闭。它是“官方ACT五轴＋独立学习夹爪＋固定执行适配器”的状态策略闭环，不能写成官方完整ACT通关或不带适配器的模型验收。
+
+当前完成固定训练初始场景单回合门槛；下一步如继续，只在冻结该候选后独立开展20正常＋20有界扰动，完整记录注入、安全与成功率。20+20仍not_run，尚无扰动恢复率、视觉或实体标定证据；不从1/1推断泛化或将低位标签当成唯一因果证明。
+
+所有原失败继续保留，碰撞余量/限位/任务判据不变。此前[201项/55.101s](output/late-recovery-v7-final-tests-20261002.log)只证明其当时版本；[当次运行参数](output/late-recovery-v7-final-test-arguments-20261002.json)只绑定8条真实产物（四v5＋四v6 guarded），彼时12条训练集合另有[独立审核](output/late-recovery-v7-independent-audit-20261002.json)，后续14总集另有[数据审核](output/late-recovery-v9-data-audit-20261002.json)。新增release采集器后，[当前全套212项/41.991s、0 skip、exit0](output/late-recovery-v11-final-test-result-20261002.json)通过，源码测试前后哈希一致；[实际参数](output/late-recovery-v11-final-test-arguments-20261002.json)绑定11份HDF5（四v5＋七guarded）与release2517回放，四份v4训练档案不在这11份artifact绑定内。测试、各档案回放与纯策略任务是不同证据，不能相互替代。
+
+[v11独立Codex审核](output/late-recovery-v11-independent-audit-20261002.json)39项检查全true：重算真实物理静稳1s、完整旋转物体蓝盘范围、支撑和松爪；逐tensor确认72个ACT不变、arm14/head15、原四归一化与夹爪15份统计误差0；确认invalid前缀NaN、raw64回放差0及212项当前源码/产物绑定。审核未训练、推理或运行物理，只审现有产物和源码；SHA `24e341d401479ad57c39a5b2a13609738ca70247b2e3d5dac02d315402f8f565`。最终真实物体(.21228807,.13849017,.00992145)m有蓝盘底支撑、双指接触力0；没有放宽成功判据。该审核来自Codex，非新的AGY批准。
+
+同checkpoint/同固定初态的[可见纯策略复跑](output/policy-correction-v11-release-visible-20261002/render-binding.json)也通过，9个NPZ字段数组及全部物理diagnostics逐项与首次完全一致，渲染未修改执行状态。[995帧视频](output/policy-correction-v11-release-visible-20261002/attempt-000-nominal/pure-policy-grab-place.mp4)与[释放落盘细节](output/policy-correction-v11-release-visible-20261002/attempt-000-nominal/placed-detail.png)为本机忽略产物；这只是可见复验，不额外计入20+20或泛化成功率。
+
+以下为前序实验的原始结果，保留失败演变；其中“没有载物collector”“下一项待验”等状态仅指当时，当前状态以上述日期段落及[progress](../../plans/colab-digital-twin-20261001/progress.md)为准。
 
 2026-10-01本地RTX3050 Laptop物理显存4096MiB：首次官方ACT探针峰值allocated117.59MiB/reserved146MiB，5步计算0.1175s；MLP分别17.53/22MiB、0.00829s。两者资源门槛通过，不代表学习任务已通过。
 

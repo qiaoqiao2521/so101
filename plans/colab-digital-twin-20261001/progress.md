@@ -182,3 +182,55 @@ v5采集只执行无接触策略前缀1/2/4/5s（50/100/200/250拍，20ms，最�
 按用户要求，实际AGY审查提交 `5c41ca0` 并引用本地源码及产物；原生会话 `11ef62ca-91ac-414d-b850-1a1b6225f170` 完整读回，与最终CLI正文一致。首轮超时空响应不算完成，一次无工具收束后才记完成。AGY和根Codex各独立执行3项真实恢复档案检查通过，本轮未重跑150全测、训练或物理回合。
 
 AGY认可本次实现/记录边界，但完整策略抓放未通过；提出接近末端/持物实际偏差纠正覆盖不足。根Codex保留“起步覆盖充分”、速度唯一因果与按固定拍数滤波等分歧；四份旧统计合法继承不等于已证明漂移故障。具体引用、采用范围及未采用建议见[本次审核记录](learning-review.md#2026-10-01agy-对起步偏差与恢复采集的实际审核)。S7d/S7e状态不变；下一步owner根Codex，先覆盖证据再有界实验。
+
+### S7d 接近末端与持物纠正初期记录（已被下文接续）
+
+用户明确要求补齐纠正数据并重过纯策略单回合。根Codex在delivery树实现独立collect_policy_recovery.py，真实执行前缀后接管，前缀全invalid，首valid保持真实速度/状态连续；原grasp_episode前接触≤5s入口未扩大。接近末端用450拍（600拍已在低位闭爪，不按hover标注），持物用1700与1756拍；持物入场要求当下持续双指抬高≥25mm/≥1s。离线专家载物几何查询提取为placement helper，query-only，不操作真实执行qpos。
+
+450入场加强版与1700/1756向前剩余路线纠正均实际抓放通过；各raw64独立重放核对后才进入新训练。初始1700回溯整条搬运路线也通过但不选择作新主训练，保留原产物；新held入口从当前Cartesian投影只连接剩余腿，避免向已完成路线反教。当前纯策略单回合仍未通过，训练/新策略验收待根Codex填写；20+20/视觉/硬件/云端均未启动。
+
+### 2026-10-02 接近末端、持物及蓝盘边缘实际纠正
+
+用户要求补齐实际偏差纠正后重过纯策略单回合。最终选择六份guarded新增档案：接近末端450拍、持物1700/1756拍、独立学习夹爪候选的1800拍、v7早期持物900拍、v8蓝盘接近corridor持物2500拍。六条共15989raw/6883valid/9106invalid；加原八份后14条共34816raw/25107valid/9709invalid。每份都从参考初态真实执行已保存的策略command，前缀expert标签NaN且全invalid；实际持续双指悬空持物才准入，首valid用actualq制动，速度/状态连续，没有恢复NPZ终点或附着物体。接管期间仅离线fresh IK/载物规划；模型评测不调用该入口。
+
+六份专家纠正均完整抓放通过，各自raw64独立回放state/env/time最大差均0。载物下放的actual-to-target chord也检查自由物体的实测夹持占位；几何满足释放条件后不再假设物体刚性随爪。物理2ms/控制20ms、Noslip10、夹爪.15Nm、碰撞与关节限位全部保持。实际前缀与纠正各自≤60s、采集wall≤120s，前缀≤3000拍；原前接触≤250拍/5s入口不扩大。
+
+实现新增`collect_policy_recovery.py`、学习状态夹爪组件及其独立训练。五轴ACT L1明确排除夹爪轴，官方可微model forward不改上游源码；裸arm-only checkpoint禁止执行，必须附学习夹爪。夹爪只读相同的归一化state6/env30，二次统计只拟合有效训练行；不接收阶段、时钟或几何开爪规则。训练夹爪时72个ACT状态张量逐项冻结不变，checkpoint保存完整组合，默认旧ACT/MLP训练入口兼容。
+
+| 候选 | 纯策略实际结果 | 可引用产物（同一ignored output根） |
+| --- | --- | --- |
+| v6 full ACT（旧admission/forward数据） | 11.42s料盘底碰撞，无抓起 | `policy-correction-v6-single-20261001/report.json` |
+| v6只训jaw输出行（旧数据） | 抓起并持物20.04s，37.88s盘外失物 | `policy-correction-v6-gripper-single-20261001/report.json` |
+| 原ACT+11份guarded学习夹爪 | 持物20.10s，38.02s障碍碰撞 | `policy-correction-v6-classifier-single-20261001/report.json` |
+| 11份guarded裸MLP | 12.94s料盘底碰撞，无抓起 | `policy-correction-v6-mlp-single-20261001/report.json` |
+| v7五轴ACT+12份学习夹爪，chunk16 | 持物6.06s，完成22.54s后实际腕关节越限；command仍限内 | `policy-correction-v7-decoupled-single-20261002/report.json` |
+| 同v7权重chunk8 / chunk1 | 11.82s料盘底碰撞 / 持物71.88s、90s超时，未放置 | `policy-correction-v7-decoupled-chunk{8,1}-single-20261002/report.json` |
+| 原ACT+同v7学习夹爪 | 持物2.66s，21s盘外失物 | `policy-correction-v7-frozen-origin-classifier-single-20261002/report.json` |
+| v8五轴ACT+13份学习夹爪，chunk16 | 持物60.42s并进入蓝盘范围；89.72s后蓝盘壁/夹爪0.8471mm间距保护停止，未释放/承托 | `policy-correction-v8-decoupled-single-20261002/report.json` |
+
+这不是严格同数据模型消融：早期v6数据版本不同，v7/v8还同时改变数据与学习选项。只有v7三个执行窗口是同权重/同参考/同输入与固定标签支持的有界窗口对照。所有失败都保留原权重、实际command、逐拍诊断及报告。部分monitor的最后安全快照false不覆盖外层SafetyStop；安全停止一律任务失败。
+
+独立CPU诊断未发现arm_delta chunk锚点错位。v7第900拍已实持1.52s，附近专家状态原本存在，但低速实际持物输入的动作缩小；只离线替换物体速度能改变预测，不能作为在线修复或唯一因果。新纠正因此覆盖actual-policy早期持物和之后的路线。v8第2500拍仍在蓝盘接近corridor、实持31.94s/抬高35.768mm；fresh纠正742valid，独立3242步回放差全0，才纳入第14条。
+
+实现完整201项测试通过，无跳过，55.101s；日志`output/late-recovery-v7-final-tests-20261002.log`。这些是源码及绑定产物边界证据，不替代纯策略放置；这是release分支之前的历史测试；下文新212项覆盖最终源码。独立审计入口：`late-recovery-v7-independent-audit-20261002.json`、`late-recovery-v8-data-audit-20261002.json`、`late-recovery-v8-policy-audit-20261002.json`、`late-recovery-v9-data-audit-20261002.json`，均同ignored output根。
+
+v9已完成：从v8 arm checkpoint `00da58926f51a1408f73f3b5dc4280a895c8ef90de080c21f4a9affef51bdcd5`初始化，保持原四份统计、robot-only mask，14档案、batch64/lr1e-5、优化循环目标≤120s，实际73step/120.152s，整次405.668s；组合夹爪后27.08s盘外失物，持物11.22s。独立采样重算：只覆盖4166/25107起点，但chunk标签并集23501/25107；不将起点覆盖混称为动作标签覆盖。GPU一时低频观测不证明失物的唯一原因。20+20/视觉/实体/云端未启动。
+
+v9实际来源为`output/policy-correction-v9-arm-fit-20261002/report.json`、`policy-correction-v9-decoupled-fit-20261002/report.json`、`policy-correction-v9-decoupled-single-20261002/report.json`及`late-recovery-v9-policy-independent-audit-20261002.json`；精确argv为`policy-correction-v9-*-arguments-20261002.json`，14份数据清单`policy-correction-v9-training-datasets-20261002.json`。现场旧22项tracked遗留/index/原MJCF哈希保持，硬件Issues/Handoff仍由根Codex接续。
+
+
+### 2026-10-02 末端释放纠正与纯策略单回合通过
+
+v10在相同14档案上从v8五轴权重改用CPU有界接续，1201step/120.067s优化循环、144.551s全进程；固定初态纯策略抓起且进入蓝盘低位，但52.22s蓝盘左壁与夹爪间距0.9365mm触发原1mm保护。五轴权重SHA `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743678b52abab57e6`；组合SHA `cb8f8774f7cb7a67c06a910ebe5684e39ff0b9042070088fcbd1d73b75f06d48`。失败与实测轨迹均保留，未降低安全阈值。低位状态重新推理仍预测闭爪，离线probe排除“缓存是唯一原因”，不作唯一因果证明。
+
+从v10真实command执行2517拍，最早进入蓝盘内z=14.478mm且无地板支撑的状态；当前连续双指接触36.46s、历史实抬抓取通过。新增独立`release`离线模式，失去任一指接触或触地即重置当前接触计时；仅接受双指连续≥1s、盘内、10mm≤z<14.5mm、速度≤0.05m/s的安全状态。首valid为actual五轴制动＋开爪0.5，直接释放/承托/安全撤离/静置，不重新规划搬运。专家物理抓放与2914步raw64独立回放均通过，state/env/time差全0。2517步prefix全invalid且expert标签NaN，397条纠正valid；没有恢复NPZ终点qpos、额外沉降或附着物体。采集来源`output/policy-correction-v10-release2517-guarded-20261002/`，回放来源`policy-correction-v10-release2517-guarded-replay-20261002/`。
+
+最终15份共37730raw/25504valid/12226invalid；七份本轮新增18903raw/7280valid/11623invalid，全部专家抓放与各自回放通过。清单`output/policy-correction-v11-training-datasets-20261002.json`。v11只训练独立状态夹爪8608参数，6000step/7.102s、全进程9.950s，CPU batch128/lr0.001/seed0/critical weight5；72个ACT状态张量和原四份归一化逐项保持。五轴ACT实际在14份数据上训练，夹爪在15份数据上训练，不能称官方完整ACT整体通过或ACT整体训练15份。组合checkpoint SHA `f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`，位于`output/policy-correction-v11-release-classifier-fit-20261002/policy.pt`。
+
+纯策略正式入口`output/policy-correction-v11-release-single-20261002/report.json`：completed_evaluation，固定初态一个正常回合1988控制拍/39.76s，实持23.10s，物体完全在蓝盘内、盘底支撑、双指释放且低速稳定1s；无安全停止/IK/OMPL/阶段/时钟输入/专家兜底。策略仅state6/env30，robot-only速度mask；chunk16固定当前锚点解码，nearest仅把学习夹爪浮点输出投影到训练标签0.015/0.5，并不读取几何或触发阶段开爪。此为有仿真真值的状态组合策略、同训练参考初态的单回合门槛，不是held-out、视觉、扰动恢复率或真机通过。
+
+可见复验`output/policy-correction-v11-release-visible-20261002/`实际重新运行同一策略，渲染只读状态；全部1988步NPZ数组与逐步diagnostics和首轮完全相同，物理门槛再通过。`render-binding.json`保存checkpoint/两次report SHA与五项一致性；视频995帧/39.8s/25fps/1280×720，ffmpeg全量decode退出0，根Codex人工检查最终蓝盘物体和张爪细图。此复验仍同固定初态，不记作独立泛化批次。
+
+最终源码回归212项/0skip/41.991s，actual exit0，绑定11份真实纠正HDF（旧四v5＋本轮七）与新release replay，前后源码hash相同；记录`output/late-recovery-v11-final-test-result-20261002.json`，精确参数`late-recovery-v11-final-test-arguments-20261002.json`，日志`late-recovery-v11-final-tests-20261002.log`。独立Codex审计`late-recovery-v11-independent-audit-20261002.json`核验数据、冻结权重、阶段隔离和实际落定；它不冒充AGY或ZCODE的新审核。完整汇总`output/late-recovery-single-gates-20261002/report.json`。
+
+S7d-single已通过，S7d批次/S7e视觉继续未完成，20正常＋20扰动、视觉、实体与云端本轮未运行。接续owner根Codex：以本次组合权重与精确argv为基线，下一次先明确分回合/分种子评估范围与通过阈值，不能从1/1同初态提升为85%泛化成功率。权重、训练HDF、NPZ、视频、原始日志与审计只存ignored output；源码/公开文档同步并提交推送既有delivery分支。原现场22项旧变动与独立index/原模型均保留，既有硬件Issues/Handoff保持有效。

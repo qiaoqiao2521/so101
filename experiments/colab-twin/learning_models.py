@@ -212,10 +212,17 @@ def load_policy_checkpoint(path: str, device: str = "cpu"):
     policy.load_state_dict(data["state_dict"])
     policy.eval()
     options = data.get("normalization_options", {})
-    return policy, StateNormalizer(data["normalization"], encoding,
-                                   options.get("velocity_scale_floor_rad_s", 0.0),
-                                   options.get("robot_velocity_mask", False),
-                                   options.get("object_velocity_mask", False)), data
+    normalizer = StateNormalizer(data["normalization"], encoding,
+                                 options.get("velocity_scale_floor_rad_s", 0.0),
+                                 options.get("robot_velocity_mask", False),
+                                 options.get("object_velocity_mask", False))
+    if "learned_gripper_classifier" in data:
+        from learning_gripper import LearnedGripperPolicy
+        if spec.model != "act" or spec.use_vae or spec.dropout != 0:
+            raise ValueError("Learned gripper requires a deterministic frozen ACT base")
+        policy = LearnedGripperPolicy(policy, data["learned_gripper_classifier"],
+                                      data["normalization"][ACTION], data["train_dataset_sha256"], device).eval()
+    return policy, normalizer, data
 
 
 class StatePolicyRunner:
@@ -226,6 +233,9 @@ The optional execution ablation decodes a chunk once at its current-q anchor
 and caches absolute commands. No stage, clock, expert or hidden replay input.
 """
     def __init__(self, policy, normalizer, metadata, device, *, execute_chunk_steps: int = 1):
+        if (metadata.get("training_loss_scope") == "arm5_only"
+                and "learned_gripper_classifier" not in metadata):
+            raise ValueError("Arm-only checkpoint needs its learned gripper before policy execution")
         self.policy, self.normalizer, self.metadata = policy, normalizer, metadata
         self.device = device
         spec = metadata["model_spec"]
