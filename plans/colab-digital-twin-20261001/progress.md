@@ -438,3 +438,27 @@ future标签token搬运占53.382%、冻结模型normalized L1误差总量占46.3
 [独立Codex数组审计](../../experiments/colab-twin/output/vision-b-offline-independent-20261003/report.json)与[近邻独立审计](../../experiments/colab-twin/output/vision-b-offline-independent-20261003/consistency-report.json)回源HDF与冻结源码重算，未重复推理/物理/渲染/训练，不能冒充新AGY/ZCODE会审。辅助绘图首次因learning venv无matplotlib退出1，改为HDF时间/jaw导出保存数组后用已有系统matplotlib绘图exit0，无安装/环境修改；审核脚本首次外部STL相对路径处理错误保留失败记录并修正，均不属于模型产物通过证据。
 
 **下一候选（尚未执行）**：使用已有`--execute-chunk-steps 1`，同冻结d4db权重/同场景/同物理标准，只改变执行参数16→1，先验证后部chunk误差影响；模型仍预测16拍，但每20ms执行首拍并重新观察/锚定（原320ms）。执行窗口与观测/锚点节拍内在联动，不能把结果孤立归因为视觉，也不保证h0在陌生状态有效；forward需求最多16倍，若后续执行须记录实际耗时/峰值及原失败退出。本轮没有运行候选、增加训练/采集，暂不重采样/引入预训练或冻结视觉层。root负责接续，全部诊断NPZ/图/脚本/log继续Git忽略，原现场22项/index/README/MJCF保留。
+
+### 2026-10-03 B冻结权重chunk1单回合复验因墙钟上限截断
+
+用户授权一个同初态纯视觉物理回合，仅`--execute-chunk-steps 16→1`，冻结checkpoint SHA `d4dbfc3e840637b1605148d19349f1bf324f9e071fc4064750952aa224d68509`。复用原evaluate入口；不再训练/采集、调线程或改变物理/安全标准。保留120s墙钟与90s仿真上限，seed0、CUDA、reference raw、固定128×128RGB、原2ms物理/20ms控制、1mm余量与1s蓝盘落定一致。模型仍输出16拍，执行每拍刷新q6/RGB并重设残差锚点，不输入env真值、clock、stage、IK或OMPL。
+
+**唯一回合实际退出1，运行时间阻断；抓放对照尚未完成。** [原物理报告](../../experiments/colab-twin/output/vision-b-chunk1-nominal-20261003/report.json)SHA `179aa8dcff8e81459c41b2ac7bbedc4286a1e59b8d6fe80a83252ac7f856206e`，failure_reason=wall_time_limit：
+
+| 实际记录 | 结果 | 来源 |
+| --- | --- | --- |
+| 原evaluate墙钟 / 外层进程 | 120.4996s / 123.6989s；实际退出1，无外层超时重试 | [execution](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/execution.json)、[outer](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/outer-execution.json) |
+| 完整控制转移 / 仿真推进 | 250拍 / **5.00s**；最后动作时刻elapsed4.98s，最后完整物理状态elapsed5.00s | [保存NPZ](../../experiments/colab-twin/output/vision-b-chunk1-nominal-20261003/policy-transitions.npz) |
+| 抓取 / 持物 / 放置 | false / 0s / false，未闭爪或接触，无安全停止 | [物理报告](../../experiments/colab-twin/output/vision-b-chunk1-nominal-20261003/report.json)、[轨迹审计](../../experiments/colab-twin/output/vision-b-chunk1-audit-20261003/report.json) |
+| 原预测回调耗时，中位 / P95 | **402.0746ms / 475.0680ms**；最小234.5213/最大921.2401ms，250/250超过20ms | [独立重算](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/latency-audit.json) |
+| 回调总时间 / Torch峰值allocated、reserved | 98.8825s / 74.9336、102MiB | [逐次计时NPZ](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/prediction-latencies.npz)、[execution](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/execution.json) |
+
+[仅计时包装器](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/run_once.py)SHA `39b0d9056d7e99d61a448f5decc2908bfdf594bf2ad389091c6bd9807a6b87db`每次只调用原predict一次，原参数/返回/action保持；没有额外模型调用、CUDA同步、线程设置或物理步，结束恢复原方法。计时覆盖归一化、设备传输、模型forward、回CPU/解码/jaw投影，**不包含EGL渲染或物理推进**，不是纯GPU kernel耗时；Torch峰值不含EGL、驱动与其他进程。wrapper_evaluation_s120.5947计时截至原main返回，包含原evaluate内部产物保存，不包含包装器随后写出的计时NPZ与execution报告；原limit在step间检查，启动/最后step/保存可使总记录略超120s，不意味着本轮放宽上限。
+
+[独立轨迹/FK审计](../../experiments/colab-twin/output/vision-b-chunk1-audit-20261003/report.json)37项通过，actual exit0/2.574s，SHA `2923a3d6d6b0feccca9634da8afe04acc29dd62dbe602e370b85511d0eb191b7`：250完整行、最后命令与最后行匹配、无未保存停止tick；抓取/持物/放置监视器与原report一致，保存双pad力均0。权重/参考数据/相机/原模型/派生XML/初态及52份生产Python前后相同。[早期对照](../../experiments/colab-twin/output/vision-b-chunk1-audit-20261003/early-comparison.json)第1拍raw_action/投影action/q6/time与旧chunk16逐位一致；同sim5s新/旧PINCH参考点距物体XY278.18/270.44mm，尚是早期前缀，不作为接近末端或抓取结果。该审计仅读取保存数据/mj_kinematics，没有新物理步、渲染、推理或训练；报告中的“teacher-forced”应读作固定专家观测重构，前轮并未输入专家动作。
+
+[独立计时审计](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/latency-audit.json)148项通过，SHA `d9e3b1b0274e5fc6d720804c48a2c620e2ccffd0194e7425b800b0f7b690cd52`：直接从NPZ重算统计，250predict=250转移、一个runner、输入仅q6/RGB，核对原调用次数、source52/两历史权重与limits；没有再调用模型/物理/渲染。两位均为Codex只读审计，不冒充新AGY/ZCODE会审。[事后运行快照](../../experiments/colab-twin/output/vision-b-chunk1-gates-20261003/postrun-runtime-snapshot.json)来自另一个新进程及nvidia-smi，不是本回合内历史；不能用它断言CPU线程、GPU降频或其他进程争用已被证实为根因。
+
+**归因边界与接续。** 本次未达到专家11.02s闭爪及抓取窗口，不能确认chunk1改善抓放，也不能把“仍未通过”解释为chunk尾部不是瓶颈或视觉表征必然失败。目标方向投影20%不是“方向错80%”，专家观测h0误差也不保证偏离后动作有效。当前运行配置不支持此前毫秒级/真实50Hz预期；下一候选应先有界离线拆分预处理、传输、forward与解码耗时，记录实际调用和运行状态，再决定执行调度/运行配置的一项改动，候选尚未执行。不自动延长预算、启动第二回合或重训。
+
+B/S7e任务仍未通过，v11固定正常20/20、旧扰动3/20与S7d未过状态保持；40..59、云端、实体未使用。沿用“按当前任务选择验收依据”，本轮验证为唯一物理回合、独立只读轨迹/计时、输入/源码哈希、文档链接与diff；生产源码未变，不重复声称232项测试覆盖新的物理结果。root负责可恢复接续；全部NPZ/计时/脚本/日志仍Git忽略，公开只交付本轮事实记录，原现场22项/index/README/MJCF保持。
