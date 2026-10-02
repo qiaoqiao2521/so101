@@ -162,6 +162,12 @@ python experiments/colab-twin/train_gripper_classifier.py --dataset \
 
 ## 当前实测
 
+2026-10-02批次接续：[v11正式40轮报告](output/policy-correction-v11-batch-20261002/report.json)与[执行参数](output/policy-correction-v11-batch-evaluation-arguments-20261002.json)已本地核验，checkpoint仍`f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`。正常20/20，扰动3/20（seed20/25/31）；20次扰动均在实际3.02s连续施加10拍/0.2s、五轴目标偏移各≤0.02rad。总体安全停止5、simulation_time_limit8、payload_lost4；双方≥17/20的门槛未通过，视觉保持not_reached。[独立40轮审计](output/v11-batch-independent-audit-20261002.json)的16项汇总及40轮逐项核验均一致。正常20份NPZ每个字段数组完全相同：seed只采样扰动目标，reset仅复用同一训练参考初态；不写20种场景、独立泛化或吸引域已证明。逐轮wall_s合计309.869s，整进程时长未另记录，不采用“约4.5分钟”的叙述。
+
+失效解释以[实际command/物理核对](output/v11-batch-lost-object-claim-check-20261002.json)为准：seed22/24/36在实际抓起后分别于26.88/25.28/24.00s、物体盘外高位首次预测开爪；seed37抓起后没有开爪command。不能将四轮都认作偏心抓取或物理滑脱。seed21最终物体(.18802,.14002,.04209)m、whole-object盘内false/支撑false，抓起后未输出开爪；策略只有学习state/env与固定训练标签投影，不存在“开爪几何条件”门控。数据先覆盖接近段actual-state纠正与盘外持物闭爪标签，再由实际回放/有界训练定验收；后续方案尚未执行。原批次成为已见诊断集；若用于补标签，下一验收必须另用未参与纠正的新扰动种子，并保留旧正常基线回归。仅借用[DART论文](https://proceedings.mlr.press/v78/laskey17a.html)的噪声示范/纠偏思路，不将固定随机脉冲和有限前缀纠正宣传为完整DART优化。
+
+以下v11单回合记录保留批次前的验收快照，当前S7d以本段和[progress](../../plans/colab-digital-twin-20261001/progress.md)末节为准。
+
 2026-10-02最新实测：七条guarded纠正与raw64回放通过，合并原八条为15档案。v11冻结v10的14档案五轴ACT，仅用15档案重训学习夹爪；相同训练初始场景的chunk16纯策略完成抓起、搬运、释放及蓝盘内静稳，单回合门槛**1/1通过**，1988控制周期/39.76仿真秒、hold23.10s、静稳1s，无专家介入或安全停止。只通过这一固定训练场景的重复性门槛；20+20、视觉、云端和实物均未新增。此前v6–v10失败完整保留。
 
 | v6候选 | 本次单回合结果 | 使用的新增纠正数据 |

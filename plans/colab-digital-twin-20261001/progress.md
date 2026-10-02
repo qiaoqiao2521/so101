@@ -234,3 +234,20 @@ v10在相同14档案上从v8五轴权重改用CPU有界接续，1201step/120.067
 最终源码回归212项/0skip/41.991s，actual exit0，绑定11份真实纠正HDF（旧四v5＋本轮七）与新release replay，前后源码hash相同；记录`output/late-recovery-v11-final-test-result-20261002.json`，精确参数`late-recovery-v11-final-test-arguments-20261002.json`，日志`late-recovery-v11-final-tests-20261002.log`。独立Codex审计`late-recovery-v11-independent-audit-20261002.json`核验数据、冻结权重、阶段隔离和实际落定；它不冒充AGY或ZCODE的新审核。完整汇总`output/late-recovery-single-gates-20261002/report.json`。
 
 S7d-single已通过，S7d批次/S7e视觉继续未完成，20正常＋20扰动、视觉、实体与云端本轮未运行。接续owner根Codex：以本次组合权重与精确argv为基线，下一次先明确分回合/分种子评估范围与通过阈值，不能从1/1同初态提升为85%泛化成功率。权重、训练HDF、NPZ、视频、原始日志与审计只存ignored output；源码/公开文档同步并提交推送既有delivery分支。原现场22项旧变动与独立index/原模型均保留，既有硬件Issues/Handoff保持有效。
+
+
+### 2026-10-02 S7d 40轮批次核验完成，门槛未通过
+
+用户提供批次结果，根Codex回源实际产物核验，没有重跑40轮、采集或训练。checkpoint仍v11 `f50a14052b48ad1237024a63cebddec032686441be1149c33e4c8bc5d071a007`；[批次报告](../../experiments/colab-twin/output/policy-correction-v11-batch-20261002/report.json) SHA `ca487dd7ffd8e529834390c5ec467d2dbe7ae4e425bb1f732c010db97cc8f4bf`，[精确argv](../../experiments/colab-twin/output/policy-correction-v11-batch-evaluation-arguments-20261002.json)，原始日志及40轮NPZ/diagnostics继续ignored保存。
+
+实际20正常/20扰动全部执行完，正常20/20、扰动3/20（seed20/25/31），双方≥17/20标准未达成。总体安全停止5/40=12.5%，超时8/40=20%，失物4/40=10%；若仅扰动组，分别为25%/40%/20%，分母必须注明。每次扰动实际从3.02s连续10拍/0.2s，五轴目标偏移≤0.02rad，无接触且未抬升；不是外力脉冲，也不保证实际joint displacement等于目标偏移。逐轮wall_s合计309.869s，不推断未记录的全进程耗时。
+
+正常20轮使用同一训练reference/reset、确定性模型，seed只在perturbed时改变目标偏移；全部NPZ字段数组相同。因此只证明同初态可重复执行，不能表述为名义流形闭环稳定性或20种场景泛化。3个扰动方向实际恢复通过，不构成连续吸引域、任意方向或理论稳定性证明。沿用开发知识页“按当前任务选择验收依据”的已采纳原则：执行完成与验收通过分别记，不能扩大已观察范围；来源为Wiki/自动化开发范式与智能体协作.md。
+
+最早失分集中于抓起之前：7个未抓取超时（23/26/27/30/32/38/39）＋4个pick_floor/活动指爪低于1mm余量停止（28/29/34/35），共11/17失败。余量停机不宣称实际碰撞穿透。seed33为place_wall_y_-1/夹爪0.998711mm余量停止，实际hold42.2s、放置仍false。seed21虽然hold74.12s，但终点物体(.18802,.14002,.04209)m未全进入蓝盘、无盘底支撑，不能认作低位待释放；学习策略也没有几何开爪条件门控。
+
+[失物命令核对](../../experiments/colab-twin/output/v11-batch-lost-object-claim-check-20261002.json)：22/24/36在物体盘外高位且已实抓起后，于26.88/25.28/24.00s首次输出开爪0.5；37实抓起后没有开爪command。前3条优先检查学习夹爪在持物状态的误分类与监督覆盖，第4条再检查仍闭爪时的实际夹持/动力学；仅观察时序不能作为开爪单一因果验证，四轮不能笼统归因偏心滑脱。[独立40轮审计](../../experiments/colab-twin/output/v11-batch-independent-audit-20261002.json)16项汇总与40轮逐项核验全部一致，SHA `0e5bcee2706cb7ad42f9b53476079f8cda18892e5e5c68c213ee00951274d5da`。96041次有限command中96036步完成进入NPZ，5条安全失败command保留在各attempt last_command/failure_details；最后保存的安全物理快照不覆盖外层SafetyStop。核验来自独立Codex助手，不冒充新的AGY/ZCODE审核。
+
+后续建议（尚未执行）：保持MuJoCo状态ACT五轴＋学习夹爪和原控制/安全约定，用已有grasp_episode短前接触prefix接口覆盖脉冲结束后的actual-state重新对准，用held离线入口补盘外持续持物闭爪标签。先选少量不同方向/失效类型，前缀保持invalid，专家从真实受扰状态重新求解；每条完整抓放与独立raw64回放通过后才纳入有界微调。此做法参考[DART原论文](https://proceedings.mlr.press/v78/laskey17a.html)的纠偏示范思路，未实现其噪声分布优化，不宣称完整算法复现。原20..39若用于训练则转为已见诊断集，正式复验另留未参与纠正的新扰动种子；旧正常基线检查退化。没有新增模型架构、GPU任务、实体或视觉。
+
+当前S7d-single仍通过，S7d批次执行完成但任务门槛未通过，S7e未开始；owner根Codex。下一次需用户确定是否采用上述小批纠正＋有界微调方向；本次交付为统计复核、解释纠正及项目状态同步。40轮全部产物、17轮失败和v11权重保留，既有现场22项变动/index/原MJCF继续受保护。

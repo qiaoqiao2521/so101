@@ -169,3 +169,14 @@ v11只冻结v10五轴ACT SHA `b92adf12f9482467aa927aff1c71e8c94ae2cba6ed878b7743
 [v11独立Codex审计](../../experiments/colab-twin/output/late-recovery-v11-independent-audit-20261002.json)39项全true，SHA `24e341d401479ad57c39a5b2a13609738ca70247b2e3d5dac02d315402f8f565`。只读重算最终真实物体蓝盘范围/盘底承托/松爪/1s静稳，结果与报告一致；72个ACT tensor逐项相等，arm14/head15及原四归一化/15份夹爪统计误差0；prefixNaN/回放差0及212项11档案绑定一致。审核未重跑训练、推理或物理。物体最终(.21228807,.13849017,.00992145)m、双指力0、盘底支撑真实，安全和任务标准保持。
 
 [同初态可见纯策略复跑](../../experiments/colab-twin/output/policy-correction-v11-release-visible-20261002/render-binding.json)通过，checkpoint仍f50a1405…，9个NPZ字段数组/全部diagnostics与首次逐项完全相同，渲染不修改物理状态；[995帧视频](../../experiments/colab-twin/output/policy-correction-v11-release-visible-20261002/attempt-000-nominal/pure-policy-grab-place.mp4)只作本机可见复验，不合并计算20+20或泛化成功率。
+
+
+## 2026-10-02 v11 40轮批次的范围与失效解释
+
+[v11批次report](../../experiments/colab-twin/output/policy-correction-v11-batch-20261002/report.json)实际为20/20正常、3/20扰动、20次扰动全部10拍；安全5、超时8、失物4。正常组全部NPZ数组相同，seed不影响reset，故这是单一训练初态重复性，不是20个独立场景。扰动是固定时间实际3.02s的五轴控制目标偏移，幅度各≤0.02rad持续0.2s，不能表述为大范围任意外力或连续吸引域已证明。
+
+[命令/物理只读核对](../../experiments/colab-twin/output/v11-batch-lost-object-claim-check-20261002.json)发现22/24/36先在盘外高位学习开爪，37抓起后始终闭爪：四个payload_lost应分开检查，不作统一偏心夹持归因。21超时终点仍全物体盘内false、z42.09mm，没有几何开爪门控。28/29/34/35为pick_floor/活动爪1mm余量保护，33为蓝盘y负侧壁/夹爪余量保护，并非已证明发生实接触碰撞。各轮wall_s合计309.869s。
+
+优先数据候选为脉冲后的前接触恢复，以及真实持物尚未失触前的继续闭爪纠正；仍须完整专家成功/raw64回放后才学习。若使用本批失败补标签，该批成为已见诊断集，另留新种子验收，保留固定正常回归。这个后续方案只记录为建议，未采集/微调/重评；当前S7d未通过、视觉未启动。原single/212测试证据保持其范围，本次文档核验没有重跑训练、physics或测试。
+
+[独立审计](../../experiments/colab-twin/output/v11-batch-independent-audit-20261002.json)确认16汇总和40逐轮检查全部一致；96041次command中96036步完成进入NPZ，5条失败command仍保存在外层attempt。不能用最后正常snapshot覆盖安全停止。
