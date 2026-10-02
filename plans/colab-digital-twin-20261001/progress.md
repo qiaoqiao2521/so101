@@ -403,3 +403,38 @@ pick原始XY20mm窗口内最低参考点68.52s/Z24.1883mm，全局最低68.30s/Z
 **数据/资源/训练执行完成，纯视觉抓放仍未通过。** v11正常20/20与旧扰动3/20保留，S7d/S7e整体未通过；没有把无安全停止或新数据准入当成功。原232项实现/产物测试来源仍只覆盖原范围，生产源码未改，因此本轮未重复跑全套；验证为新HDF准入、六次完整专家回放、五步资源、实际训练重载、唯一物理回合、离线几何及独立审计。采用既有Wiki“按当前任务选择验收依据”的范围区分。
 
 接续owner根Codex：本轮停止追加训练/采集/rollout，保存全部新RGB、权重、超时及逐拍证据。下一建议先离线检查固定专家/实际观测的动作拟合误差、相近观测是否存在监督冲突与低位对准覆盖，再决定优化预算/数据/模型的单项改动；建议尚未执行，不凭这次失败承诺视觉天然更容易纠偏或自动扩大训练。全部runtime继续Git忽略，原现场22项/index/README/原MJCF不变。
+
+### 2026-10-03 B四档案离线拟合与监督一致性诊断完成
+
+用户授权四档案接触前动作拟合、低位监督覆盖与相近输入标签一致性离线切片。本轮冻结新d4db与旧cd298权重，未追加优化/采集/物理回合/渲染/云端/实体/留出40..59；原B0/1、S7d/S7e整体未通过事实不变。沿用既有Wiki“按当前任务选择验收依据”：数据重构、输入近邻检查和学习任务完成分开。
+
+**拟合与闭爪。** [完整重构报告](../../experiments/colab-twin/output/vision-b-offline-fit-20261003/report.json)实际exit0、内部77.293s/含启动79.687s，CUDA峰值allocated91.705/reserved124MiB；新8797全部有效chunk起点/旧原2350起点，batch8，模型及缓冲哈希保持，生产Python52份未变。新/旧batch与singleton normalized差分别6.68e-6/7.44e-5；只用q6/RGB，action真值仅作比较，不进入predict。每一有效chunk严格按起点q共同解码五轴残差，jaw保持绝对目标；padding/invalid/档案边界保留。
+
+[固定切片](../../experiments/colab-twin/output/vision-b-offline-fit-20261003/slices.json)按独立episode/frame masks连接，angular MAE单位mrad（1e-3rad），不是Cartesian精度。下表旧/新均同nominal专家观测，完整chunk只统计有效future槽，hold基线在全部槽保持chunk-start q：
+
+| 同nominal切片 | 帧数 | 旧五轴全chunk MAE | 新五轴全chunk MAE | hold基线 |
+| --- | --- | --- | --- | --- |
+| 全有效观测 | 2350 | 1.7765 | 6.3828 | 10.6723 |
+| 严格接触前 | 659 | 2.6722 | 11.2131 | 18.1097 |
+| 接触前Z0–30mm/XY≤20mm | 135 | 0.4696 | 0.8293 | 1.5337 |
+| 首次闭爪至首次接触（含产生接触transition） | 109 | 0.1805 | 0.3977 | 0.2461 |
+
+四档案严格接触前1979起点：新五轴当拍.5436mrad/全chunk9.7937mrad，对照hold1.4430/15.9632mrad；有学习收益但未充分复现全部动作。首次闭爪至接触436观测全部预测closed；该窗口新五轴当拍.2860/全chunk.3997mrad，比hold.1873/.2499差。raw jaw误差与投影分类分别记录，不把类别正确当实际夹持。低位539起点中的432closed全命中，107open却56预测提前closed；不能说夹爪毫无误差。
+
+nominal逐专家观测h0扫描在**10.74s**首预测closed（专家11.02s/旧扫描10.84s），它不是运行中的首次闭爪；线上67.20s仍为前轮原物理记录。新模型在示范观测没有晚闭爪漏判，不能从实际迟滞直接断定训练标签没学会，也不能据此确认方块视觉定位。
+
+**后部chunk。** [图与原数据](../../experiments/colab-twin/output/vision-b-offline-fit-20261003/offline-fit.png)、[目标方向投影](../../experiments/colab-twin/output/vision-b-offline-fit-20261003/directional-progress.json)只重算保存数组，没有新模型推理。同nominal接触前：新h0五轴MAE.5665mrad、h15为25.9349mrad（旧.2075/10.5571）；专家目标位移范数≥.001rad时，预测目标位移在专家方向的投影比例中位h0=.9632、h7=.4110、h15=.2002（旧.9898/.9853/.6929）。这是目标命令的统计，不是实际速度，也不能单独解释6倍运行延迟；但明确支持优先检查执行chunk后部。
+
+**覆盖与冲突。** [独立覆盖/FK报告](../../experiments/colab-twin/output/vision-b-offline-coverage-20261003/report.json)仅mj_kinematics9458次，真实物理step0；[coverage/masks](../../experiments/colab-twin/output/vision-b-offline-coverage-20261003/coverage.json)严格排除首次产生任一pad>.02N的transition。用户Z30–80mm/XY≤40mm只384valid，全open；补Z0–30mm539valid（432closed），覆盖专家首次闭爪约Z19.8mm。合Z0–80mm923，不能把8797帧说成独立抓前样本。
+
+[跨档完整观测近邻](../../experiments/colab-twin/output/vision-b-offline-coverage-20261003/supplement-consistency.json)取跨档双向q6 L∞最近邻去重，q6≤.002rad且RGB全图MAE≤.5/255，1270对/880不同源帧（高度相关）；648涉及closed的近邻当拍/未来jaw均无分歧，五轴delta cos最低.9808/最大当拍delta差.0942mrad。最大分歧集中nominal descend与v6 frame452 approach交界：当拍delta差3.201mrad、未来16拍19.758mrad、qvel差.0604rad/s；速度未输入策略。没有完全相同q6+RGB跨档输入，近邻局部差异不证明不可辨识或普遍冲突。
+
+[局部图块敏感性](../../experiments/colab-twin/output/vision-b-offline-coverage-20261003/tile-sensitivity.json)揭示全图MAE会掩盖局部像素差；再要求最大8×8tile MAE≤2/255后975对均无负delta cosine。尚无充分证据支持“多专家普遍左右打架→平均动作→67s晚闭爪”的完整因果。
+
+**机理与口径。** 训练循环按seed重建：新10493次chunk-start访问/8797=1.192793遍，旧27482/2350=11.694468遍；末batch5/6，重叠future标签另算，不是10496/1.18或完整监督曝光/独立覆盖。官方noVAE为零latent，称固定专家观测重构而非teacher forcing；损失是masked normalized L1（统计最优为中位数，不是L2均值），backbone使用FrozenBatchNorm2d，没有普通BN训练/推理统计切换。来源：[编码/解码与runner](../../experiments/colab-twin/learning_vision.py)、[实际训练循环](../../experiments/colab-twin/run_vision_learning.py)、[固定官方源码](https://github.com/huggingface/lerobot/blob/e0d50211ef236143ae867228662b7dfaba554f02/src/lerobot/policies/act/modeling_act.py)。随机ResNet/有限步数不能证明数学上无法学习或特征无序；数据、normalization和步数同时变，不能唯一归因为优化预算。
+
+future标签token搬运占53.382%、冻结模型normalized L1误差总量占46.388%；接近误差总量占34.080%，闭爪占.340%。这是当前固定预测误差分布，**不是训练梯度归因**；不能用帧比例直接宣传超过一半梯度耗在搬运，更不能据此直接5倍加权所有接触前。专家观测重构改善也不保证偏离后闭环恢复。
+
+[独立Codex数组审计](../../experiments/colab-twin/output/vision-b-offline-independent-20261003/report.json)与[近邻独立审计](../../experiments/colab-twin/output/vision-b-offline-independent-20261003/consistency-report.json)回源HDF与冻结源码重算，未重复推理/物理/渲染/训练，不能冒充新AGY/ZCODE会审。辅助绘图首次因learning venv无matplotlib退出1，改为HDF时间/jaw导出保存数组后用已有系统matplotlib绘图exit0，无安装/环境修改；审核脚本首次外部STL相对路径处理错误保留失败记录并修正，均不属于模型产物通过证据。
+
+**下一候选（尚未执行）**：使用已有`--execute-chunk-steps 1`，同冻结d4db权重/同场景/同物理标准，只改变执行参数16→1，先验证后部chunk误差影响；模型仍预测16拍，但每20ms执行首拍并重新观察/锚定（原320ms）。执行窗口与观测/锚点节拍内在联动，不能把结果孤立归因为视觉，也不保证h0在陌生状态有效；forward需求最多16倍，若后续执行须记录实际耗时/峰值及原失败退出。本轮没有运行候选、增加训练/采集，暂不重采样/引入预训练或冻结视觉层。root负责接续，全部诊断NPZ/图/脚本/log继续Git忽略，原现场22项/index/README/MJCF保留。
