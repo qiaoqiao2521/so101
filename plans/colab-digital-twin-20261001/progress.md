@@ -361,3 +361,45 @@ B固定指32.38s已有接触，早于33.00s闭爪命令；物体最低中心Z3.3
 本轮采用既有Wiki/自动化开发范式与智能体协作.md“按当前任务选择验收依据”：RGB输入敏感性、数据准入和实际抓放分别记证据。相关方法来源为[ACT论文](https://arxiv.org/abs/2304.13705)的视觉模仿/action chunking及[离线机器人示范学习研究](https://arxiv.org/abs/2108.03298)的数据质量与评估区分；它们不证明这份SO101候选已能定位或恢复。[独立Codex审计](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/independent-audit.json)只核对本轮冻结产物/源码；[文档审计](../../experiments/colab-twin/output/vision-b-diagnostics-20261002/documentation-audit.json)另核五篇公开变动的链接与事实。两项均不冒充AGY/ZCODE新讨论。
 
 B仍0/1、S7e任务未通过；v11既有20/20正常与3/20旧扰动保留，S7d未通过。生产Python与模型未变，因此未重跑上一轮232项实现/产物测试；本轮验证为真实离线探针、独立复核及文档链接/diff检查。接续owner根Codex：先上述小批RGB准入、有效接触前样本与闭合/抬升标签核对，再唯一有界训练和纯视觉单回合门槛；不预报成功率、不恢复A、不调整安全阈值。
+
+
+### 2026-10-03 B四档案RGB闭环执行完成，纯视觉抓放仍未通过
+
+用户授权三份新增EGL同步RGB、各独立raw64回放、四档案唯一120s训练与一个纯视觉正常回合。本轮全部按范围执行，没有第二次训练/rollout、留出40..59、云端或实体操作，生产Python52份前后哈希不变，旧B/v11权重和失败证据保留。[九阶段汇总](../../experiments/colab-twin/output/vision-b-pilot-gates-20261003/report.json)绑定实际退出、各层report、权重和几何；[精确argv](../../experiments/colab-twin/output/vision-b-pilot-gates-20261003/commands.json)与逐阶段execution/log全部Git忽略。专家回放通过、训练执行完成和学习任务通过分别记。
+
+| 新增档案 | raw / valid / invalid | EGL同步RGB＋原raw64比对 | 独立原动作回放 |
+| --- | --- | --- | --- |
+| prefix50起步恢复 | 2350 / 2300 / 50 | [完整2350帧通过](../../experiments/colab-twin/output/vision-b-pilot-rgb-prefix50-20261003/report.json) | [2350步通过](../../experiments/colab-twin/output/vision-b-pilot-replay-prefix50-20261003/report.json) |
+| v6-450接近下潜 | 2406 / 1956 / 450 | [完整2406帧通过](../../experiments/colab-twin/output/vision-b-pilot-rgb-v6-450-20261003/report.json) | [2406步通过](../../experiments/colab-twin/output/vision-b-pilot-replay-v6-450-20261003/report.json) |
+| v13-seed23接近恢复 | 2352 / 2191 / 161 | [完整2352帧通过](../../experiments/colab-twin/output/vision-b-pilot-rgb-approach-seed23-20261003/report.json) | [2352步通过](../../experiments/colab-twin/output/vision-b-pilot-replay-approach-seed23-20261003/report.json) |
+
+六次完整执行均actual exit0、专家实际抓放通过、state/env/time逐帧差0。新RGB复制原label_valid与NaN位置，prefix50/v13无效标签虽有限值仍排除，v6前缀NaN保持。原nominal为2350valid（不是2300）；四份合计9458raw/8797valid/661invalid。root检查每新档案quarter/half共6张样本，机位和布局一致、方块较小且接触附近仍有遮挡；[相机记录](../../experiments/colab-twin/output/vision-b-pilot-gates-20261003/camera-review.json)。[真实四RGB准入](../../experiments/colab-twin/output/vision-b-pilot-gates-20261003/visual-admission.json)逐个核8797起点的frame/episode连续性，chunk不跨无效段或回合。
+
+[原HDF独立基线审计](../../experiments/colab-twin/output/vision-b-pilot-independent-20261003/baseline-audit.json)按严格接触前口径（排除首次产生任一指垫>0.02N的transition），四份659/609/211/500、共1979valid，占22.50%；只约nominal的3.003倍，不能称接触前4倍独立覆盖。含首次接触transition的obs_t则1983，口径不能混用；transport标签4680占53.20%。各档案仍同初始物体/场景，不作为多场景或独立视觉留出证据。
+
+| 后续层级 | 实际结果 | 来源 |
+| --- | --- | --- |
+| 绑定四RGB的CUDA五次反传 | batch8、5/5、allocated309.3428MiB/reserved332MiB，总3.155s | [resource](../../experiments/colab-twin/output/vision-b-pilot-resource-20261003/report.json) |
+| 唯一随机初始化ResNet18＋ACT/fresh Adam训练 | **1312step / 120.045s优化**，123.270s总时间；峰值allocated309.3433MiB/reserved332MiB；同CPU保存重载误差0 | [fit](../../experiments/colab-twin/output/vision-b-pilot-fit-20261003/report.json) |
+| 冻结新权重后纯视觉单回合 | **0/1；4500拍/90s超时**，grasp=false/hold0/place=false，无安全停止；actual exit1 | [evaluate](../../experiments/colab-twin/output/vision-b-pilot-nominal-20261003/report.json) |
+
+新checkpoint SHA `d4dbfc3e840637b1605148d19349f1bf324f9e071fc4064750952aa224d68509`，只读q6＋固定128×128RGB，env/stage/time及IK/OMPL不入策略。保留chunk16每320ms新推理、20ms控制、2ms物理及原1mm/限位/真实释放/1s落定标准。资源探针虽绑定四份哈希，5step抽合并前8行，只证明同形状反传显存；fit遍历/打乱四档案8797valid。旧fit report诊断文字仍写single train episode，实际是一次四档案训练、没有独立留出；不为文案修改生产源码使旧权重失去绑定入口。
+
+[20ms逐拍FK与接触时序审计](../../experiments/colab-twin/output/vision-b-pilot-pregrasp-20261003/report.json)实际exit0/2.840s，25输入哈希保持，三份派生机器人几何一致，physics/render/推理/训练均0：
+
+| 离线诊断 | 新四档案B | 旧单档案B | 成功专家 |
+| --- | --- | --- | --- |
+| 首次闭爪command，elapsed | **67.20s** | 33.00s | 11.02s |
+| 动作前IK参考点－物体XY差 | **19.9447mm** | 4.4937mm | 0.00607mm |
+| 双指同时>0.02N观测帧 | **0** | 0 | 1395 |
+| 升高≥1mm持续≥0.1s的离线事件 | 70.10s | 34.26s | 13.86s |
+
+新B全4500拍固定/活动指力均严格0，物体中心Z始终约9.92145mm，未实抬升；因此未记录到指尖接触且未形成实际抓取，不能沿用旧B单指接触解释。首次close动作后参考点Z29.705mm、夹爪仍约0.4994rad；70.10s离线升高时jaw0.13557rad且双指力0，jaw<0.1rad在70.32s、<0.03rad在70.76s（参考点Z31.5915mm）。专家先13.40s双指接触，再13.86s升高，相差0.46s；新B没有双指事件，不能构造“接触后抬升”的时间差。
+
+pick原始XY20mm窗口内最低参考点68.52s/Z24.1883mm，全局最低68.30s/Z24.1704mm，窗口边缘差仅0.0179mm；全程最近XY4.3127mm发生在75.88s，但参考点Z已73.6538mm，不能当抓取对准。升高阈值和连续双指0.2s仅是离线诊断，参考点不是pad中点；20ms保存观测不是2ms接触实测。力单位N而非力矩，也未记录真实接触法向的世界分量。11–13s闭爪时间不是强制规则或独立任务通过条件。
+
+本轮数据/归一化/抽样访问和训练步数同时变化，旧B3438step与新1312step均是各自120s优化，不能把退化唯一归因数据或架构；不同minibatch loss也不是固定验证误差。前轮RGB替图响应只绑定旧`cd298…`权重，新`d4db…`没有再做该探针，不能移植成新模型已使用对象视觉或已定位。[独立Codex本轮审计](../../experiments/colab-twin/output/vision-b-pilot-independent-20261003/report.json)核各层冻结产物及公开文档，不冒充AGY/ZCODE新讨论。
+
+**数据/资源/训练执行完成，纯视觉抓放仍未通过。** v11正常20/20与旧扰动3/20保留，S7d/S7e整体未通过；没有把无安全停止或新数据准入当成功。原232项实现/产物测试来源仍只覆盖原范围，生产源码未改，因此本轮未重复跑全套；验证为新HDF准入、六次完整专家回放、五步资源、实际训练重载、唯一物理回合、离线几何及独立审计。采用既有Wiki“按当前任务选择验收依据”的范围区分。
+
+接续owner根Codex：本轮停止追加训练/采集/rollout，保存全部新RGB、权重、超时及逐拍证据。下一建议先离线检查固定专家/实际观测的动作拟合误差、相近观测是否存在监督冲突与低位对准覆盖，再决定优化预算/数据/模型的单项改动；建议尚未执行，不凭这次失败承诺视觉天然更容易纠偏或自动扩大训练。全部runtime继续Git忽略，原现场22项/index/README/原MJCF不变。
