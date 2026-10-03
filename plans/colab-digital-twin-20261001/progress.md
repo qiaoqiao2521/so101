@@ -549,3 +549,34 @@ B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms
 **归因与接续边界。** 本次短前缀的后99完整周期均低于20ms，显示当前配置在这些无抓取阶段有计算余量；原循环自由运行，没有50Hz节拍调度，且首冷超限。它不证明长期实时能力、接触/持物/落盘尾延迟或完整抓放，历史持续402ms原因仍未知；需要慢状态的现场证据，不能倒推功耗、context或线程根因。下一候选为同冻结配置接续完整chunk1抓放与分段计时，原120s墙钟/90sim上限，尚未执行；不自动追加重复探针、精度变化或重训。
 
 采用既有Wiki按当前任务选择验收依据；只交付短前缀运行成本及轨迹保全。B/S7e、chunk1完整抓放与S7d整体仍未通过，v11正常20/20与旧扰动3/20保持；40..59、云端与实体未使用。root接续，Codex独立审计不冒充AGY/ZCODE新会审；所有模型、输入/区间/轨迹、脚本和日志继续Git忽略，公开只交付本轮事实记录，原现场22项/index/README/MJCF保持。
+
+
+### 2026-10-03 B冻结chunk1完整回合关节限位安全停止抓放未通过
+
+用户明确授权一次冻结d4db/nominal/execute-chunk-steps1、原wall120s/sim90s的完整纯视觉抓放回合。唯一复用原main/evaluate，保留原2ms/20ms、1mm余量、关节限位和1s落定判据；不追加预热、重训、精度/线程/后端或节拍修改。外层hard150s只覆盖进口初始化、原退出保存和计时汇总，不扩大原回合120s预算，无重试。生产52源码未改，正式32项[预启动审查](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/script-review.json)SHA`321a5cd240b15ac405145eec31dcbf863e621c9893e9f9fbf2d12c624574c561`先落盘，launcher强制绑定两个最终脚本SHA后才生成唯一invocation。
+
+**结果0/1，安全停止，未被墙钟截断。** [原任务报告](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/evaluate/report.json)passed=false/task_acceptance=not_passed/safety_stop=true/failure_reason=safety_stop；原main、helper及[外层执行](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/execution.json)actualexit均1，outer13.599308s，原报告total10.448100s，wrapper原main10.450353s。计时[完整记录](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/report.json)status=completed_single_attempt_measurement，SHA`559bbcb40b0192d74f83d91e4df94ba6c4211f2f9f3938415d56eae34c071bc8`，只表示唯一试验及计时记录完成，不强标物理任务通过。
+
+初态absolute1.000s，579完整轨迹到absolute12.580s/elapsed11.580s；第580条命令在absolute12.580s下发，10次积分全部完成至absolute12.600s/elapsed11.600s，然后step抛SafetyStop，无第580个保存行/monitor更新。580render/predict/model_forward/step、5800mj_step、1161observe、580diagnostics、581checker、579monitor；1740mj_forward=1161执行data刷新＋579checker独立data刷新。末拍两次checker（diagnostics和异常详情）均先在joint_limit返回，没有mj_forward，不能将checker调用数直接当作forward数。
+
+第4轴wrist_flex实测1.6581003327062775rad，派生XML原关节上界1.6580627293335335rad，差3.760337274405501e-5rad=0.002154515°；最后下发1.6579903239325227rad，比ctrl上界1.65806低6.9676067477e-5rad。原collision_scene.py:256按实测q严格无容差检查，reason=joint_limit、distance/pair=null；不能写成盘壁碰撞或命令越ctrl限位。原末命令与终端time/qpos/qvel/ctrl/warmstart直接复制保留，没有额外forward/FK/诊断调用。
+
+**抓取未成立。** 580命令（包括终端尝试）全为open0.5，closed0.015未出现；579保存诊断边界双指法向力均0，无双指接触/25mm抬升/1s持物，物体z9.921450320mm仍在红盘支撑，蓝盘释放/稳定落定未成立。独立顺序重算原monitor得到grasp/place=false、hold/settled0；其safety_stop=false只覆盖已返回579行，不能否定外层第580次step异常的safety_stop=true。末拍接触力没有单独保存，20ms边界诊断也不排除未保存的2ms短接触；不夸大为所有积分步接触证明。
+
+| 分段，全579个完整周期中位数 | ms |
+| --- | --- |
+| 原EGL capture_rgb | 1.1211 |
+| 原predict | 6.5061 |
+| 原step（观测、10积分、守卫、诊断） | 3.6219 |
+| 原monitor | 0.0042 |
+| 原记账、测量及调度等复合残余 | 0.0588 |
+
+全579cycle中位11.3380/P95 13.0839/最大402.4495ms，1拍超过20ms且为首拍（predict391.68435ms）；后578中位11.3361/P95 13.0627/最大15.8733ms，0拍超过20ms，均到下一原while墙钟检查。第580异常尝试从原while检查到cleanup入口9.9363ms单列，step2.3932ms，无monitor，不混入完整周期或称next-cycle节拍。setup3.309535s＋579cycles7.022846s＋异常尝试.009936s＋tail.108035s=main10.450353s；outer还含解释器/import及诊断汇总。10次积分合计中位.4964ms已包含于step，父子段和各列中位数不重复/严格相加；残余不是单独OS等待。本轮all580predict中位6.5057ms与主表completed579的6.5061ms不同口径，前者单独保存。
+
+[独立物理与原数组审计](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/artifact-audit.json)173项通过，SHA`072d87369031a803e418dff792e6bc352195b6266fcab2aa6df18d9ebae2307d`，审计actualexit0。独立核旧chunk1前250六数组及diagnostic逐项相同、前100RGB/state/raw/action差0；原初态/派生scene/源码/冻结权重SHA一致，终端动作确实不同于最后完整保存行且10次积分记录齐全。只读XML/AST范围与原monitor标量重算，不构建模型、GL或FK。
+
+[独立计时审查](../../experiments/colab-twin/output/vision-b-chunk1-full-timing-20261003/result-audit.json)93项通过，SHA`140a08d37b48f49b4125f97fce60699f265adb208a72568eab43f7103744f7ad`，重算events父子/20列NPZ、正常/异常周期和真实预算；保存全部冷/后续口径，172模型state tensors完全相同且gradNone。计时postprocess按tick线性索引，控制路径仍原循环，source/input SHA不变。
+
+**Remaining / Next：** 每拍只执行h0仍未使当前冻结策略通过；专家观测上的低h0误差不足以证明实际rollout对齐或安全。下一最短候选是只读比较接近段五轴与专家轨迹、核wrist_flex实测/下发目标及限位余量，再决定是否需要恢复数据，未执行。本次没有抓取接触/持物/落盘阶段或长期paced50Hz证据，历史持续402ms仍未知；不将本次单冷拍倒推为原全部慢调用，也不将11.34ms外推为90sim必完成。
+
+沿用Wiki按当前任务选择验收依据；root接续，全部模型、轨迹/RGB、脚本/区间/日志/审计继续Git忽略。无新训练、精度改动、重复回合或放宽阈值；B/S7e抓放及S7d均未过，v11正常20/20与旧扰动3/20保持，40..59/云端/实体未使用。独立Codex审计不冒充AGY/ZCODE会审；原现场22项/index/README/MJCF保全。
