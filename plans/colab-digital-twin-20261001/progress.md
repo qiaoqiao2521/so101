@@ -2,9 +2,9 @@
 
 ## Current
 
-2026-10-04 用户授权的起步5倍采样接续已执行：新源码资源预检、唯一120s训练、150条专家观测离线核验完成；首帧三轴反向及首10拍方向条件未过，未下发物理回合。最新参数/证据见[本轮接续](#2026-10-04-起步5倍采样唯一训练离线方向门控未通过)。原状态v11正常20/20、扰动3/20，S7d/S7e整体均未通过，旧视觉失败档案保留。
+2026-10-04 首0–9拍观测/动作标签只读核验完成，62项标签时序与86项独立方法/结果检查通过，来源及图见[本轮审计](#2026-10-04-首09拍观测与动作标签只读核验)。首10标签有效且同拍语义正确；保存预测只在首0/1方向错误，第0拍更接近收尾目标。q6近邻有大量收尾样本，但RGB仍可区分物体位置，未证完整输入矛盾或唯一视觉根因。
 
-root接续；新资源和模型与dcaae70源码绑定，全部runtime继续Git忽略。最短下一候选是只读核首0–9拍与相近起点/收尾观测的q6/RGB和动作标签；未启动新增采集、重训、回合、云端或实体。保留主仓原index、22项现场变动和原MJCF。
+root接续；下一最短候选为固定frame0 q6、替换原起步/收尾RGB的有界反事实前向，未执行。本轮0新模型前向/训练/渲染/积分，S7e方向/抓放仍未过；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
 
 ## Done
 
@@ -623,3 +623,31 @@ B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms
 [独立Codex结果审核](../../experiments/colab-twin/output/vision-startup5-20261004/independent-report.json)actualexit0，69项通过：CPU元数据与禁止构模哨兵核新load绑定/旧d4db拒绝，独立重建采样计数、重算全部切片和门控；旧解码h0目标与raw action最大差实际0。末次53源/四RGB/新旧checkpoint哈希不变，0模型构造/前向/CUDA kernel/训练/渲染/物理，5份公开文档数值和验收边界一致。
 
 **Remaining / Issues / Next：** 本轮按门控停止，新物理回合not_run，不写成新抓放0/1，也不重试训练/加预算/放宽限位。S7e仍未通过、旧d4db关节限位失败保留。root保留新模型、完整采样与预测证据；下一最短候选是只读核首0–9拍与起点附近收尾样本的输入和标签，区分局部拟合、观测相似性和动作监督；未做，不预先定视觉/动力学唯一原因。本轮没有新AGY/ZCODE会审；独立Codex结果审核单独存档，runtime及旧现场资料继续排除发布。
+
+### 2026-10-04 首0–9拍观测与动作标签只读核验
+
+**Current / Done：** 用户指定“检查首0–9拍的观测与动作标签”。范围仅CPU读取四同步RGB/raw、旧/新保存预测、专家路线和seed0抽样重构；[范围与哈希](../../experiments/colab-twin/output/vision-first10-audit-20261004/scope.json)固定53份顶层Python、新8d4db/旧d4db模型及四RGB。本轮没有新模型构造/前向、CUDA计算、优化、相机渲染、MuJoCo积分或抓放。
+
+[标签审核](../../experiments/colab-twin/output/vision-first10-audit-20261004/labels-report.json)actualexit0，62/62通过，真实四raw SHA实算且与RGB provenance一致，全部raw列完整复制/float64保留。nominal首10全valid、未扰动、jaw .5，专家五轴delta每帧为 `+ − − − −`；另外三档raw0–9全invalid，首valid0/50/450/161，不混入起步监督。新/旧保存h0目标与raw action_t最大差0，执行command也与action exact；RGB frame/time对应obs_t，next_q_t=下一行q exact，20ms/2ms契约保持。
+
+独立用保存参考路线及当前q_t重算lookahead动作，最大差6.94e-18rad；故意改用next_q重算则差6.510mrad。源码 `grasp_episode.py:289–299,373–377` 是当前observe→设command→积分→保存，`learning_vision.py:299–302,339–342` 保留原始valid索引并以chunk起点q编码。支持标签没有一拍错位；没有新重放/渲染验证像素生成。absolute1.00–1.18s对应elapsed0–0.18s。
+
+[观测和保存预测报告](../../experiments/colab-twin/output/vision-first10-audit-20261004/observations-report.json)actualexit0，内部1.402s，8797合法起点中只缓存379幅已有RGB；[原数组](../../experiments/colab-twin/output/vision-first10-audit-20261004/observation-arrays.npz)保留输入、目标、预测、候选pixels与实际chunk起点访问。不是新网络推理，第2–9拍方向结论只限专家观测。
+
+| nominal原始帧 | elapsed秒 | 保存h0方向错误轴 | 作为chunk起点的重构次数 |
+| --- | ---: | --- | ---: |
+| 0 | 0.00 | shoulder_pan / wrist_flex / wrist_roll | 13 |
+| 1 | 0.02 | wrist_flex | 14 |
+| 2–9 | 0.04–0.18 | 五轴同向 | 各13–15 |
+
+[首10五轴残差图](../../experiments/colab-twin/output/vision-first10-audit-20261004/first10-deltas.png)由保存数组生成，蓝线专家target−q、橙线新模型h0−q。方向错误局限于首两拍，未宣称其幅度拟合或真实策略起步通过。
+
+**相近关节观测与收尾。** 描述性q6 L2≤0.01rad半径内，frame0有366有效邻居：approach2/retreat64/settle300；训练中这些行作为chunk起点共27/178/834次。frame1有371近邻，frame2起局部近邻仅approach3。访问次数通过3126更新/8997池/seed0重构，起点次数不等于chunk尾部标签总曝光或梯度权重。stage和物体真值只用于审计，不进入策略输入。
+
+frame0最接近RGB的非起步邻居为同nominal frame2349 settle：q6 L2差0.000137rad（0.137mrad）、最大单轴差0.0914mrad；物体位置从[.24,-.13,.009921]移到[.238622,.139171,.009921]，相差269.17mm。128×128图有203像素变化，变化像素平均绝对差23.31uint8、全图平均仅0.2888uint8，后者受静态背景稀释。[保存RGB及差异图](../../experiments/colab-twin/output/vision-first10-audit-20261004/first0-neighbor-rgb.png)可见工件分别在红/蓝盘；图为已有pixels排版，不是新仿真渲染。
+
+[同锚目标对照](../../experiments/colab-twin/output/vision-first10-audit-20261004/target-comparison.json)：首帧五轴预测绝对目标距起步标签6.03899mrad、距frame2349收尾标签0.413573mrad；等价于用同frame0 q重新锚定两份标签。输出更近收尾成立，但q/RGB均不同，不是假定同输入的反事实模型试验。首10对应候选中没有完全相同raw q6＋RGB或归一化float32 q6＋RGB却标签不同的行；像素近似不证明模型视觉特征相同。
+
+[独立方法与结果审核](../../experiments/colab-twin/output/vision-first10-audit-20261004/method-review.json)86/86通过，0构模/前向/GPU/物理：重新核全部10帧近邻、delta、stage/visit计数、q与RGB精确冲突统计、top pixels、统一锚目标距离及真实物体位置，53源/四RGB/新旧checkpoint哈希不变。labels62和method86为不同审计集合，不加成学习成功指标。绘图开始误选无matplotlib的学习/内置运行时，两次import失败都在读输入前，日志保留；改用已有系统Python绘制NPZ，未安装或修改依赖。
+
+**Remaining / Issues / Next：** 标签轴序/同拍错位没有证据，优先保留起点与收尾观测的局部辨别不足/监督竞争候选；不称已证明视觉忽略或状态本身不可解。root下一最短入口是同frame0 q6下替换原起步/收尾RGB的有界反事实前向，检查预测是否随图像切换；本轮未做，不重训、改主干、增权重、加阶段/时钟输入或放宽限位。S7e方向门控/视觉抓放仍未通过，0新物理回合，全部新图/脚本/日志/数组继续Git忽略。沿用Wiki“按当前任务选择验收依据”；没有新AGY/ZCODE会审，原现场22/index/README/模型保留。
