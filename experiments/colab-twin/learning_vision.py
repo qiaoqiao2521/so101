@@ -213,6 +213,53 @@ def segment_lengths(episode_ids, frame_ids, chunk_size=16):
     return lengths
 
 
+def _startup_sampling_mask(frames, weight):
+    frames = np.asarray(frames)
+    if (frames.ndim != 1 or not len(frames) or frames.dtype.kind not in "iu" or
+            np.any(frames < 0)):
+        raise ValueError("Startup sampling requires nonempty nonnegative integer raw frame indices")
+    if (isinstance(weight, (bool, np.bool_)) or
+            not isinstance(weight, (int, np.integer)) or weight not in (1, 5)):
+        raise ValueError("Startup sampling weight must be integer 1 or 5")
+    return frames < 50
+
+
+def startup_sampling_order(frames, rng, weight=1):
+    """Shuffle eligible chunk starts; input raw frames already exclude invalid labels."""
+    startup = _startup_sampling_mask(frames, weight)
+    if weight == 1 or not startup.any():
+        # Keep both the old order and subsequent RNG state exactly unchanged.
+        return rng.permutation(len(startup))
+    pool = np.repeat(np.arange(len(startup), dtype=np.int64),
+                     np.where(startup, weight, 1))
+    return rng.permutation(pool)
+
+
+def startup_sampling_metadata(frames, episodes, weight=1):
+    startup = _startup_sampling_mask(frames, weight)
+    episodes = np.asarray(episodes)
+    if (episodes.shape != startup.shape or episodes.dtype.kind not in "iu" or
+            np.any(episodes < 0)):
+        raise ValueError("Startup sampling requires matching nonnegative integer episode indices")
+    unique_rows, startup_rows = len(startup), int(startup.sum())
+    pool_len = unique_rows + (int(weight) - 1) * startup_rows
+    per_episode = []
+    for episode_id in np.unique(episodes):
+        selected = episodes == episode_id
+        rows, starts = int(selected.sum()), int(startup[selected].sum())
+        per_episode.append({"episode_id": int(episode_id), "unique_rows": rows,
+                            "startup_rows": starts,
+                            "pool_len": rows + (int(weight) - 1) * starts})
+    return {"mask": "label_valid && original_raw_frame_index < 50",
+            "weight": int(weight), "raw_frame_threshold": 50,
+            "sampling_unit": "eligible_chunk_start", "unique_rows": unique_rows,
+            "startup_rows": startup_rows, "per_episode": per_episode,
+            "pool_len": pool_len,
+            "theoretical_startup_fraction": int(weight) * startup_rows / pool_len,
+            "epoch_semantics": ("one permutation of unique eligible chunk starts" if pool_len == unique_rows else
+                                "one permutation of the expanded index pool; not a unique-row pass")}
+
+
 class VisionDataset:
     """Keep only uint8 frames on disk, index valid labels, normalize per batch."""
     def __init__(self, paths):

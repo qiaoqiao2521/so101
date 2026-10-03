@@ -580,3 +580,20 @@ B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms
 **Remaining / Next：** 每拍只执行h0仍未使当前冻结策略通过；专家观测上的低h0误差不足以证明实际rollout对齐或安全。下一最短候选是只读比较接近段五轴与专家轨迹、核wrist_flex实测/下发目标及限位余量，再决定是否需要恢复数据，未执行。本次没有抓取接触/持物/落盘阶段或长期paced50Hz证据，历史持续402ms仍未知；不将本次单冷拍倒推为原全部慢调用，也不将11.34ms外推为90sim必完成。
 
 沿用Wiki按当前任务选择验收依据；root接续，全部模型、轨迹/RGB、脚本/区间/日志/审计继续Git忽略。无新训练、精度改动、重复回合或放宽阈值；B/S7e抓放及S7d均未过，v11正常20/20与旧扰动3/20保持，40..59/云端/实体未使用。独立Codex审计不冒充AGY/ZCODE会审；原现场22项/index/README/MJCF保全。
+
+### 2026-10-03 视觉起步chunk采样5倍接入
+
+**Current / Done：** 用户选定 `label_valid & (raw_frame_index < 50)` 的chunk起点采样权重5倍。本轮交付代码、CPU验证及原数据索引审计，未执行GPU资源探针、模型训练/推理、渲染或物理回合。
+
+- `run_vision_learning.py fit --startup-weight 5` 显式启用，默认1走原 `rng.permutation(N)`，连续三轮及后续随机数序列精确相同；非fit使用5在输出目录创建前拒绝。
+- `VisionDataset.frames` 保留排除invalid后的原始帧号；每完整采样轮起步索引5份、其他1份，再以原seed洗牌。当前四档有效数2350/2300/1956/2191共8797，起步命中50/0/0/0，采样池8997。完整池250/8997＝2.779%不冒充截断训练或梯度份额。
+- 报告与checkpoint保存 `training_sampler` 的规则、权重、逐档命中、池大小、seed，以及成功optimizer更新的 `chunk_start_draw_count`、`startup_draw_count`；完整池轮数单列。模拟步数/墙钟截断及同步失败测试确认未完成批次不记入成功更新次数。
+- 原归一化仍在8797唯一有效样本上拟合；与旧fit JSON逐项完全相同。数据、标签、chunk长度、模型结构、RGB处理、动作解码、推理和物理标准未改，仅两生产源码更新。
+
+**Validation：** `python -B -m unittest -v test_startup_sampling test_learning_vision` 实际exit0，25项/0skip，框架内部0.232s；新增13项覆盖采样边界、无效标签筛选、随机序列兼容、参数拒绝和mock优化计数，其余12项为原视觉适配回归。模型、优化器和CUDA路径均mock，未开展实际学习。[CPU测试日志](../../experiments/colab-twin/output/vision-startup-sampling-20261003/cpu-tests.log)。
+
+[真实四档索引审计](../../experiments/colab-twin/output/vision-startup-sampling-20261003/report.json)实际exit0，16项通过：原始eligible索引/chunk长度与冻结NPZ相同、每个完整池索引恰为5或1次、归一化完全相同、四RGB/raw hash与baseline输入保持、仅两预期生产源码变化，旧资源报告确因源码绑定拒绝。[完整采样索引](../../experiments/colab-twin/output/vision-startup-sampling-20261003/sampling-indices.npz)与[审计脚本](../../experiments/colab-twin/output/vision-startup-sampling-20261003/audit_sampling.py)留在Git忽略的output。首次审计脚本误用不存在的context-manager接口，exit1且尚未进行索引检查；[失败记录](../../experiments/colab-twin/output/vision-startup-sampling-20261003/first-index-audit-attempt.json)保留，改显式finally关闭后通过，未修改输入。
+
+独立Codex源码/测试评审无阻塞问题，未冒充新的AGY/ZCODE会审。采用既有Wiki“按当前任务选择验收依据”：这里只确认采样实现，不扩大为起步方向、完整50Hz或视觉抓放成功。S7d/S7e仍未通过，旧v11正常20/20、旧扰动3/20与d4db失败证据保留。
+
+**Remaining / Next：** root负责接续。新源码不能使用旧资源报告或静默载入旧d4db；基线源码绑定提交 `4a1cf3b51d768b5f8004c62ce0a02a2522c4db18`。后续明确执行时，先做绑定新源码/同四档数据的五步资源探针，再按原120s/5000step上限单变量训练；先核对首帧及前3秒方向/步长，再独立验收纯视觉抓放。不开新视觉主干、不放大delta、不修改限位，也不自动进入云端、实体或留出种子。

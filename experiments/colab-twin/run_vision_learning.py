@@ -26,7 +26,8 @@ from learning_vision import (ACTION, IMAGE, STATE, CameraSpec, LEROBOT_REVISION,
     OFFICIAL_SOURCE_SHA256, RGB_NORMALIZATION, VISUAL_MODEL_SPEC,
     VISION_FORMAT, VISION_INPUT_KEYS, VisionDataset,
     VisionPolicyRunner, build_visual_policy, capture_rgb, load_visual_checkpoint,
-    make_renderer, sha256, validate_resource_report, visual_source_hashes)
+    make_renderer, sha256, startup_sampling_metadata, startup_sampling_order,
+    validate_resource_report, visual_source_hashes)
 
 
 def write_json(path, value):
@@ -246,6 +247,13 @@ def fit(args):
         resource_sha256 = hashlib.sha256(resource_text.encode("utf8")).hexdigest()
         resource = json.loads(resource_text)
         dataset = VisionDataset(args.dataset)
+        sampler = startup_sampling_metadata(dataset.frames, dataset.episodes,
+                                            getattr(args, "startup_weight", 1))
+        sampler.update(seed=args.seed, chunk_start_draw_count=0, startup_draw_count=0,
+                       epoch_orders_generated=0, completed_pool_passes=0,
+                       draw_count_scope="chunk starts in completed optimizer updates")
+        report["training_sampler"] = sampler
+        startup_mask = dataset.frames < 50
         batch_size = validate_resource_report(resource, dataset.camera, dataset.visual_hashes, dataset.raw_hashes)
         report.update(resource_report_sha256=resource_sha256, batch_size=batch_size,
                       visual_dataset_sha256=dataset.visual_hashes,
@@ -262,7 +270,8 @@ def fit(args):
         train_started = time.perf_counter()
         stop = "epoch_limit"
         for epoch in range(args.max_epochs):
-            order = rng.permutation(len(dataset))
+            order = startup_sampling_order(dataset.frames, rng, sampler["weight"])
+            sampler["epoch_orders_generated"] += 1
             for start in range(0, len(order), batch_size):
                 if steps >= args.max_steps:
                     stop = "step_limit"
@@ -270,7 +279,8 @@ def fit(args):
                 if time.perf_counter() - train_started >= args.max_wall_s:
                     stop = "optimization_wall_time_limit"
                     break
-                batch = dataset.batch(order[start:start + batch_size], "cuda")
+                selection = order[start:start + batch_size]
+                batch = dataset.batch(selection, "cuda")
                 optimizer.zero_grad(set_to_none=True)
                 loss, loss_metrics = policy(batch)
                 if not torch.isfinite(loss):
@@ -282,11 +292,15 @@ def fit(args):
                 optimizer.step()
                 torch.cuda.synchronize()
                 steps += 1
+                sampler["chunk_start_draw_count"] += len(selection)
+                sampler["startup_draw_count"] += int(startup_mask[selection].sum())
                 if steps == 1 or steps % 50 == 0:
                     losses.append({"step": steps, "normalized_l1": float(loss.detach()),
                                    "training_s": time.perf_counter() - train_started})
                 if max(torch.cuda.max_memory_allocated(), torch.cuda.max_memory_reserved()) > 3200 * 2**20:
                     raise RuntimeError("Training exceeded the original 3200MiB resource gate")
+            else:
+                sampler["completed_pool_passes"] += 1
             if stop != "epoch_limit":
                 break
         if steps == 0:
@@ -306,6 +320,7 @@ def fit(args):
             "visual_dataset_sha256": dataset.visual_hashes, "raw_dataset_sha256": dataset.raw_hashes,
             "gripper_labels_rad": dataset.gripper_labels.tolist(),
             "training_row_count": len(dataset), "training_steps": steps,
+            "training_sampler": sampler,
             "training_seed": args.seed, "optimizer": "fresh Adam", "learning_rate": 1e-4,
             "initialization": report["initialization"], "torch_version": str(torch.__version__),
             "state_dict": {key: value.detach().cpu() for key, value in policy.state_dict().items()},
@@ -451,12 +466,16 @@ def main(argv=None):
     parser.add_argument("--max-steps", type=int, default=5000)
     parser.add_argument("--max-epochs", type=int, default=200)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--startup-weight", type=int, choices=(1, 5), default=1,
+                        help="Fit only: repeat eligible chunk starts with raw frame index <50")
     parser.add_argument("--execute-chunk-steps", type=int, default=16)
     parser.add_argument("--resource-report", type=Path)
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--camera-reviewed", action="store_true",
                         help="Root/user inspected the exported sample frames before training")
     args = parser.parse_args(argv)
+    if args.stage != "fit" and args.startup_weight != 1:
+        parser.error("--startup-weight other than 1 is only allowed for fit")
     if not 0 < args.max_wall_s <= 120 or not np.isfinite(args.max_wall_s):
         parser.error("wall budget must be finite and in (0,120] seconds")
     if not 0 < args.max_simulation_s <= 90 or not np.isfinite(args.max_simulation_s):
