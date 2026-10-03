@@ -2,11 +2,9 @@
 
 ## Current
 
-2026-10-01：真实AGY/CODEX/ZCODE方向会审完成。首轮独立判断，只请AGY追加一次针对模型顺序的复核；保留ZCODE状态MLP先行的分歧。根Codex建议同步数据/专家恢复→小配置无图像ACT→纯策略抓放→单相机视觉；4GB内存与训练效果未验证。原始响应、超时和引用核验在被忽略的local-documents/decision-consultation-20261001/；可发布会审见[learning-review.md](learning-review.md)。
+2026-10-04 用户授权的起步5倍采样接续已执行：新源码资源预检、唯一120s训练、150条专家观测离线核验完成；首帧三轴反向及首10拍方向条件未过，未下发物理回合。最新参数/证据见[本轮接续](#2026-10-04-起步5倍采样唯一训练离线方向门控未通过)。原状态v11正常20/20、扰动3/20，S7d/S7e整体均未通过，旧视觉失败档案保留。
 
-本轮只完成会审、数据与验收约定，没有安装学习依赖、训练模型、改仿真代码或分配GPU。既有41项物理抓放检查不扩张为学习验收。下一步owner根Codex，最短入口是grasp_episode.py的advance记录和独立学习环境最小batch预检；S7b/S7c/S7d均未开始。保护原规划环境、自由物体动力学和原仓库index，现场遗留继续按原交接保留。
-
-文档归档与 Colab CPU 基础平台完成；修正后的一命令运行成功并回收结果、释放会话。用户已选择运动自主规划以 MuJoCo 为核心，单主线整理和实际 AGY 咨询完成；位置IK、OMPL全局绕障和物理执行已接入，本地29项测试与真实Colab CPU20轮通过；修正了默认隐藏group3环境几何的显示问题，可见场景最终复验与视频回收已通过。
+root接续；新资源和模型与dcaae70源码绑定，全部runtime继续Git忽略。最短下一候选是只读核首0–9拍与相近起点/收尾观测的q6/RGB和动作标签；未启动新增采集、重训、回合、云端或实体。保留主仓原index、22项现场变动和原MJCF。
 
 ## Done
 
@@ -597,3 +595,31 @@ B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms
 独立Codex源码/测试评审无阻塞问题，未冒充新的AGY/ZCODE会审。采用既有Wiki“按当前任务选择验收依据”：这里只确认采样实现，不扩大为起步方向、完整50Hz或视觉抓放成功。S7d/S7e仍未通过，旧v11正常20/20、旧扰动3/20与d4db失败证据保留。
 
 **Remaining / Next：** root负责接续。新源码不能使用旧资源报告或静默载入旧d4db；基线源码绑定提交 `4a1cf3b51d768b5f8004c62ce0a02a2522c4db18`。后续明确执行时，先做绑定新源码/同四档数据的五步资源探针，再按原120s/5000step上限单变量训练；先核对首帧及前3秒方向/步长，再独立验收纯视觉抓放。不开新视觉主干、不放大delta、不修改限位，也不自动进入云端、实体或留出种子。
+
+### 2026-10-04 起步5倍采样唯一训练，离线方向门控未通过
+
+**Current / Done：** 用户授权新源码资源预检→一次 `fit --startup-weight 5` 原120s/5000step预算→首帧/前3秒离线核验→通过后唯一纯视觉回合。采用既有Wiki“按当前任务选择验收依据”，将资源/训练/诊断与实际抓放分开。本轮源文件与dcaae70一致，无生产代码、模型结构、动作编码、精度、物理或限位修改。
+
+[预先记录的范围](../../experiments/colab-twin/output/vision-startup5-20261004/scope.json)绑定53份顶层Python、四RGB/raw、旧d4db和原MJCF。四档顺序为nominal/prefix50/v6-450/seed23；seed0、随机ACT及随机ResNet18、fresh Adam/lr1e-4、batch8、epoch200上限。没有续载旧权重，不把本轮称为微调。若资源只通过batch4，原执行脚本会在fit前停止，以保护batch8对照。
+
+[资源报告](../../experiments/colab-twin/output/vision-startup5-20261004/microbenchmark/report.json)actualexit0，batch8完整5step，内部3.789s/外层6.388s；peak allocated309.343/reserved332MiB，两份源码/相机/四档数据/官方ACT绑定通过。[唯一fit报告](../../experiments/colab-twin/output/vision-startup5-20261004/fit/report.json)actualexit0，3126step/120.002158s优化，total123.329s、outer125.631s；原优化墙钟上限在新更新前检查，因此最后一次更新可使实际优化时间略跨120s。本轮峰值仍332MiB，CPU同设备保存重载exact/误差0，新checkpoint SHA `8d4db85e798f53aee2d63d59cd77e35f9ca9047450dfed99cc07ae157d224afd`。总进程时间含初始化/重载保存，不当作优化预算加长。
+
+8797唯一行、8997项池；实际25002次chunk起点，其中702次命中nominal原始0–49行（2.808%），2完整池＋第3池部分抽样。重构与成功更新计数一致，frame0见13次、所有唯一行都见过；归一化与旧四档完全相同。旧1312步对应10493次起点/61次起步；同120s并非等步数因果消融，不能把预测改善只归因权重5。
+
+**离线准入在新模型预测前固化。** [门控定义](../../experiments/colab-twin/output/vision-startup5-20261004/offline-gate-spec.json)要求首帧五轴方向与专家相同且delta比0.5–1.5；首10拍逐轴同向100%且有向投影0.5–1.5；前150拍逐轴MAE及整体方向投影不劣于旧保存数组、投影后的jaw全open。0.5–1.5是本轮保守的诊断准入，新设而非既有物理门槛，不能替代原抓持/释放/稳定判据。
+
+[离线报告](../../experiments/colab-twin/output/vision-startup5-20261004/offline-report.json)actualexit0/outer7.754s，唯一150次batch1/no_grad CUDA前向，仅专家nominal原始0–149（elapsed0–2.98s），0优化/渲染/积分，源码和172模型张量均不变。旧对照来自保存batch8/inference_mode数组，不绕过新源码load gate加载旧d4db；接近浮点噪声的差值不宣称训练收益。[完整预测与目标数组](../../experiments/colab-twin/output/vision-startup5-20261004/offline-predictions.npz)。
+
+| 首帧h0，mrad | 新策略delta | 专家delta | 方向 |
+| --- | ---: | ---: | --- |
+| shoulder_pan | -0.105538 | +2.317555 | 反向 |
+| shoulder_lift | -0.738442 | -1.471036 | 同向，比例0.502 |
+| elbow | -0.657571 | -0.947236 | 同向，比例0.694 |
+| wrist_flex | +0.053319 | -4.805772 | 反向 |
+| wrist_roll | +0.012467 | -2.510750 | 反向 |
+
+首10拍同向率90%/100%/100%/80%/90%，幅度投影逐轴在0.5–1.5且整体0.179→0.749；第10–29、30–49、50–149方向全对。前150逐轴MAE均改善、五轴均值0.638→0.346mrad、整体投影0.954→1.066，但首帧投影0.115→0.031，不能用前3秒平均改善遮掉最初错误。门控3项未过（首帧方向/幅度、首10方向），`rollout_allowed=false`。
+
+[独立Codex结果审核](../../experiments/colab-twin/output/vision-startup5-20261004/independent-report.json)actualexit0，69项通过：CPU元数据与禁止构模哨兵核新load绑定/旧d4db拒绝，独立重建采样计数、重算全部切片和门控；旧解码h0目标与raw action最大差实际0。末次53源/四RGB/新旧checkpoint哈希不变，0模型构造/前向/CUDA kernel/训练/渲染/物理，5份公开文档数值和验收边界一致。
+
+**Remaining / Issues / Next：** 本轮按门控停止，新物理回合not_run，不写成新抓放0/1，也不重试训练/加预算/放宽限位。S7e仍未通过、旧d4db关节限位失败保留。root保留新模型、完整采样与预测证据；下一最短候选是只读核首0–9拍与起点附近收尾样本的输入和标签，区分局部拟合、观测相似性和动作监督；未做，不预先定视觉/动力学唯一原因。本轮没有新AGY/ZCODE会审；独立Codex结果审核单独存档，runtime及旧现场资料继续排除发布。
