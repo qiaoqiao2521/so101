@@ -519,3 +519,33 @@ B原capture中位1.1119ms、最大8.1631ms；capture+predict两段中位7.9350ms
 **结论只覆盖当前静态路径。** 没有持续复现旧402ms；不能认定已修复历史慢循环，也不能将EGL上下文、GPU频率、线程或调度写成唯一根因。A-B-A有顺序、热态与系统负载混杂，每组仅8次；不将约0.35ms差异解释为因果效应。静态capture+predict<20ms只核两段，未包含真实physics、monitor、调度或保存开销与长时尾延迟，完整闭环50Hz仍未验证。下一候选冻结配置下有界检查真实循环render→predict→physics→monitor与实际调度，尚未执行。
 
 沿用按当前任务选择验收依据；本轮Codex独立只读审核不冒充AGY/ZCODE新会审。B/S7e、chunk1完整抓放、v11正常20/20与旧扰动3/20、S7d未通过状态保持；未使用40..59、云端或实体。原生产源码没有变化，不重复232项测试作为新物理/实时通过证据。root串行接续，全部模型、NPZ、脚本、日志和审计仍Git忽略；公开仅交付本轮事实记录，原现场22项/index/README/MJCF保持。
+
+### 2026-10-03 B真实循环100拍计时热态短前缀低于20ms历史慢因仍未知
+
+用户授权对真实循环的物理推进、监测与调度做有界计时。复用原run_vision_learning.main/evaluate唯一调用，不复制控制循环、不重训或改精度。固定d4db checkpoint、原nominal初态/场景/seed0、execute1、float32/no_grad、原后端和线程8/8；相机使用真实逐拍RGB＋当前q6，env/阶段/clock不进入policy。原循环只收紧为max-wall60s/max-simulation2s，最多100拍；outer hard90s/attempt1/无重试、额外预热forward0，原2ms物理/20ms控制、1mm余量/限位/1s落定标准保持。
+
+[唯一计时报告](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/report.json)SHA `7b87e60e66b157fdbacbce14f3ca3e3f642b368a7188d75cf139d8357f8adb2b`；[execution](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/execution.json)diagnostic actual exit0、外层7.3860s，原main actual exit1/4.8930s，原[任务报告](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/evaluate/report.json)保留failed/simulation_time_limit/not_passed。实际100完整拍、仿真增量1.9999999999998905s；100capture/predict/model forward/step/diagnostics/checker/monitor，1000mj_step、201observe和301mj_forward。没有warm额外推理或新的第二回合，计时完成不标记抓放通过。
+
+**完整周期与首次冷调用都保留。** 原while头的既有perf_counter检查至下一相同检查定义cycle，包含限时/仿真边界、各原调用、记账和插桩CPU开销；此外保存render进入→monitor返回工作段。100cycle中位11.7568ms/P95 12.9701ms/最大342.8987ms，1/100超过20ms且为首拍。首拍predict326.7785ms、render6.7879ms、step9.2342ms，均完整保留；后99cycle中位11.7420ms/P95 12.9191ms/最大14.1422ms，0/99超过20ms，后99predict中位6.8213ms。本次没有复现旧连续250次约402ms，不能由当前一次首冷解释全部旧慢调用。
+
+| 顶层互不重叠段，全100拍中位数 | 毫秒 | 范围 |
+| --- | --- | --- |
+| 原capture_rgb | 1.1325 | EGL出图、像素读取及原状态保全检查 |
+| 原runner.predict | 6.8278 | CPU准备、模型、原finite等待、D2H/解码/投影 |
+| 原cell.step | 3.7167 | 两次观测刷新、10次积分、接触守卫及诊断 |
+| 原monitor.update | .0044 | 消费真实诊断，不再推进物理 |
+| cycle减上述四段的残余 | .0590 | 原记账、包装/CPU计数开销及调度等复合间隙 |
+
+以上各中位数来自不同拍，不能加成严格的中位总周期。step内10次mj_step总中位.4830ms，两次observe总.5764ms，diagnostics1.4883ms；其checker1.1830ms已经包含在diagnostics内，另有独立query数据的mj_forward，不能与step/诊断重复相加。step排除直接子段后的残余中位1.1775ms仍含原命令检查、10次接触guard和测量CPU开销，不归为纯积分或特定OS等待。checker配置285个pairs，未逐mj_geomDistance打点，不能把其整体时间都写成纯距离kernel。
+
+初始化至首while3.3201s，100cycle区间合计1.5112s，末次边界至原main返回tail.0617s，三者合为4.8930s。初始化含checkpoint加载约1.9975s、cell构建1.0457s、renderer创建.2019s；结束包含close17.3384ms、原NPZ保存2.0183ms、两次JSON写4.7546/.1957ms，以及未单独包装的PNG导入/编码和其他结束成本。outer7.3860s还含解释器/import与诊断产物汇总、模型只读比较，不摊入每拍；未把tail全部说成序列化。
+
+[原调用包装脚本](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/run_loop.py)SHA `5d244080f5acd2fdddf5d86b405827a7c032e426bb1b68b71fd99354a6b5f8b0`，[唯一外层](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/launch_once.py)SHA `b1b40c8d9e96b9008bf1336a03558d8d21f18f4312b7ecfd87553df6f01bcf3a`。[正式执行前审查](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/script-review.json)SHA `d1af3dcc2cda966cda8b8686176f3a5c5b86b7cbb9c82b5fc39668c68b177ac7`，33项通过，落盘且绑定最终SHA后才有invocation。所有计时用主机clock，CPU hook只数真实forward；没有CUDA Event/getter/显式sync/status查询插入render→predict，也没有sleep/节拍等待/优先级修改。只内存记录，原main结束后保存完整区间/输入/动作/统计并恢复全部方法；hard90强制终止可能来不及写内存区间，此边界事先保留，本轮未触发。
+
+[独立轨迹与区间审计](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/artifact-audit.json)SHA `d3cd64a58a272b422dc91e1149cfe3f8f73e9caf051b4ba9b38d462872cb5492`，13323检查通过，actual exit0/.7658s，仅stdlib/numpy/h5py读取产物。独立重算旧chunk1前100的timestamp/next_timestamp/q6/next_q6/raw/action最大差全0，100条diagnostic逐项相同、两个派生XML SHA相同；首态与rawHDF一致，最后命令对应最后完整保存行，无丢失terminalcommand。实际1000积分全用执行data；301forward=reset1＋每拍2执行data刷新＋1checker独立data刷新，嵌套区间及exclusive计算合法。100拍没有闭爪、抓起、持物、放盘或安全停止，是接触前前缀，不是走完全程的抓放失败。
+
+[第二份独立计时审查](../../experiments/colab-twin/output/vision-b-loop-timing-20261003/result-audit.json)SHA `2ae58b6b17e0f1f36310aaf625369f4f402e1bb717838317529498523082915d`，83项通过，重算events父子、20列timings NPZ、全100/后99全部统计与预算/真实时序。两份审核范围分别记录，不合并为任务成功次数；审核没有构建模型/GL或执行物理。运行结束只读逐项比较172个state tensors与已加载checkpoint，torch.equal均true、grad均None；52份生产Python/原输入文件前后SHA不变，没有optimizer或模型行为修改。
+
+**归因与接续边界。** 本次短前缀的后99完整周期均低于20ms，显示当前配置在这些无抓取阶段有计算余量；原循环自由运行，没有50Hz节拍调度，且首冷超限。它不证明长期实时能力、接触/持物/落盘尾延迟或完整抓放，历史持续402ms原因仍未知；需要慢状态的现场证据，不能倒推功耗、context或线程根因。下一候选为同冻结配置接续完整chunk1抓放与分段计时，原120s墙钟/90sim上限，尚未执行；不自动追加重复探针、精度变化或重训。
+
+采用既有Wiki按当前任务选择验收依据；只交付短前缀运行成本及轨迹保全。B/S7e、chunk1完整抓放与S7d整体仍未通过，v11正常20/20与旧扰动3/20保持；40..59、云端与实体未使用。root接续，Codex独立审计不冒充AGY/ZCODE新会审；所有模型、输入/区间/轨迹、脚本和日志继续Git忽略，公开只交付本轮事实记录，原现场22项/index/README/MJCF保持。

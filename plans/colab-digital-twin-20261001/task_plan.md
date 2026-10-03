@@ -151,3 +151,12 @@ B首轮实际完成：2350RGB/raw64严格回放通过；batch8完整五次反传
 - [ ] B-runtime-original-cause：三个原predict组中位6.485/6.833/6.412ms，本次没有持续复现历史402ms，根因仍未知；静态B两段<20ms不等于实际物理闭环50Hz。
 
 本轮不重训、不改精度或推理模式、不追加抓放回合。下一候选冻结配置下有界核对真实循环的物理推进、监测与调度，尚未执行；B/S7e、chunk1抓放及S7d状态不变，owner根Codex。[实际参数、统计和本机证据](progress.md#2026-10-03-b同输入egl与cuda静态对照未复现持续慢调用)。
+
+## B真实循环物理、监测与间隙有界计时（2026-10-03）
+
+- [x] B-loop-prefix：唯一原evaluate同d4db/execute1/原精度线程，max-simulation2s最多100拍、原wall60s/outer hard90s、无额外预热或重试；实际100完整拍、1000mj_step、201observe/301mj_forward，外层7.386s。
+- [x] B-loop-timing：记录原while墙钟检查至下一检查的全周期、render→monitor工作段、拍内记账与测量残余、初始化/结束保存；step/observe/diagnostics/checker按父子关系去重。
+- [x] B-loop-audit：全100cycle中位11.757ms、仅首拍342.899ms超过20ms；后99中位11.742/P95 12.919/最大14.142ms，全低于20ms。独立核旧前100状态/动作/时间/诊断及两个派生XML相同，52源码、172模型张量不变。
+- [ ] B-loop-full-realtime-task：原循环自由运行、当前仅接触前2sim；完整抓放、接触/持物/落盘尾延迟和长期50Hz尚未验收。原task exit1/simulation_time_limit保留，不将diagnostic exit0作为task pass。
+
+接续候选为同冻结配置的完整chunk1抓放与分段计时，原120s墙钟/90sim上限，尚未执行；不追加重训、精度/线程更改或重复探针，B/S7e和S7d状态保持。历史持续402ms仍未知，owner根Codex，[本轮证据](progress.md#2026-10-03-b真实循环100拍计时热态短前缀低于20ms历史慢因仍未知)。

@@ -260,3 +260,13 @@ B实际显示资源与能力不同：随机小视觉ACT在4GB卡batch8只需峰�
 - 显式renderer.close释放GL/Mjr context，但全局EGL display可保留；A-close不是全新进程或GPU复位。静态路径未复现持续402ms，不能证明真实循环无EGL影响，也不能锁定context、功耗、线程或调度根因。
 
 [mj_forward官方说明](https://mujoco.readthedocs.io/en/3.3.7/APIreference/APIfunctions.html#mj-forward)与[MuJoCo3.3.7渲染文档](https://mujoco.readthedocs.io/en/3.3.7/python.html#rendering)支持静态设置边界；[实际记录](progress.md#2026-10-03-b同输入egl与cuda静态对照未复现持续慢调用)区分预测、静态渲染和完整物理闭环。没有训练/精度修改/积分/抓放回合；完整50Hz、chunk1抓放和历史慢因仍待验证。
+
+## 2026-10-03 同轨迹真实短循环热态未持续慢
+
+- 唯一原evaluate前缀100拍/2sim，100次实际推理、1000执行积分、201observe和301mj_forward；后者由reset1加每拍2执行刷新与1独立checker刷新组成。前100状态/动作/时间、100条物理诊断与旧chunk1逐位一致，两个派生XML一致；本次运行仍没有持续复现旧402ms。
+- 全100完整周期中位11.757ms，1/100超过20ms且就是首拍342.899ms（预测326.779ms）。后99周期中位11.742/P95 12.919/最大14.142ms，0/99超过20ms；不能省去首冷后声称全部100拍过20ms门槛。
+- step中位3.717ms含10次mj_step合计.483ms、两次observe合计.576ms和diagnostics1.488ms；诊断内checker1.183ms已包含，不能重复加总。step余项含原验证、接触守卫及插桩CPU开销；285是checker配置pairs数，没有逐距离额外打点。
+- monitor中位.0044ms，整拍减四顶层段残余中位.0590ms；该残余包括原记账、函数包装与调度，不能全部称OS等待。原循环无sleep或节拍deadline调度，仿真时间推进20ms不意味着真实50Hz。
+- 初始化至首while约3.320s，100周期合计1.511s，结束tail约.0617s，原main共4.893s；outer7.386s还含解释器启动与诊断汇总。原task保持simulation_time_limit/exit1，计时诊断完成exit0；仅接触前2sim，未重新评价抓放或长期实时能力。
+
+方法沿用既有Wiki按当前任务选择验收依据；[本机原区间和独立审计](progress.md#2026-10-03-b真实循环100拍计时热态短前缀低于20ms历史慢因仍未知)保存全部冷/热数据，172模型张量及52源码不变。原持续慢因仍未知；本次短循环快不能追认旧运行状态，也不能证明接触、持物、落盘阶段的20ms预算。
