@@ -2,9 +2,39 @@
 
 ## Current
 
-2026-10-04 首0–9拍观测/动作标签只读核验完成，62项标签时序与86项独立方法/结果检查通过，来源及图见[本轮审计](#2026-10-04-首09拍观测与动作标签只读核验)。首10标签有效且同拍语义正确；保存预测只在首0/1方向错误，第0拍更接近收尾目标。q6近邻有大量收尾样本，但RGB仍可区分物体位置，未证完整输入矛盾或唯一视觉根因。
+2026-10-04 固定frame0 q6仅切换起步/收尾RGB的冻结探针完成，原runner12次交替前向、每图6次；同图重复与前次保存首帧预测均差0。h0五轴图像差L2 3.960µrad、最大轴3.228µrad，两图仍有首帧三轴方向错误、夹爪投影都open0.5；局部图像影响弱，未证全局视盲或唯一根因。来源、逐轴表与复算见[换图检查](#2026-10-04-固定q6起步收尾rgb反事实检查)。首10标签审计继续保留。
 
-root接续；下一最短候选为固定frame0 q6、替换原起步/收尾RGB的有界反事实前向，未执行。本轮0新模型前向/训练/渲染/积分，S7e方向/抓放仍未过；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
+root接续；下一改动未定，保留局部视觉辨别不足/收尾监督竞争候选，先从本轮冻结数组和模型接口接续，不由当前结果自动改主干、加预算或重训。本轮0训练/渲染/积分，S7e方向/抓放仍未过；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
+
+## 2026-10-04 固定q6起步收尾RGB反事实检查
+
+用户指定固定q6、替换起步/收尾RGB，检查动作是否随图像切换。协议在前向前落盘：固定nominal frame0的原始float64 q6；只切换同相机frame0和2349的uint8 RGB；A/B交替6对，共12次实际前向。模型为已训练冻结的 `8d4db85e798f53aee2d63d59cd77e35f9ca9047450dfed99cc07ae157d224afd`，严格经当前源码绑定的 `load_visual_checkpoint` 加载，不使用旧d4db模型或放宽绑定。
+
+执行保持原 `VisionPolicyRunner.predict` 的no_grad、CUDA/batch1/float32/threads2、q归一化、RGB CHW/255与动作逆归一化；每次reset、execute1，输出16槽并只执行层比较h0，无动作下发。包装器仅捕获原调用输入/返回，不另发第二次预测；所有trial归一化q6及解码锚点完全相同，不输入env、stage或time。
+
+| 五轴 | 专家起步delta (mrad) | 起步RGB预测 (mrad) | 收尾RGB预测 (mrad) | 换图差：收尾−起步 (µrad) |
+| --- | ---: | ---: | ---: | ---: |
+| shoulder_pan | +2.317555 | -0.105538 | -0.106414 | -0.876371 |
+| shoulder_lift | -1.471036 | -0.738442 | -0.735215 | +3.227529 |
+| elbow | -0.947236 | -0.657571 | -0.658906 | -1.335434 |
+| wrist_flex | -4.805772 | +0.053319 | +0.051717 | -1.602286 |
+| wrist_roll | -2.510750 | +0.012467 | +0.012085 | -0.381535 |
+
+- 6对h0五轴差L2均3.959954939µrad，最大轴3.227528736µrad；对应起步/收尾专家绝对目标L2差6.000mrad，图像效应为其0.065999%。同图各6次完整16槽归一化预测重复差0，原保存的同模型frame0 CUDA预测与本轮起步图输出也差0。
+- 首帧pan/flex/roll在两图下都与起步专家反向。起步图预测五轴目标距起步标签6.038988mrad、距收尾标签0.413573mrad；收尾图分别为6.038219/0.413459mrad，仍近收尾动作。参考收尾标签重锚q0仅用于描述，原收尾q与q0相差0.137mrad，不把反事实观测当作新的专家可执行轨迹。
+- raw jaw由0.493222840变为0.493312529rad（差89.688866µrad），训练支持投影均为open0.5，6对0次开闭切换。两图203像素变化、变化像素MAE23.31uint8；换的是全部RGB差异，不能单独归因方块区域或某个表征层。
+- 实际进程exit0，探针内部耗时3.104s；软60s在调用间检查且不含imports，外层硬timeout70s，未触发任一上限。latency含额外输入CPU捕获，不用于推断真实50Hz。本轮仅12前向，0优化/训练/EGL渲染/物理积分/新抓放回合，53份顶层Python、5份输入源文件和172模型张量均不变。
+- 独立CPU复算修正后333项通过。初版12项“CPU直接除255应与CUDA逐bit相同”检查未过，最大差5.96e-08/1ULP；捕获RGB与float32倒数乘法逐bit相同，原uint8重构一致，输入未错。修正审计假设和初次失败记录完整保留，未追加CUDA或模型调用；不宣传首次全部检查通过。
+
+结论：这对图像对动作有微弱、稳定的局部影响，但没有引起所需的起步动作辨别；不确认全局视盲、视觉唯一根因或任何新抓放成功。S7e方向门控与视觉任务仍未通过；root下一改动未定，保留局部视觉辨别不足/收尾监督竞争候选及全部失败，不自动追加训练、改精度或推进仿真。
+
+本机证据均在被Git忽略的 [vision-q0-rgb-counterfactual-20261004](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/)：
+
+- [scope.json](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/scope.json) 前置协议、53源码与输入哈希；[probe.py](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/probe.py) 唯一执行入口。
+- [report.json](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/report.json) 数值和边界；[predictions.npz](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/predictions.npz) 每次真实输入、16槽输出、raw/投影动作；[comparison.png](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/comparison.png) 换图和逐轴对照。
+- [method-review.json](../../experiments/colab-twin/output/vision-q0-rgb-counterfactual-20261004/method-review.json) 独立CPU方法/结果复算，不增加模型前向；同步和发布保全由本目录收尾记录覆盖。
+
+实现依据：[当前动作解码/图像变换](../../experiments/colab-twin/learning_vision.py)、同文件原runner与严格加载；官方LeRobot pinned revision仍为 `e0d50211ef236143ae867228662b7dfaba554f02`，`predict_action_chunk` 直接模型前向，不读取select_action队列。本轮采用既有Wiki“按当前任务选择验收依据”边界，只判静态图像响应，不扩大为物理抓放、实时或实体验收。
 
 ## Done
 
