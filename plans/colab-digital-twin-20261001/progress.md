@@ -2,9 +2,43 @@
 
 ## Current
 
-2026-10-04 固定frame0 q6仅切换起步/收尾RGB的冻结探针完成，原runner12次交替前向、每图6次；同图重复与前次保存首帧预测均差0。h0五轴图像差L2 3.960µrad、最大轴3.228µrad，两图仍有首帧三轴方向错误、夹爪投影都open0.5；局部图像影响弱，未证全局视盲或唯一根因。来源、逐轴表与复算见[换图检查](#2026-10-04-固定q6起步收尾rgb反事实检查)。首10标签审计继续保留。
+2026-10-04 冻结逐层探针完成，唯一12前向（4原调用+8hook），全部输入/动作与保存基线逐位一致、同图激活重复差0。主干/投影相对差3.577%/3.595%，encoder图像位置0.998%、decoder h0 0.0597%；物理五轴h0图像差仍3.960µrad。输入q/latent token和position固定，编码器输出因图像混合变化；不由激活幅度确认语义可分或因果根因。见[逐层记录](#2026-10-04-冻结模型逐层视觉响应探针)，首10标签与原换图审计保留。
 
-root接续；下一改动未定，保留局部视觉辨别不足/收尾监督竞争候选，先从本轮冻结数组和模型接口接续，不由当前结果自动改主干、加预算或重训。本轮0训练/渲染/积分，S7e方向/抓放仍未过；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
+root接续；下一单变量候选为真实起步/收尾近q帧的局部1:1配对均衡采样，其余数据、归一化、模型和损失保持；先验证监督竞争，候选未实施，不生成同q伪专家标签或自动重训。本轮0训练/渲染/积分，S7e方向/抓放仍未过，仍须过已有离线方向门控再评价物理；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
+
+## 2026-10-04 冻结模型逐层视觉响应探针
+
+用户确认接续逐层探针；前置协议限定原8d4db/q0/同两RGB、最多12前向/硬60s、零训练/渲染/积分。实际唯一原runner序列为无hook A/B两次、hook A/B交替四对八次、移除hook后A/B两次；batch1/CUDA/float32/no_grad/threads2、每次reset/execute1保持。12次所有模型输入、完整chunk、raw及投影h0都与前轮保存基线逐位相同，8次hook的同图激活重复差0。
+
+只在原模块forward上注册观察hook：对返回激活detach/clone保存、返回None，不替换模型输出；在原runner返回后转CPU落盘。捕获backbone feature_map、图像/关节/latent投影、encoder输入与位置嵌入/输出、decoder、action_head；没有添加第二次模型调用。每trial保存部分数组和实际计数，全部12次完成，进程exit0、内部耗时3.694s，外层硬60s未触发；该耗时包含激活捕获/压缩，不当作实时性能。
+
+指标为同层对称relative L2：`2 ||B−A|| / (||A||+||B||)`；cosine distance与原norm/空间cell明细另存。不同层分母、尺度和投影不同，表中差异不能解释为逐层信息丢失比例或某一模块因果失效。
+
+| 同层比较位置 | 单次激活shape | 起步/收尾相对L2差 | 同图重复最大差 |
+| --- | --- | ---: | ---: |
+| ResNet18 feature map | 1×512×4×4 | 3.577262% | 0 |
+| 图像投影 | 1×256×4×4 | 3.595209% | 0 |
+| encoder图像位置输出 | 16×256 | 0.998225% | 0 |
+| encoder关节位置输出 | 1×256 | 0.494248% | 0 |
+| decoder h0 | 256 | 0.059739% | 0 |
+| 五轴h0归一化动作头 | 5 | 0.981892% | 0 |
+| 五轴h0物理残差 | 5 | 0.397923%（实际L2差3.959955µrad） | 0 |
+
+q6与归一化输入固定，encoder的latent/q输入token和position embeddings差0；图像投影展平后与encoder输入图像token逐位相同。encoder关节位置输出随图像变化，是self-attention混合后的输出，不属于输入q6变化；encoder图像位置输出也不再是单独的图像信息。主干每空间cell相对差2.9821–7.8686%、投影2.9126–7.9669%；宽感受野特征格不当作精确物体定位。53份顶层Python、6份输入与172模型张量保持，所有参数无grad。
+
+独立548项CPU方法/结果复算通过：12输入/输出、9类激活重复、18token重组、32空间cell指标、53源码/6输入与172checkpoint张量哈希核验一致。运行模型前后保全依赖唯一执行脚本的before/after哈希断言，CPU独立核对checkpoint与保存前态，不新增模型/GPU调用。CPU直接除255与CUDA执行舍入差最多1ULP已记录；捕获RGB与旧CUDA输入、float32倒数乘法重构均逐位相同，未误判输入错误。另补jaw h0归一化差0.000400662、raw差89.688866µrad、投影仍open。
+
+本轮支持：起步/收尾差异产生了非零主干及投影特征响应，h0动作响应仍弱；不能由3.6%认定语义可分、排除视觉瓶颈，也不能由decoder h0较小确认注意力或下游是唯一根因。首帧三轴反向、jaw open、原S7e未通过状态保持。零训练、EGL、积分、实体或云端操作。
+
+下一单变量候选收敛为**真实起步/收尾近q帧的局部1:1配对均衡采样**。依据结合首帧邻域2 approach/64 retreat/300 settle及起点访问27/178/834，但起点访问不等于全部标签曝光/梯度，监督竞争仍是假设。候选要预先固定局部样本组、权重、与既有startup5规则的组合方式及实际draw统计；保持局部组的采样总权重、其余有效帧与组外优先级、原真实q/RGB/action、归一化、模型、chunk和损失，不把换图反事实改作同q伪专家标签；先检验局部监督，再决定是否需要视觉表征改动。候选未实施，不自动训练或增加探针。已有首帧/首10拍方向与步长、前150拍误差、夹爪open的完整离线门控仍为物理下发前置，不弱化成仅修一个轴或只看loss。
+
+本机证据位于被Git排除的 [vision-layer-response-20261004](../../experiments/colab-twin/output/vision-layer-response-20261004/)：
+
+- [scope.json](../../experiments/colab-twin/output/vision-layer-response-20261004/scope.json) 预先协议与源码/输入/现场哈希；[probe.py](../../experiments/colab-twin/output/vision-layer-response-20261004/probe.py) 唯一执行入口；[execution.json](../../experiments/colab-twin/output/vision-layer-response-20261004/execution.json) 实际12/8调用计数。
+- [activations.npz](../../experiments/colab-twin/output/vision-layer-response-20261004/activations.npz) 实际各层输入/输出及12次动作；[report.json](../../experiments/colab-twin/output/vision-layer-response-20261004/report.json) 同层、空间cell与保全指标；[layer-response.png](../../experiments/colab-twin/output/vision-layer-response-20261004/layer-response.png) 图示。
+- [method-review.json](../../experiments/colab-twin/output/vision-layer-response-20261004/method-review.json) 独立CPU方法与结果审计；本目录收尾文件记录同步/发布，不提交模型、图像、原始数据或运行日志。
+
+实现依据：当前严格绑定的 `learning_vision.py` 原loader/runner，以及官方固定LeRobot ACT `modeling_act.py` 的backbone→投影→token混合→encoder→decoder→action_head路径；官方源码SHA `83d954f79ccd3eaa6774dbea92524939c8ac08359bb355ba7cd37b8601e1e3af`。沿用既有Wiki“按当前任务选择验收依据”，本轮只交付冻结层响应证据，不替代视觉语义、学习因果或物理抓放验收。
 
 ## 2026-10-04 固定q6起步收尾RGB反事实检查
 
