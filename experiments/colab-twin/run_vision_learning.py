@@ -7,6 +7,7 @@ into the visual policy. Reports retain pipeline success and task success apart.
 from __future__ import annotations
 
 import argparse
+import copy
 import ctypes.util
 import hashlib
 import json
@@ -27,6 +28,7 @@ from learning_vision import (ACTION, IMAGE, STATE, CameraSpec, LEROBOT_REVISION,
     VISION_FORMAT, VISION_INPUT_KEYS, VisionDataset,
     VisionPolicyRunner, build_visual_policy, capture_rgb, load_visual_checkpoint,
     make_renderer, sha256, startup_sampling_metadata, startup_sampling_order,
+    local_balance_groups, local_balance_sampling_metadata, local_balance_sampling_order,
     validate_resource_report, visual_source_hashes)
 
 
@@ -254,6 +256,23 @@ def fit(args):
                        draw_count_scope="chunk starts in completed optimizer updates")
         report["training_sampler"] = sampler
         startup_mask = dataset.frames < 50
+        groups = row_draw_counts = None
+        if getattr(args, "local_balance", False):
+            if sampler["weight"] != 5:
+                raise ValueError("Local balance requires the startup-weight5 baseline")
+            groups = local_balance_groups(dataset.states, dataset.frames, dataset.episodes, dataset.stages)
+            local = local_balance_sampling_metadata(dataset.frames, dataset.episodes, groups, sampler["weight"])
+            local.update(rng="SeedSequence([training_seed, 101]); independent of base sampling RNG",
+                         chunk_start_draw_counts=[0, 0, 0], valid_action_slot_counts=[0, 0, 0],
+                         group_order=["nonlocal", "startup", "settle"])
+            row_draw_counts = np.zeros(len(dataset), dtype=np.int64)
+            sampler["local_balance"] = local
+            sampler["base_per_episode"] = sampler.pop("per_episode")
+            sampler["base_theoretical_startup_fraction"] = sampler["theoretical_startup_fraction"]
+            sampler["theoretical_startup_fraction"] = (
+                sampler["weight"] * sampler["startup_rows"] - local["base_startup_slots"]
+                + local["target_slots_per_group"]) / sampler["pool_len"]
+            sampler["epoch_semantics"] += "; replace local slots with equal startup/settle counts"
         batch_size = validate_resource_report(resource, dataset.camera, dataset.visual_hashes, dataset.raw_hashes)
         report.update(resource_report_sha256=resource_sha256, batch_size=batch_size,
                       visual_dataset_sha256=dataset.visual_hashes,
@@ -262,15 +281,41 @@ def fit(args):
         torch.set_num_threads(2)
         torch.manual_seed(args.seed)
         rng = np.random.default_rng(args.seed)
+        local_rng = np.random.default_rng(np.random.SeedSequence([args.seed, 101]))
         policy = build_visual_policy("cuda")
         optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4)
         torch.cuda.reset_peak_memory_stats()
         policy.train()
         steps, losses = 0, []
+        def checkpoint_data():
+            if row_draw_counts is not None:
+                sampler["local_balance"]["row_draw_counts"] = row_draw_counts.tolist()
+            return {
+                "format": VISION_FORMAT, "policy_input_keys": list(VISION_INPUT_KEYS),
+                "lerobot_revision": LEROBOT_REVISION, "official_source_sha256": OFFICIAL_SOURCE_SHA256,
+                "source_sha256": source_hashes(), "normalization": dataset.normalizer.stats,
+                "resource_report_text": resource_text, "resource_report_sha256": resource_sha256,
+                "model_spec": VISUAL_MODEL_SPEC, "rgb_normalization": RGB_NORMALIZATION,
+                "camera": dataset.camera, "action_encoding": "arm_delta_absolute_jaw",
+                "control_period_s": .02, "model_sha256": dataset.metadata[0]["model_sha256"],
+                "physics_dt_s": .002, "scene_configuration": dataset.metadata[0]["scene_configuration"],
+                "visual_dataset_sha256": dataset.visual_hashes, "raw_dataset_sha256": dataset.raw_hashes,
+                "gripper_labels_rad": dataset.gripper_labels.tolist(),
+                "training_row_count": len(dataset), "training_steps": steps,
+                "training_sampler": copy.deepcopy(sampler),
+                "training_seed": args.seed, "optimizer": "fresh Adam", "learning_rate": 1e-4,
+                "initialization": report["initialization"], "torch_version": str(torch.__version__),
+                "state_dict": {key: value.detach().cpu() for key, value in policy.state_dict().items()},
+            }
+        snapshot_step = getattr(args, "snapshot_step", 0)
+        report["snapshot"] = {"requested_step": snapshot_step, "status": "not_reached" if snapshot_step else "disabled",
+                              "scope": "diagnostic only; final policy.pt remains the acceptance candidate"}
         train_started = time.perf_counter()
         stop = "epoch_limit"
         for epoch in range(args.max_epochs):
             order = startup_sampling_order(dataset.frames, rng, sampler["weight"])
+            if groups is not None:
+                order = local_balance_sampling_order(order, groups, local_rng)
             sampler["epoch_orders_generated"] += 1
             for start in range(0, len(order), batch_size):
                 if steps >= args.max_steps:
@@ -294,6 +339,20 @@ def fit(args):
                 steps += 1
                 sampler["chunk_start_draw_count"] += len(selection)
                 sampler["startup_draw_count"] += int(startup_mask[selection].sum())
+                if groups is not None:
+                    np.add.at(row_draw_counts, selection, 1)
+                    for group in (0, 1, 2):
+                        selected = selection[groups[selection] == group]
+                        local["chunk_start_draw_counts"][group] += len(selected)
+                        local["valid_action_slot_counts"][group] += int(dataset.lengths[selected].sum())
+                if steps == snapshot_step:
+                    snapshot_started = time.perf_counter()
+                    snapshot_path = args.output / f"policy-step-{steps}.pt"
+                    torch.save(checkpoint_data(), snapshot_path)
+                    report["snapshot"].update(status="saved", checkpoint=str(snapshot_path),
+                        checkpoint_sha256=sha256(snapshot_path), training_steps=steps,
+                        save_s=time.perf_counter() - snapshot_started,
+                        wall_budget_includes_snapshot_save=True)
                 if steps == 1 or steps % 50 == 0:
                     losses.append({"step": steps, "normalized_l1": float(loss.detach()),
                                    "training_s": time.perf_counter() - train_started})
@@ -308,23 +367,7 @@ def fit(args):
         report.update(training_steps=steps, stop_reason=stop,
                       training_s=time.perf_counter() - train_started, loss_samples=losses,
                       gpu=gpu_memory(), parameters=sum(p.numel() for p in policy.parameters()))
-        checkpoint = {
-            "format": VISION_FORMAT, "policy_input_keys": list(VISION_INPUT_KEYS),
-            "lerobot_revision": LEROBOT_REVISION, "official_source_sha256": OFFICIAL_SOURCE_SHA256,
-            "source_sha256": source_hashes(), "normalization": dataset.normalizer.stats,
-            "resource_report_text": resource_text, "resource_report_sha256": resource_sha256,
-            "model_spec": VISUAL_MODEL_SPEC, "rgb_normalization": RGB_NORMALIZATION,
-            "camera": dataset.camera, "action_encoding": "arm_delta_absolute_jaw",
-            "control_period_s": .02, "model_sha256": dataset.metadata[0]["model_sha256"],
-            "physics_dt_s": .002, "scene_configuration": dataset.metadata[0]["scene_configuration"],
-            "visual_dataset_sha256": dataset.visual_hashes, "raw_dataset_sha256": dataset.raw_hashes,
-            "gripper_labels_rad": dataset.gripper_labels.tolist(),
-            "training_row_count": len(dataset), "training_steps": steps,
-            "training_sampler": sampler,
-            "training_seed": args.seed, "optimizer": "fresh Adam", "learning_rate": 1e-4,
-            "initialization": report["initialization"], "torch_version": str(torch.__version__),
-            "state_dict": {key: value.detach().cpu() for key, value in policy.state_dict().items()},
-        }
+        checkpoint = checkpoint_data()
         # Compare reload on the SAME device to avoid hiding a CPU/GPU numerical difference.
         reference = dataset.batch(np.arange(min(batch_size, len(dataset))), "cpu")
         policy = policy.cpu().eval()
@@ -468,6 +511,10 @@ def main(argv=None):
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--startup-weight", type=int, choices=(1, 5), default=1,
                         help="Fit only: repeat eligible chunk starts with raw frame index <50")
+    parser.add_argument("--local-balance", action="store_true",
+                        help="Fit only with startup-weight5: balance real near-q startup/settle slots 1:1")
+    parser.add_argument("--snapshot-step", type=int, default=0,
+                        help="Fit only: save a diagnostic checkpoint at this step inside the same wall budget")
     parser.add_argument("--execute-chunk-steps", type=int, default=16)
     parser.add_argument("--resource-report", type=Path)
     parser.add_argument("--checkpoint", type=Path)
@@ -476,6 +523,10 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.stage != "fit" and args.startup_weight != 1:
         parser.error("--startup-weight other than 1 is only allowed for fit")
+    if args.local_balance and (args.stage != "fit" or args.startup_weight != 5):
+        parser.error("--local-balance is fit-only and requires --startup-weight 5")
+    if args.snapshot_step and (args.stage != "fit" or not 1 <= args.snapshot_step <= args.max_steps):
+        parser.error("--snapshot-step must be a fit step in [1,max_steps]")
     if not 0 < args.max_wall_s <= 120 or not np.isfinite(args.max_wall_s):
         parser.error("wall budget must be finite and in (0,120] seconds")
     if not 0 < args.max_simulation_s <= 90 or not np.isfinite(args.max_simulation_s):

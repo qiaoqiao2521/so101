@@ -260,6 +260,83 @@ def startup_sampling_metadata(frames, episodes, weight=1):
                                 "one permutation of the expanded index pool; not a unique-row pass")}
 
 
+def local_balance_groups(states, frames, episodes, stages):
+    """Select real near-q startup/settle rows; these fields never enter the policy."""
+    states, frames, episodes, stages = map(np.asarray, (states, frames, episodes, stages))
+    _startup_sampling_mask(frames, 5)
+    if (states.shape != (len(frames), 6) or states.dtype.kind not in "fiu" or
+            not np.isfinite(states).all() or
+            episodes.shape != frames.shape or episodes.dtype.kind not in "iu" or
+            np.any(episodes < 0) or stages.shape != frames.shape):
+        raise ValueError("Local balance requires finite q6 and matching episode/stage rows")
+    anchor = np.flatnonzero((episodes == 0) & (frames == 0))
+    if len(anchor) != 1:
+        raise ValueError("Local balance requires exactly one episode0/frame0 anchor")
+    near = np.linalg.norm(states - states[anchor[0]], axis=1) <= .01
+    groups = np.zeros(len(frames), dtype=np.int8)
+    groups[near & (frames < 50) & (stages == "approach")] = 1
+    groups[near & (frames >= 50) & (stages == "settle")] = 2
+    if not np.any(groups == 1) or not np.any(groups == 2):
+        raise ValueError("Local balance requires both startup and settle groups")
+    return groups
+
+
+def _validate_local_groups(groups, shape):
+    groups = np.asarray(groups)
+    if (groups.shape != shape or groups.dtype.kind not in "iu" or
+            not np.isin(groups, [0, 1, 2]).all() or
+            not np.any(groups == 1) or not np.any(groups == 2)):
+        raise ValueError("Local balance requires matching integer groups 0/1/2 and both local groups")
+    return groups
+
+
+def local_balance_sampling_metadata(frames, episodes, groups, weight=5):
+    base = startup_sampling_metadata(frames, episodes, weight)
+    groups = _validate_local_groups(groups, np.asarray(frames).shape)
+    weights = np.where(np.asarray(frames) < 50, weight, 1)
+    counts = [int(weights[groups == group].sum()) for group in (1, 2)]
+    slots = sum(counts)
+    if slots % 2:
+        raise ValueError("Exact local 1:1 balance requires an even number of base local slots")
+    return {"radius_rad": .01, "distance": "unscaled L2 of all six joints to episode0/raw_frame0",
+            "selection": "label_valid; startup: raw<50 && approach; settle: raw>=50 && settle",
+            "startup_rows": int((groups == 1).sum()), "settle_rows": int((groups == 2).sum()),
+            "startup_indices": np.flatnonzero(groups == 1).tolist(),
+            "settle_indices": np.flatnonzero(groups == 2).tolist(),
+            "base_startup_slots": counts[0], "base_settle_slots": counts[1],
+            "pool_slots": slots, "target_slots_per_group": slots // 2,
+            "total_pool_len": base["pool_len"],
+            "balance_scope": "complete-pool chunk starts, not partial draws or valid action slots",
+            "outside_scope": "all nonlocal positions/values of original shuffled pool unchanged",
+            "within_group": "uniform permutations of unique rows, full cycles then remainder"}
+
+
+def local_balance_sampling_order(base_order, groups, rng):
+    """Replace only local slots, preserving base RNG and every nonlocal position."""
+    base_order = np.asarray(base_order)
+    groups = np.asarray(groups)
+    if groups.ndim != 1:
+        raise ValueError("Local groups must be one dimensional")
+    groups = _validate_local_groups(groups, groups.shape)
+    if (base_order.ndim != 1 or base_order.dtype.kind not in "iu" or
+            not len(base_order) or np.any(base_order < 0) or np.any(base_order >= len(groups))):
+        raise ValueError("Invalid base sampling order")
+    positions = np.flatnonzero(groups[base_order] != 0)
+    if not len(positions) or len(positions) % 2:
+        raise ValueError("Exact local 1:1 balance requires a positive even local slot count")
+    count = len(positions) // 2
+    draws = []
+    for group in (1, 2):
+        rows = np.flatnonzero(groups == group)
+        cycles, remainder = divmod(count, len(rows))
+        draws.extend(rng.permutation(rows) for _ in range(cycles))
+        if remainder:
+            draws.append(rng.permutation(rows)[:remainder])
+    order = base_order.copy()
+    order[positions] = rng.permutation(np.concatenate(draws))
+    return order
+
+
 class VisionDataset:
     """Keep only uint8 frames on disk, index valid labels, normalize per batch."""
     def __init__(self, paths):
@@ -269,6 +346,7 @@ class VisionDataset:
             raise ValueError("Need unique visual episode paths")
         self.paths, self.archives = paths, []
         self.states, self.actions, self.frames, self.episodes = [], [], [], []
+        self.stages = []
         self.raw_hashes, self.visual_hashes, self.metadata = [], [], []
         self.camera = None
         try:
@@ -301,12 +379,14 @@ class VisionDataset:
                 self.actions.append(episode[ACTION][mask])
                 self.frames.append(episode["frame_index"][mask])
                 self.episodes.append(np.full(mask.sum(), episode_id, dtype=np.int64))
+                self.stages.append(episode["stage"][mask])
                 self.raw_hashes.append(str(archive.attrs["source_raw_sha256"]))
                 self.visual_hashes.append(sha256(path))
                 self.metadata.append(episode["metadata"])
             self.states, self.actions, self.frames, self.episodes = (
                 np.concatenate(pieces) for pieces in
                 (self.states, self.actions, self.frames, self.episodes))
+            self.stages = np.concatenate(self.stages)
             if len(set(self.raw_hashes)) != len(self.raw_hashes):
                 raise ValueError("Repeated source episodes would duplicate training labels")
             if len({m["control_period_s"] for m in self.metadata}) != 1 or len({m["model_sha256"] for m in self.metadata}) != 1:

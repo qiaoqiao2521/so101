@@ -2,9 +2,37 @@
 
 ## Current
 
-2026-10-04 冻结逐层探针完成，唯一12前向（4原调用+8hook），全部输入/动作与保存基线逐位一致、同图激活重复差0。主干/投影相对差3.577%/3.595%，encoder图像位置0.998%、decoder h0 0.0597%；物理五轴h0图像差仍3.960µrad。输入q/latent token和position固定，编码器输出因图像混合变化；不由激活幅度确认语义可分或因果根因。见[逐层记录](#2026-10-04-冻结模型逐层视觉响应探针)，首10标签与原换图审计保留。
+2026-10-06 局部1:1采样已接入并完成唯一有界训练：同四档、原归一化/模型/损失，2115step/120.033s，峰值332MiB、保存重载误差0。首帧pan/flex/roll改为同向，但elbow反向且首10拍全反向，原离线门控未过；固定q换图h0差仍仅4.429µrad。没有物理回合或补训，S7e仍未通过。 root保留默认均匀与原startup5行为；新局部均衡需显式 `fit --startup-weight 5 --local-balance`。本轮结果不支持仅靠局部起点均衡已解决起步/收尾辨别，且实际步数不同于旧3126，不能作等步数单变量因果结论。下一最短候选为只读核肘轴前150拍的逐槽拟合与局部抽样覆盖，区分早期输出偏差和覆盖变化；尚未执行，不自动追加训练、改主干或启动物理。
 
-root接续；下一单变量候选为真实起步/收尾近q帧的局部1:1配对均衡采样，其余数据、归一化、模型和损失保持；先验证监督竞争，候选未实施，不生成同q伪专家标签或自动重训。本轮0训练/渲染/积分，S7e方向/抓放仍未过，仍须过已有离线方向门控再评价物理；v11正常20/20、扰动3/20和旧视觉失败保留。全部runtime继续Git忽略，主仓原index/22现场变动/原MJCF保护。
+## 2026-10-06 真实近q局部1比1采样已实施，原离线方向门控未过
+
+用户指定“真实起步/收尾近q帧局部1:1均衡采样、其余保持、先检验监督竞争”。[预注册范围](../../experiments/colab-twin/output/vision-local-balance-20261006/scope.json)和[原门控副本](../../experiments/colab-twin/output/vision-local-balance-20261006/offline-gate-spec.json)在训练前固化；final `policy.pt`为唯一验收候选，预算内3126步快照只作等步数诊断，不挑选候选。沿用Wiki“按当前任务选择验收依据”，将代码、离线预测与物理抓放分开验收。
+
+**采样实现与验证。** 先在label_valid的8797行中，以nominal raw0 q6为锚、六轴未缩放L2≤0.01rad选真实行：raw<50且approach命中nominal0/1共2行；raw≥50且settle命中四档各75、共300行。64条近q retreat保持组外。保留原startup5采样池8997项及所有组外位置/值，局部原10/300项改成155/155；起步每池77/78次，收尾从300行无放回抽155。独立 `SeedSequence([seed,101])`只改局部，原基础采样和Torch RNG不被消耗。未修改或伪造q/RGB/动作；stage仅供离线采样，策略仍q6+RGB。
+
+默认 `--local-balance=false` 保留旧分支；启用必须fit+startup-weight5。归一化在8797唯一行拟合，future chunk/padding及六轴L1损失保持。新增[15项CPU测试](../../experiments/colab-twin/test_local_balance_sampling.py)与原25项共[40项通过](../../experiments/colab-twin/output/vision-local-balance-20261006/cpu-tests.log)，含默认RNG、组外逐位保持、分组边界、实际计数、快照副本/预算。独立Codex源码评审通过，[实档5池核验](../../experiments/colab-twin/output/vision-local-balance-20261006/indices-report.json)通过；没有新AGY/ZCODE会审。
+
+**唯一执行。** 新源码[五步CUDA预检](../../experiments/colab-twin/output/vision-local-balance-20261006/microbenchmark/report.json)batch8通过，内部3.969s/外层6.037s。沿原seed0、随机ACT/ResNet18、fresh Adam1e-4、batch8、120s/5000step/200epoch上限，[唯一fit](../../experiments/colab-twin/output/vision-local-balance-20261006/fit/report.json)实际2115step/120.032832s优化、内部总122.888s/外层124.893s，peak allocated309.343/reserved332MiB，同CPU重载误差0。原预算每次更新前检查，最后一个更新允许略越120s边界；没有延时补训。checkpoint SHA `490d9d71eda07d69018fec736df3342beb1d8b45270770acf63dd4ba08abcc0e`。3126快照 `not_reached`，不补做训练；实际步数不同，不能当严格等步数对照。
+
+实际16917次chunk起点、737次raw<50；1完整池+第2池部分，局部起步291/收尾285次（两起步行141/150次），组外16341次。按被抽chunk起点所属组计非padding动作槽：起步4656/收尾4030/组外261456。1:1仅指完整池起点数；截断与回合末padding使实际次数及动作槽不等，动作槽也不等价于有效梯度。见fit记录和独立重建；8718个唯一chunk起点被抽到，不当成全部未来目标标签覆盖率。
+
+**原离线门控。** [150次专家观测前向](../../experiments/colab-twin/output/vision-local-balance-20261006/offline-report.json)batch1/CUDA/no_grad/threads2，4.278s；四RGB/raw和172模型状态张量保持，未调用专家、渲染或积分。门控定义逐字沿用原协议，仍以旧d4db保存batch8数组为门控基线，旧8d4db保存batch1数组只作额外诊断；不绕过source binding加载旧权重。
+
+| 首帧h0，mrad | 新策略delta | 专家delta | 方向 |
+| --- | ---: | ---: | --- |
+| shoulder_pan | +1.356358 | +2.317555 | 同向 |
+| shoulder_lift | -1.244287 | -1.471036 | 同向 |
+| elbow | +0.374473 | -0.947236 | 反向 |
+| wrist_flex | -2.810959 | -4.805772 | 同向 |
+| wrist_roll | -1.427544 | -2.510750 | 同向 |
+
+首帧其他四轴比例0.585/0.846/0.585/0.569落入原0.5–1.5区间，但elbow比−0.395，前10拍elbow同向率0、投影−0.462；前150拍elbow同向率40%，MAE1.090709mrad，劣于原门控基线0.606118与最近startup5的0.559043。其余四轴前150同向率100%。整体方向投影0.98683好于门控基线0.95353、jaw全open，但不能覆盖坏轴：7项中5项未过（首帧方向/幅度、首10方向/幅度、逐轴MAE）。`rollout_allowed=false`，本轮物理 `not_run`，不是新抓放0/1。
+
+[同q换图12次复核](../../experiments/colab-twin/output/vision-local-balance-20261006/rgb-report.json)原frame0 q6、原0/2349两RGB、原runner execute1/reset/no_grad，2.971s；同图重复差0、起步图预测与离线首帧逐位一致。五轴h0图像差4.429µrad（旧3.960），两图下肘轴仍反向、jaw都open；未形成所需动作切换。局部采样对比中预测发生变化，但没有等步数、多训练种子对照，不能把某轴变化或视觉表征确定为单一因果。总计162次离线前向、0新物理/渲染。
+
+[独立Codex复算](../../experiments/colab-twin/output/vision-local-balance-20261006/independent-review.json)252项通过：独立重建采样、读取HDF/NPZ核标签与RGB、重算七项门控和换图差异；原数据/归一化/54源码/新旧checkpoint哈希一致。审核仅CPU，无构模/新前向/优化/仿真。v6无效前缀动作NaN按原契约同位置比较，有效标签全finite且精确相同。
+
+**收尾与接续。** root保留默认均匀与原startup5行为；新局部均衡需显式 `fit --startup-weight 5 --local-balance`。本轮结果不支持仅靠局部起点均衡已解决起步/收尾辨别，且实际步数不同于旧3126，不能作等步数单变量因果结论。下一最短候选为只读核肘轴前150拍的逐槽拟合与局部抽样覆盖，区分早期输出偏差和覆盖变化；尚未执行，不自动追加训练、改主干或启动物理。 原物理/安全阈值、v11正常20/20和扰动3/20、旧视觉失败完整保留；所有runtime模型/数据/数组/日志继续Git忽略，公开只提交实现、测试与结论。主仓旧22项/index/README/原模型保持，根Codex串行整合交付。
 
 ## 2026-10-04 冻结模型逐层视觉响应探针
 
