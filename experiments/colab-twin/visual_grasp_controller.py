@@ -122,6 +122,10 @@ class VisualGraspController:
         self.gripper_id = rig.body('gripper').id
         self.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
         self.initial_q = finite_vector(initial_q6, 6, 'initial_q6')
+        self.last_command = self.initial_q.copy()
+        self.reference = self.initial_q.copy()
+        self.servo_offset = np.zeros(5)
+        self.servo_transitions = []
         self.target_xy = self._target(target_xy)
         self.target_timestamp = float(target_timestamp_s)
         self.estimate_ttl = float(estimate_ttl_s)
@@ -199,6 +203,29 @@ class VisualGraspController:
         self.stage = stage
         self._set_motion([q5, q5], jaw, elapsed)
         self.duration = duration
+
+    def _set_continuous_motion(self, points, elapsed):
+        """Preserve holding bias while planning in achieved-configuration space.
+
+        A position actuator's setpoint is not its achieved configuration under
+        load. Capture the small equilibrium offset once per stage, never each
+        tick. Geometry guards still inspect the reference and measured q.
+        """
+        points = np.asarray(points, dtype=float)
+        offset = self.last_command[:5]-points[0]
+        if not np.isfinite(offset).all() or np.max(np.abs(offset)) > .003:
+            raise ControllerFailure('servo_offset_exceeds_arrival_tolerance')
+        mapped = np.c_[points+offset, np.full(len(points), .5)]
+        for bounds in (self.rig.jnt_range, self.rig.actuator_ctrlrange):
+            if np.any(mapped < bounds[:,0]) or np.any(mapped > bounds[:,1]):
+                raise ControllerFailure('mapped_servo_target_out_of_bounds')
+        self.servo_offset = offset.copy()
+        self.servo_start_command = self.last_command.copy()
+        self.servo_transitions.append({'stage':self.stage, 'elapsed_s':float(elapsed),
+                                       'reference_start':points[0].tolist(),
+                                       'previous_command':self.last_command.tolist(),
+                                       'fixed_offset_rad':offset.tolist()})
+        self._set_motion(points, .5, elapsed)
 
     def _ingest_estimate(self, estimate, elapsed):
         if estimate is None or self.target_frozen:
@@ -374,7 +401,7 @@ class VisualGraspController:
                                    predicted_completion_s=elapsed+required_s)
         self.plan_reports.append({'stage':'release_return', **self.release_record})
         self.stage = 'separate'
-        self._set_motion(points, .5, elapsed)
+        self._set_continuous_motion(points, elapsed)
 
     def _transition(self, q6, elapsed):
         if self.stage == 'approach':
@@ -422,8 +449,14 @@ class VisualGraspController:
             self.plan_reports.append({'stage':'return_from_measured_pose', 'method':method,
                                       'path':points.tolist(), 'duration_s':motion_duration(points)})
             self.stage = 'retreat'
-            self._set_motion(points, .5, elapsed)
+            self._set_continuous_motion(points, elapsed)
         elif self.stage == 'retreat':
+            # Retain the terminal reference and holding offset across dwell.
+            self.servo_start_command = self.last_command.copy()
+            self.servo_transitions.append({'stage':'settle', 'elapsed_s':float(elapsed),
+                                           'reference_start':self.initial_q[:5].tolist(),
+                                           'previous_command':self.last_command.tolist(),
+                                           'fixed_offset_rad':self.servo_offset.tolist()})
             self._set_dwell('settle', self.initial_q[:5], .5, elapsed, 1.5)
         elif self.stage == 'settle':
             self.done = True
@@ -432,10 +465,12 @@ class VisualGraspController:
         q6 = finite_vector(q6, 6, 'q6')
         qvel6 = finite_vector(qvel6, 6, 'qvel6')
         try:
+            if self.done:
+                return self._result(self.last_command)
             if not np.isfinite(elapsed) or elapsed < self.last_elapsed or elapsed < 0 or elapsed > 90:
                 raise ControllerFailure('invalid_or_expired_controller_time')
             self.last_elapsed = float(elapsed)
-            if self.failure_reason or self.done:
+            if self.failure_reason:
                 return self._result(q6)
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
                 raise ControllerFailure('measured_arm_configuration_invalid')
@@ -480,7 +515,15 @@ class VisualGraspController:
             if age >= self.duration+.6 and arm_arrived:
                 self._transition(q6, elapsed)
                 age = 0.
-            command = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
+            self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
+            command = self.reference.copy()
+            if self.stage in ('separate', 'retreat', 'settle'):
+                command[:5] += self.servo_offset
+                if age == 0:
+                    command = self.servo_start_command.copy()
+                for bounds in (self.rig.jnt_range, self.rig.actuator_ctrlrange):
+                    if np.any(command < bounds[:,0]) or np.any(command > bounds[:,1]):
+                        raise ControllerFailure('mapped_servo_target_out_of_bounds')
             if self.stage in ('transport', 'lower'):
                 valid = self._payload_valid
             elif self.stage == 'separate':
@@ -489,10 +532,11 @@ class VisualGraspController:
                 valid = self._released_valid
             else:
                 valid = lambda q: self._arm_valid(q, self.jaw)
-            if not validate_joint_path([q6[:5], command[:5]], valid, .005)['valid']:
+            if not validate_joint_path([q6[:5], self.reference[:5]], valid, .005)['valid']:
                 if self.stage == 'approach' and not self.target_frozen and estimate is not None:
                     self.replan_approach(q6, elapsed, estimate)
                     command = np.r_[q6[:5], .5]
+                    self.reference = command.copy()
                 else:
                     raise ControllerFailure('current_pose_command_chord_invalid')
             return self._result(command)
@@ -501,7 +545,10 @@ class VisualGraspController:
             return self._result(q6)
 
     def _result(self, command):
+        if self.failure_reason is None:
+            self.last_command = np.asarray(command).copy()
         return {'command': np.asarray(command).copy(), 'stage': self.stage, 'done': self.done,
+                'geometric_reference':self.reference.copy(), 'servo_offset':self.servo_offset.copy(),
                 'status': 'failed' if self.failure_reason else 'done' if self.done else 'running',
                 'failure_reason': self.failure_reason, 'target_frozen': self.target_frozen,
                 'replans': self.replans, 'controller_completion_is_task_success': False}

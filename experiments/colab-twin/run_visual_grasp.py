@@ -139,13 +139,16 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
     rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
-    release_audit=ReleaseAudit()
+    release_audit=ReleaseAudit(); release_samples=[]; reset_record={}
     status={'passed':False,'safety_stop':False,'failure_reason':None}
     try:
         model,rig,_=build_contact_scene(source,out/'scene',noslip_iterations=10)
         data=reset_scene(model,rig,case['initial_xy_m'])
         initial=data.qpos.copy()
         baseline_z=float(data.xpos[model.body('grasp_target').id,2])
+        reset_record={'initial_qpos':initial.tolist(), 'initial_qvel':data.qvel.copy().tolist(),
+                      'baseline_object_z_m':baseline_z, 'free_object':True,
+                      'weld_count':int(model.neq), 'mocap_count':int(model.nmocap)}
         monitor=PhysicalTaskMonitor(baseline_z)
         checker=CollisionChecker(rig,gripper=.5,margin_m=.001)
         calibration=TopDownCalibration.from_mujoco_model(model,width=640,height=480,top_plane_z_m=.018)
@@ -213,6 +216,11 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                     force=robot_target_force(model,data)
                     release_force_peak=max(release_force_peak,force)
                     release_audit.update(data.qpos[6:8],force,float(data.time)-time0)
+                    release_samples.append({'elapsed_s':float(data.time)-time0,
+                                            'object_xy_m':data.qpos[6:8].tolist(),
+                                            'q6':data.qpos[:6].tolist(), 'stage':last['stage'],
+                                            'robot_target_force_n':force,
+                                            'detached':release_audit.detached})
                     if release_audit.failure_reason:
                         break
                 if any(obstacle in (c.geom1,c.geom2) for c in data.contact):
@@ -224,6 +232,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                        q6=data.qpos[:6].tolist(),command=command.tolist(),
                        qvel6=data.qvel[:6].tolist(),controller_done=last['done'],
                        policy_command=np.asarray(last['command']).tolist(),perturbation=injected,
+                       geometric_reference=np.asarray(last['geometric_reference']).tolist(),
+                       servo_offset=np.asarray(last['servo_offset']).tolist(),
                        target_frozen=last['target_frozen'],replans=last['replans'],
                        robot_target_force_peak_n=release_force_peak,
                        released_detached=release_audit.detached)
@@ -273,13 +283,16 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                       obstacle_contact_steps=obstacle_steps,video_frames=frame_count,
                       max_lift_m=(max(r['object_z_m'] for r in rows)-baseline_z) if rows else None,
                       final_object_xyz_m=rows[-1]['object_xyz_m'] if rows else None)
+        status.update(reset_record)
         if time.monotonic()>=deadline:
             status.update(passed=False,failure_reason='wall_time_limit')
         if controller is not None:
             status['target_handover']=controller.freeze_record
             status['release_plan']=controller.release_record
+            status['servo_transitions']=controller.servo_transitions
             write_json(out/'planning.json',controller.plan_reports)
         write_json(out/'trajectory.json',rows)
+        write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)
         write_json(out/'report.json',status)
     return status

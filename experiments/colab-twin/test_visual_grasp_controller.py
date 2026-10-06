@@ -9,6 +9,8 @@ import visual_grasp_controller as module
 class VisualControllerTests(unittest.TestCase):
     def controller(self):
         rig = SimpleNamespace(nq=6, nv=6, ngeom=0,
+                              jnt_range=np.tile([-3.,3.],(6,1)),
+                              actuator_ctrlrange=np.tile([-3.,3.],(6,1)),
                               body=lambda name: SimpleNamespace(id=0))
         query = SimpleNamespace(qpos=np.zeros(6), qvel=np.zeros(6),
                                 xpos=np.zeros((1, 3)), xmat=np.eye(3).reshape(1, 9))
@@ -171,6 +173,55 @@ class VisualControllerTests(unittest.TestCase):
         c.released_query.pad_vertices.return_value={'pad_gripper':np.tile([0,0,.002],(8,1))}
         self.assertTrue(c._separation_valid(q[:5]))
         self.assertFalse(c._released_valid(q[:5]))  # No contact exception on return.
+
+    def test_continuous_phase_preserves_setpoint_without_treating_it_as_pose(self):
+        c=self.controller();q=c.initial_q.copy();c.target_frozen=True
+        offset=np.array([.0001,-.00056,-.00031,0,.00005])
+        previous=q.copy();previous[:5]+=offset;c.last_command=previous.copy()
+        c.stage='retreat'
+        c._set_continuous_motion([q[:5],q[:5]+.01],0)
+        # The setpoint may differ from a collision-free achieved pose under load.
+        # This predicate permits only the geometric start, not the servo target.
+        c._released_valid=lambda pose,jaw=.5: np.allclose(pose,q[:5],rtol=0,atol=1e-12)
+        result=c.update(q,np.zeros(6),0)
+        self.assertEqual(result['status'],'running')
+        np.testing.assert_array_equal(result['command'],previous)
+        np.testing.assert_array_equal(result['geometric_reference'],q)
+        np.testing.assert_allclose(result['command'][:5]-q[:5],offset,atol=1e-17)
+        c._released_valid=lambda pose,jaw=.5:True
+        result=c.update(q,np.zeros(6),.02)
+        np.testing.assert_array_equal(result['servo_offset'],previous[:5]-q[:5])
+        self.assertGreater(np.linalg.norm(result['geometric_reference']-q),0)
+
+    def test_phase_bias_is_recaptured_once_and_retained_through_settle(self):
+        c=self.controller();c.target_frozen=True
+        q=c.initial_q.copy();q[:5]+=.01
+        c.last_command=q.copy();c.last_command[:5]+=.0005
+        c.stage='retreat';c._set_continuous_motion([q[:5],c.initial_q[:5]],0)
+        c._released_valid=lambda pose,jaw=.5:True
+        terminal=c.update(c.initial_q.copy(),np.zeros(6),c.duration-.01)['command']
+        terminal=c.update(c.initial_q.copy(),np.zeros(6),c.duration+.01)['command']
+        result=c.update(c.initial_q.copy(),np.zeros(6),c.duration+.61)
+        self.assertEqual(result['stage'],'settle')
+        np.testing.assert_array_equal(result['command'],terminal)
+        result=c.update(c.initial_q.copy(),np.zeros(6),c.stage_started+c.duration+.61)
+        self.assertTrue(result['done'])
+        np.testing.assert_array_equal(result['command'],terminal)
+        repeated=c.update(c.initial_q.copy(),np.zeros(6),c.last_elapsed+.02)
+        np.testing.assert_array_equal(repeated['command'],terminal)
+        expired=c.update(c.initial_q.copy(),np.zeros(6),90.02)
+        self.assertEqual(expired['status'],'done')
+        np.testing.assert_array_equal(expired['command'],terminal)
+
+    def test_large_bias_or_mapped_limit_violation_is_rejected_without_clipping(self):
+        c=self.controller();q=c.initial_q.copy();c.stage='separate'
+        c.last_command=q.copy();c.last_command[0]+=.00301
+        with self.assertRaisesRegex(module.ControllerFailure,'servo_offset_exceeds'):
+            c._set_continuous_motion([q[:5],q[:5]+.1],0)
+        c.last_command=q.copy();c.last_command[0]+=.002
+        goal=q[:5].copy();goal[0]=2.999
+        with self.assertRaisesRegex(module.ControllerFailure,'out_of_bounds'):
+            c._set_continuous_motion([q[:5],goal],0)
 
 
 if __name__ == '__main__':
