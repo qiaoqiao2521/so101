@@ -238,6 +238,7 @@ def fit(args):
     started = time.perf_counter()
     report = new_report("visual_act_single_bounded_offline_fit")
     report.update(max_wall_s=args.max_wall_s, max_steps=args.max_steps, max_epochs=args.max_epochs,
+                  extended_fit_budget=bool(getattr(args, "extended_fit_budget", False)),
                   optimizer="fresh Adam", learning_rate=1e-4,
                   initialization="random official ACT including random ResNet18; no downloaded/pretrained weights",
                   training_loss_scope="all_six_action_coordinates")
@@ -505,6 +506,8 @@ def main(argv=None):
                         "workspaces/so101_ws/src/so101_mujoco/models/so101.xml")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--max-wall-s", type=float, default=120.)
+    parser.add_argument("--extended-fit-budget", action="store_true",
+                        help="Fit only: explicitly allow up to 600 optimization seconds; default stays 120")
     parser.add_argument("--max-simulation-s", type=float, default=90.)
     parser.add_argument("--max-steps", type=int, default=5000)
     parser.add_argument("--max-epochs", type=int, default=200)
@@ -527,8 +530,11 @@ def main(argv=None):
         parser.error("--local-balance is fit-only and requires --startup-weight 5")
     if args.snapshot_step and (args.stage != "fit" or not 1 <= args.snapshot_step <= args.max_steps):
         parser.error("--snapshot-step must be a fit step in [1,max_steps]")
-    if not 0 < args.max_wall_s <= 120 or not np.isfinite(args.max_wall_s):
-        parser.error("wall budget must be finite and in (0,120] seconds")
+    if args.extended_fit_budget and args.stage != "fit":
+        parser.error("--extended-fit-budget is only allowed for fit")
+    wall_limit = 600 if args.extended_fit_budget else 120
+    if not 0 < args.max_wall_s <= wall_limit or not np.isfinite(args.max_wall_s):
+        parser.error(f"wall budget must be finite and in (0,{wall_limit}] seconds")
     if not 0 < args.max_simulation_s <= 90 or not np.isfinite(args.max_simulation_s):
         parser.error("simulation budget must be finite and in (0,90] seconds")
     if not 1 <= args.max_steps <= 5000 or not 1 <= args.max_epochs <= 200 or args.seed < 0:

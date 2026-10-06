@@ -2,6 +2,22 @@
 
 复用 SO101 原生模型，在 Colab CPU 完成“目标位置与静态盒子 → Mink 位置 IK → OMPL RRTConnect 绕行 → MuJoCo 物理执行 → 视频和指标回收”。本地真实模型与 20 轮 ±3 mm 目标扰动已通过；Colab CPU / OSMesa 20轮通过，可见场景与视频回收已复验通过。视觉、接触抓放和真机同步继续作为后续任务。
 
+## Colab GPU 视觉训练（2026-10-06）
+
+本机已有四份同步RGB示范时，通过CLI上传原字节数据、运行固定官方ACT、收回权重并释放会话：
+
+```bash
+python3 experiments/colab-twin/run_vision_colab.py \
+  --output experiments/colab-twin/output/vision-colab-NEW-RUN \
+  --gpu L4 --gpu-minutes 30
+```
+
+每次使用新的output目录。`--prepare-only`只打包检查，不分配GPU；正式运行使用另一新目录。若CLI直连不稳定，可通过命令级`HTTP_PROXY`/`HTTPS_PROXY`使用本机已经运行的代理；不把代理凭据写入仓库，也不自动改系统设置。
+
+入口复用现有Colab CLI 0.6.0安全适配层，独立会话身份、8MiB分片和逐文件SHA；仅同路径同内容的瞬时传输错误每片最多尝试3次（初次加2次重试，退避5/10秒），分配和训练不重试。远端采用独立Python3.12、固定Torch/cu126与LeRobot；五步batch8资源检查通过后，仅一次startup5/FP32训练，优化循环到5000步或600秒先到即停，保存2115步诊断快照。控制器分配后的总预算最多30分钟，另保留最多120秒释放窗口。
+
+默认训练CLI仍限制120秒；600秒仅由`fit --extended-fit-budget`显式开启，物理evaluate预算和原七项离线门控保持。只有最终policy.pt参与准入；snapshot不替代失败最终模型。训练进程完成、文件回收、离线准入、物理抓放分别验收，更多GPU时间不预先保证成功。实际结果见[学习记录](LEARNING.md)。
+
 ## 运行
 
 前提：本机 `colab` CLI 已登录且 `colab sessions` 成功。开发机 CLI 0.6.0，当前不要求 GPU。

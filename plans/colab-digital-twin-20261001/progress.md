@@ -2,7 +2,33 @@
 
 ## Current
 
-2026-10-06 唯一新A采用原startup5、不启用local-balance，从头训练2115步/119.205s优化，峰值332MiB、重载误差0；复用原B的2115步权重。A前150条专家观测肘轴h0同向率100%、MAE0.206395mrad，B为40%/1.090709mrad；B其余四轴h0 MAE更小。A首帧肘幅仅专家0.686%，原7项门控仍有3项失败，未进入物理回合。 等步数比较已完成，已消除旧3126与2115步数不一致这一项混杂；单seed加历史B仍不足以证明唯一因果或采样普遍优劣。前置肘轴逐槽/覆盖只读审计也已完成：不是完全漏采，近q邻域未发现肘轴正负标签竞争。root保留两份失败模型与原阈值；接续应据五轴逐槽误差选择下一项最小验证，尚未决定或执行新的训练。S7e仍未通过，本轮止于离线，不补训B3126、不改安全界限。
+2026-10-06 按用户要求已通过Colab CLI完成唯一L4视觉ACT训练：5000步/171.180s优化，2115步诊断快照，峰值reserved332MiB。全部产物校验回收，真实unassign完成。同次训练的前150条专家观测h0五轴MAE均改善，原7项门控仍失败3项（首帧方向/幅度、首10拍方向），本轮物理not_run、S7e未过。后续有界训练优先Colab，根Codex先以冻结新模型的起步/收尾局部辨别为下一最短只读候选，不自动补训或放宽门槛。
+
+## 2026-10-06 Colab L4完成5000步，原起步门控仍未通过
+
+**范围与实现。** 最新用户要求“多用Colab CLI训练，进行下一步”，本轮明确采用原startup5、不启用local-balance，同四RGB、归一化、模型、batch8、FP32、seed0、随机初始化与fresh Adam1e-4。预置5000步或600秒优化先到即停，同run保存2115步；final policy.pt唯一候选，快照仅诊断，不挑快照替代失败最终权重。[预置范围](../../experiments/colab-twin/output/vision-colab-preflight-20261006/scope.json)、[网络恢复上限](../../experiments/colab-twin/output/vision-colab-preflight-20261006/transport-recovery-scope.json)、[代理范围](../../experiments/colab-twin/output/vision-colab-preflight-20261006/proxy-recovery-scope.json)均早于对应执行。
+
+新增[run_vision_colab.py](../../experiments/colab-twin/run_vision_colab.py)与[remote_vision_worker.py](../../experiments/colab-twin/remote_vision_worker.py)：复用固定Colab CLI0.6.0安全层、独立会话和Python3.12环境、上传白名单及8MiB分片、逐文件SHA、原子回收索引与真实释放。分片幂等传输每片最多3次尝试（初次＋2重试），分配/训练不重试。控制器本次总预算30分钟，worker1200秒、fit外层660秒；默认runner仍120秒，只有fit显式extended-fit-budget最多600秒。没有修改网络结构、损失、采样器、精度或物理守卫。78项相关CPU测试通过，含预算边界、坏包/错SHA拒绝、传输失败释放和worker超时清理；测试完成不代表任务通过。[测试日志](../../experiments/colab-twin/output/vision-colab-preflight-20261006/cpu-tests.log)。
+
+**网络与真实执行。** 第一次分配L4在第3片PUT遇ConnectTimeout，worker/训练未开始，实例已实际释放。第二次控制器在read-only check-connection失败，未分配实例。确认GNOME已有本机代理而进程无HTTP_PROXY/HTTPS_PROXY，第三次仅通过命令级代理执行成功；该次仍有一次上传和一次状态读取ReadTimeout，按有界规则恢复。总计3次控制器调用、2次实际分配、1次fit，无重复训练。不能由成功推出配额余额或网络唯一根因。[首次失败](../../experiments/colab-twin/output/vision-colab-startup5-20261006/delivery.json)、[分配前失败](../../experiments/colab-twin/output/vision-colab-startup5-recovery-20261006/delivery.json)、[成功与释放回执](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/delivery.json)。
+
+四RGB原字节输入全部核验，官方LeRobot e0d50211及ACT源码SHA与本机固定版本一致；CUDA五步batch8预检通过。L4唯一fit最终5000步/171.179632s优化，因step_limit停止；worker安装至打包前241.279s，控制器含传输/释放约9分36秒，三者不是同一计时。峰值reserved332MiB、同CPU保存重载差0，实际39988个chunk起点/1105次起步命中。最终`ea548c3152a7539210828c715952683b2b6d30dfe40aa579192efb3be2e7c730`，2115快照`bd8749b8198e06cfa7c84e23bf855cd3330339288716f33ba764f112c5f7b48e`。Compute Units消耗未读取，不声称免费或扣除数值。[训练报告](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/recovered/fit/report.json)、[环境实证](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/recovered/imports.json)。
+
+**原离线门控。** 严格加载本轮源码绑定的两模型，原门控规范字节保留；各150次batch1/no_grad本机CUDA前向，共300次/12.062s内部、15.628s外层，模型172张量/源码/四RGB在审计前后不变。只使用专家nominal raw0–149；0优化、渲染与物理积分。旧d4db保存数组仍为门控基线，没有以新云端快照改写阈值。首10拍方向错误从2115快照的14/50个轴观测降至最终1/50，但剩余错误在raw0腕旋。
+
+| h0，前150条专家观测MAE / mrad | 2115步快照 | 5000步最终 |
+| --- | ---: | ---: |
+| shoulder_pan | 0.511566 | 0.276773 |
+| shoulder_lift | 0.622766 | 0.045201 |
+| elbow | 0.156705 | 0.095949 |
+| wrist_flex | 1.163642 | 0.726564 |
+| wrist_roll | 0.577296 | 0.340449 |
+
+最终首帧五轴delta比依次为`0.080055 / 0.363609 / 0.208908 / 0.066753 / -0.006503`，其他四轴同向但不足原0.5下界，腕旋反向。原七项门控最终4项通过、3项失败；不能以平均改善代替首帧准入。h15各轴虽改善，但腕俯仰/腕旋MAE仍29.807/22.641mrad，不改用后部槽位执行。[完整报告与图](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/REPORT.md)、[原门控](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/offline-gate-spec.json)、[最终逐槽与切片](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/offline/final-report.json)、[快照](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/offline/step2115-report.json)。
+
+[独立Codex CPU复核](../../experiments/colab-twin/output/vision-colab-startup5-proxy-20261006/independent-review/report.json)721项断言通过，重新计算切片与16槽指标最大差7.11e-14；核对数据/源码/回收清单/权重SHA并独立重建抽样。raw0/raw1最终作为起点出现25/20次、快照9/10次；不是完全未采。该审核0模型加载/前向/GPU/优化/物理，不能替代根审计的模型参数不变检查。
+
+**Remaining / owner / 最短入口。** 同一run增加步数改善本轮局部拟合，但不证明图像语义或纯策略抓放；本地/云端2115数值不同，不声称跨设备逐位确定或唯一因果。最终门控失败，未追加训练/物理，S7e仍未过。根Codex下一候选先冻结5000步模型检查首帧近q起步/收尾动作辨别，再决定后续变量；未做。既有遗留22项/index/顶层README/原MJCF保持，runtime、权重、日志继续Git排除。未来训练优先Colab入口；本地准备数据、低成本审核与通过门控后的MuJoCo验收继续。
 
 ## 2026-10-06 startup5等2115步对照完成，原离线门控仍未通过
 
