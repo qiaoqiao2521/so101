@@ -2,7 +2,21 @@
 
 ## Current
 
-2026-10-06 夹爪扫掠、下降与跟踪只读检查完成，原1mm余量及生产代码保持。确认闭爪中间jaw未被预检覆盖，dev-05/07下降端点仍不通过，dev-09原参考仅剩94.388µm查询储备。独立顶点位移核验发现legacy CCD距离跳变超出几何移动上界，不能据最大查询差设置跟踪补偿。下一候选先核距离可靠性，再补完整动作预检和抓取路线；均未实施。P2仍6/10，20正常＋20扰动未运行，ACT仍暂停新增训练。 [只读核验报告](../../experiments/colab-twin/output/visual-grasp-clearance-audit-20261006/REPORT.md)。
+2026-10-07 有界静态距离交叉验证完成，生产flag/cap和原安全阈值保持。四个原报错pair的低于1mm查询已被独立模型几何参照证伪：dev-01/09盘底距6.348/10.021mm，dev-05侧壁下界10.158mm，dev-07盘底距10.098mm。native原yaw回归也有经证明的分离假零值，不能直接切换。下一候选收敛为legacy局部10mm查询的贴阈值/接触/穿透负例验证，尚未实施；闭爪扫掠预检仍待修复，P2仍6/10，20＋20未运行，ACT暂停新增训练。 [本轮报告](../../experiments/colab-twin/output/visual-grasp-distance-crosscheck-20261007/REPORT.md)。
+
+## 2026-10-07 有界静态距离交叉验证完成
+
+用户ok接续静态交叉核验。基线5fecb00，固定前次16个关键姿态、原285对碰撞几何，比较legacy/native及10/20/50/100mm诊断cap；生产flag/cap、原1mm机械臂/0.2mm持物/0.003rad偏置及20ms/2ms保持。原yaw回归继续2mm余量、jaw0.35rad、35次迭代/tol1e-6。没有积分/reset/渲染/训练/云端/实体或新物理回合。
+
+独立参照使用原编译mesh凸包支持顶点与有限盒面；投影在面内时下界可实现，否则只给上下界。16姿态×5 pick箱体的80个活动指爪pair下界全部>1mm：16个floor精确模型证书、64壁对界；另2个native零值pair的面证书，共82对、18精确证书。原四报错pair与独立参照不符：dev-01 floor0.931→6.347763mm；dev-09 floor0.981→10.021287mm；dev-05 wall−1.842→下界10.157617mm；dev-07 floor0.654→10.098390mm。这是模型几何，不是实物标定，也不证明整条动作安全。原报错数值不能继续作为贴盘、穿盘或跟踪储备依据。
+
+同输入cap对照：legacy四cap低于1mm姿态数0/0/0/6，native为2/7/13/15，分母均16。legacy局部10mm值得保留为下一候选，但只放行这组保存姿态，尚无贴阈值、接触或穿透负例，不能认定可靠或任务成功。cap是查询范围，原安全阈值不随cap改变。[同版本官方API边界](https://mujoco.readthedocs.io/en/3.3.7/APIreference/APIfunctions.html#mj-geomdistance)。
+
+原15点yaw回归legacy15/15，native14/15；yaw−0.2142857142857144的lower_arm1/gripper0返回0，独立分离下界88.300193mm。+1µrad有限邻点另有base0/upperarm1假零值，分离下界50.695979mm。旧注释“五个wrist/jaw零值”模式未复现，不能混写；legacy稳定yaw距离也低于独立下界约88.317µm。两代表姿态各285对在kinematics→静态forward、memory flag→XML enable内存编译后距离和全部witness完全相同，排除这两类方法误用，不定位GJK/EPA唯一分支，也不推广其它版本。
+
+[完整报告](../../experiments/colab-twin/output/visual-grasp-distance-crosscheck-20261007/REPORT.md)及[425项收尾复算](../../experiments/colab-twin/output/visual-grasp-distance-crosscheck-20261007/closeout-verification.json)保留证书、query/witness数组、原回归、内存fixture、方法来源及图表。四项实际报告合计43620次距离查询；独立几何参照0CCD，方法对照仅两次静态forward。67份顶层Python（含测试）、原XML/13STL、旧物理结果和规范工作树25保护路径保持。输出继续Git忽略，仅更新既有SpecMesh。采用Wiki按当前任务选择验收依据，不将模型静态证据扩为自由物体抓放和回位通过。
+
+**Remaining / Next：** 根Codex执行局部10mm候选的有界贴阈值/接触/穿透负例验证，通过后再考虑接回完整q6/jaw扫掠预检。当前不改生产flag/cap/安全余量、抓取高度或下降端点，不以原异常距离重设跟踪补偿。原闭爪预检缺口和FK弯曲仍成立，修复未实施；P2仍6/10，20＋20未准入，ACT暂停新增训练。
 
 ## 2026-10-06 闭爪扫掠下降跟踪只读核验完成
 

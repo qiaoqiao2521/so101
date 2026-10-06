@@ -1,5 +1,14 @@
 # Findings
 
+## 2026-10-07 原报错pair被独立几何证伪，保留局部查询候选
+
+原四个失败pair在选定姿态的legacy查询均低于1mm，但独立模型参照为dev-01 floor6.347763mm、dev-09 floor10.021287mm、dev-05 wall下界10.157617mm、dev-07 floor10.098390mm。不能再把原0.931/0.981/−1.842/0.654mm作为实际贴盘、穿盘或跟踪储备结论。16姿态的80个活动指爪/料盘pair下界均>1mm；只覆盖这些pair与姿态，不覆盖全285对或完整路径，不将旧P2改判通过。
+
+legacy 10/20/50mm cap在同16姿态均无低于1mm查询，100mm原cap有6个；native对应2/7/13/15个，且原15点yaw回归有经独立凸包分离界证实的假零值。两代表姿态的静态forward与重新编译对照exact，排除这两类调用状态误用。稳定或更大距离不等于准确，cap截断值也不是远处真距。[官方API边界](https://mujoco.readthedocs.io/en/3.3.7/APIreference/APIfunctions.html#mj-geomdistance)。
+
+局部legacy10mm查询仅作为下一候选，尚缺贴阈值/接触/穿透负例；生产flag/cap和原安全阈值不变，不直接切native、不据异常query抬高抓取姿态。通过候选负例后再补完整q6/jaw扫掠，FK路线弯曲与扫掠缺口仍保留。根Codex负责接续，P2仍6/10、20＋20未运行、ACT暂停新增训练。[证书、数组、原回归和方法审核](../../experiments/colab-twin/output/visual-grasp-distance-crosscheck-20261007/REPORT.md)及425项收尾复算保持原源/模型/输入；静态模型核验不替代完整物理任务。
+
+
 ## 2026-10-06 距离可靠性成为扫掠下降与跟踪修正前置
 
 三项只读审查完成，原1mm/0.2mm/0.003rad及生产代码保持。预检只插值五轴并固定目标jaw，遗漏闭爪中间角度；24条扫掠58224样本复现dev-01中间查询小于1mm。该覆盖缺口与距离算法的可靠性是两个独立问题。
