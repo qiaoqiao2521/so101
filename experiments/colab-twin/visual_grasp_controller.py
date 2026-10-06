@@ -11,7 +11,8 @@ import math
 import mujoco
 import numpy as np
 
-from collision_scene import CollisionChecker
+from conservative_collision import ConservativeCollisionChecker as CollisionChecker
+from configuration_sweep import validate_configuration_path
 from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
@@ -146,6 +147,7 @@ class VisualGraspController:
         self.released_query = released_query
         self.release_record = None
         self.plan_reports = []
+        self.sweep_reports = []
         self._plan_approach(self.initial_q[:5])
         self._set_motion(self.approach_path, .5, 0.)
         self.world = []
@@ -191,7 +193,16 @@ class VisualGraspController:
         for points, jaw in (([self.approach, self.down], .5), ([self.down, self.lift], .015)):
             if not validate_joint_path(points, lambda q: self._arm_valid(q, jaw), .005)['valid']:
                 raise ControllerFailure('grasp_leg_collision')
+        sweep = self._configuration_sweep(np.r_[self.down, .5], np.r_[self.down, .015])
+        self.sweep_reports.append({'stage': 'planned_closure', **sweep})
+        if not sweep['valid']:
+            raise ControllerFailure('grasp_closure_sweep_invalid')
         self.approach_path = np.asarray(plan['path'])
+
+    def _configuration_sweep(self, start, end):
+        return validate_configuration_path(
+            start, end, lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'],
+            arm_resolution_rad=.005, jaw_resolution_rad=.002, max_samples=4096)
 
     def _set_motion(self, points, jaw, elapsed):
         self.points = np.asarray(points, dtype=float)
@@ -410,6 +421,10 @@ class VisualGraspController:
             self.stage = 'descend'
             self._set_motion([q6[:5], self.down], .5, elapsed)
         elif self.stage == 'descend':
+            sweep = self._configuration_sweep(q6, np.r_[self.down, .015])
+            self.sweep_reports.append({'stage': 'measured_closure', **sweep})
+            if not sweep['valid']:
+                raise ControllerFailure('measured_closure_sweep_invalid')
             self._set_dwell('close', self.down, .015, elapsed, 6.)
         elif self.stage == 'close':
             origin, rotation, _ = self._fk(q6)
@@ -532,10 +547,15 @@ class VisualGraspController:
                 valid = self._released_valid
             else:
                 valid = lambda q: self._arm_valid(q, self.jaw)
-            if not validate_joint_path([q6[:5], self.reference[:5]], valid, .005)['valid']:
+            # Query achieved geometry, including the measured jaw. The loaded
+            # servo setpoint can differ from this reference by a fixed bias.
+            sweep = self._configuration_sweep(q6, self.reference)
+            self.last_sweep_report = sweep
+            if (not sweep['valid'] or
+                    not validate_joint_path([q6[:5], self.reference[:5]], valid, .005)['valid']):
                 if self.stage == 'approach' and not self.target_frozen and estimate is not None:
                     self.replan_approach(q6, elapsed, estimate)
-                    command = np.r_[q6[:5], .5]
+                    command = q6.copy()
                     self.reference = command.copy()
                 else:
                     raise ControllerFailure('current_pose_command_chord_invalid')

@@ -16,11 +16,12 @@ os.environ.setdefault('MUJOCO_GL', 'egl')
 import mujoco
 import numpy as np
 from PIL import Image, ImageDraw
-from collision_scene import CollisionChecker
+from conservative_collision import ConservativeCollisionChecker as CollisionChecker
 from grasp_episode import build_contact_scene, solve_pinch_ik
 from learning_env import PhysicalTaskMonitor, diagnostics
 from released_object import ReleasedObjectQuery, ReleaseAudit, robot_target_force
 from visual_localization import TopDownCalibration, localize_green_target
+from support_native import library_metadata
 
 SOURCE = Path(__file__).resolve().parents[2]/'workspaces/so101_ws/src/so101_mujoco/models/so101.xml'
 
@@ -35,7 +36,28 @@ def digest(path):
 
 def source_hashes():
     root = Path(__file__).parent
-    return {p.name: digest(p) for p in root.glob('*.py') if not p.name.startswith('test_')}
+    sources = list(root.glob('*.py')) + list(root.glob('support_kernel.cpp'))
+    return {p.name: digest(p) for p in sources if not p.name.startswith('test_')}
+
+
+def native_binding():
+    metadata = library_metadata()
+    return {key: metadata[key] for key in ('kernel_sha256', 'library_sha256',
+                                           'compiler_identity_sha256', 'flags_sha256')}
+
+
+def record_collision_backend(status, checker):
+    """Preserve case evidence when provenance verification fails at closeout."""
+    status['collision_backend'] = {'method':'conservative_support_projection',
+                                   'distance_kind':checker.distance_kind,
+                                   'margin_m':checker.margin_m}
+    try:
+        status['collision_backend']['library'] = library_metadata()
+    except RuntimeError as error:
+        status.update(passed=False, safety_stop=True, native_provenance_error=str(error))
+        status['failure_reason'] = status.get('failure_reason') or 'native_runtime_provenance_invalid'
+    finally:
+        checker.native.close()
 
 
 def reset_scene(model, rig, xy):
@@ -137,7 +159,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     out.mkdir(exist_ok=False)
     start_wall=time.monotonic()
     deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
-    rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None
+    rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None; checker=None
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
     release_audit=ReleaseAudit(); release_samples=[]; reset_record={}
     status={'passed':False,'safety_stop':False,'failure_reason':None}
@@ -181,7 +203,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             last=controller.update(before,data.qvel[:6].copy(),elapsed,estimate=estimate)
             if last['status']=='failed':
                 if last['failure_reason'] in ('measured_arm_configuration_invalid','current_pose_command_chord_invalid',
-                                              'measured_separation_invalid','measured_released_object_clearance_invalid'):
+                                              'measured_closure_sweep_invalid','measured_separation_invalid',
+                                              'measured_released_object_clearance_invalid'):
                     status['safety_stop']=True
                 raise RuntimeError('controller: '+str(last['failure_reason']))
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit_after_controller')
@@ -291,6 +314,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             status['release_plan']=controller.release_record
             status['servo_transitions']=controller.servo_transitions
             write_json(out/'planning.json',controller.plan_reports)
+            write_json(out/'jaw-sweeps.json',controller.sweep_reports)
+            controller.checker.native.close()
+        if checker is not None:
+            record_collision_backend(status, checker)
         write_json(out/'trajectory.json',rows)
         write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)
@@ -361,6 +388,8 @@ def check_phase_prerequisites(root, phase, variant, binding, source_sha256):
         elif (phase=='p3' and name.startswith('p2')) or (phase=='p2' and name.startswith('p1')):
             if report['code_sha256']!=source_hashes():
                 raise ValueError('Implementation changed after development gate')
+            if report.get('native_binding') != native_binding():
+                raise ValueError('Native collision runtime changed after development gate')
         continuation=root/'continuation.json'
         if name != 'p0' and continuation.is_file() and report.get('continuation_sha256')!=digest(continuation):
             raise ValueError('Continuation criteria changed after prerequisite')
@@ -374,7 +403,8 @@ def check_phase_prerequisites(root, phase, variant, binding, source_sha256):
     if phase=='p3':
         lock=root/'final-test-started.json'
         with lock.open('x') as stream:
-            json.dump({'variant':variant,'protocol_sha256':binding,'code_sha256':source_hashes()},stream,indent=2)
+            json.dump({'variant':variant,'protocol_sha256':binding,'code_sha256':source_hashes(),
+                       'native_binding':native_binding()},stream,indent=2)
 
 
 def main():
@@ -404,19 +434,28 @@ def main():
     before_model=digest(args.source)
     started=time.monotonic()
     report={'passed':False,'complete':False}
+    before_native = None
     try:
         if args.phase=='p0':
             report=run_p0(args.source,out,protocol,started+remaining)
         else:
+            before_native = native_binding()
             report=run_physical_phase(args.source,args.root,out,protocol,args.phase,args.variant,started+remaining)
     except Exception as error:
         report.update(error_type=type(error).__name__,error=str(error))
     finally:
         elapsed=time.monotonic()-started
+        if before_native is not None:
+            try:
+                if native_binding() != before_native:
+                    report.update(passed=False,error='Native collision runtime changed during phase')
+            except RuntimeError as error:
+                report.update(passed=False,error='Native collision runtime unavailable: '+str(error))
         if (source_hashes()!=before_hashes or digest(args.source)!=before_model
                 or (continuation_hash is not None and digest(continuation)!=continuation_hash)):
             report.update(passed=False,error='Code or model changed during phase')
         report.update(phase=args.phase,variant=args.variant,wall_s=elapsed,protocol_sha256=binding,
+                      native_binding=before_native,
                       continuation_sha256=continuation_hash,
                       source_sha256=digest(args.source),code_sha256=source_hashes())
         write_json(out/'report.json',report)
