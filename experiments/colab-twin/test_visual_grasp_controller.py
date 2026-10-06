@@ -149,6 +149,29 @@ class VisualControllerTests(unittest.TestCase):
         with self.assertRaisesRegex(module.ControllerFailure, 'outside_visible'):
             c.replan_approach(c.initial_q, 0, None)
 
+    def test_return_shortcut_cannot_cut_through_obstacle(self):
+        points=np.array([[0.,0,0,0,0],[0,1.,0,0,0],[1.,1.,0,0,0],[1.,0,0,0,0]])
+        valid=lambda q: not (.2<q[0]<.8 and q[1]<.8)
+        result=module.shorten_path(points,valid)
+        self.assertGreater(len(result),2)
+        self.assertTrue(module.validate_joint_path(result,valid,.005)['valid'])
+        clear=module.shorten_path(points,lambda q:True)
+        np.testing.assert_array_equal(clear,points[[0,-1]])
+
+    def test_separation_cannot_return_below_recorded_high_water(self):
+        c=self.controller();q=c.initial_q
+        c.separation_pinch=q[:3].copy()
+        c.separation_floors={'pad_gripper':-.00105}
+        c.separation_vertices={'pad_gripper':np.zeros((8,3))}
+        c.separation_high_z={'pad_gripper':np.full(8,.002)}
+        c.released_query=Mock()
+        c.released_query.distances.return_value={'pad_gripper':-.001}
+        c.released_query.pad_vertices.return_value={'pad_gripper':np.tile([0,0,.0005],(8,1))}
+        self.assertFalse(c._separation_valid(q[:5]))
+        c.released_query.pad_vertices.return_value={'pad_gripper':np.tile([0,0,.002],(8,1))}
+        self.assertTrue(c._separation_valid(q[:5]))
+        self.assertFalse(c._released_valid(q[:5]))  # No contact exception on return.
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw
 from collision_scene import CollisionChecker
 from grasp_episode import build_contact_scene, solve_pinch_ik
 from learning_env import PhysicalTaskMonitor, diagnostics
+from released_object import ReleasedObjectQuery, ReleaseAudit, robot_target_force
 from visual_localization import TopDownCalibration, localize_green_target
 
 SOURCE = Path(__file__).resolve().parents[2]/'workspaces/so101_ws/src/so101_mujoco/models/so101.xml'
@@ -138,6 +139,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
     rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
+    release_audit=ReleaseAudit()
     status={'passed':False,'safety_stop':False,'failure_reason':None}
     try:
         model,rig,_=build_contact_scene(source,out/'scene',noslip_iterations=10)
@@ -153,7 +155,9 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         observations.append(first.to_dict())
         save_overlay(out/'initial-localization.png',rgb,first)
         if not first.valid: raise RuntimeError('initial_localization_rejected: '+first.reason)
-        controller=VisualGraspController(rig,first.xy_m,data.qpos[:6].copy(),seed=0,target_timestamp_s=0.0)
+        released_query=ReleasedObjectQuery(out/'scene/grasp-planning.xml')
+        controller=VisualGraspController(rig,first.xy_m,data.qpos[:6].copy(),seed=0,target_timestamp_s=0.0,
+                                         released_query=released_query)
         if video:
             writer=imageio.get_writer(out/'grasp-place.mp4',fps=25,codec='libx264',quality=8)
         time0=float(data.time); tick=0; next_image=.5
@@ -173,7 +177,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             before=data.qpos[:6].copy()
             last=controller.update(before,data.qvel[:6].copy(),elapsed,estimate=estimate)
             if last['status']=='failed':
-                if last['failure_reason'] in ('measured_arm_configuration_invalid','current_pose_command_chord_invalid'):
+                if last['failure_reason'] in ('measured_arm_configuration_invalid','current_pose_command_chord_invalid',
+                                              'measured_separation_invalid','measured_released_object_clearance_invalid'):
                     status['safety_stop']=True
                 raise RuntimeError('controller: '+str(last['failure_reason']))
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit_after_controller')
@@ -197,10 +202,19 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                     np.any(command<bounds[:,0]) or np.any(command>bounds[:,1])):
                 status['safety_stop']=True
                 raise RuntimeError('unsafe_command')
+            if last['stage']=='release':
+                release_audit.start(data.qpos[6:8])  # Before the first opening command.
             data.ctrl[:]=command
             obstacle=model.geom('approach_obstacle').id
+            release_force_peak=0.
             for _ in range(10):
                 mujoco.mj_step(model,data)
+                if release_audit.anchor is not None:
+                    force=robot_target_force(model,data)
+                    release_force_peak=max(release_force_peak,force)
+                    release_audit.update(data.qpos[6:8],force,float(data.time)-time0)
+                    if release_audit.failure_reason:
+                        break
                 if any(obstacle in (c.geom1,c.geom2) for c in data.contact):
                     obstacle_steps+=1
                     break  # Abort at the first 2 ms contact, before another integration.
@@ -208,10 +222,16 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             row=diagnostics(model,data,checker)
             row.update(stage=last['stage'],elapsed_s=float(data.time)-time0,
                        q6=data.qpos[:6].tolist(),command=command.tolist(),
+                       qvel6=data.qvel[:6].tolist(),controller_done=last['done'],
                        policy_command=np.asarray(last['command']).tolist(),perturbation=injected,
-                       target_frozen=last['target_frozen'],replans=last['replans'])
+                       target_frozen=last['target_frozen'],replans=last['replans'],
+                       robot_target_force_peak_n=release_force_peak,
+                       released_detached=release_audit.detached)
             rows.append(row)
             status=monitor.update(row)
+            if release_audit.failure_reason:
+                status['safety_stop']=True
+                raise RuntimeError(release_audit.failure_reason)
             if injected and pulse_count==10 and pulse_after is None:
                 pulse_after=data.qpos[:6].tolist()
             if writer is not None and tick%2==0:
@@ -228,7 +248,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             raise TimeoutError('simulation_time_limit')
         if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit')
         status=monitor.report()
-        status['passed']=bool(status['passed'] and last['done'] and not obstacle_steps and
+        status['passed']=bool(status['passed'] and last['done'] and not obstacle_steps and release_audit.report()['passed'] and
                               (not case['perturbed'] or pulse_count==10))
         if not status['passed'] and not status['failure_reason']:
             status['failure_reason']='physical_task_not_complete'
@@ -247,6 +267,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         if writer is not None: writer.close()
         if renderer is not None: renderer.close()
         status.update(case=case,wall_s=time.monotonic()-start_wall,steps=len(rows),
+                      release_audit=release_audit.report(),
                       simulation_s=rows[-1]['elapsed_s'] if rows else 0.,
                       pulse_steps=pulse_count,pulse_before_q6=pulse_before,pulse_after_q6=pulse_after,
                       obstacle_contact_steps=obstacle_steps,video_frames=frame_count,
@@ -256,6 +277,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             status.update(passed=False,failure_reason='wall_time_limit')
         if controller is not None:
             status['target_handover']=controller.freeze_record
+            status['release_plan']=controller.release_record
             write_json(out/'planning.json',controller.plan_reports)
         write_json(out/'trajectory.json',rows)
         write_json(out/'visual-observations.json',observations)
@@ -323,9 +345,12 @@ def check_phase_prerequisites(root, phase, variant, binding, source_sha256):
             for f in ('visual_localization.py',):
                 if report['code_sha256'][f]!=digest(Path(__file__).parent/f):
                     raise ValueError('Perception changed after P0')
-        elif phase=='p3' and name.startswith('p2'):
+        elif (phase=='p3' and name.startswith('p2')) or (phase=='p2' and name.startswith('p1')):
             if report['code_sha256']!=source_hashes():
                 raise ValueError('Implementation changed after development gate')
+        continuation=root/'continuation.json'
+        if name != 'p0' and continuation.is_file() and report.get('continuation_sha256')!=digest(continuation):
+            raise ValueError('Continuation criteria changed after prerequisite')
     if variant=='revision1':
         note=root/'revision-reason.json'
         if not note.is_file():
@@ -347,6 +372,14 @@ def main():
     parser.add_argument('--source',type=Path,default=SOURCE)
     args=parser.parse_args()
     protocol,binding=load_protocol(args.root)
+    continuation=args.root/'continuation.json'
+    continuation_hash=digest(continuation) if continuation.is_file() else None
+    if continuation_hash is not None:
+        if (args.root/'continuation.sha256').read_text().strip()!=continuation_hash:
+            raise ValueError('Continuation scope changed after freeze')
+        scope=json.loads(continuation.read_text())
+        if scope['max_new_physical_variants']==1 and args.variant!='baseline':
+            raise ValueError('Continuation permits only one physical variant')
     check_phase_prerequisites(args.root,args.phase,args.variant,binding,digest(args.source))
     ledger_path=args.root/'runtime-budget.json'
     ledger=json.loads(ledger_path.read_text()) if ledger_path.exists() else {'spent_wall_s':0,'runs':[]}
@@ -367,9 +400,11 @@ def main():
         report.update(error_type=type(error).__name__,error=str(error))
     finally:
         elapsed=time.monotonic()-started
-        if source_hashes()!=before_hashes or digest(args.source)!=before_model:
+        if (source_hashes()!=before_hashes or digest(args.source)!=before_model
+                or (continuation_hash is not None and digest(continuation)!=continuation_hash)):
             report.update(passed=False,error='Code or model changed during phase')
         report.update(phase=args.phase,variant=args.variant,wall_s=elapsed,protocol_sha256=binding,
+                      continuation_sha256=continuation_hash,
                       source_sha256=digest(args.source),code_sha256=source_hashes())
         write_json(out/'report.json',report)
         ledger['spent_wall_s']+=elapsed

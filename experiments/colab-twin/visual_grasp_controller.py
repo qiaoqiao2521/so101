@@ -12,7 +12,7 @@ import mujoco
 import numpy as np
 
 from collision_scene import CollisionChecker
-from grasp_episode import PINCH_POINT, solve_pinch_ik
+from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
 from visual_localization import TopDownCalibration
@@ -74,10 +74,36 @@ def sample_minimum_jerk(points, fraction):
     return points[segment]+alpha*(points[segment+1]-points[segment])
 
 
+def motion_duration(points):
+    return max(2., float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())*1.875/.3)
+
+
+def shorten_path(points, valid, max_checks=128):
+    """Greedily shortcut only independently validated edges, with bounded work."""
+    points = np.asarray(points, dtype=float)
+    result = [points[0]]
+    index = 0
+    checks = 0
+    while index < len(points)-1:
+        next_index = index+1
+        for candidate in range(len(points)-1, index+1, -1):
+            if checks >= max_checks:
+                break
+            checks += 1
+            if validate_joint_path([points[index], points[candidate]], valid, .005)['valid']:
+                next_index = candidate
+                break
+        result.append(points[next_index])
+        index = next_index
+    if not validate_joint_path(result, valid, .005)['valid']:
+        raise ControllerFailure('shortened_return_path_invalid')
+    return np.asarray(result)
+
+
 class VisualGraspController:
     """Only the six-joint planning model, encoder arrays and RGB estimates enter."""
     def __init__(self, rig, target_xy, initial_q6, *, seed=0, target_timestamp_s=0.,
-                 estimate_ttl_s=1., payload_uncertainty_m=.002):
+                 estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None):
         if rig.nq != 6 or rig.nv != 6:
             raise ValueError('Use the six-joint planning rig without a free target')
         if (not np.isfinite(estimate_ttl_s) or not 0 < estimate_ttl_s <= 1
@@ -113,6 +139,8 @@ class VisualGraspController:
         self.transport_index = 0
         self.payload_relative = None
         self.payload_rotation = None
+        self.released_query = released_query
+        self.release_record = None
         self.plan_reports = []
         self._plan_approach(self.initial_q[:5])
         self._set_motion(self.approach_path, .5, 0.)
@@ -164,8 +192,7 @@ class VisualGraspController:
     def _set_motion(self, points, jaw, elapsed):
         self.points = np.asarray(points, dtype=float)
         self.jaw = float(jaw)
-        length = np.linalg.norm(np.diff(self.points, axis=0), axis=1).sum()
-        self.duration = max(2., float(length)*1.875/.3)
+        self.duration = motion_duration(self.points)
         self.stage_started = float(elapsed)
 
     def _set_dwell(self, stage, q5, jaw, elapsed, duration):
@@ -275,6 +302,80 @@ class VisualGraspController:
             self.transport.append(np.asarray(points))
         self.transport_index = 0
 
+    def _released_valid(self, q5, jaw=.5):
+        return (self._arm_valid(q5, jaw)
+                and min(self.released_query.distances(np.r_[q5, jaw]).values()) >= .001)
+
+    def _separation_valid(self, q5, jaw=.5):
+        if not self._arm_valid(q5, jaw):
+            return False
+        _, _, pinch = self._fk(np.r_[q5, jaw])
+        if (np.linalg.norm(pinch[:2]-self.separation_pinch[:2]) > .0002
+                or pinch[2] < self.separation_pinch[2]-.0002):
+            return False
+        distances = self.released_query.distances(np.r_[q5, jaw])
+        if not all(distance >= self.separation_floors.get(name, .001)
+                   for name, distance in distances.items()):
+            return False
+        vertices = self.released_query.pad_vertices()
+        return all(np.max(np.abs(vertices[name][:,:2]-baseline[:,:2])) <= .0002
+                   and np.min(vertices[name][:,2]-self.separation_high_z[name]) >= -.00005
+                   for name, baseline in self.separation_vertices.items())
+
+    def _return_path(self, start):
+        direct = [start, self.initial_q[:5]]
+        if validate_joint_path(direct, self._released_valid, .005)['valid']:
+            return np.asarray(direct), 'validated_direct'
+        plan = plan_joint_path(start, self.initial_q[:5], self.checker.bounds,
+                               self._released_valid, seed=self.seed, timeout_s=10, resolution_rad=.005)
+        self.plan_reports.append(plan)
+        if plan['status'] != 'solved':
+            raise ControllerFailure('released_object_return_planning_failed')
+        return shorten_path(plan['path'], self._released_valid), 'validated_ompl_shortcuts'
+
+    def _plan_separation(self, q6, elapsed):
+        if q6[5] < .45:
+            raise ControllerFailure('release_jaw_not_open')
+        _, _, self.separation_pinch = self._fk(q6)
+        distances = self.released_query.distances(q6)
+        # Inflation may overlap a pad that is touching the released object.
+        # This exception is local to vertical separation and never permits
+        # deeper penetration or lateral return through the object.
+        self.separation_floors = {}
+        for name, distance in distances.items():
+            if distance < .001:
+                if name not in PAD_NAMES or distance < -.003:
+                    raise ControllerFailure('release_initial_overlap_not_allowed')
+                self.separation_floors[name] = distance-.00005
+        self.separation_vertices = {name:v for name,v in self.released_query.pad_vertices().items()
+                                    if name in self.separation_floors}
+        self.separation_high_z = {name:v[:,2].copy() for name,v in self.separation_vertices.items()}
+        points = [q6[:5].copy()]
+        previous = distances
+        for dz in np.linspace(0, .037, 14)[1:]:
+            q = solve_pinch_ik(self.rig, self.separation_pinch+[0, 0, dz], points[-1])
+            if not validate_joint_path([points[-1], q], self._separation_valid, .002)['valid']:
+                raise ControllerFailure('vertical_separation_invalid')
+            current = self.released_query.distances(np.r_[q, .5])
+            if any(current[name] < min(previous[name], .001)-.00005
+                   for name in self.separation_floors):
+                raise ControllerFailure('vertical_separation_deepens_contact')
+            previous = current
+            points.append(q)
+        if not self._released_valid(points[-1]):
+            raise ControllerFailure('vertical_separation_did_not_clear')
+        return_path, method = self._return_path(points[-1])
+        required_s = motion_duration(points)+.6+motion_duration(return_path)+.6+1.5+.6+.1
+        if elapsed+required_s > 90:
+            raise ControllerFailure('insufficient_time_for_safe_return')
+        self.release_record.update(separation_path=np.asarray(points).tolist(),
+                                   initial_distances_m=distances, separation_floors_m=self.separation_floors.copy(),
+                                   return_method=method, planned_return_path=return_path.tolist(),
+                                   predicted_completion_s=elapsed+required_s)
+        self.plan_reports.append({'stage':'release_return', **self.release_record})
+        self.stage = 'separate'
+        self._set_motion(points, .5, elapsed)
+
     def _transition(self, q6, elapsed):
         if self.stage == 'approach':
             if not self.target_frozen:
@@ -301,16 +402,27 @@ class VisualGraspController:
                 self.stage = 'lower' if self.transport_index == len(self.transport)-1 else 'transport'
                 self._set_motion(self.transport[self.transport_index], .015, elapsed)
             else:
+                if self.released_query is None:
+                    raise ControllerFailure('released_object_query_missing')
+                origin, rotation, _ = self._fk(q6)
+                center = origin+rotation @ self.payload_relative
+                center[2] = .010  # Known tray support height; no execution pose.
+                self.released_query.freeze(center)
+                self.release_record = {'estimated_center_m':center.tolist(),
+                                       'uncertainty_m':self.released_query.uncertainty_m,
+                                       'estimate_frozen_at_s':elapsed,
+                                       'source':'pre-opening FK and carried estimate; known support height'}
                 self._set_dwell('release', self.points[-1], .5, elapsed, 6.)
         elif self.stage == 'release':
-            plan = plan_joint_path(q6[:5], self.initial_q[:5], self.checker.bounds,
-                                   lambda q: self._arm_valid(q, .5), seed=self.seed,
-                                   timeout_s=10, resolution_rad=.015)
-            self.plan_reports.append(plan)
-            if plan['status'] != 'solved':
-                raise ControllerFailure('retreat_planning_failed')
+            self._plan_separation(q6, elapsed)
+        elif self.stage == 'separate':
+            points, method = self._return_path(q6[:5])
+            if elapsed+motion_duration(points)+.6+1.5+.6+.1 > 90:
+                raise ControllerFailure('insufficient_time_for_safe_return')
+            self.plan_reports.append({'stage':'return_from_measured_pose', 'method':method,
+                                      'path':points.tolist(), 'duration_s':motion_duration(points)})
             self.stage = 'retreat'
-            self._set_motion(plan['path'], .5, elapsed)
+            self._set_motion(points, .5, elapsed)
         elif self.stage == 'retreat':
             self._set_dwell('settle', self.initial_q[:5], .5, elapsed, 1.5)
         elif self.stage == 'settle':
@@ -327,6 +439,21 @@ class VisualGraspController:
                 return self._result(q6)
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
                 raise ControllerFailure('measured_arm_configuration_invalid')
+            if self.stage in ('retreat', 'settle') and not self._released_valid(q6[:5], q6[5]):
+                raise ControllerFailure('measured_released_object_clearance_invalid')
+            if self.stage == 'separate':
+                if not self._separation_valid(q6[:5], q6[5]):
+                    raise ControllerFailure('measured_separation_invalid')
+                distances = self.released_query.distances(q6)
+                vertices = self.released_query.pad_vertices()
+                for name in self.separation_high_z:
+                    self.separation_high_z[name] = np.maximum(self.separation_high_z[name], vertices[name][:,2])
+                for name in list(self.separation_floors):
+                    # Once clear, the initial-contact exception cannot return.
+                    if distances[name] >= .001:
+                        del self.separation_floors[name]
+                    else:
+                        self.separation_floors[name] = max(self.separation_floors[name], distances[name]-.00005)
             if not self.target_frozen:
                 if elapsed-self.target_timestamp > self.estimate_ttl:
                     raise ControllerFailure('visual_estimate_expired')
@@ -356,6 +483,10 @@ class VisualGraspController:
             command = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
             if self.stage in ('transport', 'lower'):
                 valid = self._payload_valid
+            elif self.stage == 'separate':
+                valid = self._separation_valid
+            elif self.stage in ('retreat', 'settle'):
+                valid = self._released_valid
             else:
                 valid = lambda q: self._arm_valid(q, self.jaw)
             if not validate_joint_path([q6[:5], command[:5]], valid, .005)['valid']:
