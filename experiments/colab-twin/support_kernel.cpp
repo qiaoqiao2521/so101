@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <new>
+#include <numeric>
 #include <unordered_map>
 #include <vector>
 #if defined(__SSE__)
@@ -102,11 +103,108 @@ bool environment(int* rounding=nullptr, std::uint32_t* control=nullptr,
            !(csr&(UINT32_C(1)<<15)) && !(csr&(UINT32_C(1)<<6)) && input && output;
 }
 
+constexpr std::size_t LEAF_SIZE=16, NO_CHILD=std::numeric_limits<std::size_t>::max();
+struct Node {
+    Vec low{},high{};
+    std::size_t begin=0,end=0,left=NO_CHILD,right=NO_CHILD;
+};
 struct Geometry {
     std::vector<double> points;
     Vec low{}, high{};
     int kind=0; // 0 finite box, 1 original mesh.
+    // All original vertices remain owned. The tree indexes every vertex once.
+    std::vector<std::size_t> order;
+    std::vector<Node> nodes;
 };
+
+std::size_t build_node(Geometry& geom,std::size_t begin,std::size_t end) {
+    Node node; node.begin=begin;node.end=end;
+    for (int j=0;j<3;++j) node.low[j]=node.high[j]=geom.points[3*geom.order[begin]+j];
+    for (std::size_t k=begin;k<end;++k) for (int j=0;j<3;++j) {
+        const auto x=geom.points[3*geom.order[k]+j];
+        node.low[j]=std::min(node.low[j],x);node.high[j]=std::max(node.high[j],x);
+    }
+    const auto index=geom.nodes.size();geom.nodes.push_back(node);
+    if (end-begin>LEAF_SIZE) {
+        int axis=0;
+        for (int j=1;j<3;++j)
+            if (node.high[j]-node.low[j]>node.high[axis]-node.low[axis]) axis=j;
+        const auto middle=begin+(end-begin)/2;
+        std::nth_element(geom.order.begin()+begin,geom.order.begin()+middle,geom.order.begin()+end,
+            [&geom,axis](std::size_t a,std::size_t b) {
+                const auto x=geom.points[3*a+axis],y=geom.points[3*b+axis];
+                return x<y || (x==y && a<b);
+            });
+        const auto left=build_node(geom,begin,middle),right=build_node(geom,middle,end);
+        geom.nodes[index].left=left;geom.nodes[index].right=right;
+    }
+    return index;
+}
+
+bool vertex_interval(const Geometry& geom,std::size_t vertex,
+                     const std::array<Interval,3>& local,Interval& out) {
+    double low=0.,high=0.;
+    for (int j=0;j<3;++j) {
+        const double first=geom.points[3*vertex+j]*local[j].lo;
+        const double second=geom.points[3*vertex+j]*local[j].hi;
+        if (!std::isfinite(first)||!std::isfinite(second)) return false;
+        const double term_low=down(first<second?first:second);
+        const double term_high=up(first>second?first:second);
+        low=down(low+term_low);high=up(high+term_high);
+        if (!std::isfinite(low)||!std::isfinite(high)) return false;
+    }
+    out={low,high};return true;
+}
+
+bool full_scan(const Geometry& geom,const std::array<Interval,3>& local,Interval& out) {
+    double minimum=INF,maximum=-INF;
+    for (std::size_t v=0;v<geom.points.size()/3;++v) {
+        Interval point;
+        if (!vertex_interval(geom,v,local,point)) return false;
+        minimum=std::min(minimum,point.lo);maximum=std::max(maximum,point.hi);
+    }
+    out={minimum,maximum};return true;
+}
+
+bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval& out,
+               bool* scan_fallback=nullptr) {
+    if (geom.nodes.empty()) return full_scan(geom,local,out);
+    Interval first;
+    if (!vertex_interval(geom,0,local,first)) return false;
+    double minimum=first.lo,maximum=first.hi;
+    std::size_t min_index=0,max_index=0;
+    std::vector<std::size_t> pending{0};
+    while (!pending.empty()) {
+        const auto index=pending.back();pending.pop_back();
+        const auto& node=geom.nodes[index];
+        const Interval bound=dot({Interval{node.low[0],node.high[0]},
+                                  Interval{node.low[1],node.high[1]},
+                                  Interval{node.low[2],node.high[2]}},local);
+        // An overly wide nonfinite bound does not imply nonfinite vertices.
+        // Restart the original scan in its original order, without tree state.
+        if (!finite(bound)) {
+            if (scan_fallback) *scan_fallback=true;
+            return full_scan(geom,local,out);
+        }
+        // Strict comparisons retain all ties, including the first signed zero.
+        if (bound.lo>minimum && bound.hi<maximum) continue;
+        if (node.left==NO_CHILD) {
+            for (std::size_t k=node.begin;k<node.end;++k) {
+                const auto v=geom.order[k];Interval point;
+                if (!vertex_interval(geom,v,local,point)) return false;
+                if (point.lo<minimum || (point.lo==minimum && v<min_index)) {
+                    minimum=point.lo;min_index=v;
+                }
+                if (point.hi>maximum || (point.hi==maximum && v<max_index)) {
+                    maximum=point.hi;max_index=v;
+                }
+            }
+        } else {
+            pending.push_back(node.right);pending.push_back(node.left);
+        }
+    }
+    out={minimum,maximum};return true;
+}
 struct Context { std::vector<Geometry> geoms; };
 struct Key {
     std::uint64_t n[3]; bool full;
@@ -125,51 +223,55 @@ struct Frame {
     const Geometry* geom=nullptr;
     Vec p{}; std::array<double,9> R{};
     std::unordered_map<Key,Interval,KeyHash> cache;
+    std::array<std::array<Interval,3>,2> world{};
+    std::array<std::array<bool,3>,2> world_ready{};
+    std::array<std::array<Interval,3>,3> local_world{};
+    std::array<Interval,3> center_world{};
+    std::array<bool,3> terms_ready{};
 };
 
 bool project(Frame& shape, const Vec& n, bool full, Interval& answer) {
+    int axis=-1;
+    for (int j=0;j<3;++j)
+        if (n[j]==1. && n[(j+1)%3]==0. && n[(j+2)%3]==0.) axis=j;
+    const int bucket=full && shape.geom->kind==1?1:0;
+    if (axis>=0 && shape.world_ready[bucket][axis]) {
+        answer=shape.world[bucket][axis];return true;
+    }
     Key key{{bits(n[0]),bits(n[1]),bits(n[2])},full};
     // Python float cache keys identify +0 and -0. Keep that exact equality.
     for (auto& raw:key.n) if ((raw&~SIGN)==0) raw=0;
-    const auto cached=shape.cache.find(key);
-    if (cached!=shape.cache.end()) { answer=cached->second; return true; }
-    std::array<Interval,3> ni{exact(n[0]),exact(n[1]),exact(n[2])},local;
-    for (int j=0;j<3;++j) {
-        std::array<Interval,3> column{exact(shape.R[j]),exact(shape.R[3+j]),exact(shape.R[6+j])};
-        local[j]=dot(column,ni);
+    if (axis<0) {
+        const auto cached=shape.cache.find(key);
+        if (cached!=shape.cache.end()) { answer=cached->second; return true; }
     }
-    const Interval center=dot({exact(shape.p[0]),exact(shape.p[1]),exact(shape.p[2])},ni);
+    std::array<Interval,3> ni{exact(n[0]),exact(n[1]),exact(n[2])},local;
+    Interval center;
+    if (axis>=0 && shape.terms_ready[axis]) {
+        local=shape.local_world[axis];center=shape.center_world[axis];
+    } else {
+        for (int j=0;j<3;++j) {
+            std::array<Interval,3> column{exact(shape.R[j]),exact(shape.R[3+j]),exact(shape.R[6+j])};
+            local[j]=dot(column,ni);
+        }
+        center=dot({exact(shape.p[0]),exact(shape.p[1]),exact(shape.p[2])},ni);
+    }
     if (!finite(center) || !finite(local[0]) || !finite(local[1]) || !finite(local[2])) return false;
+    if (axis>=0) {
+        shape.local_world[axis]=local;shape.center_world[axis]=center;shape.terms_ready[axis]=true;
+    }
     Interval extrema;
     if (!full || shape.geom->kind==0) {
         std::array<Interval,3> bounds;
         for (int j=0;j<3;++j) bounds[j]={shape.geom->low[j],shape.geom->high[j]};
         extrema=dot(bounds,local);
     } else {
-        double minimum=INF,maximum=-INF;
-        const auto& points=shape.geom->points;
-        for (std::size_t v=0;v<points.size();v+=3) {
-            double low=0.,high=0.;
-            for (int j=0;j<3;++j) {
-                const double first=points[v+j]*local[j].lo;
-                const double second=points[v+j]*local[j].hi;
-                if (!std::isfinite(first)||!std::isfinite(second)) return false;
-                // NumPy minimum/maximum choose the second operand on a tie.
-                const double term_low=down(first<second?first:second);
-                const double term_high=up(first>second?first:second);
-                low=down(low+term_low);
-                high=up(high+term_high);
-                // Do not allow a later NaN to disappear in an extrema reduce.
-                // Original NumPy full-array support refuses that whole shape.
-                if (!std::isfinite(low)||!std::isfinite(high)) return false;
-            }
-            minimum=std::min(minimum,low); maximum=std::max(maximum,high);
-        }
-        extrema={minimum,maximum};
+        if (!full_tree(*shape.geom,local,extrema)) return false;
     }
     answer=add(center,extrema);
     if (!finite(answer)) return false;
-    shape.cache.emplace(key,answer);
+    if (axis>=0) { shape.world[bucket][axis]=answer;shape.world_ready[bucket][axis]=true; }
+    else shape.cache.emplace(key,answer);
     return true;
 }
 
@@ -209,14 +311,19 @@ Vec cross(Vec a,Vec b) {
 }
 Result pair_result(Frame& a,Frame& b,double margin) {
     std::array<Vec,19> fixed;
-    std::array<bool,19> valid;
+    std::array<bool,19> valid{};
     fixed[0]={1.,0.,0.}; fixed[1]={0.,1.,0.}; fixed[2]={0.,0.,1.};
-    fixed[3]={b.p[0]-a.p[0],b.p[1]-a.p[1],b.p[2]-a.p[2]};
-    for (int j=0;j<3;++j) { fixed[4+j]=column(a,j); fixed[7+j]=column(b,j); }
-    for (int j=0;j<3;++j) for (int k=0;k<3;++k) fixed[10+3*j+k]=cross(column(a,j),column(b,k));
-    for (int i=0;i<19;++i) valid[i]=normalize(fixed[i]);
+    for (int i=0;i<3;++i) valid[i]=normalize(fixed[i]);
+    bool rest_ready=false;
     Result best; bool has_best=false; std::int64_t count=0;
     for (bool full:{false,true}) for (int i=0;i<19;++i) {
+        if (i==3 && !rest_ready) {
+            fixed[3]={b.p[0]-a.p[0],b.p[1]-a.p[1],b.p[2]-a.p[2]};
+            for (int j=0;j<3;++j) { fixed[4+j]=column(a,j); fixed[7+j]=column(b,j); }
+            for (int j=0;j<3;++j) for (int k=0;k<3;++k) fixed[10+3*j+k]=cross(column(a,j),column(b,k));
+            for (int j=3;j<19;++j) valid[j]=normalize(fixed[j]);
+            rest_ready=true;
+        }
         if (!valid[i]) continue;
         Result current;
         if (!certificate(a,b,fixed[i],margin,full,current)) {
@@ -277,6 +384,12 @@ void* ns_create(std::int64_t count,const std::int64_t* offsets,const double* poi
                     if (x<=geom.low[j]) geom.low[j]=x;
                     if (x>=geom.high[j]) geom.high[j]=x;
                 }
+                if (geom.kind==1) {
+                    geom.order.resize(geom.points.size()/3);
+                    std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
+                    geom.nodes.reserve(geom.order.size()*2/LEAF_SIZE+1);
+                    build_node(geom,0,geom.order.size());
+                }
                 context->geoms.push_back(std::move(geom));
             }
         } catch (...) { delete context; return nullptr; }
@@ -324,4 +437,34 @@ int ns_evaluate(void* raw,const double* positions,const double* rotations,
         return 0;
     }
 }
+#if defined(SUPPORT_TREE_TESTS)
+// Isolated test builds only: force the full-support branch independently of
+// the preceding coarse-AABB gate, and inspect complete leaf coverage.
+int ns_test_full_vertices(std::int64_t count,const double* points,const double* coefficients,
+                          int tree,double* output,std::int64_t* info) {
+    if (count<=0||!points||!coefficients||!output||!info||!environment()) return 2;
+    try {
+        Geometry geom;geom.kind=1;geom.points.assign(points,points+3*count);
+        for (double x:geom.points) if (!std::isfinite(x)) return 2;
+        geom.order.resize(static_cast<std::size_t>(count));
+        std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
+        build_node(geom,0,geom.order.size());
+        std::vector<int> seen(geom.order.size(),0);
+        std::size_t largest=0;
+        for (const auto& node:geom.nodes) if (node.left==NO_CHILD) {
+            largest=std::max(largest,node.end-node.begin);
+            for (std::size_t k=node.begin;k<node.end;++k) ++seen[geom.order[k]];
+        }
+        info[0]=std::all_of(seen.begin(),seen.end(),[](int x){return x==1;});
+        info[1]=static_cast<std::int64_t>(geom.nodes.size());
+        info[2]=static_cast<std::int64_t>(largest);
+        std::array<Interval,3> local;
+        for (int j=0;j<3;++j) local[j]={coefficients[2*j],coefficients[2*j+1]};
+        Interval result{NAN_VALUE,NAN_VALUE};bool fallback=false;
+        const bool valid=tree?full_tree(geom,local,result,&fallback):full_scan(geom,local,result);
+        output[0]=result.lo;output[1]=result.hi;info[3]=fallback;
+        return valid?0:1;
+    } catch (...) { return 2; }
+}
+#endif
 } // extern C
