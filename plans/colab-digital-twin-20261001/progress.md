@@ -2,7 +2,29 @@
 
 ## Current
 
-2026-10-06 按用户要求已通过Colab CLI完成唯一L4视觉ACT训练：5000步/171.180s优化，2115步诊断快照，峰值reserved332MiB。全部产物校验回收，真实unassign完成。同次训练的前150条专家观测h0五轴MAE均改善，原7项门控仍失败3项（首帧方向/幅度、首10拍方向），本轮物理not_run、S7e未过。后续有界训练优先Colab，根Codex先以冻结新模型的起步/收尾局部辨别为下一最短只读候选，不自动补训或放宽门槛。
+2026-10-06 已冻结同次Colab的2115/5000步模型，固定q0替换真实起步/收尾RGB，完成24次原runner前向。最终换图h0五轴差0.017197µrad，仅为6mrad专家目标差的0.000287%；两图输出均更近收尾参考，未产生起步所需区分。同图重复及原保存首帧全chunk差0，源码/权重/输入不变，0训练/物理/云端分配，S7e仍未过。 下一训练变量选已有local-balance采样开关：与本轮A保持同Colab L4、5000步/600秒优化上限、2115诊断快照、四RGB、FP32/batch8/seed0/fresh Adam和原七项门控，仅开启近q真实起步/收尾1:1均衡。原B2115曾改善部分轴但肘轴退化，故这是等步数单变量验证，不是已证实修复。本轮未启动训练或改生产源码；执行前需在现有云端worker显式透传开关并验证默认A不变，不扩大预算或同时改主干/损失。
+
+## 2026-10-06 冻结云端模型起步收尾图像动作辨别
+
+**Current / Done。** 用户指定先冻结新模型，检查起步/收尾RGB的动作辨别，再决定训练改动。[预置协议](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/scope.json)固定同次Colab快照bd8749与最终ea548c、nominal raw0 q6、真实raw0/2349两图、原runner reset/execute1、FP32/batch1/no_grad/threads2。每模型6组交替，共24次前向；[唯一执行](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/execution.json)exit0、内部4.266s/外层6.129s。没有新增训练、Colab分配、渲染或MuJoCo积分，不用诊断耗时作为50Hz证据。
+
+两图203像素不同；实际q_end距q0为0.137024mrad L2。两个绝对专家h0目标重锚到q0后差6.000mrad。反事实q0+收尾RGB不是实际专家采样，不据此造新标签；raw2349为最后一帧，h1–h15无专家目标，仅记录换图的输出差。[真实RGB、动作对照与报告](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/REPORT.md)。
+
+| 固定q0检查 | 2115步快照 | 5000步最终 |
+| --- | ---: | ---: |
+| 换图h0五轴L2差 / µrad | 0.001599202 | 0.017197086 |
+| 占6000µrad专家目标差 | 0.000026653% | 0.000286618% |
+| 图像效应在专家目标差上的有符号投影 | -1.740063e-7 | 1.945534e-6 |
+| 起步图输出距起步目标 / mrad | 6.627362 | 5.699520 |
+| 起步图输出距收尾参考 / mrad | 1.205577 | 0.386042 |
+
+最终两图下腕旋都反向、其他四轴起步幅度不足，jaw都投影open0.5、没有开闭切换。约10.75倍响应增长的绝对值仍很小，不能称已学会任务区分。起步图误差改善同时输出更近收尾参考；不等同网络完全不读图或采样是唯一根因。
+
+每个模型172项state_dict张量前后哈希不变、无grad；59份生产/测试Python、9份输入（四RGB、一raw、两checkpoint、两旧预测）SHA保持。两个模型六次同图重复差0，起步RGB全chunk归一化/物理动作与对应旧保存首帧差0；固定q张量跨两模型/两图严格相同。[最终指标](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/final-report.json)、[快照指标](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/step2115-report.json)、[原始NPZ](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/final-predictions.npz)。六次重复只用于确定数值稳定性，不是六个独立场景。
+
+[独立CPU复核](../../experiments/colab-twin/output/vision-colab-image-discrimination-20261006/independent-review/report.json)263项通过，最大指标复算差8.88e-16，0模型加载/前向/GPU/物理。首次误用缺h5py的系统Python在导入时退出；改现有环境后发现CPU直接除255不能与CUDA逐bit比较（最大1ULP/5.96e-8）。修正为实测一致的float32倒数乘法、uint8回构差0后通过，只改独立审计假设，失败证据保留。最终h0归一化五轴差334/0/640/284/370 ULP，不能把微弱响应直接定为舍入噪声。
+
+**Remaining / Next。** 下一训练变量选已有local-balance采样开关：与本轮A保持同Colab L4、5000步/600秒优化上限、2115诊断快照、四RGB、FP32/batch8/seed0/fresh Adam和原七项门控，仅开启近q真实起步/收尾1:1均衡。原B2115曾改善部分轴但肘轴退化，故这是等步数单变量验证，不是已证实修复。本轮未启动训练或改生产源码；执行前需在现有云端worker显式透传开关并验证默认A不变，不扩大预算或同时改主干/损失。 主线仍采用q6+RGB输入、原动作编码和物理标准；原七项门控未通过，物理not_run/S7e未过。根Codex负责接续，当前所有诊断脚本、数组、图和日志被Git忽略，仅公开结论。沿用Wiki“按当前任务选择验收依据”：这次交付局部辨别证据，不扩展为全局视觉能力或抓放成功。
 
 ## 2026-10-06 Colab L4完成5000步，原起步门控仍未通过
 
