@@ -158,6 +158,28 @@ class ArtifactRecoveryTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         self.assertEqual((self.root / "recovered/fit/policy.pt").read_bytes(), files["fit/policy.pt"])
 
+    def test_requested_balance_must_match_recovered_fit(self):
+        for requested, recorded in ((True, None), (False, {"radius_rad": .01}),
+                                    (True, False), (True, {})):
+            with self.subTest(requested=requested, recorded=recorded):
+                files = self.completed_files()
+                fit = json.loads(files["fit/report.json"])
+                fit["training_sampler"] = {} if recorded is None else {"local_balance": recorded}
+                files["fit/report.json"] = json.dumps(fit).encode()
+                with self.assertRaisesRegex(ValueError, 'local-balance'):
+                    runner.recover(self.make_archive(files), self.root / 'recovered',
+                                   expected_local_balance=requested)
+                self.assertFalse((self.root / 'recovered').exists())
+
+    def test_requested_balance_preserves_verified_package(self):
+        files = self.completed_files()
+        fit = json.loads(files["fit/report.json"])
+        fit["training_sampler"] = {"local_balance": {"radius_rad": .01, "target_slots_per_group": 155}}
+        files["fit/report.json"] = json.dumps(fit).encode()
+        result = runner.recover(self.make_archive(files), self.root / 'recovered',
+                                expected_local_balance=True)
+        self.assertEqual(result['status'], 'completed')
+
     def test_archive_integrity_cannot_hide_invalid_fit_evidence(self):
         for key, value in (("status", "failed"), ("checkpoint_reload_exact", False),
                            ("batch_size", 4), ("checkpoint_sha256", "0" * 64)):
@@ -179,6 +201,35 @@ class ArtifactRecoveryTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             runner.recover(self.make_archive(), destination)
         self.assertEqual(protected.read_bytes(), b"existing protected content")
+
+
+class JobModeTests(unittest.TestCase):
+    def test_prepare_defaults_to_a_and_explicit_flag_changes_only_sampler(self):
+        saved_umask = os.umask(0o077)
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                repo = Path(temporary) / 'project'
+                root = repo / 'experiments/colab-twin'
+                for name in runner.SOURCES + runner.DATASETS:
+                    path = root / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(b'test-only input')
+                jobs = []
+                with patch.object(runner, 'ROOT', root), patch.object(runner, 'REPO', repo), \
+                        patch.object(runner.subprocess, 'run') as subprocess, redirect_stdout(StringIO()):
+                    for name, flags in [('a', []), ('b', ['--local-balance'])]:
+                        output = Path(temporary) / name
+                        self.assertEqual(runner.main(['--output', str(output), '--prepare-only', *flags]), 0)
+                        job = json.loads((output / 'job.json').read_text())
+                        with ZipFile(output / 'input.zip') as archive:
+                            self.assertEqual(job, json.loads(archive.read('job.json')))
+                        jobs.append(job)
+                    subprocess.assert_not_called()
+                self.assertIs(jobs[0].pop('local_balance'), False)
+                self.assertIs(jobs[1].pop('local_balance'), True)
+                self.assertEqual(jobs[0], jobs[1])
+        finally:
+            os.umask(saved_umask)
 
 
 class TransferRetryTests(unittest.TestCase):

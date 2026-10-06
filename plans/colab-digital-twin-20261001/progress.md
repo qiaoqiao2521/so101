@@ -2,7 +2,29 @@
 
 ## Current
 
-2026-10-06 已冻结同次Colab的2115/5000步模型，固定q0替换真实起步/收尾RGB，完成24次原runner前向。最终换图h0五轴差0.017197µrad，仅为6mrad专家目标差的0.000287%；两图输出均更近收尾参考，未产生起步所需区分。同图重复及原保存首帧全chunk差0，源码/权重/输入不变，0训练/物理/云端分配，S7e仍未过。 下一训练变量选已有local-balance采样开关：与本轮A保持同Colab L4、5000步/600秒优化上限、2115诊断快照、四RGB、FP32/batch8/seed0/fresh Adam和原七项门控，仅开启近q真实起步/收尾1:1均衡。原B2115曾改善部分轴但肘轴退化，故这是等步数单变量验证，不是已证实修复。本轮未启动训练或改生产源码；执行前需在现有云端worker显式透传开关并验证默认A不变，不扩大预算或同时改主干/损失。
+2026-10-06 现有local-balance已透传Colab CLI并完成唯一L4训练：5000步/173.028s优化、峰值332MiB，权重回收且实例已实际释放。B2115五轴方向全对但首帧幅度不足；最终B5000首帧pan/flex/roll反向，原七门控失败四项，未启动物理或补训，S7e仍未过。 根Codex保留云端A/B两级权重；下一最短候选是冻结B2115/B5000、固定q0替换真实起步/收尾RGB，核对起步回退是否伴随图像动作区分减弱。本轮未执行换图探针；不凭本轮增加步数、改采样权重/主干/损失或以快照替代最终候选。
+
+## 2026-10-06 Colab现有local-balance完成最终门控未过
+
+**Current / Done。** 用户选择“现有local-balance”。新增云端CLI显式开关，默认A保持；worker在五步预检后仅fit透传，远端与回收两层核实际sampler模式。85项CPU测试通过，独立代码复核无阻断；两份学习源码不变。预置[范围](../../experiments/colab-twin/output/vision-colab-balance-preflight-20261006/scope.json)与[job对照](../../experiments/colab-twin/output/vision-colab-balance-preflight-20261006/prelaunch-comparison.json)固定四RGB、官方模型、归一化、FP32/batch8/seed0/fresh Adam1e-4、5000步/600s、2115诊断快照，仅local_balance false→true。
+
+唯一Colab L4分配、一次fit；上传有一次PUT ReadTimeout，同分片原字节按既有规则重试恢复，未重分配或重训；五步CUDA/batch8资源检查通过。5000步/173.027871s优化，step_limit停止，peak reserved332MiB、CPU保存重载差0。worker耗时242.229s，控制器含传输与释放520.624s；原始权重/报告已校验回收，实际unassign完成。最终37a0ef24e088…，2115快照d2aa719a62dd…；不读取或推测Compute Units用量。[训练](../../experiments/colab-twin/output/vision-colab-balance-20261006/recovered/fit/report.json)、[回收与释放](../../experiments/colab-twin/output/vision-colab-balance-20261006/delivery.json)。
+
+**原门控。** 两模型各150条nominal专家观测，合计300冻结CUDA前向，内部6.049s/外层7.981s。172项模型张量分别不变、59份Python/四RGB/模型哈希保持；原d4db门控基线与规范字节不变。B2115只失败首帧幅度：五轴比0.275534/0.445764/0.138850/0.171722/0.024803，方向均正确。最终B5000失败前四项：首帧pan/flex/roll反向，首10拍elbow投影0.481135<0.5；前150拍MAE/向量投影与jaw三项通过。相较A5000原3项失败增加为4项，不能用平均改善放行。
+
+| 前150拍h0 MAE / mrad | A5000 | B2115诊断 | B5000最终 |
+| --- | ---: | ---: | ---: |
+| pan | 0.276773 | 0.223637 | 0.088468 |
+| lift | 0.045201 | 0.143879 | 0.100889 |
+| elbow | 0.095949 | 0.156083 | 0.436829 |
+| flex | 0.726564 | 0.594621 | 0.123280 |
+| roll | 0.340449 | 0.068325 | 0.084107 |
+
+B5000相对A5000的h15五轴MAE均改善，但h0 lift/elbow变差；B自身2115→5000的elbow/roll h0误差及首帧方向退化，不能宣称长训单调改善。仅云端等步数对照，不混入旧本地B。[完整报告与图](../../experiments/colab-twin/output/vision-colab-balance-20261006/REPORT.md)、[最终](../../experiments/colab-twin/output/vision-colab-balance-20261006/offline/final-report.json)、[快照](../../experiments/colab-twin/output/vision-colab-balance-20261006/offline/step2115-report.json)。
+
+**采样与独立复核。** 完整8997池局部槽155:155保持；5000步39988起点中raw<50命中1756次，局部起步/收尾696/693次，raw0/1各350/346次，有效动作槽11136/9965。A5000局部45/1344，非局部曝光一致；不能把完整池配比写成实际监督严格1:1。[独立CPU审核](../../experiments/colab-twin/output/vision-colab-balance-20261006/independent-review/report.json)1549断言通过，标量fsum指标重算最大差7.11e-14，重建A/B两级逐行曝光、原七项门控、数据/归一化/模型身份/源码与回收清单；该审核0模型加载/前向/GPU/训练/物理。
+
+**Remaining / owner / 最短入口。** 采样旗标确实生效、起步两帧多次被采；没有证明唯一根因或采样普遍优劣，GPU同型号/单seed不保证跨实例逐位确定。S7e仍未通过，0新增物理/补训。根Codex保留云端A/B两级权重；下一最短候选是冻结B2115/B5000、固定q0替换真实起步/收尾RGB，核对起步回退是否伴随图像动作区分减弱。本轮未执行换图探针；不凭本轮增加步数、改采样权重/主干/损失或以快照替代最终候选。 原现场22项/index/顶层README/原MJCF保留，源码与报告同步canonical；产物、权重、日志继续Git排除。
 
 ## 2026-10-06 冻结云端模型起步收尾图像动作辨别
 

@@ -81,7 +81,9 @@ def validate_index(index):
         raise ValueError('Artifact shard lengths do not cover archive')
 
 
-def recover(archive, destination):
+def recover(archive, destination, *, expected_local_balance=False):
+    if type(expected_local_balance) is not bool:
+        raise ValueError('Requested local-balance mode must be boolean')
     allowed = {'report.json', 'runtime.json', 'imports.json', 'artifact-manifest.json',
                'microbenchmark/report.json', 'fit/report.json',
                'fit/policy.pt', 'fit/policy-step-2115.pt'}
@@ -121,6 +123,13 @@ def recover(archive, destination):
                     or fit.get('batch_size') != 8
                     or hashlib.sha256(source.read('fit/policy.pt')).hexdigest() != fit.get('checkpoint_sha256')):
                 raise ValueError('Completed fit checkpoint is unverified')
+            sampler = fit.get('training_sampler', {})
+            if not isinstance(sampler, dict):
+                raise ValueError('Completed fit sampler is invalid')
+            balance = sampler.get('local_balance')
+            if (('local_balance' in sampler) != expected_local_balance
+                    or (expected_local_balance and (not isinstance(balance, dict) or not balance))):
+                raise ValueError('Completed fit local-balance mode differs from requested job')
         destination.mkdir(exist_ok=False)
         for name in names:
             p = destination / name
@@ -135,6 +144,8 @@ def main(argv=None):
     parser.add_argument('--gpu', choices=['L4', 'T4', 'A100'], default='L4')
     parser.add_argument('--gpu-minutes', type=int, default=30)
     parser.add_argument('--prepare-only', action='store_true')
+    parser.add_argument('--local-balance', action='store_true',
+                        help='Use existing near-q startup/settle balancing; default remains startup5 only')
     args = parser.parse_args(argv)
     if not 5 <= args.gpu_minutes <= 30:
         parser.error('GPU ownership budget must be 5..30 minutes')
@@ -151,7 +162,7 @@ def main(argv=None):
     job = {'dataset_paths': [(ROOT / p).relative_to(REPO).as_posix() for p in DATASETS],
            'source_sha256': source_hash, 'visual_dataset_sha256': [sha(ROOT / p) for p in DATASETS],
            'max_steps': 5000, 'max_wall_s': 600, 'snapshot_step': 2115, 'seed': 0,
-           'startup_weight': 5, 'local_balance': False, 'batch_size': 8,
+           'startup_weight': 5, 'local_balance': args.local_balance, 'batch_size': 8,
            'precision': 'float32', 'physical_scope': 'not_run',
            'acceptance_candidate': 'final policy.pt only; snapshot is diagnostic',
            'requested_gpu': args.gpu}
@@ -320,7 +331,7 @@ with (w/'worker-launch.log').open('wb') as log:
                 stream.write((pieces / part['file']).read_bytes())
         if sha(result_zip) != recovered['zip']['sha256']:
             raise ValueError('Downloaded archive mismatch')
-        worker = recover(result_zip, output / 'recovered')
+        worker = recover(result_zip, output / 'recovered', expected_local_balance=args.local_balance)
         report['artifact_recovery_verified'] = True
         report['remote_worker_completed'] = worker.get('status') == 'completed'
         report['status'] = 'completed' if report['remote_worker_completed'] else 'failed'

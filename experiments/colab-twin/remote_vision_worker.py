@@ -134,6 +134,9 @@ class Worker:
 
     def validate(self):
         job = json.loads((self.work / "job.json").read_text())
+        local_balance = job.get("local_balance", False)
+        if type(local_balance) is not bool:
+            raise JobFailure("job_local_balance_must_be_bool")
         expected = {"max_steps": 5000, "max_wall_s": 600, "snapshot_step": 2115, "seed": 0}
         if any(type(job.get(key)) is not int or job[key] != value for key, value in expected.items()):
             raise JobFailure("job_budget_or_seed_mismatch")
@@ -163,6 +166,7 @@ class Worker:
         self.report.update(job_sha256=digest(self.work / "job.json"),
                            source_sha256=sources, visual_dataset_sha256=hashes,
                            dataset_paths=paths, budget=expected,
+                           requested_local_balance=local_balance,
                            worker_sha256=digest(Path(__file__)))
         self.save()
 
@@ -244,11 +248,25 @@ class Worker:
         self.report["training_invocations"] = 1
         self.save()
         fit_dir = self.artifacts / "fit"
+        sampling_flags = ["--local-balance"] if self.job.get("local_balance", False) else []
         self.phase("fit", [self.python, script, "fit", *common, "--output", fit_dir,
                             "--resource-report", resource_dir / "report.json", "--camera-reviewed",
                             "--startup-weight", "5", "--extended-fit-budget", "--max-wall-s", "600",
-                            "--max-steps", "5000", "--max-epochs", "200", "--snapshot-step", "2115"], 660)
+                            "--max-steps", "5000", "--max-epochs", "200", "--snapshot-step", "2115",
+                            *sampling_flags], 660)
         fit = json.loads((fit_dir / "report.json").read_text())
+        sampler = fit.get("training_sampler")
+        if not isinstance(sampler, dict) or type(sampler.get("weight")) is not int or sampler["weight"] != 5:
+            raise JobFailure("training_sampler_mode_mismatch")
+        if self.job.get("local_balance", False):
+            local = sampler.get("local_balance")
+            if (not isinstance(local, dict)
+                    or local.get("group_order") != ["nonlocal", "startup", "settle"]):
+                raise JobFailure("training_sampler_mode_mismatch")
+        elif "local_balance" in sampler:
+            # Original startup5 reports omit this key entirely; presence is not
+            # silently treated as disabled, including malformed null/false values.
+            raise JobFailure("training_sampler_mode_mismatch")
         if (fit.get("status") != "completed_diagnostic" or fit.get("checkpoint_reload_exact") is not True
                 or fit.get("batch_size") != 8 or not (fit_dir / "policy.pt").is_file()
                 or digest(fit_dir / "policy.pt") != fit.get("checkpoint_sha256")):

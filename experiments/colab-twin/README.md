@@ -14,6 +14,8 @@ python3 experiments/colab-twin/run_vision_colab.py \
 
 每次使用新的output目录。`--prepare-only`只打包检查，不分配GPU；正式运行使用另一新目录。若CLI直连不稳定，可通过命令级`HTTP_PROXY`/`HTTPS_PROXY`使用本机已经运行的代理；不把代理凭据写入仓库，也不自动改系统设置。
 
+默认使用`startup-weight=5`。显式追加`--local-balance`可复用已有近q起步/收尾1:1采样；其余训练参数和预算保持。开关写入上传job，远端fit及本地回收均核对报告采样模式，缺失或错配时拒绝作为完成结果。
+
 入口复用现有Colab CLI 0.6.0安全适配层，独立会话身份、8MiB分片和逐文件SHA；仅同路径同内容的瞬时传输错误每片最多尝试3次（初次加2次重试，退避5/10秒），分配和训练不重试。远端采用独立Python3.12、固定Torch/cu126与LeRobot；五步batch8资源检查通过后，仅一次startup5/FP32训练，优化循环到5000步或600秒先到即停，保存2115步诊断快照。控制器分配后的总预算最多30分钟，另保留最多120秒释放窗口。
 
 默认训练CLI仍限制120秒；600秒仅由`fit --extended-fit-budget`显式开启，物理evaluate预算和原七项离线门控保持。只有最终policy.pt参与准入；snapshot不替代失败最终模型。训练进程完成、文件回收、离线准入、物理抓放分别验收，更多GPU时间不预先保证成功。实际结果见[学习记录](LEARNING.md)。
