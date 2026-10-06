@@ -2,7 +2,41 @@
 
 ## Current
 
-2026-10-06 局部1:1采样已接入并完成唯一有界训练：同四档、原归一化/模型/损失，2115step/120.033s，峰值332MiB、保存重载误差0。首帧pan/flex/roll改为同向，但elbow反向且首10拍全反向，原离线门控未过；固定q换图h0差仍仅4.429µrad。没有物理回合或补训，S7e仍未通过。 root保留默认均匀与原startup5行为；新局部均衡需显式 `fit --startup-weight 5 --local-balance`。本轮结果不支持仅靠局部起点均衡已解决起步/收尾辨别，且实际步数不同于旧3126，不能作等步数单变量因果结论。下一最短候选为只读核肘轴前150拍的逐槽拟合与局部抽样覆盖，区分早期输出偏差和覆盖变化；尚未执行，不自动追加训练、改主干或启动物理。
+2026-10-06 唯一新A采用原startup5、不启用local-balance，从头训练2115步/119.205s优化，峰值332MiB、重载误差0；复用原B的2115步权重。A前150条专家观测肘轴h0同向率100%、MAE0.206395mrad，B为40%/1.090709mrad；B其余四轴h0 MAE更小。A首帧肘幅仅专家0.686%，原7项门控仍有3项失败，未进入物理回合。 等步数比较已完成，已消除旧3126与2115步数不一致这一项混杂；单seed加历史B仍不足以证明唯一因果或采样普遍优劣。前置肘轴逐槽/覆盖只读审计也已完成：不是完全漏采，近q邻域未发现肘轴正负标签竞争。root保留两份失败模型与原阈值；接续应据五轴逐槽误差选择下一项最小验证，尚未决定或执行新的训练。S7e仍未通过，本轮止于离线，不补训B3126、不改安全界限。
+
+## 2026-10-06 startup5等2115步对照完成，原离线门控仍未通过
+
+用户“赞成”后，按[预注册范围](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/scope.json)只新增A：原 `--startup-weight 5`、`local_balance=false`、随机初始化、seed0、fresh Adam1e-4、batch8、float32、threads2，最多2115步/120s优化/200epoch。若不足2115步就停止并标记对照未完成，不续训或重试；B复用既有490d9d71、无需再训练。本轮无论门控结果均不启动物理。
+
+**前置只读审计已完成。** [肘轴逐槽与覆盖报告](../../experiments/colab-twin/output/vision-elbow-slot-audit-20261006/REPORT.md)确认B前150条h0肘误差全部偏正、90条反向；这90行均被采过，nominal raw0/1各141/150次。近q的366行在h0–h15所有有效肘标签均为负，不支持局部正负标签打架。完整池1:1起点、部分池抽样次数、future目标曝光和实际梯度必须分别描述；不改用h1或放大步长。
+
+**资源与唯一训练。** 同两份视觉入口源码哈希绑定的[5步CUDA预检](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/microbenchmark/report.json)通过，batch8，peak allocated309.343/reserved332MiB。[A训练报告](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/fit/report.json)实际2115步、119.205101s优化、stop_reason=step_limit；含初始化/保存内部总124.045s，外层127.897s，后两者不当作优化预算超限。保存重载差0。A checkpoint SHA `fcb723af8c2c5000ef31e601f5f00ec613588b1576972ad4798ff950e334867a`，B仍为 `490d9d71eda07d69018fec736df3342beb1d8b45270770acf63dd4ba08abcc0e`。
+
+同四档8797唯一valid归一化、8997采样池、chunk16与原模型/损失保持。两组均16917次chunk起点，但raw<50曝光A465/B737次，nominal raw0/1为A9/10、B141/150次；完整池末batch仅5行，16917不应写为2115×8。元数据核对数据/源码/模型/seed/初始化方案/优化器/步数一致；没有历史B初始张量和CUDA逐位确定性证据，不能声称除采样外所有执行过程逐位相同。
+
+**同输入等步数结果。** A唯一150次batch1 CUDA/no_grad前向覆盖nominal raw0–149，内部6.739s；B使用原保存输出，未加载旧模型绕过源码绑定。五轴×16槽按同一专家观测及 `action[t+h]-q[t]` 标签比较；旧startup5的3126步结果仅作次级诊断。以下为首150观测h0 MAE，单位mrad：
+
+| 轴 | A startup5 / 2115步 | B local-balance / 2115步 |
+| --- | ---: | ---: |
+| shoulder_pan | 0.098503 | 0.089926 |
+| shoulder_lift | 0.104060 | 0.084447 |
+| elbow | 0.206395 | 1.090709 |
+| wrist_flex | 0.908849 | 0.432567 |
+| wrist_roll | 0.247353 | 0.149180 |
+
+A五轴h0同向率全100%，B除elbow40%外均100%；肘轴h15 MAE仍为A2.492832/B4.363806mrad。A肘拟合更好、B其余四轴h0误差更小，不能写成A全面胜出或B均衡采样已证明有害。相同步数下仍有差异，因而不能再单用少1011步解释B肘轴表现；单seed/历史运行和样本曝光差异限制仍在。完整[对比JSON](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/comparison-report.json)、[逐槽CSV](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/comparison-slots.csv)和[图](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/equal2115-comparison.png)均已保存。
+
+**原门控仍失败。** [离线报告](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/offline-report.json)沿用[原7项规格](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/offline-gate-spec.json)，以d4db保存的batch8数组为基线，A/B比较不能替换该准入基线。A通过首帧/首10拍方向、前150整体投影和jaw open，共4项；失败如下：
+
+- 首帧逐轴幅度：pan/lift/elbow/flex/roll的预测/专家比例为0.176/0.742/0.00686/0.159/0.080，只有lift位于原0.5–1.5区间。elbow虽同向，−0.006498mrad仅为专家−0.947236mrad的0.686%，不能称起步已修复。
+- 首10拍逐轴投影：elbow0.380、wrist_roll0.472低于0.5，其余三轴在范围内。
+- 首150逐轴MAE不劣化：wrist_flex0.908849mrad劣于d4db基线0.849739mrad。
+
+`offline_gate_passed=false`、`rollout_allowed=false`，本轮物理not_run，不能记成抓放0/1。没有新渲染/积分、B补训、精度/阈值改动、40..59留出、云端或实体操作。
+
+[独立Codex CPU审计](../../experiments/colab-twin/output/vision-startup5-equal2115-20261006/review/independent-result.json)646项通过：A/B共800行逐槽CSV×6项指标复算最大差0，核对4 raw/4 RGB、采样、七项门控、54源码和B权重/报告/预测未改；该审计0前向/优化/GPU/物理。采用既有Wiki“按当前任务选择验收依据”，实验执行完成不等于离线准入或抓放成功。全部新checkpoint、数组、日志、脚本与图保存在Git忽略的output，公开仅交付事实记录；owner根Codex，继续保留canonical现场22项/index/README/原MJCF。
+
+**接续状态。** 等步数比较已完成，已消除旧3126与2115步数不一致这一项混杂；单seed加历史B仍不足以证明唯一因果或采样普遍优劣。前置肘轴逐槽/覆盖只读审计也已完成：不是完全漏采，近q邻域未发现肘轴正负标签竞争。root保留两份失败模型与原阈值；接续应据五轴逐槽误差选择下一项最小验证，尚未决定或执行新的训练。S7e仍未通过，本轮止于离线，不补训B3126、不改安全界限。
 
 ## 2026-10-06 真实近q局部1比1采样已实施，原离线方向门控未过
 
