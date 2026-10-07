@@ -166,6 +166,40 @@ bool full_scan(const Geometry& geom,const std::array<Interval,3>& local,Interval
     out={minimum,maximum};return true;
 }
 
+// Seed from real vertices in two greedily selected leaves. The child bounds
+// only choose work order; they never supply the returned support extrema.
+// Failed exploratory arithmetic discards both seeds before the original DFS.
+#if !defined(SUPPORT_TREE_SEED_DISABLED)
+bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
+                  bool minimum,std::size_t& vertex,Interval& point) {
+    std::size_t index=0;
+    while (geom.nodes[index].left!=NO_CHILD) {
+        const auto& node=geom.nodes[index];
+        const auto& a=geom.nodes[node.left];const auto& b=geom.nodes[node.right];
+        const Interval first=dot({Interval{a.low[0],a.high[0]},
+                                  Interval{a.low[1],a.high[1]},
+                                  Interval{a.low[2],a.high[2]}},local);
+        const Interval second=dot({Interval{b.low[0],b.high[0]},
+                                   Interval{b.low[1],b.high[1]},
+                                   Interval{b.low[2],b.high[2]}},local);
+        if (!finite(first)||!finite(second)) return false;
+        const bool choose_first=minimum?first.lo<=second.lo:first.hi>=second.hi;
+        index=choose_first?node.left:node.right;
+    }
+    const auto& leaf=geom.nodes[index];
+    vertex=geom.order[leaf.begin];
+    if (!vertex_interval(geom,vertex,local,point)) return false;
+    for (std::size_t k=leaf.begin+1;k<leaf.end;++k) {
+        const auto v=geom.order[k];Interval candidate;
+        if (!vertex_interval(geom,v,local,candidate)) return false;
+        const double a=minimum?candidate.lo:candidate.hi;
+        const double b=minimum?point.lo:point.hi;
+        if ((minimum?a<b:a>b)||(a==b && v<vertex)) { vertex=v;point=candidate; }
+    }
+    return true;
+}
+#endif
+
 bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval& out,
                bool* scan_fallback=nullptr) {
     if (geom.nodes.empty()) return full_scan(geom,local,out);
@@ -173,6 +207,21 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
     if (!vertex_interval(geom,0,local,first)) return false;
     double minimum=first.lo,maximum=first.hi;
     std::size_t min_index=0,max_index=0;
+#if !defined(SUPPORT_TREE_SEED_DISABLED)
+    std::size_t low_vertex=0,high_vertex=0;Interval low_point,high_point;
+    if (seed_extreme(geom,local,true,low_vertex,low_point) &&
+        seed_extreme(geom,local,false,high_vertex,high_point)) {
+        const auto consider=[&](std::size_t v,Interval point) {
+            if (point.lo<minimum || (point.lo==minimum && v<min_index)) {
+                minimum=point.lo;min_index=v;
+            }
+            if (point.hi>maximum || (point.hi==maximum && v<max_index)) {
+                maximum=point.hi;max_index=v;
+            }
+        };
+        consider(low_vertex,low_point);consider(high_vertex,high_point);
+    }
+#endif
     std::vector<std::size_t> pending{0};
     while (!pending.empty()) {
         const auto index=pending.back();pending.pop_back();
