@@ -1,5 +1,15 @@
 # Findings
 
+## 2026-10-07 接近缩短和更强查询证书的验证边界
+
+原shorten_path可复用于接近段，必须保留原路线/端点、.005rad独立连边和最终整路核验。128/512上限是候选边数，不是状态查询数；本轮最终静态11条共104510路线查询，加dev-01十次85410成本查询，共189920查询×285pair。dev-01/09预测省25.309725/9.447592s；实际抓放评分另验。
+
+保守native找到足够分离证据会提前返回。1mm查询的返回下界低于2mm不能证明不存在更强证书；六个固定姿态查询显示起点1mm返回1.967667mm，而显式2mm查询可证2.310180mm。新可选certificate_margin_m只能等于或提高原guard，默认不变、拒绝更低/非有限参数。新捷径请求2mm，raw/final/online仍1mm；有限采样不构成连续路径或跟踪误差包络证明。
+
+baseline实际P2 8/10且dev-05安全停机1，证明名义1mm捷径有效不等于受扰跟踪有效。完整循环revision1中位29.301654/P95 56.759456ms，50Hz仍失败；正式P1 74.14sim完整通过；原固定P2最终10/10，正常5/5、扰动5/5、完整注入5/5、安全停机0。开发门通过，完整50Hz仍失败；固定开发集合不替代留出或真机验收。[静态证据](../../experiments/colab-twin/output/visual-grasp-approach-shortcut-20261007/revision1b-static-report.json)、[原P1](../../experiments/colab-twin/output/visual-grasp-approach-shortcut-20261007/p1-revision1/report.json)、[原P2](../../experiments/colab-twin/output/visual-grasp-approach-shortcut-20261007/p2-revision1/report.json)及[416项评分复核](../../experiments/colab-twin/output/visual-grasp-approach-shortcut-20261007/revision1b-p2-review.md)。
+
+dev-09旧释放起点82.78sim；本次为73.32sim，原回位预检79.94sim＋7.602465s≤90，实际87.52sim完成。case墙钟117.966399s，只余2.033601s；相对baseline增加22.578978s。路径变短与程序变快是不同事实，初始化查询和在线扫掠仍需计时。原26条累计4202.513212/9000s，旧14条前缀完整。
+
 ## 2026-10-07 累计接近路径耗尽后段预算，释放末接触尚未证异常
 
 只读核固定P2全10例与P1，commit00faafb源码及保存结果保持。dev-01/09接近段42.02/38.50s，对应保存路径6.6272/6.0610rad；成功8例为22.98–27.38s。两例运输26.50/26.70s处于成功组24.76–27.36s范围，优先检查接近路径长度。源码直接使用OMPL返回路径，已有shorten_path只用于回位；没有验证新接近捷径或证明其足够短。

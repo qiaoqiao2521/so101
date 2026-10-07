@@ -160,6 +160,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     start_wall=time.monotonic()
     deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
     rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None; checker=None
+    initialization_planning=None; initialization_sweeps=None; initialization_checker=None
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
     release_audit=ReleaseAudit(); release_samples=[]; reset_record={}
     status={'passed':False,'safety_stop':False,'failure_reason':None}
@@ -290,6 +291,9 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         status.update(controller_done=bool(last['done']),initial_qpos=initial.tolist(),
                       free_object=True,weld_count=int(model.neq),mocap_count=int(model.nmocap))
     except Exception as error:
+        initialization_planning=getattr(error,'initialization_planning',None)
+        initialization_sweeps=getattr(error,'initialization_sweeps',None)
+        initialization_checker=getattr(error,'initialization_checker',None)
         if monitor is not None:
             measured=monitor.report()
             measured['safety_stop'] |= status.get('safety_stop',False)
@@ -316,6 +320,11 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             write_json(out/'planning.json',controller.plan_reports)
             write_json(out/'jaw-sweeps.json',controller.sweep_reports)
             controller.checker.native.close()
+        elif initialization_planning is not None:
+            write_json(out/'planning.json',initialization_planning)
+            write_json(out/'jaw-sweeps.json',initialization_sweeps)
+        if initialization_checker is not None:
+            initialization_checker.native.close()
         if checker is not None:
             record_collision_backend(status, checker)
         write_json(out/'trajectory.json',rows)

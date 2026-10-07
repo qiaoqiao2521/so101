@@ -8,6 +8,7 @@ controller completion is not evidence that an object was actually grasped.
 from __future__ import annotations
 
 import math
+import time
 import mujoco
 import numpy as np
 
@@ -79,24 +80,48 @@ def motion_duration(points):
     return max(2., float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())*1.875/.3)
 
 
-def shorten_path(points, valid, max_checks=128):
-    """Greedily shortcut only independently validated edges, with bounded work."""
+def shorten_path(points, valid, max_checks=128, *, report=None, shortcut_valid=None):
+    """Bound candidate edges; optional stricter predicate never replaces final valid.
+
+    Unshortened raw edges retain the original validity requirement. The returned
+    route is always independently rechecked with ``valid`` at .005 rad spacing.
+    """
+    started = time.perf_counter()
     points = np.asarray(points, dtype=float)
+    if report is not None:
+        report.update(max_candidate_edges=max_checks, resolution_rad=.005,
+                      attempts=[], candidate_checked_states=0)
     result = [points[0]]
     index = 0
     checks = 0
+    fallback_edges = 0
+    candidate_valid = valid if shortcut_valid is None else shortcut_valid
     while index < len(points)-1:
         next_index = index+1
         for candidate in range(len(points)-1, index+1, -1):
             if checks >= max_checks:
                 break
             checks += 1
-            if validate_joint_path([points[index], points[candidate]], valid, .005)['valid']:
+            validation = validate_joint_path([points[index], points[candidate]], candidate_valid, .005)
+            if report is not None:
+                report['attempts'].append({'start_index': index, 'end_index': candidate,
+                                           'validation': validation})
+                report['candidate_checked_states'] += validation['checked_states']
+            if validation['valid']:
                 next_index = candidate
                 break
+        if next_index == index+1:
+            fallback_edges += 1
         result.append(points[next_index])
         index = next_index
-    if not validate_joint_path(result, valid, .005)['valid']:
+    final_validation = validate_joint_path(result, valid, .005)
+    if report is not None:
+        report.update(candidate_edges_attempted=checks, final_validation=final_validation,
+                      total_checked_states=report['candidate_checked_states']+final_validation['checked_states'],
+                      raw_fallback_edges=fallback_edges,
+                      accepted_shortcuts=len(result)-1-fallback_edges,
+                      wall_s=time.perf_counter()-started)
+    if not final_validation['valid']:
         raise ControllerFailure('shortened_return_path_invalid')
     return np.asarray(result)
 
@@ -180,6 +205,14 @@ class VisualGraspController:
     def _arm_valid(self, q5, jaw):
         return self.checker.evaluate(np.r_[q5, jaw], require_fixed_gripper=False)['valid']
 
+    def _approach_shortcut_valid(self, q5):
+        """Filter new chords by the existing conservative certificate, not CCD."""
+        certificate = self.checker.evaluate(np.r_[q5, .5], require_fixed_gripper=False,
+                                           certificate_margin_m=.002)
+        minimum = certificate.get('min_distance_m')
+        return bool(certificate['valid'] and minimum is not None and np.isfinite(minimum)
+                    and minimum >= .002)
+
     def _plan_approach(self, current):
         self.approach = solve_pinch_ik(self.rig, np.r_[self.target_xy, .06], current)
         self.down = solve_pinch_ik(self.rig, np.r_[self.target_xy, .019], self.approach)
@@ -197,7 +230,40 @@ class VisualGraspController:
         self.sweep_reports.append({'stage': 'planned_closure', **sweep})
         if not sweep['valid']:
             raise ControllerFailure('grasp_closure_sweep_invalid')
-        self.approach_path = np.asarray(plan['path'])
+        raw_path = np.asarray(plan['path'], dtype=float)
+        execution = {'stage': 'approach_execution', 'method': 'bounded_validated_shortcuts',
+                     'jaw_rad': .5, 'arm_margin_m': .001,
+                     'shortcut_candidate_margin_m': .002,
+                     'final_min_certified_bound_m': None,
+                     'raw_waypoint_count': len(raw_path),
+                     'raw_path_length_rad': float(np.linalg.norm(np.diff(raw_path, axis=0), axis=1).sum()),
+                     'raw_motion_duration_s': motion_duration(raw_path), 'shortcut': {}}
+        self.plan_reports.append(execution)
+        def executed_path_valid(q5):
+            certificate = self.checker.evaluate(np.r_[q5, .5], require_fixed_gripper=False)
+            minimum = certificate.get('min_distance_m')
+            if certificate['valid'] and minimum is not None:
+                previous = execution['final_min_certified_bound_m']
+                execution['final_min_certified_bound_m'] = (minimum if previous is None
+                                                          else min(previous, minimum))
+            return certificate['valid']
+        try:
+            self.approach_path = shorten_path(
+                raw_path, executed_path_valid, max_checks=512, report=execution['shortcut'],
+                shortcut_valid=self._approach_shortcut_valid)
+        except (ControllerFailure, ValueError, RuntimeError) as error:
+            execution['failure_reason'] = str(error)
+            reason = ('approach_shortcut_final_path_invalid' if isinstance(error, ControllerFailure)
+                      else 'approach_shortcut_validation_error')
+            failure = ControllerFailure(reason)
+            failure.initialization_planning = self.plan_reports
+            failure.initialization_sweeps = self.sweep_reports
+            failure.initialization_checker = self.checker
+            raise failure from error
+        execution.update(executed_path=self.approach_path.tolist(),
+                         executed_waypoint_count=len(self.approach_path),
+                         executed_path_length_rad=float(np.linalg.norm(np.diff(self.approach_path, axis=0), axis=1).sum()),
+                         executed_motion_duration_s=motion_duration(self.approach_path))
 
     def _configuration_sweep(self, start, end):
         return validate_configuration_path(
@@ -339,6 +405,16 @@ class VisualGraspController:
                 points.append(q.copy())
             self.transport.append(np.asarray(points))
         self.transport_index = 0
+        legs = [{'index': index, 'stage': 'lower' if index == len(self.transport)-1 else 'transport',
+                 'path': points.tolist(), 'waypoint_count': len(points),
+                 'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
+                 'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
+                for index, points in enumerate(self.transport)]
+        duration = sum(leg['motion_duration_s']+.6 for leg in legs)
+        self.plan_reports.append({'stage': 'transport_execution_plan', 'planned_at_s': self.last_elapsed,
+                                  'legs': legs, 'motion_and_arrival_s': duration,
+                                  'budget_finish_lower_bound_s': self.last_elapsed+duration+14.,
+                                  'budget_note': '14s includes release and minimum original safe-return reservation; necessary only'})
 
     def _released_valid(self, q5, jaw=.5):
         return (self._arm_valid(q5, jaw)
@@ -404,6 +480,11 @@ class VisualGraspController:
             raise ControllerFailure('vertical_separation_did_not_clear')
         return_path, method = self._return_path(points[-1])
         required_s = motion_duration(points)+.6+motion_duration(return_path)+.6+1.5+.6+.1
+        self.plan_reports.append({'stage': 'release_return_budget', 'planned_at_s': elapsed,
+                                  'separation_motion_s': motion_duration(points),
+                                  'return_motion_s': motion_duration(return_path),
+                                  'required_s': required_s, 'predicted_completion_s': elapsed+required_s,
+                                  'within_original_90s': elapsed+required_s <= 90})
         if elapsed+required_s > 90:
             raise ControllerFailure('insufficient_time_for_safe_return')
         self.release_record.update(separation_path=np.asarray(points).tolist(),

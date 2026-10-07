@@ -51,6 +51,44 @@ class ConservativeCollisionTests(unittest.TestCase):
         self.assertEqual(checker.margin_m, .001)
         self.assertEqual(checker.bounds.shape, (5, 2))
 
+    def test_default_none_and_original_certificate_margin_are_identical(self):
+        model, checker = self.checker()
+        q = np.r_[np.zeros(5), .5]
+        original = checker.native.evaluate
+        with patch.object(checker.native, 'evaluate', wraps=original) as backend:
+            implicit = checker.evaluate(q, require_fixed_gripper=False)
+            none = checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=None)
+            explicit = checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=.001)
+        self.assertEqual(implicit, none)
+        self.assertEqual(implicit, explicit)
+        self.assertEqual([call.args[3] for call in backend.call_args_list], [.001] * 3)
+        self.assertEqual(checker.margin_m, .001)
+
+    def test_higher_certificate_margin_reaches_native_without_changing_guard(self):
+        model, checker = self.checker()
+        q = np.r_[np.zeros(5), .5]
+        baseline = checker.evaluate(q, require_fixed_gripper=False)
+        original = checker.native.evaluate
+        with patch.object(checker.native, 'evaluate', wraps=original) as backend:
+            checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=.002)
+            repeated = checker.evaluate(q, require_fixed_gripper=False)
+        self.assertEqual([call.args[3] for call in backend.call_args_list], [.002, .001])
+        self.assertEqual(checker.margin_m, .001)
+        self.assertEqual(repeated, baseline)
+
+    def test_lower_and_nonfinite_margin_rejected_before_kinematics_or_backend(self):
+        model, checker = self.checker()
+        before = checker.data.qpos.copy()
+        with patch.object(checker.native, 'evaluate', side_effect=AssertionError('forbidden backend')) as backend, \
+                patch.object(mujoco, 'mj_kinematics', side_effect=AssertionError('forbidden kinematics')) as kinematics:
+            for margin in (np.nextafter(.001, -np.inf), .0005, 0., -1., np.nan, np.inf, -np.inf):
+                with self.subTest(margin=margin), self.assertRaises(ValueError):
+                    checker.evaluate(np.zeros(5), certificate_margin_m=margin)
+        backend.assert_not_called()
+        kinematics.assert_not_called()
+        np.testing.assert_array_equal(checker.data.qpos, before)
+        self.assertEqual(checker.margin_m, .001)
+
     def test_limits_nonfinite_and_actual_jaw_preserved(self):
         model, checker = self.checker()
         self.assertEqual(checker.evaluate(np.r_[np.zeros(5), .25])['reason'], 'gripper_not_fixed')
