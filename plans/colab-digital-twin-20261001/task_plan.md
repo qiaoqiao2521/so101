@@ -36,6 +36,10 @@ S2–S4 的具体正反例与候选容差见 `../../docs/MUJOCO_MOTION_PLANNING.
 
 ## Status
 
+2026-10-07 完整周期只读拆分与两次等值性能候选完成。在线52点收益0.7776%/0.8727%均低于事先5%门，候选归档、生产恢复。未运行新P1/P2或20＋20；最新开发10/10/P95 56.759456ms/dev-09余2.033601s保持。30条累计4255.701335/9000s，根Codex接续实际native热点与同步录像/规划，原安全与采样保持。[诊断报告](../../experiments/colab-twin/output/visual-grasp-world-constants-20261007/REPORT.md)。
+
+以下保留前轮状态：
+
 2026-10-07 有界接近缩短完成。累计预算1800→9000s，原14次1799.422648s保留；最终26次4202.513212s。baseline P2 8/10、安全停机1；唯一revision1 P1完整74.14sim通过，固定P2 10/10、正常5/5、扰动5/5、完整注入5/5、安全停机0。仅新候选请求2mm，原最终/在线1mm、全部pair/完整夹爪扫/90sim及120wall保持。70项回归、11保存路线和独立审核完成。[本轮报告](../../experiments/colab-twin/output/visual-grasp-approach-shortcut-20261007/REPORT.md)。
 
 - [x] 保留原预算前缀，并冻结9000s、baseline＋一次物理修正范围。
