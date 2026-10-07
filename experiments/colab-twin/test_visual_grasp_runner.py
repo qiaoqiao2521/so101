@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch, Mock
-from run_visual_grasp import check_phase_prerequisites, load_protocol, source_hashes, digest, record_collision_backend
+from run_visual_grasp import check_phase_prerequisites, load_protocol, source_hashes, digest, record_collision_backend, finalize_episode_video
 
 
 class PhaseAdmissionTests(unittest.TestCase):
@@ -95,6 +95,46 @@ class PhaseAdmissionTests(unittest.TestCase):
             record_collision_backend(status, checker)
         self.assertEqual(status['failure_reason'], 'physical_task_not_complete')
         checker.native.close.assert_called_once_with()
+
+
+class VideoFinalizationTests(unittest.TestCase):
+    def writer(self, **changes):
+        receipt=dict(complete=True,captured_frames=10,encoded_frames=10)
+        receipt.update(changes)
+        return Mock(report=Mock(return_value=receipt))
+
+    def test_no_video_preserves_case(self):
+        status={'passed':True}
+        finalize_episode_video(None,status,0)
+        self.assertEqual(status,{'passed':True})
+
+    def test_complete_video_preserves_physical_success(self):
+        writer=self.writer();status={'passed':True,'failure_reason':None}
+        finalize_episode_video(writer,status,10)
+        self.assertTrue(status['passed']);writer.close.assert_called_once_with()
+        self.assertEqual(status['video_recording']['encoded_frames'],10)
+
+    def test_bad_counts_or_incomplete_receipt_fail_successful_case(self):
+        for change in ({'complete':False},{'captured_frames':9},{'encoded_frames':9}):
+            with self.subTest(change=change):
+                status={'passed':True};finalize_episode_video(self.writer(**change),status,10)
+                self.assertFalse(status['passed']);self.assertEqual(status['failure_reason'],'video_finalize_failed')
+
+    def test_empty_receipt_cannot_pass_grasp(self):
+        status={'passed':True}
+        finalize_episode_video(self.writer(captured_frames=0,encoded_frames=0),status,0)
+        self.assertFalse(status['passed'])
+
+    def test_encoder_deadline_failure_is_recorded(self):
+        writer=self.writer(complete=False);writer.close.side_effect=TimeoutError('video_finalize_deadline')
+        status={'passed':True};finalize_episode_video(writer,status,10)
+        self.assertFalse(status['passed']);self.assertEqual(status['video_error_type'],'TimeoutError')
+
+    def test_video_failure_keeps_physical_cause(self):
+        writer=self.writer(complete=False);writer.close.side_effect=RuntimeError('encode failed')
+        status={'passed':False,'failure_reason':'payload_lost'}
+        finalize_episode_video(writer,status,10)
+        self.assertEqual(status['failure_reason'],'payload_lost');self.assertEqual(status['video_error'],'encode failed')
 
 
 if __name__=='__main__':unittest.main()

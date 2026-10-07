@@ -60,6 +60,24 @@ def record_collision_backend(status, checker):
         checker.native.close()
 
 
+def finalize_episode_video(writer, status, frame_count):
+    """Encoding belongs to the case budget and cannot silently pass on failure."""
+    if writer is None:
+        return
+    try:
+        writer.close()
+        receipt = writer.report()
+        status['video_recording'] = receipt
+        if (not receipt.get('complete') or receipt.get('captured_frames') != frame_count
+                or receipt.get('encoded_frames') != frame_count
+                or (status.get('passed') and frame_count == 0)):
+            raise RuntimeError('video_recording_incomplete')
+    except Exception as error:
+        status.update(passed=False, video_recording=writer.report(),
+                      video_error_type=type(error).__name__, video_error=str(error))
+        status['failure_reason'] = status.get('failure_reason') or 'video_finalize_failed'
+
+
 def reset_scene(model, rig, xy):
     """Reset-only fixture placement; no scripted object motion after this call."""
     data = mujoco.MjData(model)
@@ -155,7 +173,7 @@ def run_p0(source, out, protocol, deadline):
 def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
-    import imageio.v2 as imageio
+    from deferred_video import DeferredVideo
     out.mkdir(exist_ok=False)
     start_wall=time.monotonic()
     deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
@@ -185,7 +203,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         controller=VisualGraspController(rig,first.xy_m,data.qpos[:6].copy(),seed=0,target_timestamp_s=0.0,
                                          released_query=released_query)
         if video:
-            writer=imageio.get_writer(out/'grasp-place.mp4',fps=25,codec='libx264',quality=8)
+            writer=DeferredVideo(model,out/'grasp-place.mp4',max_frames=2250,deadline=deadline)
         time0=float(data.time); tick=0; next_image=.5
         last={'target_frozen':False,'stage':'approach'}
         while float(data.time)-time0 < protocol['max_sim_s']-1e-9:
@@ -269,8 +287,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             if injected and pulse_count==10 and pulse_after is None:
                 pulse_after=data.qpos[:6].tolist()
             if writer is not None and tick%2==0:
-                renderer.update_scene(data,camera='overview')
-                writer.append_data(renderer.render()); frame_count+=1
+                writer.capture(data,tick); frame_count+=1
             tick+=1
             if obstacle_steps or status['safety_stop']:
                 status['safety_stop']=True
@@ -301,7 +318,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         status.update(passed=False,error_type=type(error).__name__,error=str(error))
         if not status.get('failure_reason'): status['failure_reason']=str(error)
     finally:
-        if writer is not None: writer.close()
+        finalize_episode_video(writer,status,frame_count)
         if renderer is not None: renderer.close()
         status.update(case=case,wall_s=time.monotonic()-start_wall,steps=len(rows),
                       release_audit=release_audit.report(),
