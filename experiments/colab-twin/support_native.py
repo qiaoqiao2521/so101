@@ -35,6 +35,12 @@ _LOAD_LOCK = RLock()
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
+_MODES = np.asarray(["none", "enclosing_local_AABB", "full"])
+_REASONS = np.asarray(["none", "separation_certified", "no_separation_certificate",
+                       "nonfinite_or_unsupported_arithmetic", "invalid_margin",
+                       "invalid_arithmetic_environment", "invalid_pair_index"])
+_MODES.setflags(write=False)
+_REASONS.setflags(write=False)
 
 
 def _sha(path):
@@ -287,11 +293,16 @@ class NativeSupport:
         with self._lock:
             return self._evaluate_locked(positions, rotations, pairs, margin)
 
-    def _evaluate_locked(self, positions, rotations, pairs, margin):
-        if not self._handle:
-            raise RuntimeError("NativeSupport is closed")
-        p = np.array(positions, dtype=np.float64, order="C", copy=True)
-        R = np.array(rotations, dtype=np.float64, order="C", copy=True)
+    def bind_pairs(self, pairs):
+        """Own a validated ordered snapshot; evaluation retains this handle's lock."""
+        with self._lock:
+            if not self._handle:
+                raise RuntimeError("NativeSupport is closed")
+            q = self._copy_pairs(pairs)
+            q.setflags(write=False)
+            return _BoundPairs(self, q)
+
+    def _copy_pairs(self, pairs):
         raw_pairs = np.asarray(pairs)
         if raw_pairs.dtype.kind not in ("i", "u"):
             raise ValueError("Pair indices must have an integer dtype without truncation")
@@ -299,7 +310,19 @@ class NativeSupport:
             raise ValueError("Pairs must have shape Mx2")
         if raw_pairs.size and (np.any(raw_pairs < 0) or np.any(raw_pairs >= self.geometry_count)):
             raise ValueError("Pair indices must refer to owned original geometry")
-        q = np.array(raw_pairs, dtype=np.int64, order="C", copy=True)
+        return np.array(raw_pairs, dtype=np.int64, order="C", copy=True)
+
+    def _evaluate_locked(self, positions, rotations, pairs, margin):
+        if not self._handle:
+            raise RuntimeError("NativeSupport is closed")
+        return self._decode(*self._frame_locked(positions, rotations, pairs, margin))
+
+    def _frame_locked(self, positions, rotations, pairs, margin, *, bound=False):
+        if not self._handle:
+            raise RuntimeError("NativeSupport is closed")
+        p = np.array(positions, dtype=np.float64, order="C", copy=True)
+        R = np.array(rotations, dtype=np.float64, order="C", copy=True)
+        q = pairs if bound else self._copy_pairs(pairs)
         if p.shape != (self.geometry_count, 3) or R.shape != (self.geometry_count, 3, 3):
             raise ValueError("Frame position/rotation shapes do not match original geometry")
         if q.ndim != 2 or q.shape[1] != 2:
@@ -311,14 +334,37 @@ class NativeSupport:
                                   numeric.ctypes.data_as(_DOUBLE), flags.ctypes.data_as(_INT64))
         if status:
             raise RuntimeError("Native frame evaluation failed closed")
-        modes = np.asarray(["none", "enclosing_local_AABB", "full"])
-        reasons = np.asarray(["none", "separation_certified", "no_separation_certificate",
-                              "nonfinite_or_unsupported_arithmetic", "invalid_margin",
-                              "invalid_arithmetic_environment", "invalid_pair_index"])
-        return {"certified": flags[:, 0].astype(bool), "support_mode": modes[flags[:, 1]],
+        return numeric, flags
+
+    @staticmethod
+    def _decode(numeric, flags):
+        return {"certified": flags[:, 0].astype(bool), "support_mode": _MODES[flags[:, 1]],
                 "direction_index": flags[:, 2], "evaluations": flags[:, 3],
-                "reason": reasons[flags[:, 4]], "orientation": flags[:, 5],
+                "reason": _REASONS[flags[:, 4]], "orientation": flags[:, 5],
                 "n": numeric[:, :3], "projection_a": numeric[:, 3:5], "projection_b": numeric[:, 5:7],
                 "gap_lower": numeric[:, 7], "norm_squared_upper": numeric[:, 8],
                 "squared_gap_lower": numeric[:, 9], "squared_threshold_upper": numeric[:, 10],
                 "lower_bound_m": numeric[:, 11]}
+
+
+class _BoundPairs:
+    """Private immutable query policy; each call owns fresh frame/output arrays."""
+
+    def __init__(self, owner, pairs):
+        self._owner = owner
+        self._pairs = pairs
+
+    def evaluate(self, positions, rotations, margin):
+        with self._owner._lock:
+            return self._owner._decode(*self._owner._frame_locked(positions, rotations, self._pairs, margin, bound=True))
+
+    def summary(self, positions, rotations, margin):
+        with self._owner._lock:
+            numeric, flags = self._owner._frame_locked(positions, rotations, self._pairs, margin, bound=True)
+            certified = flags[:, 0].astype(bool)
+            failures = np.flatnonzero(~certified)
+            nearest = int(failures[0]) if len(failures) else int(np.argmin(numeric[:, 11]))
+            return {"valid": not len(failures), "nearest_index": nearest,
+                    "lower_bound_m": float(numeric[nearest, 11]),
+                    "certificate_reason": str(_REASONS[flags[nearest, 4]]),
+                    "certified_pairs": int(certified.sum()), "checked_pairs": len(self._pairs)}

@@ -43,6 +43,7 @@ class ConservativeCollisionChecker(CollisionChecker):
             else:
                 raise ValueError('Separation certificates support only finite mesh/box geometry')
         self.native = NativeSupport(points, kinds)
+        self._native_query = self.native.bind_pairs(self.pair_indices)
         self.distance_kind = 'certified_lower_bound'
 
     def evaluate(self, q5orq6, *, require_fixed_gripper=True, certificate_margin_m=None):
@@ -67,22 +68,20 @@ class ConservativeCollisionChecker(CollisionChecker):
         self.data.qvel[:] = 0
         try:
             mujoco.mj_kinematics(self.model, self.data)
-            result = self.native.evaluate(self.data.geom_xpos[self.geometry_ids],
-                                          self.data.geom_xmat[self.geometry_ids].reshape(-1, 3, 3),
-                                          self.pair_indices, margin)
+            result = self._native_query.summary(self.data.geom_xpos[self.geometry_ids],
+                                                self.data.geom_xmat[self.geometry_ids].reshape(-1, 3, 3),
+                                                margin)
         except (RuntimeError, ValueError) as error:
             return dict(invalid, reason='geometry_certificate_unavailable', detail=str(error))
-        failures = np.flatnonzero(~result['certified'])
-        bounds = result['lower_bound_m']
-        nearest = int(failures[0]) if len(failures) else int(np.argmin(bounds))
+        nearest = result['nearest_index']
         first, second = self.pairs[nearest]
-        lower_bound = float(bounds[nearest]) if np.isfinite(bounds[nearest]) else None
-        return {'valid': not len(failures),
-                'min_distance_m': lower_bound if not len(failures) else None,
+        lower_bound = result['lower_bound_m'] if np.isfinite(result['lower_bound_m']) else None
+        return {'valid': result['valid'],
+                'min_distance_m': lower_bound if result['valid'] else None,
                 'pair_lower_bound_m': lower_bound,
                 'distance_kind': self.distance_kind,
-                'reason': 'clear' if not len(failures) else 'uncertified_geometry_clearance',
-                'certificate_reason': str(result['reason'][nearest]),
+                'reason': 'clear' if result['valid'] else 'uncertified_geometry_clearance',
+                'certificate_reason': result['certificate_reason'],
                 'pair': [self._names[first], self._names[second]],
-                'certified_pairs': int(result['certified'].sum()),
-                'checked_pairs': len(self.pairs)}
+                'certified_pairs': result['certified_pairs'],
+                'checked_pairs': result['checked_pairs']}

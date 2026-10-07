@@ -54,32 +54,32 @@ class ConservativeCollisionTests(unittest.TestCase):
     def test_default_none_and_original_certificate_margin_are_identical(self):
         model, checker = self.checker()
         q = np.r_[np.zeros(5), .5]
-        original = checker.native.evaluate
-        with patch.object(checker.native, 'evaluate', wraps=original) as backend:
+        original = checker._native_query.summary
+        with patch.object(checker._native_query, 'summary', wraps=original) as backend:
             implicit = checker.evaluate(q, require_fixed_gripper=False)
             none = checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=None)
             explicit = checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=.001)
         self.assertEqual(implicit, none)
         self.assertEqual(implicit, explicit)
-        self.assertEqual([call.args[3] for call in backend.call_args_list], [.001] * 3)
+        self.assertEqual([call.args[2] for call in backend.call_args_list], [.001] * 3)
         self.assertEqual(checker.margin_m, .001)
 
     def test_higher_certificate_margin_reaches_native_without_changing_guard(self):
         model, checker = self.checker()
         q = np.r_[np.zeros(5), .5]
         baseline = checker.evaluate(q, require_fixed_gripper=False)
-        original = checker.native.evaluate
-        with patch.object(checker.native, 'evaluate', wraps=original) as backend:
+        original = checker._native_query.summary
+        with patch.object(checker._native_query, 'summary', wraps=original) as backend:
             checker.evaluate(q, require_fixed_gripper=False, certificate_margin_m=.002)
             repeated = checker.evaluate(q, require_fixed_gripper=False)
-        self.assertEqual([call.args[3] for call in backend.call_args_list], [.002, .001])
+        self.assertEqual([call.args[2] for call in backend.call_args_list], [.002, .001])
         self.assertEqual(checker.margin_m, .001)
         self.assertEqual(repeated, baseline)
 
     def test_lower_and_nonfinite_margin_rejected_before_kinematics_or_backend(self):
         model, checker = self.checker()
         before = checker.data.qpos.copy()
-        with patch.object(checker.native, 'evaluate', side_effect=AssertionError('forbidden backend')) as backend, \
+        with patch.object(checker._native_query, 'summary', side_effect=AssertionError('forbidden backend')) as backend, \
                 patch.object(mujoco, 'mj_kinematics', side_effect=AssertionError('forbidden kinematics')) as kinematics:
             for margin in (np.nextafter(.001, -np.inf), .0005, 0., -1., np.nan, np.inf, -np.inf):
                 with self.subTest(margin=margin), self.assertRaises(ValueError):
@@ -99,7 +99,7 @@ class ConservativeCollisionTests(unittest.TestCase):
 
     def test_library_failure_cannot_fall_back_to_approximate_distance(self):
         model, checker = self.checker()
-        with patch.object(checker.native, 'evaluate', side_effect=RuntimeError('invalid environment')), \
+        with patch.object(checker._native_query, 'summary', side_effect=RuntimeError('invalid environment')), \
                 patch.object(mujoco, 'mj_geomDistance', side_effect=AssertionError('forbidden CCD')):
             result = checker.evaluate(np.zeros(5))
         self.assertFalse(result['valid'])
