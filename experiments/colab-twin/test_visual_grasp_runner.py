@@ -1,3 +1,4 @@
+import itertools
 """Gate failures must prevent physics and final-test reuse."""
 import json
 from pathlib import Path
@@ -251,7 +252,7 @@ class RuntimeBudgetTests(unittest.TestCase):
     def test_case_retains_120_second_cap_and_shorter_finite_phase_cap(self):
         for index,(phase_deadline,end) in enumerate(((None,220.),(300.,220.),(150.,150.))):
             with self.subTest(phase_deadline=phase_deadline):
-                with patch('run_visual_grasp.time.monotonic',side_effect=[100.,end,end]), \
+                with patch('run_visual_grasp.time.monotonic',side_effect=itertools.chain([100.], itertools.repeat(end))), \
                         patch('run_visual_grasp.build_contact_scene',side_effect=RuntimeError('mock initialization')) as build, \
                         patch('run_visual_grasp.mujoco.mj_step') as step:
                     report=run_physical_episode(self.source,self.root/str(index),

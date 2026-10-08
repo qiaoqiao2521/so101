@@ -1,5 +1,15 @@
 # Colab 数字孪生实验平台
 
+## 2026-10-09 R3b：高位等待时持续推进物理
+
+- [x] 单次后台运输规划与当前姿态准入；等待保持原高位闭爪目标、stage_started、完整q6/载荷守卫。
+- [x] 163 CPU回归、六保存输入原规划等值、绑定新源码的完整控制周期；启动中断清理修复完成。
+- [x] 原P0 24/24、P1 1/1、P2 10/10开发门通过；P3/20＋20未启动。
+- [x] 根串行审查有效交付范围；最终推送、C保护项及产物读回以交付回执为准。
+- [ ] 完整50Hz仍未通过：P95 33.712277ms；根Codex接续完整扫掠成本与同步释放/回位。
+
+累计预算与尝试上限均null；90sim/120wall及原安全阈值保留。当前[新绑定报告](../../experiments/colab-twin/output/visual-grasp-r3b-startup-20261009/REPORT.md)独立于初版9/10失败。[事前门](../../experiments/colab-twin/output/visual-grasp-r3b-async-20261009/gate-spec.json)。
+
 ## 2026-10-08 R3a运输规划隔离
 
 用户继续授权R3。先把运输规划移到独立数据worker，主update保持同步等待并一次接纳。worker不得推进阶段或写主query/native；失败不提交部分路线。等待计入原完整周期和case墙钟。参见[当前执行](progress.md#current2026-10-08-r3a运输规划隔离完成)。

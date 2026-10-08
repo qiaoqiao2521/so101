@@ -225,7 +225,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             if last['status']=='failed':
                 if last['failure_reason'] in ('measured_arm_configuration_invalid','current_pose_command_chord_invalid',
                                               'measured_closure_sweep_invalid','measured_separation_invalid',
-                                              'measured_released_object_clearance_invalid'):
+                                              'measured_released_object_clearance_invalid',
+                                              'transport_admission_chord_invalid',
+                                              'transport_admission_payload_invalid',
+                                              'transport_first_command_invalid'):
                     status['safety_stop']=True
                 raise RuntimeError('controller: '+str(last['failure_reason']))
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit_after_controller')
@@ -252,6 +255,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             if last['stage']=='release':
                 release_audit.start(data.qpos[6:8])  # Before the first opening command.
             data.ctrl[:]=command
+            if (controller.transport_events and controller.transport_events[-1]['event']=='admission'
+                    and controller.transport_events[-1]['elapsed_s']==elapsed
+                    and controller.transport_events[-1]['accepted']):
+                controller.transport_events[-1]['issued']=True
             obstacle=model.geom('approach_obstacle').id
             release_force_peak=0.
             for _ in range(10):
@@ -320,6 +327,17 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         status.update(passed=False,error_type=type(error).__name__,error=str(error))
         if not status.get('failure_reason'): status['failure_reason']=str(error)
     finally:
+        if controller is not None:
+            try:
+                controller.close()
+            except Exception as cleanup_error:
+                status.update(passed=False, transport_cleanup_error=str(cleanup_error))
+                if not status.get('failure_reason'):
+                    status['failure_reason'] = 'transport_cleanup_failed'
+            status['transport_events'] = controller.transport_events
+            status['transport_job'] = (dict(controller.transport_job.execution,
+                                          state=controller.transport_job.state)
+                                       if controller.transport_job is not None else None)
         finalize_episode_video(writer,status,frame_count)
         if renderer is not None: renderer.close()
         status.update(case=case,wall_s=time.monotonic()-start_wall,steps=len(rows),
@@ -349,6 +367,9 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         write_json(out/'trajectory.json',rows)
         write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)
+        status['wall_s'] = time.monotonic()-start_wall
+        if time.monotonic()>=deadline:
+            status.update(passed=False,failure_reason='wall_time_limit')
         write_json(out/'report.json',status)
     return status
 

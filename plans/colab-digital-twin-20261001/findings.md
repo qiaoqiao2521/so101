@@ -1,5 +1,17 @@
 # Findings
 
+## 2026-10-09 R3b 调度与准入边界
+
+R3a同次update等待worker结束，不能证明等待时物理仍推进。本轮保留原hold阶段，原到达判据满足后仅发起一次请求；每次轮询不等待。冻结目标/载荷/场景上下文，允许encoder/time自然变化；结果到达时用当拍q6重新扫掠至冻结路径首点，并以.005rad验证载荷连边。主线程不接受worker阶段变化。
+
+[Python Thread文档](https://docs.python.org/3.12/library/threading.html)规定is_alive表示线程仍在运行，join会等待结束。非阻塞轮询不等于可硬取消native；异常时发协作取消信号，并在case清理内实际join。worker耗时与主循环重叠，不得与主线程分段墙钟相加。采用Wiki第33–49行两项绑定经验。
+
+Thread.start可能在操作系统线程创建后、调用返回前被中断。只检查start返回标志会漏join；新实现记录launch_attempted及worker进入ack，实际join成功才确认清理。无ack且join失败保持unknown/unconfirmed，可重试清理，原异常不丢失。37项独立审查通过，但严格pre-ack窗口与硬native取消未证明。[线程审查](../../experiments/colab-twin/output/visual-grasp-r3b-startup-20261009/r3b-worker-review-initial.json)。
+
+新源原P0 24/24、P1 1/1、固定P2 10/10及232项最终开发读回通过。初版P2 9/10保留，不能把新成功归因于启动修复。完整周期P95 33.712277ms，50Hz失败；扫掠主线程子树46.811775s约占controller83.9%，与BoundPairs.summary及worker重叠视图不重复相加。[周期及主成本](../../experiments/colab-twin/output/visual-grasp-r3b-startup-20261009/r3b-cycle-review-initial.json)。
+
+开发审计初版误将R2归档与R3a哈希比较，且要求poll_count等于等待积分行数。启动与最终接纳均轮询，最终接纳后的物理拍已执行transport，故poll_count=等待hold积分行数+1。纠正只涉及审计脚本，两份失败原文保留；生产与守卫阈值未改，也未重跑物理。raw审核亦保留字典update误识别的失败初版。知识收尾already_covered，未写共享Wiki或刷新索引。
+
 ## 2026-10-08 R3a隔离与暂停边界
 
 最终129项CPU回归通过。六保存输入中，30腿/909 waypoint/879 edge/每分支3907次native调用顺序、1113495 pair的14字段逐位等值；独立466项只读审核重建保存路径采样并核查询指纹，未重算FK/native。原计算核只更名，23个其他方法保持。旧metadata fixture改为直接审计算核，所有断言保留；初版回归失败日志仍在。[等值读回](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/r3-equivalence-readback.json)。

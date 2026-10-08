@@ -21,7 +21,7 @@ from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
 from visual_localization import TopDownCalibration
-from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob
+from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob, AsyncTransportPlanningJob
 
 
 BOX_CORNERS = np.array([[x, y, z] for x in (-1., 1.)
@@ -171,6 +171,10 @@ class VisualGraspController:
         self.observation = None
         self.sweep_request_seq = 0
         self.transport_request_seq = 0
+        self.transport_job = None
+        self.transport_request_binding = None
+        self.transport_events = []
+        self.transport_wait = None
         self.failure_reason = None
         self.done = False
         self.transport = []
@@ -487,6 +491,130 @@ class VisualGraspController:
         self.transport_index = 0
         self.plan_reports.append(report)
 
+    def _async_transport_binding(self):
+        """Stable hold assumptions; fresh observations are checked at admission."""
+        def snapshot(value):
+            if isinstance(value, np.ndarray):
+                return snapshot(value.tolist())
+            if isinstance(value, dict):
+                return tuple((key, snapshot(item)) for key, item in sorted(value.items()))
+            if isinstance(value, (tuple, list)):
+                return tuple(snapshot(item) for item in value)
+            return value
+        names = ('transport_request_seq', 'stage_started', 'points', 'duration', 'jaw',
+                 'target_timestamp', 'target_frozen', 'target_xy', 'payload_uncertainty',
+                 'payload_relative', 'payload_rotation', 'world', 'seed', 'servo_offset')
+        context = tuple((name, snapshot(vars(self).get(name))) for name in names)
+        released = vars(self.released_query) if self.released_query is not None else {}
+        context += (('released_owner', id(self.released_query)),
+                    ('released_model', id(released.get('model'))),
+                    ('released_center', snapshot(released.get('center'))),
+                    ('released_uncertainty_m', released.get('uncertainty_m')))
+        return SweepBinding(self, self.checker, self.rig, self.stage, float(self.jaw), context)
+
+    def _check_transport_context(self):
+        if not self.transport_request_binding.matches(self._async_transport_binding()):
+            self.transport_job.reject('transport_context_changed')
+            raise ControllerFailure('transport_context_changed')
+
+    def _start_transport(self, q6, elapsed):
+        if self.transport_job is not None:
+            raise ControllerFailure('transport_request_already_started')
+        self.transport_request_seq += 1
+        snapshot = TransportSnapshot(q6, self.target_xy, self.payload_relative,
+                                     self.payload_rotation, self.world,
+                                     self.payload_uncertainty, elapsed)
+        self.transport_request_binding = self._async_transport_binding()
+        self.transport_job = AsyncTransportPlanningJob(self.transport_request_binding)
+        self.transport_wait = {'started_at_s': float(elapsed), 'pending_updates': 0,
+                               'snapshot_q6': list(snapshot.q6), 'hold_target_q6': list(self.reference)}
+        self.transport_events.append({'event': 'request', 'elapsed_s': float(elapsed),
+                                      'request_seq': self.transport_request_seq,
+                                      'snapshot_q6': list(snapshot.q6),
+                                      'snapshot': {name: getattr(snapshot, name) for name in
+                                                   ('q6', 'target_xy', 'payload_relative',
+                                                    'payload_rotation', 'world',
+                                                    'payload_uncertainty', 'elapsed_s')}})
+        # Model cloning remains main-thread cost and is measured in the cycle.
+        self.transport_job.start(_run_transport_plan, copy.copy(self.rig), snapshot,
+                                 self.transport_job.cancel_event)
+
+    def _poll_transport(self, q6, elapsed, *, admit=True):
+        self._check_transport_context()
+        self.transport_wait['pending_updates'] += 1
+        if not self.transport_job.poll() or not admit:
+            return False
+        proposal = self.transport_job.peek(self._async_transport_binding())
+        paths = [np.asarray(path, dtype=float) for path in proposal.paths]
+        endpoint = np.r_[paths[0][0], .015]
+        sweep = self._configuration_sweep(q6, endpoint)
+        self.sweep_reports.append({'stage': 'transport_admission', **sweep})
+        bridge = {'event': 'admission', 'elapsed_s': float(elapsed),
+                  'observation': self.observation, 'start_q6': q6.tolist(),
+                  'end_q6': endpoint.tolist(), 'configuration_sweep': sweep,
+                  'payload_validation': None, 'first_command_guard': None,
+                  'accepted': False, 'issued': False, 'proposal_report': json.loads(proposal.report_json)}
+        self.transport_events.append(bridge)
+        if not sweep['valid']:
+            raise ControllerFailure('transport_admission_chord_invalid')
+        admission_binding = self._sweep_binding(q6, endpoint, 'online_chord')
+        validation = validate_joint_path([q6[:5], paths[0][0]], self._payload_valid, .005)
+        bridge['payload_validation'] = validation
+        if not validation['valid']:
+            raise ControllerFailure('transport_admission_payload_invalid')
+        if not admission_binding.matches(self._sweep_binding(q6, endpoint, 'online_chord')):
+            raise ControllerFailure('transport_admission_observation_changed')
+        first_command = np.r_[q6[:5], .015]
+        first_sweep = self._configuration_sweep(q6, first_command)
+        first_binding = self._sweep_binding(q6, first_command, 'online_chord')
+        first_payload = (validate_joint_path([q6[:5], q6[:5]], self._payload_valid, .005)
+                         if first_sweep['valid'] else None)
+        bridge['first_command_guard'] = {'start_q6': q6.tolist(),
+                                         'end_q6': first_command.tolist(),
+                                         'configuration_sweep': first_sweep,
+                                         'payload_validation': first_payload}
+        if not first_sweep['valid'] or not first_payload['valid']:
+            raise ControllerFailure('transport_first_command_invalid')
+        # Keep every original waypoint; the new bridge starts at achieved q5.
+        paths[0] = np.vstack((q6[:5], paths[0]))
+        report = json.loads(proposal.report_json)
+        report['proposal_legs'] = report['legs']
+        report['planner_snapshot_elapsed_s'] = report['planned_at_s']
+        report['planned_at_s'] = float(elapsed)
+        legs = [{'index': index, 'stage': 'lower' if index == len(paths)-1 else 'transport',
+                 'path': points.tolist(), 'waypoint_count': len(points),
+                 'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
+                 'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
+                for index, points in enumerate(paths)]
+        duration = sum(leg['motion_duration_s']+.6 for leg in legs)
+        report.update(legs=legs, motion_and_arrival_s=duration,
+                      budget_finish_lower_bound_s=float(elapsed)+duration+14.,
+                      admission=bridge, waiting=dict(self.transport_wait,
+                                                     elapsed_s=float(elapsed)-self.transport_wait['started_at_s']),
+                      planner_execution=dict(self.transport_job.execution,
+                                             request_seq=self.transport_request_seq))
+        bridge['motion_and_arrival_s'] = duration
+        bridge['budget_finish_lower_bound_s'] = report['budget_finish_lower_bound_s']
+        if report['budget_finish_lower_bound_s'] > 90:
+            raise ControllerFailure('insufficient_time_for_transport')
+        self._check_transport_context()
+        if not first_binding.matches(self._sweep_binding(q6, first_command, 'online_chord')):
+            raise ControllerFailure('transport_admission_observation_changed')
+        self.transport_job.consume(self._async_transport_binding())
+        bridge['accepted'] = True
+        self.transport = paths
+        self.transport_index = 0
+        self.plan_reports.append(report)
+        return True
+
+    def close(self):
+        """Join an owned worker in measured case cleanup, including failures."""
+        if self.transport_job is not None:
+            self.transport_job.close()
+            for report in self.plan_reports:
+                if report.get('stage') == 'transport_execution_plan' and 'waiting' in report:
+                    report['planner_execution'].update(self.transport_job.execution)
+
     def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
         centers = [current, [.18, self.target_xy[1], .06], [.18, 0, .06],
@@ -616,9 +744,11 @@ class VisualGraspController:
         elif self.stage == 'lift':
             self._set_dwell('hold', self.lift, .015, elapsed, 1.5)
         elif self.stage == 'hold':
-            self._plan_transport(q6)
-            self.stage = 'transport'
-            self._set_motion(self.transport[0], .015, elapsed)
+            if self.transport_job is None:
+                self._start_transport(q6, elapsed)
+            if self._poll_transport(q6, elapsed):
+                self.stage = 'transport'
+                self._set_motion(self.transport[0], .015, elapsed)
         elif self.stage in ('transport', 'lower'):
             self.transport_index += 1
             if self.transport_index < len(self.transport):
@@ -673,6 +803,8 @@ class VisualGraspController:
             self.observation = (self.observation_seq, float(elapsed), tuple(q6), tuple(qvel6))
             if self.failure_reason:
                 return self._result(q6)
+            if self.stage == 'hold' and self.transport_job is not None:
+                self._check_transport_context()
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
                 raise ControllerFailure('measured_arm_configuration_invalid')
             if self.stage in ('retreat', 'settle') and not self._released_valid(q6[:5], q6[5]):
@@ -713,7 +845,8 @@ class VisualGraspController:
             if age > self.duration+8:
                 raise ControllerFailure('encoder_stage_timeout')
             arm_arrived = np.max(np.abs(q6[:5]-self.points[-1])) <= .003 and np.linalg.norm(qvel6[:5]) < .05
-            if age >= self.duration+.6 and arm_arrived:
+            hold_ready = self.stage == 'hold' and age >= self.duration+.6 and arm_arrived
+            if self.stage != 'hold' and age >= self.duration+.6 and arm_arrived:
                 self._transition(q6, elapsed)
                 age = 0.
             self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
@@ -725,7 +858,7 @@ class VisualGraspController:
                 for bounds in (self.rig.jnt_range, self.rig.actuator_ctrlrange):
                     if np.any(command < bounds[:,0]) or np.any(command > bounds[:,1]):
                         raise ControllerFailure('mapped_servo_target_out_of_bounds')
-            if self.stage in ('transport', 'lower'):
+            if self.stage in ('hold', 'transport', 'lower'):
                 valid = self._payload_valid
             elif self.stage == 'separate':
                 valid = self._separation_valid
@@ -745,8 +878,19 @@ class VisualGraspController:
                     self.reference = command.copy()
                 else:
                     raise ControllerFailure('current_pose_command_chord_invalid')
+            # Validate the unchanged hold command before starting or polling.
+            if self.stage == 'hold' and self.transport_job is not None and not hold_ready:
+                self._poll_transport(q6, elapsed, admit=False)
+            if hold_ready:
+                self._transition(q6, elapsed)
+                if self.stage == 'transport':
+                    self.reference = np.r_[self.points[0], self.jaw]
+                    command = self.reference.copy()
+                    self.last_sweep_report = self.transport_events[-1]['first_command_guard']['configuration_sweep']
             return self._result(command)
         except (ControllerFailure, ValueError, RuntimeError) as error:
+            if self.transport_job is not None:
+                self.transport_job.reject(str(error))
             self.failure_reason = str(error)
             return self._result(q6)
 
@@ -761,7 +905,7 @@ class VisualGraspController:
                 'replans': self.replans, 'controller_completion_is_task_success': False}
 
 
-def _run_transport_plan(rig, snapshot):
+def _run_transport_plan(rig, snapshot, cancel_event=None):
     """Own all planning data; never construct or mutate the live controller."""
     context = VisualGraspController.__new__(VisualGraspController)
     context.rig = rig
@@ -778,6 +922,18 @@ def _run_transport_plan(rig, snapshot):
     context.plan_reports = []
     context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
     try:
+        if cancel_event is not None:
+            original_valid = context._payload_valid
+            def cooperative_valid(q5):
+                if cancel_event.is_set():
+                    raise ControllerFailure('transport_planning_cancelled')
+                valid = original_valid(q5)
+                if cancel_event.is_set():
+                    raise ControllerFailure('transport_planning_cancelled')
+                return valid
+            context._payload_valid = cooperative_valid
+            if cancel_event.is_set():
+                raise ControllerFailure('transport_planning_cancelled')
         context._compute_transport(np.asarray(snapshot.q6))
         proposal = TransportPlan(context.transport,
                                  json.dumps(context.plan_reports[-1], allow_nan=False))

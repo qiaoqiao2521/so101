@@ -1,5 +1,24 @@
 # Progress
 
+## CURRENT 2026-10-09 R3b持续物理等待完成，原开发门通过
+
+- Done：后台独占运输规划，原高位闭爪等待每拍推进物理并保留完整q6/载荷守卫。当前姿态桥与实际首命令双检查通过后一次提交；等待不重置stage_started。启动中断后的真实join与unknown/unconfirmed失败处理已补齐。
+- Verification：163项CPU回归、raw六输入及独立527项、worker37项、代码27项通过。原模型/native/协议和85源前后保持；原计算与释放/回位算法不变。
+- Development：新绑定P0 24/24、P1 1/1、P2固定10/10（正常5/5、扰动5/5、5次完整注入、安全0）。最终232项读回及118项独立终审通过。P1完整1873帧；dev09为88.30sim/73.419359wall，sim余1.70s。开发集合不等于留出验收。
+- Timing：3771完整body、3770周期、0截断，独立27项审核通过。41等待拍/410积分、原目标/.015与52点守卫保持；当前pose准入一次issued/joined。P95 33.712277ms，2090周期超20ms，50Hz仍失败。主线程完整q6/jaw扫掠46.811775s占controller约83.9%；同步分离规划含回位336.081ms；worker1.346580s与主线程重叠，不相加。
+- Preservation：初版P2 9/10与worker启动中断缺口保留。raw审核初版526/527、开发审核初版220/232均为审计错配，保留初版、唯一纠正脚本与报告；未因此重跑物理或更改生产。casewall真实范围含清理及数据落盘，原profile caption勘误已记录。
+- Delivery：根串行审查10文件有效范围，运行产物持续Git忽略。C保护项和最终提交/远端结果以[实际读回](../../experiments/colab-twin/output/visual-grasp-r3b-startup-20261009/delivery-verification.json)为准。累计预算及尝试次数上限null，单例90sim/120wall和原安全阈值保持。
+- Next owner：根Codex。完整扫掠仍是主成本；下一设计先冻结当前姿态/跟踪/夹爪/载荷及独立几何误放/误拒验收，再处理同步释放/回位。严格pre-ack、硬native取消、完整50Hz及实体安全未证明。P3/20＋20、ACT/云训练、实体未运行。
+- 知识收尾：already_covered。原页Wiki/自动化开发范式与智能体协作.md第33–49行两节已覆盖实际调用路径与运行版本绑定；本轮未写Wiki或刷新索引，具体线程与审计纠正留在项目findings。
+
+[最终报告](../../experiments/colab-twin/output/visual-grasp-r3b-startup-20261009/REPORT.md)。以下保留初版与历史证据。
+
+## 历史 2026-10-09 R3b初版开发门未过及修复准备
+
+161CPU、raw6独立481、周期27项审核通过；P0 24/24、P1 1/1、P2 9/10（dev-06回位120wall超时），50Hz P9543.148717ms未过。worker初版30/31，启动确认中断的join缺口保留；候选仅在ignored目录准备，E生产85源与初版P2证据保持冻结。根Codex负责整合后新绑定重验。累计与尝试预算null；单例原90sim/120wall保持。
+
+根Codex接续R3a。已冻结原协议和持续hold/结果重验边界。后台只规划；主线程每拍推进物理并运行原完整扫掠与额外载荷验证。取消累计/尝试预算；各例仍90sim/120wall。先CPU/六输入等值，再完整周期/P0/P1/P2；P3未授权本切片启动。知识采用Wiki“验证入口跟随实际调用路径”“性能对照与运行版本分别绑定”；当时收尾状态pending，后续收尾见本文件顶部；owner根Codex。
+
 ## Current：2026-10-08 R3a运输规划隔离完成
 
 用户“继续”授权接续R3；本轮先做运输规划隔离与同步接纳。worker持有独立rig/query/checker/native和owned tuple快照；update内等待时不积分。释放/脱离/回位保留同步。先冻结[范围](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/gate-spec.json)与[执行顺序](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/cycle-gate-spec.json)。
