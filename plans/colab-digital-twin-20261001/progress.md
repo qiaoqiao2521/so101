@@ -1,5 +1,20 @@
 # Progress
 
+## Current：2026-10-08 R2夹爪语义与同拍生命周期完成
+
+用户“ok”授权根Codex继续R2。预先冻结[验收范围](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/gate-spec.json)，基线8f33109、81源、C25、原model/native/protocol绑定。累计预算null；90sim/120wall与原安全阈值保持。
+
+- Done：production仅controller最小改动，保持.015rad命令与完整扫掠。113回归、真实wrapper100路径/11892姿态×285pair×14逐位等值通过；独立源码、矩阵及完整周期审核通过。
+- Development：新源原P0 24/24、P1 1/1、P2固定10/10（正常5/5、扰动5/5、完整注入5/5）通过。独立124项审核重算保存监控与2ms释放判据，全部案例failed/error字段清楚。P1为74.14sim/62.105902casewall，完整1854帧录像；P2 dev09为87.52sim/64.235346wall，sim仍仅余2.48s，不宣称泛化裕量。
+- Timing：完整诊断3730拍/3729周期、0截断；中位18.341849ms、P95 28.427508ms、467周期超20ms，50Hz失败。与D0轨迹/释放逐字节同；无同期预定性能对照，不归因提速。
+- Delivery：根Codex串行同步、提交与推送；最终状态以[交付读回](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/delivery-verification.json)为准。运行产物保持Git忽略，旧9/10及全部失败记录保留。P3/20＋20、ACT/云端训练、实体操作未启动。
+- Issues：接触证据始终unobserved，不能缩短52/244全chord。现有safety_stop只分类5个reason；绑定失效在下发前failed且passed=false，但不计入名单。零计数不能替代所有失败原因审计。身份绑定不检测模型原地修改；本实现仅供同步入口。
+- Next owner：根Codex接续R3方案与预冻验证。后台规划、安全等待、版本返验及证书复用尚未实施；开发通过不替代50Hz门。
+- 知识收尾：already_covered。原页`Wiki/自动化开发范式与智能体协作.md`的“验证入口跟随实际调用路径”和“性能对照与运行版本分别绑定”已覆盖实际调用/计数范围及运行证据边界，本轮读回确认。本轮未写Wiki或刷新索引；R2可观测性和评分具体限制留在项目findings。
+
+以下保留前轮执行证据。
+
+
 ## Current：2026-10-08 D0/R1执行完成
 
 **Authorization：** 用户在“编排agent”对话要求确保开始执行，根Codex将D0诊断及R1必要回归明确转交本对话。本对话根Codex串行统筹实施，不再等待proposal确认。R2/R3仍保留设计状态。

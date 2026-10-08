@@ -1,5 +1,20 @@
 # Findings
 
+## 2026-10-08 R2可观测性与结果生命周期
+
+两路独立审查确认：控制器仅有q6/qvel6、RGB目标估计及声明的静态几何。位置伺服的目标误差能继续施加闭爪作用；encoder开度稳定无法区分目标夹持、卡住和沿指面滑动。0.015rad命令不得替换为实测jaw。模型位置伺服定义见[MuJoCo官方](https://mujoco.readthedocs.io/en/3.3.7/XMLreference.html#actuator-position)与[力生成公式](https://mujoco.readthedocs.io/en/3.3.7/computation/index.html#force-generation)；本项目参数位于模型和grasp_episode.py的场景力矩限制。此可观测性判断是对现有输入的分析，不是接触识别实验。
+
+采用最小切片：输出开爪、闭爪、保持闭爪意图及原始jaw读数、速度和目标误差，contact_evidence始终unobserved。绑定同次update序号和自有输入副本，区分planned_closure/measured_closure/online_chord；新观测、重入、参考/伺服/命令或原场景假设变化使未消费结果失效。原完整q6 chord、当前姿态及payload/released/separation独立守卫保持。不声明在位修改模型被身份绑定检测，不扩展成异步证书。
+
+现有runner仅将5类几何失败计入safety_stop；R1/R2绑定错配不在名单。此类结果仍在data.ctrl/mj_step之前被拒绝，异常分支强制passed=false，不会误验通过；但safety_stop=0不足以证明零guard拒绝。独立审核确认这是原有评分限制，本轮保留实现和具体原因，后续R3不得沿用零计数替代故障审计。
+
+本轮最终113回归、真实wrapper100路径native逐位等值通过；新绑定原P0 24/24、P1 1/1、P2固定10/10通过。独立124项审核核对全部10例失败字段、监控、2ms释放和5次完整脉冲。P1真实抬升40.895580mm、双指持物30.70s，脱离后无再接触，完整回位。P2最小持物29.54s、最小落稳6.96s、最大释放XY漂移0.320241mm；旧9/10保持历史。开发成功不证明接触可由encoder辨识，也不证明缩短扫掠安全。[独立开发审核](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/r2-development-review.json)。
+
+完整周期P95 28.427508ms、467/3729周期超20ms，50Hz仍失败。诊断与D0保存轨迹及2ms释放逐字节相同；无同期预冻性能对照，不将单次墙钟变化归因R2。接触保持、异步规划和安全等待仍待证明。[本轮报告](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/REPORT.md)。
+
+沿用Wiki实际入口及分层验收经验：元数据/生命周期证明不能代替夹持证据、完整物理开发门或50Hz。归档范围见[事前冻结规则](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/gate-spec.json)。
+
+
 ## 2026-10-08 D0/R1授权执行与预冻
 
 用户通过“编排agent”要求确保开始执行，当前根Codex已读回原用户消息，D0诊断与R1必要回归进入实施。新输出目录 `output/visual-grasp-execution-d0-20261008/` 已由Git排除，旧产物不覆盖。原81源已复制为独立baseline-source，原协议为null累计预算/90sim/120wall；绑定XML＋13网格及原native四身份，原6eb库未改。
@@ -28,7 +43,7 @@ R1同步调用保留原validator及21其他控制方法；端点/context拥有�
 
 **建议与未解风险。** 保留模型、定位、IK/OMPL与评分资产，先诊断dev01墙钟，再抽出不可变请求/同步执行器，随后设计自由开合、接触保持与结果失效规则，最后考虑异步规划。必须证明当前状态、跟踪偏差、场景版本、载荷与已释放物体约束，以及等待/制动安全。接触保持判据、观测来源、保守短程覆盖和完整周期收益均未验证；不承诺50Hz必过。几何阈值仍为1mm/0.2mm，全部285pair、完整顶点和原采样保持，现有P2 9/10不变。
 
-采用Obsidian `Wiki/自动化开发范式与智能体协作` 的分层验收与运行版本绑定；CapMesh PIT-001/PIT-003支持在现有仓库按切片修改、继续忽略实验产物。没有据本轮proposal改写长期架构或已确认决策。具体待办见[计划](task_plan.md#2026-10-08-执行层重构顺序d0r1已授权执行)。
+采用Obsidian `Wiki/自动化开发范式与智能体协作` 的分层验收与运行版本绑定；CapMesh PIT-001/PIT-003支持在现有仓库按切片修改、继续忽略实验产物。没有据本轮proposal改写长期架构或已确认决策。具体待办见[计划](task_plan.md#2026-10-08-执行层重构顺序d0r1及r2最小切片完成)。
 
 2026-10-08 新证据：累计预算已取消，单case90sim/120wall和安全/开发门保留。多核、quad、query guard、finite四候选均归档恢复；query guard组件改善不构成完整周期通过，其与历史时钟的差异不证明代码因果。finite104回归/边界/3389220pair全14字段逐位等值，实测244改善14.64997%但variable8.52613%<10%，六次同期完整诊断未运行。原入口最新P0 24/24、P1 1/1、P2 9/10；dev01释放阶段墙钟超时，视觉根因未证。50Hz及P3门未过。
 

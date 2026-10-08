@@ -163,6 +163,9 @@ class VisualGraspController:
         self.stage = 'approach'
         self.stage_started = 0.
         self.last_elapsed = -1.
+        self.observation_seq = 0
+        self.observation = None
+        self.sweep_request_seq = 0
         self.failure_reason = None
         self.done = False
         self.transport = []
@@ -226,7 +229,8 @@ class VisualGraspController:
         for points, jaw in (([self.approach, self.down], .5), ([self.down, self.lift], .015)):
             if not validate_joint_path(points, lambda q: self._arm_valid(q, jaw), .005)['valid']:
                 raise ControllerFailure('grasp_leg_collision')
-        sweep = self._configuration_sweep(np.r_[self.down, .5], np.r_[self.down, .015])
+        sweep = self._configuration_sweep(np.r_[self.down, .5], np.r_[self.down, .015],
+                                          purpose='planned_closure')
         self.sweep_reports.append({'stage': 'planned_closure', **sweep})
         if not sweep['valid']:
             raise ControllerFailure('grasp_closure_sweep_invalid')
@@ -265,19 +269,22 @@ class VisualGraspController:
                          executed_path_length_rad=float(np.linalg.norm(np.diff(self.approach_path, axis=0), axis=1).sum()),
                          executed_motion_duration_s=motion_duration(self.approach_path))
 
-    def _configuration_sweep(self, start, end):
+    def _configuration_sweep(self, start, end, *, purpose='online_chord'):
         # Preserve the legacy input rejection before reading the jaw endpoint.
         start = _configuration(start, 'startq6')
         end = _configuration(end, 'endq6')
-        binding = self._sweep_binding(end)
+        if purpose not in ('planned_closure', 'measured_closure', 'online_chord'):
+            raise ValueError('Unknown configuration sweep purpose')
+        self.sweep_request_seq = vars(self).get('sweep_request_seq', 0) + 1
+        binding = self._sweep_binding(start, end, purpose)
         invocation = ConfigurationSweepInvocation(
             start, end, binding=binding,
             arm_resolution_rad=.005, jaw_resolution_rad=.002, max_samples=4096)
         invocation.execute(
             lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'])
-        return invocation.consume(self._sweep_binding(end))
+        return invocation.consume(self._sweep_binding(start, end, purpose))
 
-    def _sweep_binding(self, end):
+    def _sweep_binding(self, start, end, purpose):
         """Freeze current hypotheses without querying payload or execution truth.
 
         Planned closure runs before jaw/world initialization. Its jaw intent
@@ -292,10 +299,16 @@ class VisualGraspController:
                 return tuple(snapshot(item) for item in value)
             return value
 
-        names = ('stage_started', 'last_elapsed', 'target_xy', 'payload_uncertainty',
+        names = ('stage_started', 'last_elapsed', 'observation_seq', 'observation',
+                 'sweep_request_seq', 'jaw', 'reference', 'servo_offset', 'replans',
+                 'transport_index', 'target_timestamp', 'target_frozen',
+                 'target_xy', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z')
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
+        intent = 'close' if purpose != 'online_chord' else self._jaw_intent()
+        context += (('purpose', purpose), ('jaw_intent', intent),
+                    ('requested_start', tuple(start)), ('requested_end', tuple(end)))
         released = self.released_query
         released_values = vars(released) if released is not None else {}
         context += (('released_owner', id(released) if released is not None else None),
@@ -304,6 +317,27 @@ class VisualGraspController:
                     ('released_center', snapshot(released_values.get('center'))),
                     ('released_uncertainty_m', released_values.get('uncertainty_m')))
         return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context)
+
+    def _jaw_intent(self):
+        """Describe stage intent without inferring contact from encoders."""
+        if self.stage == 'close':
+            return 'close'
+        if self.stage in ('lift', 'hold', 'transport', 'lower'):
+            return 'maintain_close'
+        if self.stage in ('approach', 'descend', 'release', 'separate', 'retreat', 'settle'):
+            return 'open'
+        return 'unspecified'
+
+    def _gripper_observation(self):
+        """Return owned diagnostics, never a contact or motion certificate."""
+        observation = self.observation
+        measured = observation[2][5] if observation is not None else None
+        velocity = observation[3][5] if observation is not None else None
+        return {'intent': self._jaw_intent(), 'setpoint_rad': self.jaw,
+                'measured_rad': measured, 'velocity_rad_s': velocity,
+                'target_error_rad': self.jaw-measured if measured is not None else None,
+                'observation_seq': observation[0] if observation is not None else None,
+                'contact_evidence': 'unobserved', 'guard_extent': 'full_reference_chord'}
 
     def _set_motion(self, points, jaw, elapsed):
         self.points = np.asarray(points, dtype=float)
@@ -537,7 +571,8 @@ class VisualGraspController:
             self.stage = 'descend'
             self._set_motion([q6[:5], self.down], .5, elapsed)
         elif self.stage == 'descend':
-            sweep = self._configuration_sweep(q6, np.r_[self.down, .015])
+            sweep = self._configuration_sweep(q6, np.r_[self.down, .015],
+                                              purpose='measured_closure')
             self.sweep_reports.append({'stage': 'measured_closure', **sweep})
             if not sweep['valid']:
                 raise ControllerFailure('measured_closure_sweep_invalid')
@@ -601,6 +636,11 @@ class VisualGraspController:
             if not np.isfinite(elapsed) or elapsed < self.last_elapsed or elapsed < 0 or elapsed > 90:
                 raise ControllerFailure('invalid_or_expired_controller_time')
             self.last_elapsed = float(elapsed)
+            # Equal timestamps remain legal, but each admitted input is new.
+            # Sequence identity prevents an ABA return to the same pose from
+            # reviving a result from a previous controller call.
+            self.observation_seq += 1
+            self.observation = (self.observation_seq, float(elapsed), tuple(q6), tuple(qvel6))
             if self.failure_reason:
                 return self._result(q6)
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
@@ -687,4 +727,5 @@ class VisualGraspController:
                 'geometric_reference':self.reference.copy(), 'servo_offset':self.servo_offset.copy(),
                 'status': 'failed' if self.failure_reason else 'done' if self.done else 'running',
                 'failure_reason': self.failure_reason, 'target_frozen': self.target_frozen,
+                'gripper': self._gripper_observation(),
                 'replans': self.replans, 'controller_completion_is_task_success': False}
