@@ -13,7 +13,7 @@ import mujoco
 import numpy as np
 
 from conservative_collision import ConservativeCollisionChecker as CollisionChecker
-from configuration_sweep import validate_configuration_path
+from configuration_sweep import ConfigurationSweepInvocation, SweepBinding, _configuration
 from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
@@ -266,9 +266,44 @@ class VisualGraspController:
                          executed_motion_duration_s=motion_duration(self.approach_path))
 
     def _configuration_sweep(self, start, end):
-        return validate_configuration_path(
-            start, end, lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'],
+        # Preserve the legacy input rejection before reading the jaw endpoint.
+        start = _configuration(start, 'startq6')
+        end = _configuration(end, 'endq6')
+        binding = self._sweep_binding(end)
+        invocation = ConfigurationSweepInvocation(
+            start, end, binding=binding,
             arm_resolution_rad=.005, jaw_resolution_rad=.002, max_samples=4096)
+        invocation.execute(
+            lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'])
+        return invocation.consume(self._sweep_binding(end))
+
+    def _sweep_binding(self, end):
+        """Freeze current hypotheses without querying payload or execution truth.
+
+        Planned closure runs before jaw/world initialization. Its jaw intent
+        comes from the requested endpoint, never the current jaw command.
+        """
+        def snapshot(value):
+            if isinstance(value, np.ndarray):
+                return snapshot(value.tolist())
+            if isinstance(value, dict):
+                return tuple((key, snapshot(item)) for key, item in sorted(value.items()))
+            if isinstance(value, (tuple, list)):
+                return tuple(snapshot(item) for item in value)
+            return value
+
+        names = ('stage_started', 'last_elapsed', 'target_xy', 'payload_uncertainty',
+                 'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
+                 'separation_floors', 'separation_vertices', 'separation_high_z')
+        context = tuple((name, snapshot(vars(self).get(name))) for name in names)
+        released = self.released_query
+        released_values = vars(released) if released is not None else {}
+        context += (('released_owner', id(released) if released is not None else None),
+                    ('released_model', id(released_values.get('model'))
+                     if released_values.get('model') is not None else None),
+                    ('released_center', snapshot(released_values.get('center'))),
+                    ('released_uncertainty_m', released_values.get('uncertainty_m')))
+        return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context)
 
     def _set_motion(self, points, jaw, elapsed):
         self.points = np.asarray(points, dtype=float)

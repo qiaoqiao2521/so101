@@ -1,6 +1,9 @@
 """Controller regressions for interior q6 rejection; fake FK, no physics."""
 
 import unittest
+import json
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import numpy as np
 
@@ -82,6 +85,145 @@ class VisualGraspSweepTests(unittest.TestCase):
         self.assertEqual(result['status'], 'failed')
         np.testing.assert_array_equal(result['command'], q)
         self.assertTrue(.24 < controller.last_sweep_report['invalid_state'][5] < .27)
+
+    def track_invocations(self):
+        actual, invocations = module.ConfigurationSweepInvocation, []
+
+        def create(*args, **kwargs):
+            invocation = actual(*args, **kwargs)
+            invocations.append(invocation)
+            return invocation
+
+        return patch.object(module, 'ConfigurationSweepInvocation', side_effect=create), invocations
+
+    def test_each_controller_sweep_has_a_fresh_consumed_request_and_original_report(self):
+        controller = self.controller()
+        controller.checker.reset_mock()
+        start = controller.initial_q.copy()
+        context, invocations = self.track_invocations()
+        with context:
+            first = controller._configuration_sweep(start, start)
+            second = controller._configuration_sweep(start, start)
+        self.assertEqual(len(invocations), 2)
+        self.assertIsNot(invocations[0], invocations[1])
+        self.assertEqual(controller.checker.evaluate.call_count, 4)
+        for invocation in invocations:
+            binding = invocation.request.binding
+            self.assertIs(binding.owner, controller)
+            self.assertIs(binding.checker, controller.checker)
+            self.assertIs(binding.model, controller.rig)
+            self.assertEqual(binding.stage, controller.stage)
+            self.assertEqual(binding.jaw_intent_rad, start[5])
+            self.assertEqual(binding.guard_scope, 'arm_q6_chord')
+            self.assertEqual(invocation.state, 'consumed')
+        self.assertEqual(first, second)
+        self.assertTrue(first['valid'])
+        self.assertEqual(first['checked_states'], 2)
+        self.assertNotIn('binding', first)
+        json.dumps(first, allow_nan=False)
+
+    def test_planned_closure_binds_endpoint_intent_before_current_jaw_exists(self):
+        context, invocations = self.track_invocations()
+        with context:
+            controller = self.controller()
+        self.assertEqual(len(invocations), 1)
+        invocation = invocations[0]
+        self.assertEqual(invocation.request.binding.stage, 'approach')
+        self.assertEqual(invocation.request.binding.jaw_intent_rad, .015)
+        self.assertEqual(invocation.request.endq6[-1], .015)
+        self.assertEqual(invocation.state, 'consumed')
+        self.assertEqual(controller.sweep_reports[0]['checked_states'], 244)
+
+    def test_invalid_endpoints_keep_legacy_value_error_before_any_geometry(self):
+        controller = self.controller()
+        start = controller.initial_q.copy()
+        invalid = ([], [0.] * 5, [0.] * 7, [0.] * 5 + [np.nan], None)
+        for value in invalid:
+            for first, last in ((value, start), (start, value)):
+                with self.subTest(first=repr(first), last=repr(last)):
+                    controller.checker.reset_mock()
+                    with self.assertRaises(ValueError):
+                        controller._configuration_sweep(first, last)
+                    controller.checker.evaluate.assert_not_called()
+
+    def test_generator_endpoints_keep_legacy_values_and_sample_order(self):
+        controller = self.controller()
+        seen = []
+        self.install_predicate(controller, lambda q: seen.append(q.copy()) or True)
+        start, end = controller.initial_q.copy(), controller.initial_q.copy()
+        end[5] = .015
+        report = controller._configuration_sweep((float(x) for x in start),
+                                                (float(x) for x in end))
+        self.assertTrue(report['valid'])
+        self.assertEqual(len(seen), 244)
+        self.assertEqual(np.asarray(seen[0]).tobytes(), start.tobytes())
+        self.assertEqual(np.asarray(seen[-1]).tobytes(), end.tobytes())
+
+    def test_changed_stage_payload_or_released_hypothesis_rejects_result_consumption(self):
+        mutations = {'stage': lambda c: setattr(c, 'stage', 'release'),
+                     'payload': lambda c: setattr(c, 'payload_relative', np.array([0., .002, 0.])),
+                     'released': lambda c: setattr(c.released_query, 'center', np.array([.24, .15, .02]))}
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                controller = self.controller()
+                controller.released_query = SimpleNamespace(model=object(), center=np.zeros(3), uncertainty_m=.002)
+                seen = []
+
+                def valid(q):
+                    seen.append(q.copy())
+                    if len(seen) == 1:
+                        mutate(controller)
+                    return True
+
+                self.install_predicate(controller, valid)
+                context, invocations = self.track_invocations()
+                with context, self.assertRaisesRegex(RuntimeError, 'ownership or context changed'):
+                    controller._configuration_sweep(controller.initial_q.copy(), controller.initial_q.copy())
+                self.assertEqual(len(seen), 2)
+                self.assertEqual(len(invocations), 1)
+                self.assertEqual(invocations[0].state, 'failed')
+                with self.assertRaises(RuntimeError):
+                    invocations[0].consume(invocations[0].request.binding)
+
+    def test_checker_exception_has_one_request_no_retry_and_no_report(self):
+        controller = self.controller()
+        failure = RuntimeError('checker failed during q6 sweep')
+        controller.checker.reset_mock()
+        controller.checker.evaluate.side_effect = failure
+        context, invocations = self.track_invocations()
+        with context, self.assertRaises(RuntimeError) as caught:
+            controller._configuration_sweep(controller.initial_q.copy(), controller.initial_q.copy())
+        self.assertIs(caught.exception, failure)
+        self.assertEqual(controller.checker.evaluate.call_count, 1)
+        self.assertEqual(len(invocations), 1)
+        self.assertEqual(invocations[0].state, 'failed')
+        with self.assertRaises(RuntimeError):
+            invocations[0].consume(invocations[0].request.binding)
+
+    def test_online_binding_failure_returns_encoder_command_without_claiming_a_sweep(self):
+        controller = self.controller()
+        controller.target_frozen = True
+        controller._set_dwell('close', controller.down, .015, 0., 6.)
+        q, seen = np.r_[controller.down, .5], []
+
+        def valid(sample):
+            seen.append(sample.copy())
+            # update checks the achieved q6 first. Change the hypothesis only
+            # inside the new invocation, whose consume must then reject it.
+            if len(seen) == 2:
+                controller.payload_uncertainty = .003
+            return True
+
+        self.install_predicate(controller, valid)
+        context, invocations = self.track_invocations()
+        with context:
+            result = controller.update(q, np.zeros(6), .1)
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('ownership or context changed', result['failure_reason'])
+        np.testing.assert_array_equal(result['command'], q)
+        self.assertEqual(len(invocations), 1)
+        self.assertEqual(invocations[0].state, 'failed')
+        self.assertFalse(hasattr(controller, 'last_sweep_report'))
 
 
 if __name__ == '__main__':
