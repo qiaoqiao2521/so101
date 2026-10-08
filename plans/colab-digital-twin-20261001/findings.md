@@ -1,5 +1,23 @@
 # Findings
 
+## 2026-10-08 R3a隔离与暂停边界
+
+最终129项CPU回归通过。六保存输入中，30腿/909 waypoint/879 edge/每分支3907次native调用顺序、1113495 pair的14字段逐位等值；独立466项只读审核重建保存路径采样并核查询指纹，未重算FK/native。原计算核只更名，23个其他方法保持。旧metadata fixture改为直接审计算核，所有断言保留；初版回归失败日志仍在。[等值读回](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/r3-equivalence-readback.json)。
+
+完整dev01诊断74.60sim/64.631748casewall，3730完整body/3729周期、602423个主span；独立26项核验排他守恒。P95 27.727263ms、675周期超20ms，50Hz失败。运输主span942.285496ms包含worker等待894.595547ms，不能相加；worker内部细分未计时。R2/R3a轨迹及2ms释放字节相同，10条数字路径相同；没有同期预定性能对照，不宣称提速。driver标题沿用R2文字，已标勘误，实际版本由83源绑定证明。[周期审核](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/r3-cycle-review.json)。
+
+新源原P0 24/24、P1 1/1、P2固定10/10通过。独立156项核验重算原监控/释放判据、完整5×10拍脉冲、原夹爪全扫与11份运输线程收据；P1录像1854帧全计数，110维integration记录和100份RGB hash保持。P2 dev09为87.52sim/67.429486wall，sim余2.48s；固定开发集合不代表留出泛化。接触证据仍unobserved，原5类safety_stop名单不包含所有绑定拒绝，本次另核全部failure_reason/error字段。[开发审核](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/r3-development-review.json)。
+
+周期只读审计初版误用compiler身份重构字段，修正读取公式后最终26项通过，无重跑物理/矩阵。初版报告被原地覆盖，完整对象不可恢复；现只有原SHA及[缺口摘要收据](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/r3-cycle-review-initial-preservation-receipt.json)，不能称原文保全。运行报告和其他失败回归均保持。本缺口不改变当前实际开发/计时结果，交付须明确披露。
+
+知识收尾already_covered：Wiki“验证入口跟随实际调用路径”和“性能对照与运行版本分别绑定”已覆盖本轮采用经验。项目具体线程/计时/评分边界留在此处，没有写Wiki或刷新索引。
+
+checker在native锁之前写MjData并做FK，因此共享native锁不能保护跨线程checker。worker必须独占rig/query/checker/native和tuple载荷/世界假设。运输规划不调用OMPL，先仅隔离该入口以保持原进程RNG序列；释放和回位保留原同步流程。
+
+MuJoCo3.3.7最小本地copy.copy(MjModel)核验确认模型/数组独立；[官方Python绑定](https://mujoco.readthedocs.io/en/3.3.7/python.html)说明原数组访问不复制，保存观测需显式copy。[Python3.12 Future.cancel契约](https://docs.python.org/3.12/library/concurrent.futures.html#concurrent.futures.Future.cancel)不能停止已运行线程。本切片join清理不能保证卡死原生工作被硬取消；原case墙钟失败仍在update返回后执行。
+
+update内等待不推进仿真。不能将其称为持续物理持物等待安全；主计时栈只记录主线程，worker执行包含在主等待的墙钟中，不能把后台inclusive与主线程排他重复相加。原模型/native/完整扫掠和评分保持；验收前不宣称行为或50Hz通过。
+
 ## 2026-10-08 R2可观测性与结果生命周期
 
 两路独立审查确认：控制器仅有q6/qvel6、RGB目标估计及声明的静态几何。位置伺服的目标误差能继续施加闭爪作用；encoder开度稳定无法区分目标夹持、卡住和沿指面滑动。0.015rad命令不得替换为实测jaw。模型位置伺服定义见[MuJoCo官方](https://mujoco.readthedocs.io/en/3.3.7/XMLreference.html#actuator-position)与[力生成公式](https://mujoco.readthedocs.io/en/3.3.7/computation/index.html#force-generation)；本项目参数位于模型和grasp_episode.py的场景力矩限制。此可观测性判断是对现有输入的分析，不是接触识别实验。

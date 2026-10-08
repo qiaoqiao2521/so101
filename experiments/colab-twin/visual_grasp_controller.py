@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import math
 import time
+import copy
+from dataclasses import replace
+import json
 import mujoco
 import numpy as np
 
@@ -18,6 +21,7 @@ from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
 from visual_localization import TopDownCalibration
+from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob
 
 
 BOX_CORNERS = np.array([[x, y, z] for x in (-1., 1.)
@@ -166,6 +170,7 @@ class VisualGraspController:
         self.observation_seq = 0
         self.observation = None
         self.sweep_request_seq = 0
+        self.transport_request_seq = 0
         self.failure_reason = None
         self.done = False
         self.transport = []
@@ -457,7 +462,32 @@ class VisualGraspController:
                 return False
         return True
 
+    def _transport_binding(self, q6):
+        binding = self._sweep_binding(q6, q6, 'online_chord')
+        return replace(binding, context=binding.context+(
+            ('transport_request_seq', self.transport_request_seq),
+            ('last_command', tuple(self.last_command)), ('seed', self.seed)))
+
     def _plan_transport(self, q6):
+        q6 = finite_vector(q6, 6, 'transport q6')
+        self.transport_request_seq += 1
+        binding = self._transport_binding(q6)
+        snapshot = TransportSnapshot(q6, self.target_xy, self.payload_relative,
+                                     self.payload_rotation, self.world,
+                                     self.payload_uncertainty, self.last_elapsed)
+        # MjModel.__copy__ owns its arrays. No execution MjData reaches worker.
+        job = TransportPlanningJob(binding)
+        job.run(_run_transport_plan, copy.copy(self.rig), snapshot)
+        proposal = job.consume(self._transport_binding(q6))
+        paths = [np.asarray(path, dtype=float) for path in proposal.paths]
+        report = json.loads(proposal.report_json)
+        report['planner_execution'] = dict(job.execution, request_seq=self.transport_request_seq)
+        # Commit only after successful worker close/join and context admission.
+        self.transport = paths
+        self.transport_index = 0
+        self.plan_reports.append(report)
+
+    def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
         centers = [current, [.18, self.target_xy[1], .06], [.18, 0, .06],
                    [.18, PLACE_CENTER[1], .06], [*PLACE_CENTER, .06], [*PLACE_CENTER, .023]]
@@ -729,3 +759,28 @@ class VisualGraspController:
                 'failure_reason': self.failure_reason, 'target_frozen': self.target_frozen,
                 'gripper': self._gripper_observation(),
                 'replans': self.replans, 'controller_completion_is_task_success': False}
+
+
+def _run_transport_plan(rig, snapshot):
+    """Own all planning data; never construct or mutate the live controller."""
+    context = VisualGraspController.__new__(VisualGraspController)
+    context.rig = rig
+    context.query = mujoco.MjData(rig)
+    context.gripper_id = rig.body('gripper').id
+    context.target_xy = np.asarray(snapshot.target_xy)
+    context.payload_relative = np.asarray(snapshot.payload_relative)
+    context.payload_rotation = np.asarray(snapshot.payload_rotation)
+    context.payload_uncertainty = snapshot.payload_uncertainty
+    context.world = [(name, kind, np.asarray(center), np.asarray(rotation), np.asarray(size))
+                     for name, kind, center, rotation, size in snapshot.world]
+    context.last_elapsed = snapshot.elapsed_s
+    context.transport = []
+    context.plan_reports = []
+    context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
+    try:
+        context._compute_transport(np.asarray(snapshot.q6))
+        proposal = TransportPlan(context.transport,
+                                 json.dumps(context.plan_reports[-1], allow_nan=False))
+    finally:
+        context.checker.native.close()
+    return proposal

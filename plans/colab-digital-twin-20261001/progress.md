@@ -1,5 +1,22 @@
 # Progress
 
+## Current：2026-10-08 R3a运输规划隔离完成
+
+用户“继续”授权接续R3；本轮先做运输规划隔离与同步接纳。worker持有独立rig/query/checker/native和owned tuple快照；update内等待时不积分。释放/脱离/回位保留同步。先冻结[范围](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/gate-spec.json)与[执行顺序](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/cycle-gate-spec.json)。
+
+- Done：三路只读审查、独占worker与一次同步接纳完成；原运输算法只更名为_compute_transport，23个其他方法保持。原更新/换段、完整扫掠、安全阈值与90sim/120wall保持。
+- Done verification：最终129项回归通过；六保存输入各5腿路径、计划数值与每分支3907次查询顺序等值，独立466项审核通过。原XML/13网格、native与协议保持，初版回归失败日志保留。
+- Timing：完整周期dev01物理通过，74.60sim/64.631748casewall、3730拍/3729周期、0截断。独立26项核验602423个主span守恒；P95 27.727263ms、675周期超20ms，50Hz失败。运输等待包括在942.285496ms主span内，不另行相加；与R2物理轨迹/释放字节相同，但无性能对照，不宣称提速。
+- Development：新源原P0 24/24、P1 1/1、P2固定10/10（正常5/5、扰动5/5、完整注入5/5）通过；独立156项重算全部监控/释放/脉冲并核1854帧P1录像。dev09为87.52sim/67.429486wall，sim余2.48s；开发集合不是留出验收。
+- Delivery：根Codex串行整合8文件及被Git忽略的完整证据；最终同步、提交及远端状态见[实际交付读回](../../experiments/colab-twin/output/visual-grasp-r3-transport-20261008/delivery-verification.json)。账本继承旧152条，162条记录、9901.046403s，总限额/剩余null；未知费用不计作0。
+- Issues：本轮不是非阻塞快环，不宣称性能收益。线程不可强制取消，join等待算入原case墙钟；不把仿真暂停当真机持物等待安全。50Hz仍未通过，P3/20＋20和学习/实体保持暂停。
+- Record gap：周期审计初版因compiler字段读取错误未过，纠正后最终通过且未重跑物理。初版原报告被覆盖，不能恢复；仅保存原SHA与明确非原文的缺口收据。此缺口已披露，不能宣称全部审计原文保全。driver的R2标题亦已标勘误，实际83源绑定R3a。
+- Next owner：根Codex。R3持续物理等待、快环调度、过期返验及释放/回位隔离仍待后续切片；下一设计须先定义安全等待、观测可用性与当前姿态完整返验，不能直接去掉result等待。
+- 知识收尾：already_covered。采用Wiki实际调用/完整周期与运行版本绑定经验，原页相关两节已覆盖；本轮未写Wiki或刷新索引，项目具体边界留在findings。
+
+以下保留R2及历史证据。
+
+
 ## Current：2026-10-08 R2夹爪语义与同拍生命周期完成
 
 用户“ok”授权根Codex继续R2。预先冻结[验收范围](../../experiments/colab-twin/output/visual-grasp-r2-lifetime-20261008/gate-spec.json)，基线8f33109、81源、C25、原model/native/protocol绑定。累计预算null；90sim/120wall与原安全阈值保持。

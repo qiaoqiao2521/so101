@@ -352,7 +352,8 @@ class ApproachShortcutTests(unittest.TestCase):
         expected_centers = np.array([[.24, -.13, .06], [.18, -.13, .06],
                                      [.18, 0., .06], [.18, .14, .06],
                                      [.24, .14, .06], [.24, .14, .023]])
-        controller._plan_transport(q6)
+        # This fixture replaces geometry; audit the unchanged planning kernel.
+        controller._compute_transport(q6)
         np.testing.assert_array_equal(q6, original_q)
         self.assertEqual(len(controller.transport), 5)
         self.assertEqual(controller.transport_index, 0)
