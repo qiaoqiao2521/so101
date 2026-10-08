@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import time
@@ -125,7 +126,7 @@ def run_p0(source, out, protocol, deadline):
     rows=[]
     try:
         for case in protocol['p0_positives']:
-            if time.monotonic()>=deadline:
+            if deadline is not None and time.monotonic()>=deadline:
                 break
             data=reset_scene(model,rig,case['initial_xy_m'])
             rgb=render_rgb(renderer,data)
@@ -140,7 +141,7 @@ def run_p0(source, out, protocol, deadline):
         occluder=model.geom('p0_occluder').id
         distractor=model.geom('p0_distractor').id
         for kind in protocol['p0_negatives']:
-            if time.monotonic()>=deadline:
+            if deadline is not None and time.monotonic()>=deadline:
                 break
             model.geom_rgba[target,3]=1
             model.geom_rgba[occluder,3]=0
@@ -176,7 +177,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     from deferred_video import DeferredVideo
     out.mkdir(exist_ok=False)
     start_wall=time.monotonic()
-    deadline=min(deadline,start_wall+protocol['max_episode_wall_s'])
+    case_deadline=start_wall+protocol['max_episode_wall_s']
+    deadline=case_deadline if deadline is None else min(deadline,case_deadline)
     rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None; checker=None
     initialization_planning=None; initialization_sweeps=None; initialization_checker=None
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
@@ -355,13 +357,13 @@ def run_physical_phase(source, root, out, protocol, phase, variant, deadline):
     cases=protocol[phase]
     reports=[]
     for case in cases:
-        if time.monotonic()>=deadline: break
+        if deadline is not None and time.monotonic()>=deadline: break
         result=run_physical_episode(source,out/case['id'],protocol,case,deadline,video=phase=='p1')
         reports.append(result)
         print(json.dumps({'case':case['id'],'passed':result['passed'],'reason':result['failure_reason'],
                           'sim_s':result['simulation_s'],'wall_s':result['wall_s']},ensure_ascii=False),flush=True)
     complete=len(reports)==len(cases)
-    within_budget=time.monotonic()<deadline
+    within_budget=deadline is None or time.monotonic()<deadline
     stops=sum(bool(r['safety_stop']) for r in reports)
     normal=[r for r in reports if not r['case']['perturbed']]
     perturbed=[r for r in reports if r['case']['perturbed']]
@@ -382,6 +384,11 @@ def run_physical_phase(source, root, out, protocol, phase, variant, deadline):
 def load_protocol(root):
     path=root/'protocol.json'
     protocol=json.loads(path.read_text())
+    if 'total_runtime_wall_s' in protocol:
+        total=protocol['total_runtime_wall_s']
+        if total is not None and (isinstance(total,bool) or not isinstance(total,(int,float))
+                                  or not math.isfinite(total)):
+            raise ValueError('Total runtime wall limit must be a finite number or null')
     checksum=digest(path)
     binding=root/'protocol.sha256'
     if binding.exists():
@@ -452,21 +459,24 @@ def main():
     check_phase_prerequisites(args.root,args.phase,args.variant,binding,digest(args.source))
     ledger_path=args.root/'runtime-budget.json'
     ledger=json.loads(ledger_path.read_text()) if ledger_path.exists() else {'spent_wall_s':0,'runs':[]}
-    remaining=protocol['total_runtime_wall_s']-ledger['spent_wall_s']
-    if remaining<=0: raise RuntimeError('Total pilot runtime budget exhausted')
+    total=protocol['total_runtime_wall_s']
+    remaining=None if total is None else total-ledger['spent_wall_s']
+    if remaining is not None and remaining<=0:
+        raise RuntimeError('Total pilot runtime budget exhausted')
     out=args.root/(args.phase if args.phase=='p0' else args.phase+'-'+args.variant)
     out.mkdir(exist_ok=False)
     before_hashes=source_hashes()
     before_model=digest(args.source)
     started=time.monotonic()
+    deadline=None if remaining is None else started+remaining
     report={'passed':False,'complete':False}
     before_native = None
     try:
         if args.phase=='p0':
-            report=run_p0(args.source,out,protocol,started+remaining)
+            report=run_p0(args.source,out,protocol,deadline)
         else:
             before_native = native_binding()
-            report=run_physical_phase(args.source,args.root,out,protocol,args.phase,args.variant,started+remaining)
+            report=run_physical_phase(args.source,args.root,out,protocol,args.phase,args.variant,deadline)
     except Exception as error:
         report.update(error_type=type(error).__name__,error=str(error))
     finally:
