@@ -1,5 +1,25 @@
 # Findings
 
+## 2026-10-08 执行层边界与夹爪命令语义只读审查
+
+本次仅核对当前源码、保存数据与官方资料，未执行新仿真、训练或实体操作。运行基线仍为 `c78f0ac` 的81个源码文件与原native库；后续执行层重构仅为proposal。
+
+**dev01超时的已知范围。** 最新原入口dev01在60.80sim进入release，首条post-step记录为60.82sim，62.00sim/120.140300wall停止；释放阶段推进1.20sim，保存首末记录跨度为1.18sim。原release等待为6sim，另有原0.6sim换段条件。报告 `error=wall_time_limit_after_controller` 只说明在update返回后发现deadline，最终 `failure_reason=wall_time_limit`。墙钟从初始化前开始覆盖全case，不是release专属计时。该case没有阶段wall分项，不能定位是前段累计计算还是该次调用尖峰。[deadline与检查位置](../../experiments/colab-twin/run_visual_grasp.py#L179)、[dev01报告](../../experiments/colab-twin/output/visual-grasp-no-quota-20261008/p2-baseline/dev-01/report.json)。
+
+根Codex复算确认dev01全部3100行、每行25字段，与历史scalar成功dev01前缀逐项相同；历史随后于68.202sim脱离，75.00sim/50.930792wall完成。该前缀没有观测到物理退化，不证明视觉错误或release接触缺陷。不同日期的墙钟差异也不能单独归因宿主争用。[最新轨迹](../../experiments/colab-twin/output/visual-grasp-no-quota-20261008/p2-baseline/dev-01/trajectory.json)、[历史成功报告](../../experiments/colab-twin/output/visual-grasp-scalar-profile-20261007/p2-baseline/dev-01/report.json)。
+
+**夹爪意图与几何参考的耦合。** 最新dev01 hold段实测jaw约0.115432rad，命令和几何参考均为0.015rad；阶段到达条件只检查五臂轴。闭合命令不等于夹爪已达到该位置。原每拍实测q6→参考q6扫掠在持物阶段仍检查约52个姿态；close为244→52，release为194→2，不能说全程固定244点。物体阻挡形成夹持平衡与现象相符，但未由去载反例独立证明。把命令改为实测jaw会改变执行器作用，不能作为等值提速。[到达与在线扫掠](../../experiments/colab-twin/visual_grasp_controller.py#L610)、[采样定义](../../experiments/colab-twin/configuration_sweep.py#L43)、[保存调用](../../experiments/colab-twin/output/visual-grasp-scalar-profile-20261007/deferred-call-timings.json)。
+
+历史axis-cache完整诊断中close/release关联194/202个超20ms周期；只将两次规划耗时清零的乐观算术仍有200个超时周期、P95 22.306743ms。这是保存计时的反事实算术，不是新实测。异步规划单独移出不足以解决已观察到的主要周期成本；要同时审查夹爪操作语义与全程验证生命周期。[对应成本审核](../../experiments/colab-twin/output/visual-grasp-axis-cache-20261007/REPORT.md#剩余成本完整扫掠和规划分别处理)。
+
+**官方资料支持的范围（2026-10-08查阅）。** [MoveIt Hybrid Planning](https://moveit.picknik.ai/main/doc/concepts/hybrid_planning/hybrid_planning.html)将全局规划与持续局部执行分开，全局规划不保证实时；[Servo主循环](https://github.com/moveit/moveit2/blob/main/moveit_ros/moveit_servo/src/servo_node.cpp)的publish_period与[碰撞监测](https://github.com/moveit/moveit2/blob/main/moveit_ros/moveit_servo/src/collision_monitor.cpp)的collision_check_rate分开。后者检查当前robot state并输出共享限速系数，不提供本项目整段q6/jaw扫掠的安全等价。这些是rolling/main架构参考，未选定安装版本，也未在本机部署MoveIt Servo。
+
+[OMPL/MoveIt官方说明](https://moveit.picknik.ai/main/doc/examples/ompl_interface/ompl_interface_tutorial.html#longest-valid-segment-fraction)明确默认运动检查为离散检查；本地configuration_sweep也只认证采样弦，不证明连续运动或真机安全。[LeRobot teleop源码](https://github.com/huggingface/lerobot/blob/main/src/lerobot/scripts/lerobot_teleoperate.py)的60fps是目标频率配置，不是本机SO101 I/O实时证据。项目早期[learning-review](learning-review.md#当前建议与保留分歧)已将20ms列为建议值，允许离线仿真等待；尚未找到本项目50Hz硬件必要性的实测来源。原50Hz失败保留，未来评价分层须事前定义。
+
+**建议与未解风险。** 保留模型、定位、IK/OMPL与评分资产，先诊断dev01墙钟，再抽出不可变请求/同步执行器，随后设计自由开合、接触保持与结果失效规则，最后考虑异步规划。必须证明当前状态、跟踪偏差、场景版本、载荷与已释放物体约束，以及等待/制动安全。接触保持判据、观测来源、保守短程覆盖和完整周期收益均未验证；不承诺50Hz必过。几何阈值仍为1mm/0.2mm，全部285pair、完整顶点和原采样保持，现有P2 9/10不变。
+
+采用Obsidian `Wiki/自动化开发范式与智能体协作` 的分层验收与运行版本绑定；CapMesh PIT-001/PIT-003支持在现有仓库按切片修改、继续忽略实验产物。没有据本轮proposal改写长期架构或已确认决策。具体待办见[计划](task_plan.md#2026-10-08-执行层重构顺序proposal未实施)。
+
 2026-10-08 新证据：累计预算已取消，单case90sim/120wall和安全/开发门保留。多核、quad、query guard、finite四候选均归档恢复；query guard组件改善不构成完整周期通过，其与历史时钟的差异不证明代码因果。finite104回归/边界/3389220pair全14字段逐位等值，实测244改善14.64997%但variable8.52613%<10%，六次同期完整诊断未运行。原入口最新P0 24/24、P1 1/1、P2 9/10；dev01释放阶段墙钟超时，视觉根因未证。50Hz及P3门未过。
 
 
