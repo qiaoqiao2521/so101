@@ -684,3 +684,25 @@ root保留默认均匀与原startup5行为；新局部均衡需显式 `fit --sta
 完整3772相邻周期P95 32.943571ms、626>20ms，接纳整拍23.811411ms，50Hz仍失败；启动复制/确认77.760851ms，纯接纳13.707711ms。组件低于20ms不能替代完整周期。dev09仅余1.68sim，但余60.439830casewall；原墙钟上限保持。失败后同配置重试通过不能证明墙钟可靠性或旧超时原因。
 
 来源：[R3d报告](../../experiments/colab-twin/output/visual-grasp-r3d-separation-20261009/REPORT.md)、[371项核验](../../experiments/colab-twin/output/visual-grasp-r3d-separation-20261009/r3d-development-review.json)。Knowledge already_covered，沿用已采用实际调用/版本绑定原则，无共享Wiki写入。
+
+
+## 2026-10-09 R3e：摘要成本候选的事实边界
+
+当前生产已批全部285pair；不是缺少pair批处理。R3d保存trace中配置扫掠3779次累计41.109s（inclusive，嵌套项不相加），transport/close/release占541/626超20ms拍。启动复制77.760851ms仅一次，作为次优先。原summary每sample创建输入/输出/hint数组及7个typed pointers；占比需新probe确认，不能凭代码推断收益。
+
+R3e根执行原版归因probe actualexit0：两个244点完整输入各warmup＋3遍、两独立handle，共3904实际原生调用；1952行原版/插桩summary、全14字段、hint输入输出逐位一致。原版summary中位planned244 218.216µs、measured244 218.096µs；插桩分项中位原生分派170.342/168.854µs、ctypes参数准备13.556/13.595µs、p/R复制1.863/1.854µs、numeric/flags分配1.222/1.242µs、hint复制/分配1.333/1.333µs。分项中位不能相加充当总量；C分项含dispatch，不称纯kernel CPU成本。measured组一次参数准备23.043479ms尖峰完整保留，不推断其系统原因。此probe只归因，不充当组件/整拍采用门；0积分/渲染/编译。[真实报告](../../experiments/colab-twin/output/visual-grasp-r3e-summary-20261009/probe-run-001/report.json)。
+
+候选仅私有summary scratch，原owner锁和每次完整输入拷贝/原生查询保持，公开evaluate及返回数组所有权不变。采用Wiki《自动化开发范式与智能体协作》实际summary入口和性能/运行版本分别绑定，历史失败不直接转成当前事实。
+
+
+## 最终事实：2026-10-09 R3e私有摘要候选已过采用与开发门
+
+90源/291回归，公开NativeSupport整类和bound.evaluate AST保持；原native4/模型14/协议、全部285pair/q6/jaw采样/首失败、1mm/.2mm/90sim/120wall不变。重入走fresh fallback、失败不发布hint、公开返回数组独立拥有。原3904-call分解、11892帧/3389220pair实际summary等值、700完整成本保留；两244中位收益8.925%/8.798%，四组P95改善，variable单次最大回退披露。
+
+ABBA四轮原仿真抓放均成功，整间隔P95依序27.965330/26.934996/26.350993/28.329639ms；配对3.684326%/6.984366%，中位5.334346%达事前5%门。全部冷拍/间隙/重叠/路径指纹保持；完整50Hz仍FAILED，不作纯因果、硬实时或硬件声明。组件文件审核18463项通过；未全部保存raw numeric的离线复算边界明确。
+
+新P0 24/24最大0.613647mm，新P1 1/1 74.98sim/58.404119casewall及1875录像帧；新P2固定10/10（正常5/5、扰动5/5各10拍、安全0）。最长dev-09 88.38sim/56.463779casewall，仿真余1.62s。独立开发376项通过。上一R3d首次P1/诊断失败和旧开发证据保持原目录，不覆盖。无新20＋20/训练/云/实体。
+
+聚合及尝试null；历史账本241行保持，新phase只补CLI开销，其它CLI实测一次，worker不重复加，未量化准备/审阅/lookup未知不记0。Knowledge already_covered，沿用Wiki实际调用和版本绑定、组件与整周期证据边界，无共享Wiki写入。
+
+Remaining / owner：根Codex完成规范工程同步及提交推送后独立读回，见[最终报告](../../experiments/colab-twin/output/visual-grasp-r3e-summary-20261009/REPORT.md)与delivery-verification.json；后续性能仍先处理长扫掠及启动复制，P3暂停。

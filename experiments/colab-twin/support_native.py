@@ -366,11 +366,27 @@ class NativeSupport:
 
 
 class _BoundPairs:
-    """Private immutable query policy; each call owns fresh frame/output arrays."""
+    """Own ordered pairs and locked summary scratch; public detail stays fresh."""
 
     def __init__(self, owner, pairs):
         self._owner = owner
         self._pairs = pairs
+        self._summary_busy = False
+        self._summary_positions = np.empty((owner.geometry_count, 3), dtype=np.float64)
+        self._summary_rotations = np.empty((owner.geometry_count, 3, 3), dtype=np.float64)
+        self._summary_numeric = np.empty((len(pairs), 12), dtype=np.float64)
+        self._summary_flags = np.empty((len(pairs), 6), dtype=np.int64)
+        self._summary_hint_in = np.empty((owner.geometry_count, 3, 2), dtype=np.int64)
+        self._summary_hint_out = np.empty_like(self._summary_hint_in)
+        # These seven pointers retain fixed owned arrays for this policy's
+        # lifetime. The ABI function is looked up on the current owner library.
+        self._summary_positions_pointer = self._summary_positions.ctypes.data_as(_DOUBLE)
+        self._summary_rotations_pointer = self._summary_rotations.ctypes.data_as(_DOUBLE)
+        self._summary_pairs_pointer = pairs.ctypes.data_as(_INT64)
+        self._summary_numeric_pointer = self._summary_numeric.ctypes.data_as(_DOUBLE)
+        self._summary_flags_pointer = self._summary_flags.ctypes.data_as(_INT64)
+        self._summary_hint_in_pointer = self._summary_hint_in.ctypes.data_as(_INT64)
+        self._summary_hint_out_pointer = self._summary_hint_out.ctypes.data_as(_INT64)
 
     def evaluate(self, positions, rotations, margin):
         with self._owner._lock:
@@ -378,11 +394,65 @@ class _BoundPairs:
 
     def summary(self, positions, rotations, margin):
         with self._owner._lock:
-            numeric, flags = self._owner._frame_locked(positions, rotations, self._pairs, margin, bound=True)
-            certified = flags[:, 0].astype(bool)
-            failures = np.flatnonzero(~certified)
-            nearest = int(failures[0]) if len(failures) else int(np.argmin(numeric[:, 11]))
-            return {"valid": not len(failures), "nearest_index": nearest,
-                    "lower_bound_m": float(numeric[nearest, 11]),
-                    "certificate_reason": str(_REASONS[flags[nearest, 4]]),
-                    "certified_pairs": int(certified.sum()), "checked_pairs": len(self._pairs)}
+            if not self._owner._handle:
+                raise RuntimeError("NativeSupport is closed")
+            if self._summary_busy:
+                # RLock permits same-thread conversion callbacks to reenter.
+                # The original fresh path cannot overwrite the outer scratch.
+                numeric, flags = self._owner._frame_locked(
+                    positions, rotations, self._pairs, margin, bound=True)
+                return self._summarize(numeric, flags)
+            self._summary_busy = True
+            try:
+                numeric, flags = self._summary_frame_locked(positions, rotations, margin)
+                return self._summarize(numeric, flags)
+            finally:
+                self._summary_busy = False
+
+    @staticmethod
+    def _copy_summary_input(value, destination):
+        # Plain binary64 arrays have no conversion callback. Other inputs keep
+        # the original np.array owned-copy semantics, including exceptions.
+        if (type(value) is np.ndarray and value.dtype == np.dtype(np.float64)
+                and value.shape == destination.shape):
+            np.copyto(destination, value, casting="no")
+            return destination
+        converted = np.array(value, dtype=np.float64, order="C", copy=True)
+        if converted.shape == destination.shape:
+            np.copyto(destination, converted, casting="no")
+            return destination
+        return converted
+
+    def _summary_frame_locked(self, positions, rotations, margin):
+        owner = self._owner
+        p = self._copy_summary_input(positions, self._summary_positions)
+        R = self._copy_summary_input(rotations, self._summary_rotations)
+        q = self._pairs
+        if p.shape != (owner.geometry_count, 3) or R.shape != (owner.geometry_count, 3, 3):
+            raise ValueError("Frame position/rotation shapes do not match original geometry")
+        if q.ndim != 2 or q.shape[1] != 2:
+            raise ValueError("Pairs must have shape Mx2")
+        np.copyto(self._summary_hint_in, owner._witness_hints, casting="no")
+        # Keep margin conversion in the original left-to-right ABI argument
+        # position, after owned p/R and the owner's current hint snapshot.
+        status = owner._lib.ns_evaluate_hinted(
+            owner._handle, self._summary_positions_pointer, self._summary_rotations_pointer,
+            self._summary_pairs_pointer, len(q), float(margin),
+            self._summary_numeric_pointer, self._summary_flags_pointer,
+            self._summary_hint_in_pointer, self._summary_hint_out_pointer)
+        if status:
+            raise RuntimeError("Native frame evaluation failed closed")
+        if len(q) and self._summary_flags[:, 0].all():
+            hints = np.array(self._summary_hint_out, dtype=np.int64, order="C", copy=True)
+            hints.setflags(write=False)
+            owner._witness_hints = hints
+        return self._summary_numeric, self._summary_flags
+
+    def _summarize(self, numeric, flags):
+        certified = flags[:, 0].astype(bool)
+        failures = np.flatnonzero(~certified)
+        nearest = int(failures[0]) if len(failures) else int(np.argmin(numeric[:, 11]))
+        return {"valid": not len(failures), "nearest_index": nearest,
+                "lower_bound_m": float(numeric[nearest, 11]),
+                "certificate_reason": str(_REASONS[flags[nearest, 4]]),
+                "certified_pairs": int(certified.sum()), "checked_pairs": len(self._pairs)}

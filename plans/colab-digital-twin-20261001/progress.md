@@ -1206,3 +1206,25 @@ Knowledge：already_covered。沿用Wiki《自动化开发范式与智能体协�
 Remaining / owner：根Codex后续性能工作先处理完整扫掠与启动复制尖峰，另冻原门；开发通过不解锁新的20＋20或实体操作。
 
 [最终开发报告](../../experiments/colab-twin/output/visual-grasp-r3d-separation-20261009/REPORT.md)。
+
+
+## Current：2026-10-09 R3e冻结与分解准备
+
+用户授权下一最小性能切片。6d7b29f/89源、原模型14/native4/协议/C25已冻，生产未改。根执行probe和全部native/物理；三工作者分别准备分解脚本、私有工作区设计和既有失败/采用门复核。原case90sim/120wall、聚合/尝试null，P3/训练/云实例/实体保持未运行。
+
+Remaining：先确认分配/接口成本，再做一个候选的14字段/完整244与完整周期对照；采用门事前固定，未过保留原版。Knowledge pending，owner根Codex。冻结脚本及初次文件lookup、修正task文档patch未有外部process成本收据，未知不记0。
+
+R3e成本分解已完成：原版3904实际native调用、1952原版/插桩配对，summary/all14/hint逐位一致；原版中位约218µs，ctypes参数准备约13.6µs，原生分派约169–170µs。完整分配/转换/校验/解码及23.043479ms单次参数准备尖峰均保留。prepare/probe两份外部CLI实际exit0、0新物理/渲染/编译。根据实批准唯一私有summary scratch/pointer候选准备；生产89源不变。组件及整拍收益尚未测，不能写50Hz通过。
+
+
+## Current：2026-10-09 R3e私有摘要候选已过采用与开发门
+
+90源/291回归，公开NativeSupport整类和bound.evaluate AST保持；原native4/模型14/协议、全部285pair/q6/jaw采样/首失败、1mm/.2mm/90sim/120wall不变。重入走fresh fallback、失败不发布hint、公开返回数组独立拥有。原3904-call分解、11892帧/3389220pair实际summary等值、700完整成本保留；两244中位收益8.925%/8.798%，四组P95改善，variable单次最大回退披露。
+
+ABBA四轮原仿真抓放均成功，整间隔P95依序27.965330/26.934996/26.350993/28.329639ms；配对3.684326%/6.984366%，中位5.334346%达事前5%门。全部冷拍/间隙/重叠/路径指纹保持；完整50Hz仍FAILED，不作纯因果、硬实时或硬件声明。组件文件审核18463项通过；未全部保存raw numeric的离线复算边界明确。
+
+新P0 24/24最大0.613647mm，新P1 1/1 74.98sim/58.404119casewall及1875录像帧；新P2固定10/10（正常5/5、扰动5/5各10拍、安全0）。最长dev-09 88.38sim/56.463779casewall，仿真余1.62s。独立开发376项通过。上一R3d首次P1/诊断失败和旧开发证据保持原目录，不覆盖。无新20＋20/训练/云/实体。
+
+聚合及尝试null；历史账本241行保持，新phase只补CLI开销，其它CLI实测一次，worker不重复加，未量化准备/审阅/lookup未知不记0。Knowledge already_covered，沿用Wiki实际调用和版本绑定、组件与整周期证据边界，无共享Wiki写入。
+
+Remaining / owner：根Codex完成规范工程同步及提交推送后独立读回，见[最终报告](../../experiments/colab-twin/output/visual-grasp-r3e-summary-20261009/REPORT.md)与delivery-verification.json；后续性能仍先处理长扫掠及启动复制，P3暂停。
