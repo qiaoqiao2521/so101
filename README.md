@@ -6,7 +6,7 @@
 
 先体验成熟预训练模型与可运行应用，再围绕具体场景做适配。每轮优先交付用户能亲手操作、改变输入并看到结果的演示。训练和底层优化必须解决已经确认的应用缺口，不能代替目标、期望和落地效果的选择。
 
-首个应用场景与成品模型尚未选定。官方代码、预训练权重、已适配 SO101 的完整应用分别核实。已有 MuJoCo、IK/OMPL、执行器和安全检查作为复用资产；下方保留历史入口，旧性能与训练待办不自动恢复。详见 [当前目标](PROJECT.md)、[D006 决策](docs/DECISIONS.md#d006) 与 [当前计划](plans/colab-digital-twin-20261001/task_plan.md)。
+首个可体验入口已完成：[预训练 SmolVLA 机械臂仿真](experiments/pretrained-demo/README.md)。本机 4GB GPU 实跑推物、抓取移到目标、箱间搬运，最终默认 10 步观察设置各一个回合达到官方目标范围判据；保留原 50 步抓放失败。它使用 Sawyer 仿真，尚未适配 SO101，也未验证松爪后静稳。已有 MuJoCo、IK/OMPL、执行器和安全检查继续保留；旧性能与训练待办不自动恢复。详见 [当前目标](PROJECT.md)、[D006 决策](docs/DECISIONS.md#d006) 与 [当前计划](plans/colab-digital-twin-20261001/task_plan.md)。
 
 ```bash
 ./so101.sh check

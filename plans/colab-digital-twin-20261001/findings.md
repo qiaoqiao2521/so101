@@ -1,5 +1,15 @@
 # Findings
 
+## 2026-10-10 现成模型首次体验
+
+选用公开 `lerobot/smolvla_metaworld`，固定策略 revision `cd6778d2cfa724c1bf5fc637490548e54d81dc4c`。相比 EVO1 作者双环境 server/client，LeRobot 0.6.1 官方 MetaWorld CI 提供更短的单进程仿真入口。权重/许可/来源及环境见 [演示说明](../../experiments/pretrained-demo/README.md)。
+
+本机4GB、同一权重：push50成功4.85秒；pick-place50失败12.30秒；pick-place10成功4.47秒；bin-picking10成功6.24秒；最终默认入口push10成功4.45秒。全为seed0各一回合，不合并宣称总体成功率。没有训练或实体控制。
+
+MetaWorld原生成功条件与旧SO101验收不同：pick-place物体距目标≤7cm、bin-picking≤5cm，不要求释放静稳。包装器成功时立即reset，视频尾帧可能跳变。影片只能按该范围解释，不改写旧安全门。
+
+安装与下载约占本轮主要等待；Xet传输停滞后策略用官方HTTP下载完成。基座中断文件经完整SHA-256核对后恢复，官方CLI再次确认缓存；模型实际加载通过。复跑使用缓存，已实际验证HF_HUB_OFFLINE=1。
+
 ## 2026-10-10 用户目标纠偏：选择大于努力
 
 用户明确指出：此前缺少清楚的目标、期望和落地效果，主要投入自训练与底层优化；用户参与度和成就感低，也没有及时理解成熟预训练模型可以复用哪些能力。用户以“好像在自己做 ChatGPT”作类比，要求将教训写入项目并推送。

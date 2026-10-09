@@ -25,6 +25,7 @@ dist/
 # Local thesis documents and experiment outputs (never upload or commit).
 /local-documents/
 /experiments/colab-twin/output/
+/experiments/pretrained-demo/output/
 /experiments/colab-twin/bundle.zip
 /experiments/colab-twin/results.zip
 .omo/
