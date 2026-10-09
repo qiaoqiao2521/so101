@@ -22,6 +22,8 @@ from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
 from visual_localization import TopDownCalibration
 from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob, AsyncTransportPlanningJob
+from separation_worker import (SeparationSnapshot, AsyncSeparationPlanningJob,
+                               run_separation_plan, validate_separation_samples)
 
 
 BOX_CORNERS = np.array([[x, y, z] for x in (-1., 1.)
@@ -175,6 +177,12 @@ class VisualGraspController:
         self.transport_request_binding = None
         self.transport_events = []
         self.transport_wait = None
+        self.separation_request_seq = 0
+        self.separation_job = None
+        self.separation_request_binding = None
+        self.separation_events = []
+        self.separation_live_ready = False
+        self.separation_accepted_plan = None
         self.failure_reason = None
         self.done = False
         self.transport = []
@@ -609,11 +617,22 @@ class VisualGraspController:
 
     def close(self):
         """Join an owned worker in measured case cleanup, including failures."""
-        if self.transport_job is not None:
-            self.transport_job.close()
-            for report in self.plan_reports:
-                if report.get('stage') == 'transport_execution_plan' and 'waiting' in report:
-                    report['planner_execution'].update(self.transport_job.execution)
+        errors = []
+        self.planner_cleanup_errors = []
+        for name, job in (('transport', self.transport_job),
+                          ('separation', getattr(self, 'separation_job', None))):
+            if job is not None:
+                try:
+                    job.close()
+                except Exception as error:
+                    errors.append(error)
+                    self.planner_cleanup_errors.append({'planner': name,
+                        'error_type': type(error).__name__, 'error': str(error)})
+        for report in self.plan_reports:
+            if report.get('stage') == 'transport_execution_plan' and 'waiting' in report:
+                report['planner_execution'].update(self.transport_job.execution)
+        if errors:
+            raise errors[0]
 
     def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
@@ -674,7 +693,186 @@ class VisualGraspController:
             raise ControllerFailure('released_object_return_planning_failed')
         return shorten_path(plan['path'], self._released_valid), 'validated_ompl_shortcuts'
 
-    def _plan_separation(self, q6, elapsed):
+    def _separation_binding(self):
+        """Bind stable release hypotheses, separately from fresh admission q."""
+        def snapshot(value):
+            if isinstance(value, np.ndarray):
+                return snapshot(value.tolist())
+            if isinstance(value, dict):
+                return tuple((key, snapshot(item)) for key, item in sorted(value.items()))
+            if isinstance(value, (tuple, list)):
+                return tuple(snapshot(item) for item in value)
+            return value
+        names = ('separation_request_seq', 'stage_started', 'points', 'duration',
+                 'jaw', 'initial_q', 'seed', 'release_record', 'servo_offset',
+                 'world', 'last_command')
+        released = vars(self.released_query) if self.released_query is not None else {}
+        context = tuple((name, snapshot(vars(self).get(name))) for name in names)
+        context += (('released_owner', id(self.released_query)),
+                    ('released_model', id(released.get('model'))),
+                    ('released_center', snapshot(released.get('center'))),
+                    ('released_uncertainty_m', released.get('uncertainty_m')))
+        return SweepBinding(self, self.checker, self.rig, self.stage, float(self.jaw), context)
+
+    def _check_separation_context(self):
+        if not self.separation_request_binding.matches(self._separation_binding()):
+            self.separation_job.reject('separation_context_changed')
+            raise ControllerFailure('separation_context_changed')
+
+    def _start_separation(self, q6, elapsed):
+        if self.stage != 'release' or self.separation_job is not None:
+            raise ControllerFailure('separation_request_already_started_or_wrong_stage')
+        if q6[5] < .45:
+            raise ControllerFailure('release_jaw_not_open')
+        self.separation_request_seq += 1
+        snapshot = SeparationSnapshot(q6, self.initial_q, self.last_command, self.seed,
+                                      elapsed, self.released_query.center,
+                                      self.released_query.uncertainty_m)
+        self.separation_request_binding = self._separation_binding()
+        self.separation_job = AsyncSeparationPlanningJob(self.separation_request_binding)
+        self.separation_events.append({'event': 'request', 'elapsed_s': float(elapsed),
+                                       'request_seq': self.separation_request_seq,
+                                       'snapshot_q6': list(snapshot.q6),
+                                       'snapshot_elapsed_s': snapshot.elapsed,
+                                       'release_stage_started_s': self.stage_started})
+        # Cloning is main-loop cost. Both MjData instances are worker-owned.
+        self.separation_job.start(run_separation_plan, copy.copy(self.rig),
+                                  copy.copy(self.released_query.model), snapshot,
+                                  self.separation_job.cancel_event)
+
+    def _initialize_separation(self, q6):
+        """Establish the original guard at the original release switching time."""
+        if q6[5] < .45:
+            raise ControllerFailure('release_jaw_not_open')
+        _, _, self.separation_pinch = self._fk(q6)
+        distances = self.released_query.distances(q6)
+        self.separation_distance_names = tuple(distances)
+        self.separation_initial_distances = distances.copy()
+        self.separation_floors = {}
+        for name, distance in distances.items():
+            if distance < .001:
+                if name not in PAD_NAMES or distance < -.003:
+                    raise ControllerFailure('release_initial_overlap_not_allowed')
+                self.separation_floors[name] = distance-.00005
+        self.separation_vertices = {name:v for name,v in self.released_query.pad_vertices().items()
+                                    if name in self.separation_floors}
+        self.separation_high_z = {name:v[:,2].copy() for name,v in self.separation_vertices.items()}
+        self.separation_live_ready = True
+
+    def _ratchet_separation(self, q6):
+        if not self._separation_valid(q6[:5], q6[5]):
+            raise ControllerFailure('measured_separation_invalid')
+        distances = self.released_query.distances(q6)
+        vertices = self.released_query.pad_vertices()
+        for name in self.separation_high_z:
+            self.separation_high_z[name] = np.maximum(self.separation_high_z[name], vertices[name][:,2])
+        for name in list(self.separation_floors):
+            # Once clear, the initial-contact exception cannot return.
+            if distances[name] >= .001:
+                del self.separation_floors[name]
+            else:
+                self.separation_floors[name] = max(self.separation_floors[name], distances[name]-.00005)
+
+    def _poll_separation(self, q6, elapsed, *, admit=True):
+        """Admit exact worker samples and a freshly queried achieved-q bridge."""
+        self._check_separation_context()
+        if admit and q6[5] < .45:
+            raise ControllerFailure('release_jaw_not_open')
+        if admit and not self.separation_live_ready:
+            self._initialize_separation(q6)
+        if not self.separation_job.poll() or not admit:
+            return False
+        observation = self.observation
+        if (observation is None or observation[1] != elapsed
+                or observation[2] != tuple(q6)):
+            raise ControllerFailure('separation_admission_observation_changed')
+        live_binding = self._sweep_binding(q6, q6, 'online_chord')
+        live_binding = replace(live_binding, context=tuple(
+            row for row in live_binding.context if row[0] != 'sweep_request_seq'))
+        proposal = self.separation_job.peek(self._separation_binding())
+        paths = [np.asarray(path, dtype=float) for path in proposal.paths]
+        event = {'event': 'admission', 'elapsed_s': float(elapsed),
+                 'observation': observation, 'accepted': False, 'issued': False,
+                 'proposal_elapsed_s': proposal.snapshot.elapsed,
+                 'current_q6': q6.tolist(), 'proposal_q6': list(proposal.snapshot.q6)}
+        self.separation_events.append(event)
+        event['live_guard'] = {
+            'pinch': self.separation_pinch.tolist(),
+            'floors': self.separation_floors.copy(),
+            'vertices': {name: v.tolist() for name, v in self.separation_vertices.items()},
+            'high_z': {name: v.tolist() for name, v in self.separation_high_z.items()},
+            'expected_names': self.separation_distance_names}
+        names = tuple(name for name, _ in proposal.samples[0].distances)
+        if names != self.separation_distance_names:
+            raise ControllerFailure('separation_geometry_coverage_changed')
+        inclusion = validate_separation_samples(
+            proposal, self.separation_pinch, self.separation_floors,
+            self.separation_vertices, self.separation_high_z,
+            expected_names=self.separation_distance_names)
+        event['sample_inclusion'] = inclusion
+        if not inclusion['valid']:
+            raise ControllerFailure('separation_saved_samples_invalid')
+        endpoint = np.r_[paths[0][0], .5]
+        sweep = self._configuration_sweep(q6, endpoint)
+        self.sweep_reports.append({'stage': 'separation_admission', **sweep})
+        bridge = validate_joint_path([q6[:5], paths[0][0]], self._separation_valid, .002)
+        event['configuration_sweep'] = sweep
+        event['separation_validation'] = bridge
+        if not sweep['valid'] or not bridge['valid']:
+            raise ControllerFailure('separation_admission_chord_invalid')
+        # Retain every original waypoint. A setpoint is not an achieved pose.
+        paths[0] = np.vstack((q6[:5], paths[0]))
+        offset = self.last_command[:5]-paths[0][0]
+        if not np.isfinite(offset).all() or np.max(np.abs(offset)) > .003:
+            raise ControllerFailure('servo_offset_exceeds_arrival_tolerance')
+        mapped = np.c_[paths[0]+offset, np.full(len(paths[0]), .5)]
+        for bounds in (self.rig.jnt_range, self.rig.actuator_ctrlrange):
+            if (np.any(mapped < bounds[:,0]) or np.any(mapped > bounds[:,1])
+                    or np.any(self.last_command < bounds[:,0])
+                    or np.any(self.last_command > bounds[:,1])):
+                raise ControllerFailure('mapped_servo_target_out_of_bounds')
+        first_reference = np.r_[q6[:5], .5]
+        first_sweep = self._configuration_sweep(q6, first_reference)
+        first_validation = validate_joint_path([q6[:5], q6[:5]], self._separation_valid, .005)
+        event['first_command_guard'] = {'start_q6': q6.tolist(),
+            'end_q6': first_reference.tolist(), 'configuration_sweep': first_sweep,
+            'separation_validation': first_validation,
+            'actuator_command': self.last_command.tolist(), 'continuous': True}
+        if not first_sweep['valid'] or not first_validation['valid']:
+            raise ControllerFailure('separation_first_command_invalid')
+        required_s = motion_duration(paths[0])+.6+motion_duration(paths[1])+.6+1.5+.6+.1
+        event.update(required_s=required_s, predicted_completion_s=float(elapsed)+required_s)
+        if elapsed+required_s > 90:
+            raise ControllerFailure('insufficient_time_for_safe_return')
+        self._check_separation_context()
+        current_binding = self._sweep_binding(q6, q6, 'online_chord')
+        current_binding = replace(current_binding, context=tuple(
+            row for row in current_binding.context if row[0] != 'sweep_request_seq'))
+        if (not live_binding.matches(current_binding)
+                or observation != self.observation or elapsed != self.last_elapsed):
+            raise ControllerFailure('separation_admission_observation_changed')
+        report = json.loads(proposal.report_json)
+        budget = {'stage': 'release_return_budget', 'planned_at_s': elapsed,
+                  'separation_motion_s': motion_duration(paths[0]),
+                  'return_motion_s': motion_duration(paths[1]), 'required_s': required_s,
+                  'predicted_completion_s': elapsed+required_s, 'within_original_90s': True}
+        record = dict(self.release_record, separation_path=paths[0].tolist(),
+                      initial_distances_m=self.separation_initial_distances.copy(),
+                      separation_floors_m=self.separation_floors.copy(),
+                      return_method=report['release_record']['return_method'],
+                      planned_return_path=paths[1].tolist(), predicted_completion_s=elapsed+required_s)
+        # No proposal becomes a live path until all current guards pass.
+        self.separation_job.consume(self._separation_binding())
+        self.separation_accepted_plan = proposal
+        event['accepted'] = True
+        event['proposal_report'] = report
+        self.release_record = record
+        self.plan_reports.extend((budget, {'stage': 'release_return', **record}))
+        self.stage = 'separate'
+        self._set_continuous_motion(paths[0], elapsed)
+        return True
+
+    def _legacy_plan_separation(self, q6, elapsed):
         if q6[5] < .45:
             raise ControllerFailure('release_jaw_not_open')
         _, _, self.separation_pinch = self._fk(q6)
@@ -767,7 +965,10 @@ class VisualGraspController:
                                        'source':'pre-opening FK and carried estimate; known support height'}
                 self._set_dwell('release', self.points[-1], .5, elapsed, 6.)
         elif self.stage == 'release':
-            self._plan_separation(q6, elapsed)
+            # Establish live geometry at the original switching time. Start
+            # and poll only after the unchanged release reference is guarded.
+            if not self.separation_live_ready:
+                self._initialize_separation(q6)
         elif self.stage == 'separate':
             points, method = self._return_path(q6[:5])
             if elapsed+motion_duration(points)+.6+1.5+.6+.1 > 90:
@@ -805,23 +1006,14 @@ class VisualGraspController:
                 return self._result(q6)
             if self.stage == 'hold' and self.transport_job is not None:
                 self._check_transport_context()
+            if self.stage == 'release' and self.separation_job is not None:
+                self._check_separation_context()
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
                 raise ControllerFailure('measured_arm_configuration_invalid')
             if self.stage in ('retreat', 'settle') and not self._released_valid(q6[:5], q6[5]):
                 raise ControllerFailure('measured_released_object_clearance_invalid')
-            if self.stage == 'separate':
-                if not self._separation_valid(q6[:5], q6[5]):
-                    raise ControllerFailure('measured_separation_invalid')
-                distances = self.released_query.distances(q6)
-                vertices = self.released_query.pad_vertices()
-                for name in self.separation_high_z:
-                    self.separation_high_z[name] = np.maximum(self.separation_high_z[name], vertices[name][:,2])
-                for name in list(self.separation_floors):
-                    # Once clear, the initial-contact exception cannot return.
-                    if distances[name] >= .001:
-                        del self.separation_floors[name]
-                    else:
-                        self.separation_floors[name] = max(self.separation_floors[name], distances[name]-.00005)
+            if self.stage == 'separate' or (self.stage == 'release' and self.separation_live_ready):
+                self._ratchet_separation(q6)
             if not self.target_frozen:
                 if elapsed-self.target_timestamp > self.estimate_ttl:
                     raise ControllerFailure('visual_estimate_expired')
@@ -846,11 +1038,22 @@ class VisualGraspController:
                 raise ControllerFailure('encoder_stage_timeout')
             arm_arrived = np.max(np.abs(q6[:5]-self.points[-1])) <= .003 and np.linalg.norm(qvel6[:5]) < .05
             hold_ready = self.stage == 'hold' and age >= self.duration+.6 and arm_arrived
+            release_ready = self.stage == 'release' and age >= self.duration+.6 and arm_arrived
             if self.stage != 'hold' and age >= self.duration+.6 and arm_arrived:
+                previous_stage = self.stage
                 self._transition(q6, elapsed)
-                age = 0.
+                if self.stage != previous_stage:
+                    age = 0.
             self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
             command = self.reference.copy()
+            if self.stage == 'release' and self.separation_live_ready:
+                # Keep the original holding setpoint while querying achieved
+                # geometry. The small loaded offset is not a robot motion.
+                self.reference = np.r_[q6[:5], .5]
+                command = self.last_command.copy()
+                for bounds in (self.rig.jnt_range, self.rig.actuator_ctrlrange):
+                    if np.any(command < bounds[:,0]) or np.any(command > bounds[:,1]):
+                        raise ControllerFailure('mapped_servo_target_out_of_bounds')
             if self.stage in ('separate', 'retreat', 'settle'):
                 command[:5] += self.servo_offset
                 if age == 0:
@@ -860,7 +1063,7 @@ class VisualGraspController:
                         raise ControllerFailure('mapped_servo_target_out_of_bounds')
             if self.stage in ('hold', 'transport', 'lower'):
                 valid = self._payload_valid
-            elif self.stage == 'separate':
+            elif self.stage == 'separate' or (self.stage == 'release' and self.separation_live_ready):
                 valid = self._separation_valid
             elif self.stage in ('retreat', 'settle'):
                 valid = self._released_valid
@@ -887,10 +1090,22 @@ class VisualGraspController:
                     self.reference = np.r_[self.points[0], self.jaw]
                     command = self.reference.copy()
                     self.last_sweep_report = self.transport_events[-1]['first_command_guard']['configuration_sweep']
+            # Prefetch changes no release motion or switching deadline.
+            if self.stage == 'release' and q6[5] >= .45 and arm_arrived:
+                if self.separation_job is None:
+                    self._start_separation(q6, elapsed)
+                if self._poll_separation(q6, elapsed, admit=release_ready):
+                    self.reference = np.r_[self.points[0], .5]
+                    command = self.servo_start_command.copy()
+                    self.last_sweep_report = self.separation_events[-1]['first_command_guard']['configuration_sweep']
+            elif self.stage == 'release' and self.separation_job is not None:
+                self._poll_separation(q6, elapsed, admit=False)
             return self._result(command)
         except (ControllerFailure, ValueError, RuntimeError) as error:
             if self.transport_job is not None:
                 self.transport_job.reject(str(error))
+            if getattr(self, 'separation_job', None) is not None:
+                self.separation_job.reject(str(error))
             self.failure_reason = str(error)
             return self._result(q6)
 

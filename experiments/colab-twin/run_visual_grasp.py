@@ -228,7 +228,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                                               'measured_released_object_clearance_invalid',
                                               'transport_admission_chord_invalid',
                                               'transport_admission_payload_invalid',
-                                              'transport_first_command_invalid'):
+                                              'transport_first_command_invalid',
+                                              'separation_saved_samples_invalid',
+                                              'separation_admission_chord_invalid',
+                                              'separation_first_command_invalid'):
                     status['safety_stop']=True
                 raise RuntimeError('controller: '+str(last['failure_reason']))
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit_after_controller')
@@ -259,6 +262,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                     and controller.transport_events[-1]['elapsed_s']==elapsed
                     and controller.transport_events[-1]['accepted']):
                 controller.transport_events[-1]['issued']=True
+            if (controller.separation_events and controller.separation_events[-1]['event']=='admission'
+                    and controller.separation_events[-1]['elapsed_s']==elapsed
+                    and controller.separation_events[-1]['accepted']):
+                controller.separation_events[-1]['issued']=True
             obstacle=model.geom('approach_obstacle').id
             release_force_peak=0.
             for _ in range(10):
@@ -331,13 +338,25 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
             try:
                 controller.close()
             except Exception as cleanup_error:
-                status.update(passed=False, transport_cleanup_error=str(cleanup_error))
+                status.update(passed=False, planner_cleanup_error=str(cleanup_error),
+                              planner_cleanup_errors=controller.planner_cleanup_errors)
                 if not status.get('failure_reason'):
-                    status['failure_reason'] = 'transport_cleanup_failed'
+                    status['failure_reason'] = 'planner_cleanup_failed'
             status['transport_events'] = controller.transport_events
             status['transport_job'] = (dict(controller.transport_job.execution,
                                           state=controller.transport_job.state)
                                        if controller.transport_job is not None else None)
+            status['separation_events'] = controller.separation_events
+            status['separation_job'] = (dict(controller.separation_job.execution,
+                                           state=controller.separation_job.state)
+                                        if controller.separation_job is not None else None)
+            proposal = controller.separation_accepted_plan
+            status['separation_proof'] = None if proposal is None else {
+                'snapshot': {name: getattr(proposal.snapshot, name) for name in
+                             ('q6', 'initial_q6', 'last_command6', 'seed', 'elapsed', 'center', 'uncertainty')},
+                'paths': proposal.paths,
+                'samples': [{name: getattr(row, name) for name in
+                             ('q5', 'pinch3', 'distances', 'pad_vertices')} for row in proposal.samples]}
         finalize_episode_video(writer,status,frame_count)
         if renderer is not None: renderer.close()
         status.update(case=case,wall_s=time.monotonic()-start_wall,steps=len(rows),

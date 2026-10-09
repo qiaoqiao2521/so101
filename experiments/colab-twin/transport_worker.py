@@ -154,10 +154,11 @@ class AsyncTransportPlanningJob:
     lifecycle methods and call ``close`` inside its measured case cleanup.
     A running native call has no hard cancellation guarantee.
     """
-    def __init__(self, binding):
+    def __init__(self, binding, *, plan_type=TransportPlan):
         if not callable(getattr(binding, 'matches', None)):
             raise TypeError('Transport binding requires matches')
         self._binding = binding
+        self._plan_type = plan_type
         self._state = 'new'
         self._thread = None
         self._thread_started = False
@@ -198,7 +199,7 @@ class AsyncTransportPlanningJob:
             self._owned_ack.set()
             try:
                 result = worker(*args)
-                if not isinstance(result, TransportPlan):
+                if not isinstance(result, self._plan_type):
                     raise TypeError('Transport worker did not return a TransportPlan')
                 self._result = result
             except BaseException as error:
@@ -268,7 +269,7 @@ class AsyncTransportPlanningJob:
             self._result = None
             raise self._error
         if self._state == 'running':
-            if not isinstance(self._result, TransportPlan):
+            if not isinstance(self._result, self._plan_type):
                 self._error = RuntimeError('Transport worker exited without a plan')
                 self._state = 'failed'
                 raise self._error
