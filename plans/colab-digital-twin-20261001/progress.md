@@ -1,5 +1,17 @@
 # Progress
 
+## CURRENT 2026-10-09 R3c索引提示已采用，开发门通过
+
+- Done：仅保留真实极值顶点ID，每次重新求值；原285 pair、全部q6/jaw采样、严格DFS、首失败和安全阈值保持。原ABI无共享历史，Python锁内只发布非空all-certified调用。
+- Component：私有112项与生产226项回归通过；11892姿态／3389220 pair×14运行时逐位等值，700次交替成本观测全部保留。variable/measured244中位改善6.623%／6.994%，原5%门通过。矩阵全clear；后续只读审核不能用保存哈希重演未全存raw数值。measured244最大64.168→78.693ms，非WCET保证。
+- Development：新86源绑定原P0 24/24、P1 1/1、P2固定10/10（正常5/5、扰动5/5、完整注入5/5、安全0）；独立开发审核242项通过。P1 74.92sim／70.889871case-wall；dev09 88.34sim／66.098427case-wall，sim余1.66s。开发集不替代留出验收。
+- Timing：完整dev01诊断75.48sim／60.859318case-wall，3774body／3773周期、0截断，周期25项审核通过。P95 33.759619ms、445周期超20ms，完整50Hz仍失败。worker与等待物理重叠，不相加；与历史R3b不同期，不作代码因果归因。
+- Delivery：根串行审查7文件有效范围，同步、提交、推送和C25保护的最终状态以[交付读回](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/delivery-verification.json)为准。运行证据保持Git忽略；旧失败保留。历史混合账本不是去重成本，新CLI按不重叠口径增加；未知不作0。累计／尝试上限null，原90sim/120wall保留。
+- Next owner：根Codex接续完整扫掠调度与同步释放／回位尖峰。先冻结独立几何误放/误拒及外部行为门；不省采样或复用跨姿态证书。完整50Hz、连续运动、实体安全、硬native取消仍未证明。P3/20＋20、ACT/Colab训练与实体未启动。
+- 知识收尾：already_covered。原页Wiki/自动化开发范式与智能体协作.md第33–49行两项入口/版本绑定经验已覆盖；本轮读回确认，未写Wiki或刷新索引。
+
+[最终报告](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/REPORT.md)。以下保留对应历史证据。
+
 ## CURRENT 2026-10-09 R3b持续物理等待完成，原开发门通过
 
 - Done：后台独占运输规划，原高位闭爪等待每拍推进物理并保留完整q6/载荷守卫。当前姿态桥与实际首命令双检查通过后一次提交；等待不重置stage_started。启动中断后的真实join与unknown/unconfirmed失败处理已补齐。

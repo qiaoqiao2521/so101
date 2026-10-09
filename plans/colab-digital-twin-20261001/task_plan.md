@@ -1,5 +1,16 @@
 # Colab 数字孪生实验平台
 
+## 2026-10-09 R3c：极值顶点索引提示已采用
+
+- [x] 冻结aeaa48c、85源、原模型/协议/native、C25及100路径输入矩阵。
+- [x] 仅复用ID，每次重算当前顶点；保留原285 pair、全部q6/jaw样本、严格搜索、首失败与阈值。
+- [x] 14字段逐位等值与七轮成本门通过；variable/measured244中位改善6.623%/6.994%。原5%门保持，最大观测回退披露。
+- [x] 当前86源绑定，226回归通过；原P0 24/24、P1 1/1、P2 10/10及独立开发242项通过。
+- [x] 根串行审查、同步并交付有效范围；最终Git/C25结果以交付读回为准。累计/尝试上限null，原单例90sim/120wall保持。
+- [ ] 完整50Hz仍未通过：P95 33.759619ms，445周期超20ms；根接续完整扫掠调度与同步释放/回位尖峰，事前冻结独立安全与行为验收。
+
+[事前规则](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/gate-spec.json)、[报告](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/REPORT.md)、[交付读回](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/delivery-verification.json)。P3/20＋20、ACT/云端训练和实体不启动。知识收尾already_covered，owner根Codex；未写共享Wiki。
+
 ## 2026-10-09 R3b：高位等待时持续推进物理
 
 - [x] 单次后台运输规划与当前姿态准入；等待保持原高位闭爪目标、stage_started、完整q6/载荷守卫。

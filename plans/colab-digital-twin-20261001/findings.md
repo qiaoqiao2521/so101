@@ -1,5 +1,19 @@
 # Findings
 
+## 2026-10-09 R3c索引提示与证据边界
+
+跨帧只保留真实极值顶点ID，不保留投影值、间隙或证书。新hint ABI使用caller-owned数组；原Context和ns_evaluate保持无共享hint状态。先运行原顶点0与greedy seed，再重算提示的当前顶点，随后运行原严格DFS、最小原索引tie和非finite节点全扫描回退。非法ID跳过，额外推测非finite时丢弃新增种子；异常陷阱未屏蔽时跳过提示。舍入/控制/屏蔽位不改；masked sticky状态和trap timing不声明逐位相同。Python原RLock覆盖查询/发布/close，非空且全部认证通过才更新只读历史。
+
+同100路径矩阵包含82条不同路线，全部clear；运行时实际11892帧、3389220有序pair×14字段逐位一致，checker/summary与全部原采样字节和报告一致。后续独立审核只能复核保存字段哈希、来源和计数，不能由哈希重演未全量保存的raw数值。拒绝首失败分支由独立CPU专项覆盖，不能说矩阵触发过它。
+
+七轮交替共700次观测，variable中位36.292504→33.888780ms，measured244为61.185979→56.906657ms；达到预冻5%门。held52改善2.371%，planned244改善6.383%，全部组P95改善。measured244最大观测64.167770→78.692719ms（+22.636%），没有事前max门；不据此承诺最坏执行时间。原累计/尝试预算保持null。
+
+私有112项测试依赖本次真实原版库。提交用专项测试另外以同库真实stateless ABI作对照，不依赖ignored历史资产；两套SHA与证明范围分开。当前E的226回归通过，数学2文件与可移植测试共86源绑定。完整诊断抓放/脱离/回位通过，P95周期33.759619ms仍超过20ms。与历史R3b非同期、异步等待拍数不同，周期差值不能归因本候选；新源原P0 24/24、P1 1/1、P2 10/10已重验通过；独立开发242项通过，原监控与2ms释放判据保持。开发集合不替代留出验收。
+
+当前3773周期中的445个超20ms按stage_after归属：close114、hold97、transport131、release91、separate1，其余11。主线程controller分区46.784930s，在线完整扫掠39.055556s，其中summary排他30.981689s；三者嵌套，不能相加。最大周期469.386058ms位于release→separate，_plan_separation inclusive459.772472ms，内部_return_path2.062178ms不另加。另一回位规划1.936092ms没有构成本次20ms尖峰。当前热点同时包括反复扫掠和单次同步脱离规划，不能将全部成本归为回位或将历史差异归因于hint。
+
+采用Wiki“实际调用路径”和“性能与运行版本分别绑定”的既有经验；知识收尾already_covered，owner根Codex。原页第33–49行已覆盖，读回确认，未写共享Wiki或刷新索引。当前[事前门](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/gate-spec.json)与[成本报告](../../experiments/colab-twin/output/visual-grasp-r3c-witness-20261009/matrix-run-001/candidate-report.json)保留。
+
 ## 2026-10-09 R3b 调度与准入边界
 
 R3a同次update等待worker结束，不能证明等待时物理仍推进。本轮保留原hold阶段，原到达判据满足后仅发起一次请求；每次轮询不等待。冻结目标/载荷/场景上下文，允许encoder/time自然变化；结果到达时用当拍q6重新扫掠至冻结路径首点，并以.005rad验证载荷连边。主线程不接受worker阶段变化。

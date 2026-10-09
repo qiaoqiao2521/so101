@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cfenv>
+#include <fenv.h>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -13,6 +14,28 @@
 #include <vector>
 #if defined(__SSE__)
 #include <xmmintrin.h>
+#endif
+
+// Extra speculative vertex arithmetic is permitted only with masked traps.
+// The original environment gate and original scalar arithmetic stay intact.
+bool witness_traps_masked() {
+#if defined(__GLIBC__) && defined(__USE_GNU)
+    if (fegetexcept()!=0) return false;
+#else
+    return false; // Unknown x87/platform mask state: retain the legacy path.
+#endif
+#if defined(__SSE__)
+    if ((_mm_getcsr() & UINT32_C(0x1f80))!=UINT32_C(0x1f80)) return false;
+#endif
+    return true;
+}
+
+#if defined(SUPPORT_TREE_TESTS)
+struct WitnessTrace { std::int64_t attempted=0,finite_points=0,discarded=0,merged=0; };
+thread_local WitnessTrace* witness_trace=nullptr;
+#define WITNESS_RECORD(member) do { if (witness_trace) ++witness_trace->member; } while (false)
+#else
+#define WITNESS_RECORD(member) do {} while (false)
 #endif
 
 namespace {
@@ -201,7 +224,8 @@ bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
 #endif
 
 bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval& out,
-               bool* scan_fallback=nullptr) {
+               bool* scan_fallback=nullptr,const std::int64_t* hint_in=nullptr,
+               std::int64_t* hint_out=nullptr) {
     if (geom.nodes.empty()) return full_scan(geom,local,out);
     Interval first;
     if (!vertex_interval(geom,0,local,first)) return false;
@@ -222,6 +246,35 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
         consider(low_vertex,low_point);consider(high_vertex,high_point);
     }
 #endif
+    // IDs are work-order hints only. Every value uses the current local DAG.
+    // Both original seeds have already run; speculative failure discards all
+    // additional points without changing the original failure/fallback path.
+    if (hint_in) {
+        std::array<std::size_t,2> vertices{};
+        std::array<Interval,2> points{};
+        std::size_t used=0;bool usable=true;
+        for (int k=0;k<2;++k) {
+            const auto raw=hint_in[k];
+            if (raw<0 || static_cast<std::uint64_t>(raw)>=geom.points.size()/3) continue;
+            const auto v=static_cast<std::size_t>(raw);
+            if (v==min_index || v==max_index || (used && vertices[0]==v)) continue;
+            WITNESS_RECORD(attempted);
+            if (!vertex_interval(geom,v,local,points[used])) {
+                WITNESS_RECORD(discarded);usable=false;break;
+            }
+            WITNESS_RECORD(finite_points);vertices[used++]=v;
+        }
+        if (usable) for (std::size_t k=0;k<used;++k) {
+            const auto v=vertices[k];const auto point=points[k];
+            if (point.lo<minimum || (point.lo==minimum && v<min_index)) {
+                minimum=point.lo;min_index=v;
+            }
+            if (point.hi>maximum || (point.hi==maximum && v<max_index)) {
+                maximum=point.hi;max_index=v;
+            }
+            WITNESS_RECORD(merged);
+        }
+    }
     std::vector<std::size_t> pending{0};
     while (!pending.empty()) {
         const auto index=pending.back();pending.pop_back();
@@ -252,6 +305,10 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
             pending.push_back(node.right);pending.push_back(node.left);
         }
     }
+    if (hint_out) {
+        hint_out[0]=static_cast<std::int64_t>(min_index);
+        hint_out[1]=static_cast<std::int64_t>(max_index);
+    }
     out={minimum,maximum};return true;
 }
 struct Context { std::vector<Geometry> geoms; };
@@ -270,6 +327,8 @@ struct KeyHash {
 };
 struct Frame {
     const Geometry* geom=nullptr;
+    const std::int64_t* hint_in=nullptr;
+    std::int64_t* hint_out=nullptr;
     Vec p{}; std::array<double,9> R{};
     std::unordered_map<Key,Interval,KeyHash> cache;
     std::array<std::array<Interval,3>,2> world{};
@@ -315,7 +374,9 @@ bool project(Frame& shape, const Vec& n, bool full, Interval& answer) {
         for (int j=0;j<3;++j) bounds[j]={shape.geom->low[j],shape.geom->high[j]};
         extrema=dot(bounds,local);
     } else {
-        if (!full_tree(*shape.geom,local,extrema)) return false;
+        if (!full_tree(*shape.geom,local,extrema,nullptr,
+                       axis>=0 && shape.hint_in?shape.hint_in+2*axis:nullptr,
+                       axis>=0 && shape.hint_out?shape.hint_out+2*axis:nullptr)) return false;
     }
     answer=add(center,extrema);
     if (!finite(answer)) return false;
@@ -486,6 +547,66 @@ int ns_evaluate(void* raw,const double* positions,const double* rotations,
         return 0;
     }
 }
+
+// Caller-owned G x 3 x 2 IDs. Context retains no mutable witness state.
+// All input/output regions must be nonoverlapping and have their ABI lengths.
+// Equal hint pointers are rejected; partial overlap is outside this contract.
+// A malformed ID is discarded without altering the original result policy.
+int ns_evaluate_hinted(void* raw,const double* positions,const double* rotations,
+                       const std::int64_t* pairs,std::int64_t count,double margin,
+                       double* output,std::int64_t* flags,
+                       const std::int64_t* hint_in,std::int64_t* hint_out) {
+    if (!raw||!positions||!rotations||!pairs||!output||!flags||!hint_in||!hint_out||
+            hint_in==hint_out||count<0) return 1;
+    auto* context=static_cast<Context*>(raw);
+    Result failed;
+    if (!environment()) failed.reason=5;
+    else if (!std::isfinite(margin)||margin<=0.) failed.reason=4;
+    bool frame_valid=failed.reason==0;
+    for (std::size_t g=0;g<context->geoms.size()&&frame_valid;++g) {
+        for (int j=0;j<3;++j) frame_valid &= std::isfinite(positions[g*3+j]);
+        for (int j=0;j<9;++j) frame_valid &= std::isfinite(rotations[g*9+j]);
+    }
+    std::fill(hint_out,hint_out+6*context->geoms.size(),std::int64_t{-1});
+    if (!frame_valid) {
+        if (!failed.reason) failed.reason=3;
+        for (std::int64_t i=0;i<count;++i) write_result(failed,output+i*NFLOAT,flags+i*NINT);
+        return 0;
+    }
+    try {
+        const bool enabled=witness_traps_masked();
+        std::vector<Frame> frames(context->geoms.size());
+        for (std::size_t g=0;g<frames.size();++g) {
+            frames[g].geom=&context->geoms[g];
+            std::copy(positions+3*g,positions+3*g+3,frames[g].p.begin());
+            std::copy(rotations+9*g,rotations+9*g+9,frames[g].R.begin());
+            if (context->geoms[g].kind==1) {
+                for (int k=0;k<6;++k) {
+                    const auto id=hint_in[6*g+k];
+                    if (id>=0 && static_cast<std::uint64_t>(id)<context->geoms[g].points.size()/3)
+                        hint_out[6*g+k]=id;
+                }
+                if (enabled) {
+                    frames[g].hint_in=hint_in+6*g;
+                    frames[g].hint_out=hint_out+6*g;
+                }
+            }
+        }
+        for (std::int64_t i=0;i<count;++i) {
+            const auto a=pairs[2*i],b=pairs[2*i+1];
+            Result result;
+            if (a<0||b<0||static_cast<std::size_t>(a)>=frames.size()||static_cast<std::size_t>(b)>=frames.size()) result.reason=6;
+            else result=pair_result(frames[a],frames[b],margin);
+            write_result(result,output+i*NFLOAT,flags+i*NINT);
+        }
+        return 0;
+    } catch (...) {
+        failed.reason=3;
+        std::fill(hint_out,hint_out+6*context->geoms.size(),std::int64_t{-1});
+        for (std::int64_t i=0;i<count;++i) write_result(failed,output+i*NFLOAT,flags+i*NINT);
+        return 0;
+    }
+}
 #if defined(SUPPORT_TREE_TESTS)
 // Isolated test builds only: force the full-support branch independently of
 // the preceding coarse-AABB gate, and inspect complete leaf coverage.
@@ -515,5 +636,51 @@ int ns_test_full_vertices(std::int64_t count,const double* points,const double* 
         return valid?0:1;
     } catch (...) { return 2; }
 }
+
+int ns_test_full_vertices_hinted(std::int64_t count,const double* points,const double* coefficients,
+                                const std::int64_t* hints,double* output,
+                                std::int64_t* winners,std::int64_t* info) {
+    if (count<=0||!points||!coefficients||!hints||!output||!winners||!info||!environment()) return 2;
+    struct TraceGuard {
+        WitnessTrace* previous;
+        explicit TraceGuard(WitnessTrace* trace):previous(witness_trace) { witness_trace=trace; }
+        ~TraceGuard() { witness_trace=previous; }
+    };
+    try {
+        Geometry geom;geom.kind=1;geom.points.assign(points,points+3*count);
+        for (double x:geom.points) if (!std::isfinite(x)) return 2;
+        geom.order.resize(static_cast<std::size_t>(count));
+        std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
+        build_node(geom,0,geom.order.size());
+        std::array<Interval,3> local;
+        for (int j=0;j<3;++j) local[j]={coefficients[2*j],coefficients[2*j+1]};
+        WitnessTrace trace;TraceGuard guard(&trace);
+        Interval result{NAN_VALUE,NAN_VALUE};bool fallback=false;
+        winners[0]=winners[1]=-1;
+        const bool enabled=witness_traps_masked();
+        const bool valid=full_tree(geom,local,result,&fallback,enabled?hints:nullptr,
+                                  enabled?winners:nullptr);
+        output[0]=result.lo;output[1]=result.hi;
+        info[0]=enabled;info[1]=trace.attempted;info[2]=trace.finite_points;
+        info[3]=trace.discarded;info[4]=trace.merged;info[5]=fallback;
+        return valid?0:1;
+    } catch (...) { return 2; }
+}
+
+std::uint32_t ns_test_witness_get_mxcsr() {
+#if defined(__SSE__)
+    return _mm_getcsr();
+#else
+    return 0;
+#endif
+}
+void ns_test_witness_set_mxcsr(std::uint32_t csr) {
+#if defined(__SSE__)
+    _mm_setcsr(csr);
+#else
+    (void)csr;
+#endif
+}
+int ns_test_witness_traps_masked() { return witness_traps_masked()?1:0; }
 #endif
 } // extern C

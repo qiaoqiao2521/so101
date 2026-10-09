@@ -3,6 +3,7 @@
 The C++ constructor owns copies of complete local vertices and extrema.
 evaluate freezes p/R/pairs in independent binary64/int64 arrays, then creates
 fresh C++ support caches for that frame. No compilation occurs on import.
+Only caller-owned vertex IDs persist; every hinted projection is recomputed.
 The ignored build cache binds kernel, compiler, strict flags and library hashes.
 """
 from __future__ import annotations
@@ -192,6 +193,9 @@ def _configure_library(lib):
     lib.ns_destroy.restype = None
     lib.ns_evaluate.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64, C.c_int64, C.c_double, _DOUBLE, _INT64]
     lib.ns_evaluate.restype = C.c_int
+    lib.ns_evaluate_hinted.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64,
+                                     C.c_int64, C.c_double, _DOUBLE, _INT64, _INT64, _INT64]
+    lib.ns_evaluate_hinted.restype = C.c_int
     for name in ("ns_down", "ns_up"):
         getattr(lib, name).argtypes = [C.c_double]
         getattr(lib, name).restype = C.c_double
@@ -256,6 +260,7 @@ class NativeSupport:
     def __init__(self, points: list[np.ndarray], kinds: list[str]):
         self._lock = RLock()
         self._handle = None
+        self._witness_hints = None
         if len(points) == 0 or len(points) != len(kinds):
             raise ValueError("Geometry and kind counts must match and be nonempty")
         arrays = [np.array(p, dtype=np.float64, order="C", copy=True) for p in points]
@@ -269,6 +274,8 @@ class NativeSupport:
         offsets = np.asarray([0, *np.cumsum([len(a) for a in arrays])], dtype=np.int64)
         flat = np.ascontiguousarray(np.concatenate(arrays, axis=0))
         kind_ids = np.asarray([1 if k == "mesh" else 0 for k in kinds], dtype=np.int32)
+        hints = np.full((len(arrays), 3, 2), -1, dtype=np.int64)
+        hints.setflags(write=False)
         with self._lock:
             handle = self._lib.ns_create(len(arrays), offsets.ctypes.data_as(_INT64),
                                     flat.ctypes.data_as(_DOUBLE), kind_ids.ctypes.data_as(_INT32))
@@ -276,12 +283,14 @@ class NativeSupport:
                 raise RuntimeError("Native geometry preprocessing failed closed")
             self._handle = handle
             self.geometry_count = len(arrays)
+            self._witness_hints = hints
 
     def close(self):
         with self._lock:
             if self._handle:
                 self._lib.ns_destroy(self._handle)
                 self._handle = None
+            self._witness_hints = None
 
     def __del__(self):
         try:
@@ -329,11 +338,20 @@ class NativeSupport:
             raise ValueError("Pairs must have shape Mx2")
         numeric = np.empty((len(q), 12), dtype=np.float64)
         flags = np.empty((len(q), 6), dtype=np.int64)
-        status = self._lib.ns_evaluate(self._handle, p.ctypes.data_as(_DOUBLE), R.ctypes.data_as(_DOUBLE),
-                                  q.ctypes.data_as(_INT64), len(q), float(margin),
-                                  numeric.ctypes.data_as(_DOUBLE), flags.ctypes.data_as(_INT64))
+        hint_in = np.array(self._witness_hints, dtype=np.int64, order="C", copy=True)
+        hint_out = np.empty_like(hint_in)
+        status = self._lib.ns_evaluate_hinted(
+            self._handle, p.ctypes.data_as(_DOUBLE), R.ctypes.data_as(_DOUBLE),
+            q.ctypes.data_as(_INT64), len(q), float(margin),
+            numeric.ctypes.data_as(_DOUBLE), flags.ctypes.data_as(_INT64),
+            hint_in.ctypes.data_as(_INT64), hint_out.ctypes.data_as(_INT64))
         if status:
             raise RuntimeError("Native frame evaluation failed closed")
+        # A failed/uncertified frame cannot publish a new history. Neither
+        # history nor IDs are a certificate; all pairs still run each call.
+        if len(q) and flags[:, 0].all():
+            hint_out.setflags(write=False)
+            self._witness_hints = hint_out
         return numeric, flags
 
     @staticmethod
