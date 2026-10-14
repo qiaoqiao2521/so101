@@ -76,6 +76,29 @@ CLI混合推理1.687s、CUDA峰值allocated587.95MiB/reserved642MiB；不含模�
 
 CLI全408候选已完成独立静态审计。OBB候选92的配对误差约为 `1.94e-10mm / 4.82e-11°`，只表示数值拟合接近零；它在OBB分支模型分数排第289，未进入前16。最高分候选297则为75.55mm/64.16°。因此评分裁剪后的16个不能代表整个候选池，也不能据此宣布无可达姿态。候选92尚未接受运动或通过碰撞/接触；下一适配应先核准夹爪描述，再加入可达性筛选。
 
+## 完整夹爪资产与原安全检查
+
+对已经完成全候选审计的结果目录执行。将 `<本轮目录>` 替换为实际目录；导出和候选诊断拒绝覆盖已有目录，预览可重生成。
+
+```bash
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/export_gripper.py \
+  --root . --output experiments/graspgenx-demo/output/<本轮目录>
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/preview_gripper.py \
+  --root . --output experiments/graspgenx-demo/output/<本轮目录>
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/check_candidates.py \
+  --root . --output experiments/graspgenx-demo/output/<本轮目录>
+```
+
+导出直接来自当前MuJoCo模型，保留完整固定/活动指、马达网格、关节轴与变换，生成URDF、原网格、开爪视觉网格和逐零件凸包。独立yourdfpy FK对照9个jaw值×2个arm姿态，本轮18组最大顶点差3.824e-9m；1e-6m只是格式/数值一致性门，不是实物精度。生成资产全部被忽略，不改原模型。
+
+`config.json` 使用官方资产格式，但内侧盒子仍来自旧指尖接触垫近似，`fingertip`仍是本地pinch参考。完整几何导出通过不等于官方向导已完成；模型描述和实体标定继续待验。SO101一指固定、一指转动，保守设 `symmetric=false`，不接受未经证明的180°等价姿态。官方模型条件是内侧区域盒子；它与整个夹爪实体的运动/碰撞几何分别审查。
+
+原 `gripperframe` site不能冒充模型框架：本轮相对模型框架旋转180°，其原点与pinch参考相距14.50mm。`frame-audit.json`记录完整变换；不通过改坐标或目标姿态消除拟合误差。
+
+同一CLI的408候选，复用原完整285碰撞对和1mm余量：62个数值复现（1e-6m/1e-5rad），37个开爪端点取得分离证书，两者交集31个；31个均通过0.5→0.015rad完整244点闭爪检查（jaw步长≤0.002rad）。诊断排序首位候选103；其开爪最小分离下界2.023mm。候选92未取得桌面余量证书，被保守拒绝；未取得证书不是实际碰撞证明。
+
+结果位于 `collision-diagnostic/{REPORT.md,report.json}`；完整资产与图位于 `gripper-assets/so101_sim_tip_region/`。这些31个仍未接受运动：内侧盒子、物理姿态门、接近/下降路径、目标实体接触、载物/释放/回位均未覆盖。原规划rig移除了自由目标，目标不能由此声称碰撞安全。没有训练、额外推理、物理推进或实体操作。
+
 ## 官方来源与许可
 
 - [官方源码](https://github.com/NVlabs/GraspGenX/tree/b9429097728cb1c430dd78b92edf17ba318aad03)：固定提交，Apache-2.0。
@@ -83,6 +106,7 @@ CLI全408候选已完成独立静态审计。OBB候选92的配对误差约为 `1
 - [官方 sweep-volume 接口](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/grasp_server.py#L123)：复用官方构造、配置加载与采样，不另实现生成模型。
 - [官方GraspMoE](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/samplers/graspmoe.py)：并集、分支来源、OBB生成及评分；固定组复用其评分函数。该私有函数与固定上游提交绑定，升级需复验。
 - [官方演示参数](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/scripts/demo_object_pc.py)：CLI默认值；公共API默认值另见 `graspgenx/samplers/planner.py`。
+- [官方夹爪向导](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/scripts/gripper_config_wizard.py)：两种内侧区域标注和资产格式。当前导出未伪称完成其GUI确认。
 - [现有可行性计划](../../plans/graspgenx-feasibility-20261014/task_plan.md)：完整夹爪、姿态、碰撞和抓放的待验门槛。
 
 源码、依赖、权重和运行产物分开管理。第三方源码/权重留在缓存并保留其许可；输出、日志及二进制文件由本目录 `.gitignore` 排除。
