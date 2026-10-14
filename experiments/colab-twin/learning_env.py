@@ -133,7 +133,7 @@ class StateWorkcell:
             raise ValueError('Use physical step commands for perturbations')
         return observe(self.model, self.data)
 
-    def step(self, action):
+    def step(self, action, *, physics_observer=None):
         command = np.asarray(action, dtype=float)
         if command.shape != (6,) or not np.isfinite(command).all():
             raise SafetyStop('Nonfinite or malformed policy command')
@@ -155,6 +155,8 @@ class StateWorkcell:
                 raise SafetyStop('Obstacle contact during physical step',
                                  {'action': command.tolist(), 'observation.state': self.data.qpos[:6].tolist(),
                                   'time_s': float(self.data.time)})
+            if physics_observer is not None:
+                physics_observer(self.model, self.data)
         obs = observe(self.model, self.data)
         row = diagnostics(self.model, self.data, self.checker)
         if not row['finite_state'] or not row['arm_valid']:

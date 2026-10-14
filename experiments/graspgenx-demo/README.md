@@ -1,8 +1,44 @@
-# 看 GraspGen-X 怎样挑抓取姿势
+# 用 GraspGen-X 给 SO101 选择抓取姿势
 
-这是官方预训练模型的本地体验入口。给模型一个虚拟方块和 SO101 仿真指尖区域，它生成抓取候选；再查看实际 SO101 网格，以及五轴机械臂的静态姿态匹配误差。不训练，不操作实体，不执行物理抓放。
+官方预训练模型已经驱动本地 SO101 仿真夹起、绕障搬运，并在蓝盘释放落定。所选候选来自官方 OBB 几何分支，经预训练评分器排名和已有 IK/OMPL 筛查；不是纯 diffusion 或端到端动作策略。没有训练或实体操作。
 
-**当前夹爪输入是指尖区域近似，尚未验证完整夹爪扫掠体。** 模型分数不等于抓取成功率；漂亮候选也不代表 SO101 能执行。输入为完整物体表面几何上界，不是相机观测或真实定位。
+**完整回合尚未通过。** 原脱离保护拒绝了固定指与释放估计包络的重叠，因此没有回位。输入仍是完整物体几何上界，真实相机分割、实物标定、泛物体成功率和完整50Hz没有验证。
+
+## 最新验证：2026-10-14
+
+- 官方向导已完成当前任务内侧区域标注。使用完整原网格核对，开/半开区域最小距离均为1.9mm；只覆盖仿真任务jaw区间，不代表实体最大开口或完整通用描述。
+- 重新推理408候选（48 diffusion＋360 OBB），62个严格数值姿态复现、42个端点证书，交集31个均通过原285对/1mm及244点闭爪检查。候选103得分0.81857，首先通过预抓、下降、闭爪和抬升路径。
+- 冻结种子0和原场景。实际自由物体抬升41.60mm、持续夹持1.48s；空夹负例在安全状态下因无法建立双指接触被拒绝。无焊接、mocap或reset后的手工搬物。
+- 持物八角点最大偏差1.44mm，原2mm载荷包络和0.2mm载荷余量保持；原五段搬运规划经0.005rad独立复查。
+- 首轮完整回合55.18s仿真、75.04s墙钟，物体蓝盘连续落定2.52s。释放审计覆盖1350个2ms样本，XY漂移0.549mm，无脱离后再接触；但controller未完成，因此完整成功=false。
+- 原释放查询假设物体轴对齐，而实际释放方块旋转31.04°。角点有3.01mm超出该查询的2mm包络；固定垫重叠7.15mm超过原允许3mm。该拒绝不能通过放宽阈值消除，下一步必须核准旋转释放估计及脱离姿态。
+
+本轮根目录为 `output/reviewed-20261014-183003-2405056/`。查看其中的 `motion-plan/report.json`、`contact-probe-20261014-191511-2489650/report.json`、`empty-close-20261014-191513-2489802/report.json`、`transfer-preflight-20261014-191615/report.json` 和 `full-cycle-20261014-191715-2496623/report.json`。后者的 `grasp-lift.mp4` 已完整解码、目视核查，包含搬运和放置。
+
+最终代码复验为 `full-cycle-20261014-192316-2508348/`：55.60s仿真、33.654s墙钟，无实时录像。它明确保存place_verified=true、grasp_place_component_passed=true、full_grasp_place_passed=false，仍在同一脱离保护处失败。前一回合视频和其源码字节快照保留，快照SHA与原报告一致；这不是独立留出集成绩。
+
+100项原验收、碰撞、扫掠、生命周期及新增兼容/2ms钩子回归通过。钩子关闭时实际物理状态逐位不变，审计拒绝在下一次积分前停止。旧主线P0/P1/P2、P3/20＋20没有重新绑定运行；不借历史成绩宣称本候选通过批次门。
+
+## 接续入口
+
+使用上述独立环境。先完成原完整资产导出，再运行官方向导；生成资产和运行产物全部忽略，不提交模型、网格或录像。
+
+```bash
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/wizard.py \
+  --upstream ~/.cache/so101-graspgenx/upstream --models ~/.cache/so101-graspgenx/models \
+  --source experiments/graspgenx-demo/output/<完整资产目录> --output <新的向导目录>
+bash experiments/graspgenx-demo/reviewed.sh <已保存的向导目录> 0 16
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/plan_motion.py \
+  --root . --output experiments/graspgenx-demo/output/<reviewed目录>
+MUJOCO_GL=egl ~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/contact_probe.py \
+  --root . --output experiments/graspgenx-demo/output/<reviewed目录> --render
+```
+
+用相同命令追加 `--empty-close` 执行负例。随后以 `transfer_preflight.py --root . --output <reviewed目录> --positive <正例目录> --negative <负例目录>` 绑定实际接触证据。完整回合入口是 `full_cycle.py --root . --output <reviewed目录> --preflight <前置报告目录> --render`；它目前在原释放几何保护下停止，不能作为完整成功入口。每次使用新输出目录，失败不覆盖，输入及源码变化必须重新绑定。
+
+向导采用已核实的任务区间：open=0.5、close=0.015rad；模型G+Z沿手指，G+X闭合。当前open区域extent=[0.044,0.008,0.009]、offset=[0.016,0,0.094]m；mid区域extent=[0.028,0.008,0.012]、offset=[0.008,0,0.096]m；revolute_2f、非对称。官方fingertip是区域中心[0.016,0,0.094]，旧pinch参考为[0.006,0,0.094]，不得混用。`validate_region.py`重新核对框架、任务状态、原网格距离和区域包含；向导完成本身不证明运动安全。
+
+以下保留首次近似和静态阶段记录；它们的“尚未”状态只对应当时阶段。
 
 ## 运行
 

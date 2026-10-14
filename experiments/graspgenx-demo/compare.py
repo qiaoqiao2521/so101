@@ -91,6 +91,13 @@ def run(args):
         torch.cuda.manual_seed_all(args.seed)
         torch.set_num_threads(2)
         geo = np.load(out / "geometry.npz", allow_pickle=False)
+        descriptor = json.loads((out / "descriptor.json").read_text())
+        if descriptor.get("descriptor_validated"):
+            validation = out / "region-validation.json"
+            if digest(validation) != descriptor.get("region_validation_sha256"):
+                raise ValueError("Reviewed region binding changed")
+            receipt["descriptor_validated"] = True
+            receipt["descriptor_validation_scope"] = descriptor["validation_scope"]
         mesh = trimesh.creation.box(extents=geo["target_size"])
         mesh.apply_translation(geo["target_center"])
         points, _ = trimesh.sample.sample_surface(mesh, 3500, seed=args.seed)
@@ -101,7 +108,7 @@ def run(args):
         receipt["input_kind"] = "full box surface geometry upper bound, not camera observation"
         cfg = load_model_cfg(models / "release/gen", models / "release/dis",
                              "epoch_736.pth", "epoch_1056.pth")
-        params = json.loads((out / "descriptor.json").read_text())["params"]
+        params = descriptor["params"]
         torch.cuda.reset_peak_memory_stats()
         t0 = time.monotonic()
         sampler = GraspGenXSampler.from_sweep_volume(cfg, params)

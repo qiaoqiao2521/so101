@@ -79,6 +79,17 @@ class CalibrationTests(unittest.TestCase):
                 TopDownCalibration.from_mujoco_model(model)
             setattr(model, field, old)
 
+    def test_projection_enum_preserves_perspective_only_contract(self):
+        model = SimpleNamespace(camera=lambda name: SimpleNamespace(id=0),
+                                cam_bodyid=[0], cam_mode=[0], cam_quat=[[1, 0, 0, 0]],
+                                cam_projection=[0], cam_sensorsize=[[0, 0]],
+                                cam_pos=[[.25, 0, .95]], cam_fovy=[45])
+        self.assertEqual(TopDownCalibration.from_mujoco_model(model), TopDownCalibration())
+        for projection in (1, 2, -1):
+            with self.subTest(projection=projection), self.assertRaises(ValueError):
+                model.cam_projection = [projection]
+                TopDownCalibration.from_mujoco_model(model)
+
 
 class LocalizationTests(unittest.TestCase):
     def setUp(self):

@@ -43,7 +43,7 @@ def check(root, source):
     from configuration_sweep import validate_configuration_path
     from support_native import library_metadata
     report = {"status": "started", "candidates": [], "physics_steps": 0,
-              "motion_accepted": False, "model_descriptor_validated": False,
+              "motion_accepted": False, "model_descriptor_validated": bool(descriptor.get("descriptor_validated",False)),
               "target_solid_checked": False, "path_planned": False,
               "numerical_reproduction_tolerances": {"position_m": NUMERIC_POSITION_M,
                                                     "rotation_rad": NUMERIC_ROTATION_RAD},

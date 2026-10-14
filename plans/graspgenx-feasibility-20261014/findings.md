@@ -1,5 +1,19 @@
 # Findings：GraspGen-X 与 SO101
 
+## 2026-10-14：新描述与实际抓放组件
+
+- 复用固定官方ConfigWizard；运动检测只找到活动指，区域宽度为0，导致Step3 slider初始化失败。薄启动适配只显式选定真实固定/活动指网格，排除马达，采用已验框架与任务区间；官方跟踪源码未改。六步GUI保存后读回正确值，loopback服务与自有后台浏览器已关闭。
+- 初次多字段GUI填入未全部传到后端，逐字段Enter与最终保存读回后纠正。初始失败目录保留，不将页面显示当作保存成功。
+- 旧近似盒子与原网格微交约3.36µm。新的毫米网格区域经FCL表面/距离、watertight包含与包围检查，open/mid均1.9mm。区域针对原raw mesh，完整运动仍由原保守凸包内核单独判断。
+- 新参数独立推理与池审计：48＋360=408、数值62、端点42、交集31、全244 jaw采样通过。首先选中OBB候选103（0.818573），复用原全位姿求解、OMPL预抓及原下降/抬升/闭爪路径，未改候选姿态或原安全阈值。
+- 正例真正夹起41.6006mm、保持1.48s；空夹在6s闭爪窗口未建立双指接触，安全状态下拒绝。两者绑定最终contact_probe源码，原物体自由体、neq/nmocap=0、reset后不改object qpos。中断复验目录无report，保持incomplete，不计通过。
+- 搬运前八角点最大误差1.4422mm，原2mm载荷假设成立；复用原TransportSnapshot/_run_transport_plan五段，独立0.005rad复查通过。实际搬运期角点最大误差1.7310mm。
+- 完整回合物理监测grasp/place通过，蓝盘落定2.52s；释放审计1350个2ms样本，漂移0.5486mm、无再接触。controller在release阶段拒绝release_initial_overlap_not_allowed，整体失败，未脱离/回位。
+- 状态字段补正后，用最终源码复验：55.60sim/33.654wall，物理grasp/place与释放组件通过，full=false、controller_done=false，仍为同一释放几何拒绝；非零退出且完整失败证据保留。两次异步调度下仿真时间有0.42s差异，不宣称逐位确定性。原视频对应的adapter字节快照SHA验证一致。
+- 只读释放核查：pad_gripper估计重叠-7.15125mm，原允许最低-3mm；即使活动爪查询.5仍相同。实际方块yaw=31.0398°，原轴对齐释放盒子的2mm膨胀不足，最大角点外溢3.00905mm。说明搬运→释放接口丢掉旋转，且脱离起态需重新核准；尚未证明单改高度即可解决。不能扩大阈值或让物理真值驱动恢复。
+- MuJoCo3.15原相机字段已改为cam_projection，兼容读取仍只接受透视并拒绝正交/未知。依据[官方API](https://mujoco.readthedocs.io/en/stable/APIreference/APItypes.html#mjtprojection)，新旧接口测试通过。原StateWorkcell增加可选2ms评分钩子，默认物理逐位不变、拒绝立即停止。
+- 100项相关回归通过。新增依赖隔离于已有模型缓存，setup固定本机已测MuJoCo3.15/OMPL2.0.1/FCL0.7.0.11/rtree1.4.1/OpenCV4.11.0.86/FFmpeg适配0.6.0。上游跟踪源码、权重、原模型、规划算法及物理标准不变；全传递依赖仍未完全锁定。
+
 ## 完整几何/框架和闭爪诊断
 
 - 官方向导要求两种状态的手指内侧区域盒，不是把整个夹爪实体扫过的体积填进12数条件；完整实体仍进入独立碰撞几何。来源：[向导说明](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/README.md#integrating-a-new-gripper)。当前旧接触垫盒仅是暂定近指尖标注，向导/物理准入未完成。

@@ -18,6 +18,10 @@ fi
 uv venv --python 3.11 --allow-existing "$upstream/.venv"
 # Official sweep-volume construction imports the lightweight serving types.
 uv pip install --python "$upstream/.venv/bin/python" --torch-backend cu124 -e "${upstream}[serve]"
+# Existing SO101 motion, localization imports and MP4 output in this isolated environment.
+uv pip install --python "$upstream/.venv/bin/python" ompl==2.0.1 \
+  imageio-ffmpeg==0.6.0 opencv-python-headless==4.11.0.86 \
+  mujoco==3.15.0 python-fcl==0.7.0.11 rtree==1.4.1
 HF_HUB_DISABLE_XET=1 hf download adithyamurali/GraspGenXModel \
   release/gen/config.yaml release/gen/epoch_736.pth \
   release/dis/config.yaml release/dis/epoch_1056.pth README.md \

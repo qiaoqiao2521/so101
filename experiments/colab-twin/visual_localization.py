@@ -91,8 +91,11 @@ class TopDownCalibration:
         if not (np.allclose(quat[1:], 0, atol=1e-10, rtol=0)
                 and math.isclose(abs(float(quat[0])), 1, abs_tol=1e-10)):
             raise ValueError('camera orientation must be identity (look down world -Z)')
-        if bool(model.cam_orthographic[camera_id]):
-            raise ValueError('orthographic camera is unsupported')
+        # MuJoCo 3.15 exposes mjtProjection instead of cam_orthographic.
+        projection = (int(model.cam_projection[camera_id]) if hasattr(model, 'cam_projection')
+                      else int(bool(model.cam_orthographic[camera_id])))
+        if projection != 0:
+            raise ValueError('only perspective camera projection is supported')
         if np.any(np.asarray(model.cam_sensorsize[camera_id]) != 0):
             raise ValueError('sensor intrinsics are unsupported; use a fovy camera')
         return cls(width=width, height=height,

@@ -46,7 +46,7 @@ def audit(root, source, seed):
               "source_hashes": {name: digest(Path(__file__).parent / name) for name in
                                 ("audit_pool.py", "compare.py", "inspect_candidates.py", "render_preview.py")},
               "summary": summary, "inspected_candidates": len(fits),
-              "descriptor_validated": False, "physics_steps": 0,
+              "descriptor_validated": record["descriptor_validated"], "physics_steps": 0,
               "motion_accepted": False, "collision_checked": False,
               "boundary": "All saved proposals, finite local multistart fit only; no pose threshold or physical acceptance"}
     (out / "audit.json").write_text(json.dumps(report, indent=2, allow_nan=False)+"\n")
