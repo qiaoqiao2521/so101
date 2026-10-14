@@ -1,5 +1,9 @@
 # Progress
 
+## 当前接续入口 2026-10-14
+
+预训练模型体验与候选对照已转入 [GraspGen-X计划进度](../graspgenx-feasibility-20261014/progress.md)。本文件保留10月1日至10日学习/规划证据；下文历史“Current/下一步”不自动恢复训练、性能优化或20+20。最新目标与优先级以 [PROJECT](../../PROJECT.md) 和新计划为准。
+
 ## CURRENT 2026-10-10：预训练 SmolVLA 仿真体验完成
 
 - 用户选择：机械臂按指令完成仿真任务。交付 [演示入口](../../experiments/pretrained-demo/README.md)，可切换推物、抓取移到目标、箱间搬运和随机种子。

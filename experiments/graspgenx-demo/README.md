@@ -45,11 +45,44 @@ bash experiments/graspgenx-demo/run.sh 0 16
 
 首次失败分别保存在 `output/20261014-153139-2145392/` 和 `output/20261014-153437-2148392/`：前者缺官方 `serve` 的 msgpack 依赖，后者为 Trimesh 数组子类未被官方精确类型检查识别。补齐依赖、转成连续float32标准数组后运行成功，未修改上游代码或权重。
 
+## 四组静态对照
+
+无需再次安装或训练。在仓库根运行：
+
+```bash
+bash experiments/graspgenx-demo/compare.sh 0 16 cli
+```
+
+第三个参数 `cli` 使用官方演示脚本的OBB默认值：36个yaw、Z偏移-2/0cm、`dense-topandside`。改为 `api` 则使用公共planner API默认值：36个yaw、Z偏移-8/-6/-4/-2/-1/0cm、`sparse`。二者不应混称同一默认配置；当前分数阈值-1、扩散每次16个和下游最多16个是本实验设置，不是整套官方CLI默认值。
+
+每轮只运行一次官方GraspMoE。diffusion与OBB组分别取这一轮的分支子集，混合组取并集，再按同一评分器稳定排序选前16。保留 `pool.npz` 的全部候选及来源；这是共享候选池消融，四组不是独立重复，生成预算也不同。官方扩散分支默认至少40候选、最多6次尝试；本次16个/次实际运行3次，共48个，不能与旧一次16个推理直接作等预算比较。固定组只有原IK生成的一个场景先验姿态，也使用相同评分器，不证明感知泛化。
+
+产物 `REPORT.md`、`comparison.json` 记录数量、来源、配对姿态误差和时间/显存；四个子目录各有候选图和静态拟合报告。图和模型分数均不证明碰撞、路径、接触或释放成功。
+
+若要检查被评分裁掉的姿态，在运行结果目录上执行：
+
+```bash
+~/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/graspgenx-demo/audit_pool.py \
+  --root . --output experiments/graspgenx-demo/output/<本轮目录> --seed 0
+```
+
+该命令不重新推理，逐个检查所有保存候选，生成 `all-candidates/audit.json`、姿态报告与候选图。已有目录拒绝覆盖；有限局部求解仍不是全局不可达证明，不存在运动接受或物理成功率。
+
+### 本机对照事实
+
+2026-10-14，seed0，同一3500点方块和指尖近似。API配置原始48扩散+216OBB，CLI配置48扩散+360OBB。各组按评分选16个后，API混合组包含静态误差接近零的OBB顶抓；CLI混合组前16个全是OBB，配对加权误差最小者仍为41.23mm/40.00°。两轮扩散组相同，配对最佳0.227mm/5.084°。这只说明本轮评分排序与五轴姿态拟合存在区别，不能宣称API普遍更好或模型失败。
+
+CLI混合推理1.687s、CUDA峰值allocated587.95MiB/reserved642MiB；不含模型加载、静态求解和绘图。完整输入和近似夹爪限制继续适用。API产物 `output/comparison-20261014-165300-2254125/`；CLI产物 `output/comparison-20261014-165422-2256124/`，均由Git忽略。
+
+CLI全408候选已完成独立静态审计。OBB候选92的配对误差约为 `1.94e-10mm / 4.82e-11°`，只表示数值拟合接近零；它在OBB分支模型分数排第289，未进入前16。最高分候选297则为75.55mm/64.16°。因此评分裁剪后的16个不能代表整个候选池，也不能据此宣布无可达姿态。候选92尚未接受运动或通过碰撞/接触；下一适配应先核准夹爪描述，再加入可达性筛选。
+
 ## 官方来源与许可
 
 - [官方源码](https://github.com/NVlabs/GraspGenX/tree/b9429097728cb1c430dd78b92edf17ba318aad03)：固定提交，Apache-2.0。
 - [官方模型](https://huggingface.co/adithyamurali/GraspGenXModel/tree/7c834043c11a11417e31d6d5ea9355801e40a2c1)：生成器和评分器文件均按官方元数据 SHA-256 校验；权重采用 NVIDIA Open Model License，不能归为 Apache-2.0。
 - [官方 sweep-volume 接口](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/grasp_server.py#L123)：复用官方构造、配置加载与采样，不另实现生成模型。
+- [官方GraspMoE](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/samplers/graspmoe.py)：并集、分支来源、OBB生成及评分；固定组复用其评分函数。该私有函数与固定上游提交绑定，升级需复验。
+- [官方演示参数](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/scripts/demo_object_pc.py)：CLI默认值；公共API默认值另见 `graspgenx/samplers/planner.py`。
 - [现有可行性计划](../../plans/graspgenx-feasibility-20261014/task_plan.md)：完整夹爪、姿态、碰撞和抓放的待验门槛。
 
 源码、依赖、权重和运行产物分开管理。第三方源码/权重留在缓存并保留其许可；输出、日志及二进制文件由本目录 `.gitignore` 排除。

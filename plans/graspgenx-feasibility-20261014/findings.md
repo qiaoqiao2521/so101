@@ -1,5 +1,16 @@
 # Findings：GraspGen-X 与 SO101
 
+## 2026-10-14 接续：共享候选池与全量姿态诊断
+
+- 人类授权接续其他任务后，选择原E2四组静态对照/E3残差诊断；未恢复旧训练、实时优化、20+20或实体联调。历史Next不作为自动队列。
+- 固定上游的 [演示CLI](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/scripts/demo_object_pc.py) 默认Z偏移-2/0cm、dense-topandside；[公共planner API](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/samplers/planner.py) 默认六个Z偏移、sparse。两者不能混称同一默认配置。
+- [官方run_graspmoe](https://github.com/NVlabs/GraspGenX/blob/b9429097728cb1c430dd78b92edf17ba318aad03/graspgenx/samplers/graspmoe.py) 返回扩散/OBB子集。本轮从同一池提取四组，记录不同生成预算；纯OBB是官方分支子集，不是新写算法或官方独立CLI模式。原IK固定组有一个先验姿态，也用同评分器；不证明感知泛化。
+- seed0、3500点完整方块、同指尖描述：API48+216，CLI48+360；扩散子集逐位相同。原16/次在官方min40/max6下实际生成三次，不能与旧一次16比较等算力收益。
+- 按分数取16：API混合有接近零残差OBB顶抓；CLI前16全OBB侧抓，配对加权最佳41.23mm/40.00°。扩散配对最佳0.227mm/5.084°，没有混配各自最小平移与旋转。
+- CLI全408复核：OBB候选92评分排289，拟合约1.94e-10mm/4.82e-11°；最高分候选297为75.55mm/64.16°。证明本轮评分前16不代表整个池的拟合能力，不证明评分器普遍失效或候选92物理可用。0.1m/rad仅用于诊断排序，没有姿态接受阈值。
+- 原始产物：`experiments/graspgenx-demo/output/comparison-20261014-165300-2254125/`（API）、`comparison-20261014-165422-2256124/`（CLI含all-candidates）。9项边界检查、真实入口、来源/排序、源码/输入/回执哈希和408分母已验证；无碰撞/物理成绩。
+- 沿用Wiki“按当前任务选择验收依据”：模型推理、静态残差、碰撞路径与自由体接触分别验收。知识收尾already_covered，适配事实留在本计划。
+
 日期：2026-10-14，Asia/Shanghai。最初范围：当前文件、官方网页、公开源码与仓库元数据的只读核查。随后人类明确授权试模型，新增本地结果见末节；物理抓放与实体仍未执行。
 
 ## 官方证据与版本定位

@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-14 已交付 [GraspGen-X 本地候选体验](experiments/graspgenx-demo/README.md)，并按用户“查看SpecMesh、完成其他任务”接续候选对照。官方冻结生成器/评分器已在4GB显卡运行；固定抓取、diffusion、OBB、GraspMoE 共用输入、评分器和静态姿态检查。完整夹爪描述仍未验证，模型评分排序不保证五轴姿态可达；尚未执行模型驱动的物理抓放。当前任务入口为 [GraspGen-X进度](plans/graspgenx-feasibility-20261014/progress.md)。
+
 2026-10-10 已交付首个预训练模型体验：[SmolVLA MetaWorld](experiments/pretrained-demo/README.md)。独立环境复用官方公开权重与 LeRobot 0.6.1；本机 RTX 3050 4GB 上，最终默认每 10 步观察的推物、抓取移到目标、箱间搬运各一回合达到官方目标范围判据。原每 50 步观察的抓放失败保留；这是演示样本，不是统计成功率或松爪静稳验收。提供任务/种子可改的 CLI、原视频及慢放预览，无训练、云分配或实体操作。Sawyer 仿真尚未迁移 SO101；R3e与原安全成绩保留，自训练和性能优化暂停自动接续。方向以 [D006](docs/DECISIONS.md#d006) 为准。
 
 以下为已验证基线及历史证据，旧记录中的“下一步”不代表当前任务：
@@ -103,6 +105,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 2026-10-01 主线接续：新增本地 `experiments/colab-twin/run_staged.py` 四层单回合入口。复用已安装 MuJoCo3.3.7/Mink1.1.0/OMPL2.0.1；依赖导入、reset/10步、单次绕障和位置伺服执行均实际通过。TCP误差0.549mm，20ms碰撞无无效采样，关节限位超出0；378帧视频完整解码通过。32项回归检查通过，缺失依赖入口实际拒绝并保留阶段报告。输出按UUID分轮保留且被Git忽略。执行只覆盖静态路径和仿真位置伺服反馈，动态重规划、抓放、视觉和实体同步继续待办；GR00T云端尝试保持停止。
 
 ## Current Priority
+2026-10-14：沿当前预训练候选体验补齐静态对照与全候选姿态诊断，再解决夹爪描述、坐标与姿态准入。API和演示CLI默认参数分别记录；不得把模型最高分直接当作SO101可执行候选。具体已完成与剩余项以 [当前候选计划](plans/graspgenx-feasibility-20261014/progress.md) 为准，旧训练、50Hz、20+20与实体任务仍保持暂停/未运行。
+
 根Codex先把目标、选择依据与可体验成果交给用户。默认顺序是“应用目标 → 成熟模型/完整应用比较 → 用户亲手体验 → 明确能力缺口 → 必要适配或训练”。
 
 下一步由用户体验现成仿真入口，选择值得落地的任务，再明确 SO101 接入或完整释放落定的能力缺口。已有 CLI 可切换三个任务与随机种子，结果和失败均可查看。不要自动扩大训练、跑统计批次或恢复旧性能优化。
@@ -128,6 +132,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 2026-09-22：主从跟随迟钝已完成静态/离线诊断；用户当前不便使用实体机械臂，后续采样与修复标记为待处理。不自动连接硬件、启动跟随或调整限幅，等用户明确继续后再开展。
 ## Knowledge Map
 README.md；mint_follower_demo/SECURITY.md；workspaces/so101_ws/AGENTS.md；docs/ARCHITECTURE.md。
+
+当前模型体验：[GraspGen-X运行与对照](experiments/graspgenx-demo/README.md)；[适配计划与剩余门槛](plans/graspgenx-feasibility-20261014/task_plan.md)；[进度](plans/graspgenx-feasibility-20261014/progress.md)。
 
 当前方向以 [D006：选择大于努力](docs/DECISIONS.md#d006) 和 [计划顶部](plans/colab-digital-twin-20261001/task_plan.md) 为准。历史训练与性能待办只作可恢复资产。
 
