@@ -38,6 +38,14 @@ def run(root,source,preflight,render=False):
             if release.anchor is not None:
                 release.update(physical.qpos[6:8],robot_target_force(model,physical),float(physical.time))
                 if release.failure_reason:raise SafetyStop(release.failure_reason)
+                if release.detached:
+                    orientation=np.empty(9);mujoco.mju_quat2Mat(orientation,physical.qpos[9:13])
+                    corners=BOX_CORNERS*np.asarray(TARGET_SIZE)/2
+                    actual=physical.qpos[6:9]+corners @ orientation.reshape(3,3).T
+                    local=(actual-controller.released_query.center) @ controller.released_query.rotation
+                    outside=float(np.max(np.abs(local)-(np.asarray(TARGET_SIZE)/2+.002)))
+                    report['released_envelope_max_outside_m']=max(report.get('released_envelope_max_outside_m',-1.),outside)
+                    if outside>0:raise SafetyStop('released_object_outside_declared_rotated_envelope')
         try:
             scene=env.checker.model
             released=ReleasedObjectQuery(Path(report["output_directory"])/"scene/grasp-planning.xml")

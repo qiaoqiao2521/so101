@@ -14,6 +14,25 @@ from grasp_workcell import TARGET_SIZE
 BOX_CORNERS = np.array([[x,y,z] for x in (-1.,1.) for y in (-1.,1.) for z in (-1.,1.)])
 
 
+def rotation_matrix(value):
+    rotation = np.array(value, dtype=float, copy=True)
+    if (rotation.shape != (3, 3) or not np.isfinite(rotation).all()
+            or not np.allclose(rotation.T @ rotation, np.eye(3), atol=1e-10, rtol=0)
+            or not np.isclose(np.linalg.det(rotation), 1., atol=1e-10, rtol=0)):
+        raise ValueError('Release rotation requires a finite proper 3x3 rotation')
+    return rotation
+
+
+def floor_yaw_rotation(rotation):
+    """Declared flat-box rest on the known horizontal tray; no task truth."""
+    rotation = rotation_matrix(rotation)
+    if rotation[2, 2] <= 0 or np.linalg.norm(rotation[:2, 0]) < 1e-12:
+        raise ValueError('Cannot project an inverted box onto the known support')
+    angle = np.arctan2(rotation[1, 0], rotation[0, 0])
+    c, s = np.cos(angle), np.sin(angle)
+    return np.array([[c, -s, 0.], [s, c, 0.], [0., 0., 1.]])
+
+
 def box_separation(center, rotation, extent, other_center, other_extent):
     """SAT separation lower bound for an OBB and a world-aligned box.
 
@@ -57,13 +76,20 @@ class ReleasedObjectQuery:
                               or int(self.model.geom_conaffinity[i]) & 2)]
         self.uncertainty_m = float(uncertainty_m)
         self.center = None
+        self.rotation = None
 
-    def freeze(self, center):
+    def freeze(self, center, rotation=None):
         center = np.asarray(center, dtype=float)
         if self.center is not None or center.shape != (3,) or not np.isfinite(center).all():
             raise ValueError('Freeze one finite release estimate only')
+        rotation = rotation_matrix(np.eye(3) if rotation is None else rotation)
         self.center = center.copy()
+        self.rotation = rotation
         self.model.geom_pos[self.object_id] = center
+        if not np.array_equal(rotation, np.eye(3)):
+            mujoco.mju_mat2Quat(self.model.geom_quat[self.object_id], rotation.ravel())
+            # A compiled identity-rotation shortcut must not discard the new pose.
+            self.model.geom_sameframe[self.object_id] = mujoco.mjtSameFrame.mjSAMEFRAME_NONE
 
     def distances(self, q6):
         if self.center is None:
@@ -78,8 +104,12 @@ class ReleasedObjectQuery:
         for i in self.robot_ids:
             name = self.model.geom(i).name
             if name in PAD_NAMES:
-                distance = box_separation(self.data.geom_xpos[i], self.data.geom_xmat[i].reshape(3,3),
-                                          self.model.geom_size[i], self.center,
+                center, rotation, other = self.data.geom_xpos[i], self.data.geom_xmat[i].reshape(3,3), self.center
+                if not np.array_equal(self.rotation, np.eye(3)):
+                    center = self.rotation.T @ (center-self.center)
+                    rotation = self.rotation.T @ rotation
+                    other = np.zeros(3)
+                distance = box_separation(center, rotation, self.model.geom_size[i], other,
                                           self.model.geom_size[self.object_id])
             else:
                 distance = float(mujoco.mj_geomDistance(self.model, self.data, i, self.object_id, .1, None))

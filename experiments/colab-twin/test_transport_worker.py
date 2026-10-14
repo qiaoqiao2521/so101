@@ -33,6 +33,13 @@ class TransportWorkerTests(unittest.TestCase):
                     world=[['tray', 6, [.24, .14, 0.], np.eye(3), [.1, .1, .01]]],
                     payload_uncertainty=.002, elapsed_s=3.)
 
+    def test_release_height_keeps_original_default_and_rejects_unsafe_range(self):
+        values=self.snapshot_values()
+        self.assertEqual(TransportSnapshot(**values).release_pinch_height_m,.023)
+        self.assertEqual(TransportSnapshot(**values,release_pinch_height_m=.028).release_pinch_height_m,.028)
+        for height in (.022,.031,float('nan')):
+            with self.assertRaises(ValueError):TransportSnapshot(**values,release_pinch_height_m=height)
+
     def paths(self):
         return [[[float(index)*.01, 0., 0., 0., 0.],
                  [float(index+1)*.01, -.0, .01, 0., 0.]] for index in range(5)]

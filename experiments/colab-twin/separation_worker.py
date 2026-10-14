@@ -67,6 +67,7 @@ class SeparationSnapshot:
     elapsed: float
     center: tuple
     uncertainty: float
+    rotation: tuple = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
 
     def __post_init__(self):
         for name in ('q6', 'initial_q6', 'last_command6'):
@@ -82,6 +83,8 @@ class SeparationSnapshot:
             raise ValueError('Released-object uncertainty must be 2..5 mm')
         object.__setattr__(self, 'elapsed', elapsed)
         object.__setattr__(self, 'uncertainty', uncertainty)
+        from released_object import rotation_matrix
+        object.__setattr__(self, 'rotation', tuple(tuple(row) for row in rotation_matrix(self.rotation)))
 
 
 @dataclass(frozen=True)
@@ -246,11 +249,17 @@ def _planning_context(rig, released_model, snapshot):
     query = ReleasedObjectQuery.__new__(ReleasedObjectQuery)
     query.model, query.data = released_model, mujoco.MjData(released_model)
     query.object_id = released_model.geom('estimated_released_box').id
+    expected_quat = np.empty(4)
+    mujoco.mju_mat2Quat(expected_quat, np.asarray(snapshot.rotation).ravel())
     if (_bytes(released_model.geom_pos[query.object_id]) != _bytes(snapshot.center) or
+            _bytes(released_model.geom_quat[query.object_id]) != _bytes(expected_quat) or
+            (not np.array_equal(np.asarray(snapshot.rotation), np.eye(3)) and
+             released_model.geom_sameframe[query.object_id] != mujoco.mjtSameFrame.mjSAMEFRAME_NONE) or
             _bytes(released_model.geom_size[query.object_id]) !=
             _bytes(np.asarray(TARGET_SIZE)/2+snapshot.uncertainty)):
         raise ValueError('Released model differs from the frozen estimate')
     query.center, query.uncertainty_m = np.asarray(snapshot.center), snapshot.uncertainty
+    query.rotation = np.asarray(snapshot.rotation)
     query.robot_ids = [i for i in range(released_model.ngeom)
                        if released_model.geom_bodyid[i] != 0 and
                        (int(released_model.geom_contype[i]) & 2 or

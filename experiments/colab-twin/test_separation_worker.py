@@ -19,6 +19,15 @@ from transport_worker import AsyncTransportPlanningJob, TransportPlan
 
 
 class SeparationWorkerTests(unittest.TestCase):
+    def test_rotation_snapshot_owns_values_and_rejects_invalid_pose(self):
+        angle=.53;rotation=np.array([[np.cos(angle),-np.sin(angle),0],
+                                  [np.sin(angle),np.cos(angle),0],[0,0,1]])
+        snapshot=self.snapshot(rotation=rotation);saved=np.asarray(snapshot.rotation).copy()
+        rotation[:]=np.eye(3)
+        np.testing.assert_array_equal(snapshot.rotation,saved)
+        for value in (np.eye(3)*2,np.diag([-1,1,1])):
+            with self.assertRaises(ValueError):self.snapshot(rotation=value)
+
     def snapshot(self, **changes):
         values = dict(q6=[0., -.0, 0., 0., 0., .5], initial_q6=[-.1, 0., 0., 0., 0., .5],
                       last_command6=[0., -.0, 0., 0., 0., .5], seed=11,

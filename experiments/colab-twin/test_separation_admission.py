@@ -390,6 +390,7 @@ class SeparationAdmissionTests(unittest.TestCase):
                    lambda c: setattr(c.released_query, 'model', object()),
                    lambda c: c.released_query.center.__setitem__(0, .241),
                    lambda c: setattr(c.released_query, 'uncertainty_m', .003),
+                   lambda c: setattr(c.released_query, 'rotation', np.array([[0,-1,0],[1,0,0],[0,0,1]])),
                    lambda c: c.last_command.__setitem__(0, .2001),
                    lambda c: c.world[0][2].__setitem__(0, .001),
                    lambda c: c.release_record.__setitem__('estimate_frozen_at_s', 10.01)]

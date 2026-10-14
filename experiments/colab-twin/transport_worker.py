@@ -38,6 +38,7 @@ class TransportSnapshot:
     world: tuple
     payload_uncertainty: float
     elapsed_s: float
+    release_pinch_height_m: float = .023
 
     def __post_init__(self):
         for name, size in (('q6', 6), ('target_xy', 2), ('payload_relative', 3)):
@@ -55,6 +56,10 @@ class TransportSnapshot:
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f'{name} requires a finite nonnegative value')
             object.__setattr__(self, name, value)
+        height = float(self.release_pinch_height_m)
+        if not math.isfinite(height) or not .023 <= height <= .030:
+            raise ValueError('Release pinch height must be 23..30 mm in this fixed box workcell')
+        object.__setattr__(self, 'release_pinch_height_m', height)
 
 
 @dataclass(frozen=True)

@@ -30,7 +30,8 @@ def declared_payload(rig, goal, geometry):
 def held_controller(rig, goal, geometry, released_query, q6, last_command, elapsed):
     from visual_grasp_controller import VisualGraspController
     controller=VisualGraspController(rig,geometry["target_center"][:2],np.r_[goal["start_q5"],.5],
-                                     seed=0,released_query=released_query)
+                                     seed=0,released_query=released_query,
+                                     release_rotation_mode='floor_yaw',release_pinch_height_m=.028)
     controller.target_frozen=True
     controller.freeze_record={"source":"frozen full-geometry input upper bound; not live vision"}
     controller.payload_relative,controller.payload_rotation=declared_payload(rig,goal,geometry)
@@ -46,6 +47,8 @@ def preflight(root,source,positive,negative):
     from visual_grasp_controller import _run_transport_plan,BOX_CORNERS
     from grasp_workcell import TARGET_SIZE
     from joint_planner import validate_joint_path
+    from released_object import ReleasedObjectQuery,floor_yaw_rotation
+    from separation_worker import SeparationSnapshot,run_separation_plan
     positive_record=json.loads((positive/"report.json").read_text())
     negative_record=json.loads((negative/"report.json").read_text())
     planned=json.loads((source/"motion-plan/report.json").read_text());goal=planned["chosen"]
@@ -60,6 +63,7 @@ def preflight(root,source,positive,negative):
     out=source/("transfer-preflight-"+time.strftime("%Y%m%d-%H%M%S"));out.mkdir(exist_ok=False)
     report={"status":"started","physical_transfer_passed":False,"physics_steps":0,
             "payload_uncertainty_m":.002,"payload_clearance_m":.0002,"arm_margin_m":.001,
+            "release_rotation_mode":"floor_yaw","release_pinch_height_m":.028,
             "source_adapter_sha256":digest(Path(__file__)),
             "contact_probe_adapter_sha256":digest(Path(__file__).parent/"contact_probe.py"),
             "motion_plan_sha256":digest(source/"motion-plan/report.json"),
@@ -88,12 +92,25 @@ def preflight(root,source,positive,negative):
         report["declared_payload_rotation"]=controller.payload_rotation.tolist()
         if max(errors)>.002:raise RuntimeError("payload_hypothesis_exceeds_original_2mm_bound")
         snapshot=TransportSnapshot(q6,geometry["target_center"][:2],controller.payload_relative,
-            controller.payload_rotation,controller.world,.002,positive_record["simulation_s"])
+            controller.payload_rotation,controller.world,.002,positive_record["simulation_s"],.028)
         proposal=_run_transport_plan(copy.copy(rig),snapshot)
         checks=[validate_joint_path(path,controller._payload_valid,.005) for path in proposal.paths]
         report.update(transport=json.loads(proposal.report_json),independent_path_checks=checks)
         if not all(row["valid"] for row in checks):raise RuntimeError("transport_postcheck_failed")
         if report["transport"]["budget_finish_lower_bound_s"]>90:raise RuntimeError("necessary_simulation_budget_failed")
+        endq=np.r_[proposal.paths[-1][-1],.5]
+        origin,rotation,_=controller._fk(endq)
+        center=origin+rotation @ controller.payload_relative;center[2]=.010
+        settled_rotation=floor_yaw_rotation(rotation @ controller.payload_rotation)
+        released=ReleasedObjectQuery(positive/"scene/grasp-planning.xml")
+        released.freeze(center,settled_rotation)
+        elapsed=positive_record["simulation_s"]+report["transport"]["motion_and_arrival_s"]+2.1+6.6
+        separation_snapshot=SeparationSnapshot(endq,np.r_[goal["start_q5"],.5],endq,0,elapsed,center,.002,settled_rotation)
+        separation=run_separation_plan(copy.copy(rig),copy.copy(released.model),separation_snapshot)
+        report.update(release_estimate_center_m=center.tolist(),release_rotation_world=settled_rotation.tolist(),
+                      separation_preview=json.loads(separation.report_json),
+                      separation_sample_count=len(separation.samples),return_waypoint_count=len(separation.paths[1]),
+                      release_and_return_static_verified=True)
         report["status"]="transport_preflight_verified"
     except Exception as error:
         report.update(status="stopped",error_type=type(error).__name__,error=str(error))
