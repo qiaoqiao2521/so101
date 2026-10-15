@@ -1,0 +1,72 @@
+# Keep imported snapshots and third-party source trees on their own upstream update path.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:06"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: "npm"
+    directories:
+      - "/workspaces/so101_ws/mes_frontend"
+      - "/workspaces/so101_ws/tools/robotic-arm-sequencer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:06"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: "pip"
+    directories:
+      - "/mint_follower_demo"
+      - "/workspaces/so101_ws/tools/win7_follower_demo"
+      - "/experiments/colab-twin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:06"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      pip-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: "maven"
+    directory: "/workspaces/so101_ws/mes_backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:06"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      maven-minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "chore(deps)"
