@@ -1258,3 +1258,14 @@ ABBA四轮原仿真抓放均成功，整间隔P95依序27.965330/26.934996/26.35
 聚合及尝试null；历史账本241行保持，新phase只补CLI开销，其它CLI实测一次，worker不重复加，未量化准备/审阅/lookup未知不记0。Knowledge already_covered，沿用Wiki实际调用和版本绑定、组件与整周期证据边界，无共享Wiki写入。
 
 Remaining / owner：根Codex完成规范工程同步及提交推送后独立读回，见[最终报告](../../experiments/colab-twin/output/visual-grasp-r3e-summary-20261009/REPORT.md)与delivery-verification.json；后续性能仍先处理长扫掠及启动复制，P3暂停。
+
+
+## 2026-10-20 工作台接入原规划执行器
+
+用户要求从可编辑工作台接已有执行器。新增 station_executor.py 和定向测试，为 run_physical_episode 增加默认不启用的场景、进度、协作取消、录像与控制器选项注入。复用原视觉定位、IK/OMPL、物理推进、释放审计和回位，不新增控制器。说明见 experiments/colab-twin/STATION_EXECUTOR.md。
+
+35项定向测试通过；新CLI完整回合74.76sim/53.13wall通过，持物31.40s、落盘静稳7.52s、脱离后再接触峰值0，原物理判据保持。修改方块X=.245并添加障碍后取消，实际初态与XML确认消费草稿。首轮旧释放高度失败保留，最终使用已有floor_yaw与28mm释放姿态。根通过真实浏览器HTTP再次启动一轮抓放，74.76sim/50.22wall成功；刷新原任务不重发，另轮4.16sim协作取消。
+
+支持范围限固定八步模板、方块XY各±10mm与固定尺寸附加障碍；不支持的编辑给出具体错误。泛化、20+20、50Hz、训练和实体未启动。工作台实现仍在其独立仓库分支。canonical现场既有跟随器、配置、录制与其他未跟踪实验保持；只把本轮三份执行源码和说明同步到既有交付工作树，由根串行提交。原现场遗留由SO101原模块owner继续核实，不提交用户日志、标定或会话。
+
+Knowledge closeout：already_covered。沿用原任务身份恢复及依赖隔离约定，新接口和证据留在项目。

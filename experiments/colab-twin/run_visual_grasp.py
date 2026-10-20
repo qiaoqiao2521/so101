@@ -171,7 +171,9 @@ def run_p0(source, out, protocol, deadline):
             'negative_fixtures':'rendered visual-only occluder, invisible target, second green box; no pixel masking'}
 
 
-def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
+def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
+                         scene_builder=None, progress_callback=None, cancel_check=None,
+                         video_factory=None, video_stride=2, controller_options=None):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
     from deferred_video import DeferredVideo
@@ -185,7 +187,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
     release_audit=ReleaseAudit(); release_samples=[]; reset_record={}
     status={'passed':False,'safety_stop':False,'failure_reason':None}
     try:
-        model,rig,_=build_contact_scene(source,out/'scene',noslip_iterations=10)
+        if cancel_check is not None:
+            cancel_check()
+        builder = build_contact_scene if scene_builder is None else scene_builder
+        model,rig,_=builder(source,out/'scene',noslip_iterations=10)
         data=reset_scene(model,rig,case['initial_xy_m'])
         initial=data.qpos.copy()
         baseline_z=float(data.xpos[model.body('grasp_target').id,2])
@@ -203,12 +208,15 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
         if not first.valid: raise RuntimeError('initial_localization_rejected: '+first.reason)
         released_query=ReleasedObjectQuery(out/'scene/grasp-planning.xml')
         controller=VisualGraspController(rig,first.xy_m,data.qpos[:6].copy(),seed=0,target_timestamp_s=0.0,
-                                         released_query=released_query)
+                                         released_query=released_query, **(controller_options or {}))
         if video:
-            writer=DeferredVideo(model,out/'grasp-place.mp4',max_frames=2250,deadline=deadline)
+            factory = DeferredVideo if video_factory is None else video_factory
+            writer=factory(model,out/'grasp-place.mp4',max_frames=2250,deadline=deadline)
         time0=float(data.time); tick=0; next_image=.5
         last={'target_frozen':False,'stage':'approach'}
         while float(data.time)-time0 < protocol['max_sim_s']-1e-9:
+            if cancel_check is not None:
+                cancel_check()
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit')
             elapsed=float(data.time)-time0
             estimate=None
@@ -266,7 +274,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                     and controller.separation_events[-1]['elapsed_s']==elapsed
                     and controller.separation_events[-1]['accepted']):
                 controller.separation_events[-1]['issued']=True
-            obstacle=model.geom('approach_obstacle').id
+            obstacle_ids = {model.geom(name).id for name in
+                            case.get('obstacle_geom_names', ['approach_obstacle'])}
             release_force_peak=0.
             for _ in range(10):
                 mujoco.mj_step(model,data)
@@ -281,7 +290,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                                             'detached':release_audit.detached})
                     if release_audit.failure_reason:
                         break
-                if any(obstacle in (c.geom1,c.geom2) for c in data.contact):
+                if any(obstacle_ids.intersection((c.geom1,c.geom2)) for c in data.contact):
                     obstacle_steps+=1
                     break  # Abort at the first 2 ms contact, before another integration.
             mujoco.mj_forward(model,data)
@@ -296,13 +305,15 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False):
                        robot_target_force_peak_n=release_force_peak,
                        released_detached=release_audit.detached)
             rows.append(row)
+            if progress_callback is not None:
+                progress_callback(row)
             status=monitor.update(row)
             if release_audit.failure_reason:
                 status['safety_stop']=True
                 raise RuntimeError(release_audit.failure_reason)
             if injected and pulse_count==10 and pulse_after is None:
                 pulse_after=data.qpos[:6].tolist()
-            if writer is not None and tick%2==0:
+            if writer is not None and tick%video_stride==0:
                 writer.capture(data,tick); frame_count+=1
             tick+=1
             if obstacle_steps or status['safety_stop']:
