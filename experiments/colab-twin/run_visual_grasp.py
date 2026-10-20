@@ -11,6 +11,7 @@ import math
 import os
 from pathlib import Path
 import time
+import warnings
 import xml.etree.ElementTree as ET
 
 os.environ.setdefault('MUJOCO_GL', 'egl')
@@ -173,7 +174,8 @@ def run_p0(source, out, protocol, deadline):
 
 def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                          scene_builder=None, progress_callback=None, cancel_check=None,
-                         video_factory=None, video_stride=2, controller_options=None):
+                         video_factory=None, video_stride=2, controller_options=None,
+                         scene_callback=None):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
     from deferred_video import DeferredVideo
@@ -186,12 +188,30 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
     pulse_count=0; pulse=None; pulse_before=None; pulse_after=None; obstacle_steps=0
     release_audit=ReleaseAudit(); release_samples=[]; reset_record={}
     status={'passed':False,'safety_stop':False,'failure_reason':None}
+    model=None; data=None; time0=0.; last={'stage':'initializing'}
+    scene_warning=False
+
+    def emit_scene(*, final=False, row=None):
+        nonlocal scene_warning
+        if scene_callback is None or model is None or data is None:
+            return
+        try:
+            scene_callback(model, data, elapsed_s=float(data.time)-time0,
+                           phase=last['stage'], final=final, row=row)
+        except Exception as error:
+            # Display transport is optional. A disconnected viewer must not
+            # change the physical controller, original task result or guards.
+            if not scene_warning:
+                warnings.warn('WARNING station scene update failed: ' + str(error))
+                scene_warning=True
     try:
         if cancel_check is not None:
             cancel_check()
         builder = build_contact_scene if scene_builder is None else scene_builder
         model,rig,_=builder(source,out/'scene',noslip_iterations=10)
         data=reset_scene(model,rig,case['initial_xy_m'])
+        time0=float(data.time)
+        emit_scene()
         initial=data.qpos.copy()
         baseline_z=float(data.xpos[model.body('grasp_target').id,2])
         reset_record={'initial_qpos':initial.tolist(), 'initial_qvel':data.qvel.copy().tolist(),
@@ -307,6 +327,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             rows.append(row)
             if progress_callback is not None:
                 progress_callback(row)
+            emit_scene(row=row)
             status=monitor.update(row)
             if release_audit.failure_reason:
                 status['safety_stop']=True
@@ -345,6 +366,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         status.update(passed=False,error_type=type(error).__name__,error=str(error))
         if not status.get('failure_reason'): status['failure_reason']=str(error)
     finally:
+        # Capture the actual final physical state even when cancellation or a
+        # guard interrupts between sparse updates. Deferred video uses its own
+        # MjData and cannot overwrite this terminal scene.
+        emit_scene(final=True, row=rows[-1] if rows else None)
         if controller is not None:
             try:
                 controller.close()

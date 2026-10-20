@@ -240,6 +240,27 @@ def run(station_path, output, cancel_file):
                     mujoco.MjModel.from_xml_path(str(folder/'grasp-planning.xml')), path)
 
         last_publish = 0.
+        last_scene_publish = 0.
+        scene_projector = None
+        scene_sequence = 0
+
+        def scene(model, data, *, elapsed_s, phase, final=False, row=None):
+            nonlocal last_scene_publish, scene_projector, scene_sequence
+            now = time.monotonic()
+            if not final and phase == current.get('scene_phase') and now-last_scene_publish < .1:
+                return
+            if scene_projector is None:
+                from station_scene import StationScene
+                scene_projector = StationScene(model)
+            scene_sequence += 1
+            target = model.body('grasp_target').id
+            publish(scene=scene_projector.update(data, elapsed_s=elapsed_s, phase=phase),
+                    scene_seq=scene_sequence, scene_time_s=elapsed_s, scene_phase=phase,
+                    scene_final=final, scene_source='MuJoCo physical execution',
+                    q6=data.qpos[:6].tolist(), object_xyz_m=data.xpos[target].tolist(),
+                    object_quat_wxyz=data.xquat[target].tolist(), simulation_s=elapsed_s,
+                    **({'tip_forces_n': row['tip_forces_n']} if row is not None else {}))
+            last_scene_publish = now
 
         def progress(row):
             nonlocal last_publish
@@ -258,6 +279,7 @@ def run(station_path, output, cancel_file):
         report = run_physical_episode(SOURCE, output/'episode',
                     {'max_episode_wall_s': 120, 'max_sim_s': 90}, case, None,
                     video=True, scene_builder=build_scene, progress_callback=progress,
+                    scene_callback=scene,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options={'release_rotation_mode': 'floor_yaw',
                                         'release_pinch_height_m': .028})

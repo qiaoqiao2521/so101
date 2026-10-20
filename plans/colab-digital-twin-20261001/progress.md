@@ -1,5 +1,13 @@
 # Progress
 
+## 2026-10-20 工作台实时三维接续
+
+工作站执行器现可输出实际MuJoCo全臂、夹爪、物块旋转及场景。原13STL反解编译mesh变换，独立XML对照误差≤2e-12；编辑预览零物理步，终态在录像编码前强制输出。显示导入/初始化/发送失败警告继续，原控制与评分保持。19项定向测试通过。
+
+真实浏览器完整任务74.74sim/106.662wall通过抓放、脱离和回位；取消任务5.12sim后保留最后实际姿态，逐值核对任务scene与Web源。编辑/任务隔离、刷新不重复提交、原13STL加载与390px完整模型均已核验。详细接口与证据见[STATION_EXECUTOR](../../experiments/colab-twin/STATION_EXECUTOR.md)。发布分支由根Codex串行整合；canonical历史改动保留。
+
+下一步由根Codex按应用需求接更多受支持参数或FishBot能力；本轮不恢复学习/性能/20+20，也不声称CY、真机或50Hz通过。Knowledge：already_covered，PIT-004与现有分层验收原则已覆盖；实际几何接口留项目。
+
 ## 当前接续入口 2026-10-14
 
 预训练模型体验与候选对照已转入 [GraspGen-X计划进度](../graspgenx-feasibility-20261014/progress.md)。本文件保留10月1日至10日学习/规划证据；下文历史“Current/下一步”不自动恢复训练、性能优化或20+20。最新目标与优先级以 [PROJECT](../../PROJECT.md) 和新计划为准。
