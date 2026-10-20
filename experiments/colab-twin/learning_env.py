@@ -42,10 +42,11 @@ def diagnostics(model, data, checker):
     from placement import object_inside_tray
     names = [(model.geom(c.geom1).name, model.geom(c.geom2).name) for c in data.contact]
     target = model.body('grasp_target').id
+    tray_center = data.geom_xpos[model.geom('place_floor').id]
     return {'time_s': float(data.time), 'object_z_m': float(data.xpos[target, 2]),
             'object_xyz_m': data.xpos[target].tolist(),
             'object_speed_m_s': float(np.linalg.norm(data.qvel[6:9])),
-            'in_place_tray': object_inside_tray(data.xmat[target].reshape(3, 3), data.xpos[target]),
+            'in_place_tray': object_inside_tray(data.xmat[target].reshape(3, 3), data.xpos[target], tray_center),
             'place_floor_contact': any('target_collision' in p and 'place_floor' in p for p in names),
             'tip_forces_n': list(grasp_contacts(model, data).values()),
             'floor_contact': any('target_collision' in p and ('pick_floor' in p or 'worktable' in p) for p in names),

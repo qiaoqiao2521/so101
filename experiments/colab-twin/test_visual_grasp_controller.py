@@ -7,7 +7,7 @@ import visual_grasp_controller as module
 
 
 class VisualControllerTests(unittest.TestCase):
-    def controller(self):
+    def controller(self, **options):
         rig = SimpleNamespace(nq=6, nv=6, ngeom=0,
                               jnt_range=np.tile([-3.,3.],(6,1)),
                               actuator_ctrlrange=np.tile([-3.,3.],(6,1)),
@@ -43,7 +43,174 @@ class VisualControllerTests(unittest.TestCase):
                          return_value=module.TopDownCalibration())
         p.start()
         self.addCleanup(p.stop)
-        return module.VisualGraspController(rig, [.24, -.13], [.24, .14, .06, 0, 0, .5])
+        return module.VisualGraspController(rig, [.24, -.13], [.24, .14, .06, 0, 0, .5], **options)
+
+    def test_place_target_uses_original_default_and_owns_requested_xy(self):
+        default = self.controller()
+        np.testing.assert_array_equal(default.place_xy, module.PLACE_CENTER)
+        requested = np.array([.252, .124])
+        changed = self.controller(place_xy=requested)
+        requested[:] = 99
+        np.testing.assert_array_equal(changed.place_xy, [.252, .124])
+        for invalid in ([.25], [.25, .14, .01], [np.nan, .14], [.25, np.inf]):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, 'place_xy'):
+                self.controller(place_xy=invalid)
+
+    def test_transport_worker_plans_all_final_legs_to_requested_place(self):
+        for requested in (None, [.252, .124]):
+            with self.subTest(place_xy=requested):
+                controller = self.controller(place_xy=requested)
+                controller.stage = 'hold'
+                controller.last_elapsed = 3.
+                controller.payload_relative = np.zeros(3)
+                controller.payload_rotation = np.eye(3)
+                controller._plan_transport(np.r_[controller.lift, .015])
+                goal = np.array(module.PLACE_CENTER if requested is None else requested)
+                np.testing.assert_allclose(controller.transport[2][-1][:3], [.18, goal[1], .06])
+                np.testing.assert_allclose(controller.transport[3][-1][:3], [*goal, .06])
+                np.testing.assert_allclose(controller.transport[4][-1][:3], [*goal, .023])
+                self.assertEqual(controller.plan_reports[-1]['place_xy'], goal.tolist())
+                self.assertEqual(controller.plan_reports[-1]['transition_height_m'], .06)
+                self.assertEqual(controller.plan_reports[-1]['transition_height_reason'], 'original_height')
+                self.assertEqual(len(controller.plan_reports[-1]['transition_attempts']), 1)
+
+    def test_lower_transition_requires_complete_route_after_endpoint_ik_precheck(self):
+        controller = self.controller(place_xy=[.252, .124])
+        def limited_ik(rig, xyz, initial=None):
+            if np.allclose(xyz[:2], controller.place_xy) and xyz[2] > .0540001:
+                raise RuntimeError('No vertical pinch IK candidate')
+            return np.r_[xyz, 0., 0.]
+        checked = []
+        def payload_valid(q):
+            checked.append(np.array(q))
+            # The first IK-reachable hover is unsafe. It must not be adopted.
+            return not (np.allclose(q[:2], controller.place_xy) and q[2] > .053999)
+        controller._payload_valid = payload_valid
+        with patch.object(module, 'solve_pinch_ik', side_effect=limited_ik):
+            controller._compute_transport(np.r_[controller.lift, .015])
+        report = controller.plan_reports[-1]
+        self.assertAlmostEqual(report['transition_height_m'], .051)
+        self.assertEqual(report['transition_height_reason'], 'lower_certified_route')
+        self.assertEqual([row['status'] for row in report['transition_attempts']],
+                         ['rejected', 'rejected', 'rejected', 'accepted'])
+        self.assertEqual([row['validation_stage'] for row in report['transition_attempts']],
+                         ['endpoint_ik', 'endpoint_ik', 'complete_route', 'complete_route'])
+        self.assertGreater(len(checked), 100)
+        np.testing.assert_allclose(controller.transport[-2][-1][:3], [.252, .124, .051])
+        np.testing.assert_allclose(controller.transport[-1][-1][:3], [.252, .124, .023])
+
+    def test_failed_height_search_does_not_commit_partial_paths_or_cancel_fallback(self):
+        for failure in ('estimated_payload_route_collision', 'transport_planning_cancelled'):
+            with self.subTest(failure=failure):
+                controller = self.controller(place_xy=[.252, .124])
+                previous = [np.full((2, 5), .7)]
+                controller.transport = previous
+                controller._payload_valid = Mock(side_effect=module.ControllerFailure(failure))
+                with self.assertRaisesRegex(module.ControllerFailure, failure):
+                    controller._compute_transport(np.r_[controller.lift, .015])
+                self.assertIs(controller.transport, previous)
+                self.assertFalse(any(item.get('stage') == 'transport_execution_plan'
+                                     for item in controller.plan_reports))
+                if failure == 'transport_planning_cancelled':
+                    self.assertEqual(controller._payload_valid.call_count, 1)
+
+    def test_async_transport_freezes_place_and_rejects_changed_target_context(self):
+        controller = self.controller(place_xy=[.252, .124])
+        controller.stage = 'hold'
+        controller.last_elapsed = 3.
+        controller.payload_relative = np.zeros(3)
+        controller.payload_rotation = np.eye(3)
+        job = Mock()
+        with patch.object(module, 'AsyncTransportPlanningJob', return_value=job):
+            controller._start_transport(np.r_[controller.lift, .015], 3.)
+        snapshot = job.start.call_args.args[2]
+        self.assertEqual(snapshot.place_xy, (.252, .124))
+        self.assertEqual(controller.transport_events[-1]['snapshot']['place_xy'], (.252, .124))
+        controller.place_xy[0] += .001
+        self.assertEqual(snapshot.place_xy, (.252, .124))
+        with self.assertRaisesRegex(module.ControllerFailure, 'transport_context_changed'):
+            controller._check_transport_context()
+        job.reject.assert_called_once_with('transport_context_changed')
+
+    def test_unreachable_new_place_is_not_replaced_by_original_center(self):
+        controller = self.controller(place_xy=[.252, .124])
+        controller.payload_relative = np.zeros(3)
+        controller.payload_rotation = np.eye(3)
+        def reject_requested(rig, xyz, initial=None):
+            if xyz[0] > .25:
+                raise ValueError('requested_place_unreachable')
+            return np.r_[xyz, 0., 0.]
+        with patch.object(module, 'solve_pinch_ik', side_effect=reject_requested), \
+                self.assertRaisesRegex(ValueError, 'requested_place_unreachable'):
+            controller._compute_transport(np.r_[controller.lift, .015])
+        self.assertFalse(any(report.get('stage') == 'transport_execution_plan'
+                             for report in controller.plan_reports))
+
+    def separation_controller(self, distance=.002):
+        controller = self.controller()
+        controller.released_query = Mock()
+        controller.released_query.distances.return_value = {module.PAD_NAMES[0]: distance}
+        controller.released_query.pad_vertices.return_value = {module.PAD_NAMES[0]: np.zeros((8, 3))}
+        controller.release_record = {}
+        return controller
+
+    @staticmethod
+    def limited_vertical_ik(rig, xyz, initial=None):
+        if xyz[2] > .0942:
+            raise RuntimeError('No vertical pinch IK candidate')
+        return np.r_[xyz, 0., 0.]
+
+    def test_default_separation_keeps_original_height_and_fourteen_waypoints(self):
+        controller = self.separation_controller()
+        controller._legacy_plan_separation(controller.initial_q.copy(), 0.)
+        record = controller.release_record
+        self.assertEqual(len(record['separation_path']), 14)
+        self.assertEqual(record['separation_end']['reason'], 'original_vertical_height')
+        self.assertEqual(record['separation_end']['height_m'], .037)
+        self.assertEqual(controller.stage, 'separate')
+
+    def test_vertical_ik_limit_can_use_only_clear_validated_prefix_and_return(self):
+        controller = self.separation_controller()
+        with patch.object(module, 'solve_pinch_ik', side_effect=self.limited_vertical_ik):
+            controller._legacy_plan_separation(controller.initial_q.copy(), 0.)
+        record = controller.release_record
+        self.assertEqual(len(record['separation_path']), 13)
+        self.assertEqual(record['separation_end']['reason'], 'vertical_ik_limit_after_clearance')
+        self.assertAlmostEqual(record['separation_end']['height_m'], .037*12/13)
+        self.assertEqual(record['return_method'], 'validated_direct')
+        self.assertEqual(controller.stage, 'separate')
+
+    def test_vertical_ik_limit_cannot_accept_a_reachable_but_uncleared_prefix(self):
+        controller = self.separation_controller(distance=.0005)
+        with patch.object(module, 'solve_pinch_ik', side_effect=self.limited_vertical_ik), \
+                patch.object(controller, '_return_path') as return_path, \
+                self.assertRaisesRegex(RuntimeError, 'No vertical pinch IK candidate'):
+            controller._legacy_plan_separation(controller.initial_q.copy(), 0.)
+        return_path.assert_not_called()
+        self.assertEqual(controller.release_record, {})
+
+    def test_vertical_ik_limit_cannot_bypass_failed_return_path(self):
+        controller = self.separation_controller()
+        with patch.object(module, 'solve_pinch_ik', side_effect=self.limited_vertical_ik), \
+                patch.object(controller, '_return_path', side_effect=module.ControllerFailure('return_invalid')), \
+                self.assertRaisesRegex(module.ControllerFailure, 'return_invalid'):
+            controller._legacy_plan_separation(controller.initial_q.copy(), 0.)
+        self.assertEqual(controller.release_record, {})
+
+    def test_separation_unknown_backend_error_and_cancel_are_not_ik_fallbacks(self):
+        for error in (RuntimeError('unknown_ik_backend_failure'),
+                      module.ControllerFailure('separation_planning_cancelled')):
+            with self.subTest(error=type(error).__name__):
+                controller = self.separation_controller()
+                def solve(rig, xyz, initial=None):
+                    if xyz[2] > .0942:
+                        raise error
+                    return np.r_[xyz, 0., 0.]
+                with patch.object(module, 'solve_pinch_ik', side_effect=solve), \
+                     self.assertRaises(type(error)) as failure:
+                    controller._legacy_plan_separation(controller.initial_q.copy(), 0.)
+                self.assertIs(failure.exception, error)
+                self.assertEqual(controller.release_record, {})
 
     def test_minimum_jerk_endpoints_and_monotonic_waypoint_progress(self):
         path = np.array([[0., 0, 0, 0, 0], [1., 0, 0, 0, 0], [1., 1., 0, 0, 0]])

@@ -126,6 +126,20 @@ class SeparationWorkerTests(unittest.TestCase):
             with self.subTest(count=len(altered)), self.assertRaises(ValueError):
                 replace(plan, samples=altered)
 
+    def test_shorter_separation_retains_complete_sampling_and_return_endpoint(self):
+        paths = self.paths()
+        paths[0] = paths[0][:-1]
+        paths[1][0] = paths[0][-1]
+        samples = [self.sample(q) for q in separation_sample_coordinates(paths[0])]
+        plan = self.plan(paths=paths, samples=samples, report_json=self.report(paths))
+        self.assertEqual(len(plan.paths[0]), 13)
+        self.assertEqual(len(plan.samples), 36)
+        self.assertTrue(validate_separation_samples(plan, **self.guards())['valid'])
+        with self.assertRaises(ValueError):
+            replace(plan, samples=plan.samples[:-1])
+        with self.assertRaises(ValueError):
+            self.plan(paths=[paths[0][:1], paths[1]])
+
     def test_sample_coverage_rejects_one_ulp_and_changed_geometry_names(self):
         plan = self.plan()
         q = list(plan.samples[1].q5)

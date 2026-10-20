@@ -131,8 +131,8 @@ class SeparationPlan:
         if not isinstance(self.snapshot, SeparationSnapshot):
             raise TypeError('Separation plan requires its immutable snapshot')
         paths = tuple(tuple(_vector(q, 5, 'path waypoint') for q in path) for path in self.paths)
-        if len(paths) != 2 or len(paths[0]) != 14 or len(paths[1]) < 2:
-            raise ValueError('Separation requires fourteen waypoints and a return path')
+        if len(paths) != 2 or not 2 <= len(paths[0]) <= 14 or len(paths[1]) < 2:
+            raise ValueError('Separation requires two to fourteen waypoints and a return path')
         if (_bytes(paths[0][0]) != _bytes(self.snapshot.q6[:5]) or
                 _bytes(paths[1][0]) != _bytes(paths[0][-1]) or
                 _bytes(paths[1][-1]) != _bytes(self.snapshot.initial_q6[:5])):

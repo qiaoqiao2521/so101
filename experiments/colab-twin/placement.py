@@ -132,7 +132,7 @@ def placement_acceptance(rows):
             'released_tip_forces_n': final['tip_forces_n']}
 
 
-def object_inside_tray(rotation, center):
+def object_inside_tray(rotation, center, tray_center=PLACE_CENTER):
     # Project the rotated box onto the tray XY axes; check its entire footprint.
     extent = np.abs(rotation) @ (np.array(TARGET_SIZE)/2)
-    return bool(np.all(np.abs(center[:2]-np.array(PLACE_CENTER))+extent[:2] <= .058))
+    return bool(np.all(np.abs(center[:2]-np.asarray(tray_center)[:2])+extent[:2] <= .058))

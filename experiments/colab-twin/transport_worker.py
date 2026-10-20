@@ -39,8 +39,12 @@ class TransportSnapshot:
     payload_uncertainty: float
     elapsed_s: float
     release_pinch_height_m: float = .023
+    place_xy: tuple | None = None
 
     def __post_init__(self):
+        from grasp_workcell import PLACE_CENTER
+        object.__setattr__(self, 'place_xy', _vector(
+            PLACE_CENTER if self.place_xy is None else self.place_xy, 2, 'place_xy'))
         for name, size in (('q6', 6), ('target_xy', 2), ('payload_relative', 3)):
             object.__setattr__(self, name, _vector(getattr(self, name), size, name))
         object.__setattr__(self, 'payload_rotation', _rotation(self.payload_rotation))

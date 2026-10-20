@@ -18,6 +18,32 @@ def station():
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_place_frame_moves_release_and_clear_by_same_task_goal(self):
+        value = station()
+        for node in value['nodes']:
+            if node['id'] == 'place':
+                node['position'] = [.22, .17, 0]
+            elif node['id'] in ('release', 'clear'):
+                node['parent'] = 'place'
+                node['position'][:2] = [0, 0]
+        result = validate_station(value)
+        self.assertEqual(result['place_xy_m'], [.22, .17])
+        self.assertEqual(result['resolved_positions_m']['release'], [.22, .17, .03])
+        self.assertEqual(result['resolved_positions_m']['clear'], [.22, .17, .1])
+
+    def test_place_height_is_still_explicitly_unsupported(self):
+        value = station()
+        next(node for node in value['nodes'] if node['id'] == 'place')['position'][2] = .02
+        with self.assertRaisesRegex(UnsupportedStation, 'place'):
+            validate_station(value)
+
+    def test_nondefault_goal_does_not_need_python_coordinate_whitelist(self):
+        value = station()
+        for node in value['nodes']:
+            if node['id'] in ('place', 'release', 'clear'):
+                node['position'][:2] = [.38, .21]
+        self.assertEqual(validate_station(value)['place_xy_m'], [.38, .21])
+
     def test_default_and_changed_cube_are_resolved(self):
         value = station()
         self.assertEqual(validate_station(value)['cube_xyz_m'], [.24, -.13, .01])

@@ -40,6 +40,18 @@ class TransportWorkerTests(unittest.TestCase):
         for height in (.022,.031,float('nan')):
             with self.assertRaises(ValueError):TransportSnapshot(**values,release_pinch_height_m=height)
 
+    def test_place_target_default_owned_xy_and_input_validation(self):
+        from grasp_workcell import PLACE_CENTER
+        values = self.snapshot_values()
+        self.assertEqual(TransportSnapshot(**values).place_xy, PLACE_CENTER)
+        goal = np.array([.252, .124])
+        snapshot = TransportSnapshot(**values, place_xy=goal)
+        goal[:] = 9.
+        self.assertEqual(snapshot.place_xy, (.252, .124))
+        for invalid in ([.24], [.24, .14, .01], [math.nan, .14], [.24, math.inf]):
+            with self.subTest(place_xy=invalid), self.assertRaisesRegex(ValueError, 'place_xy'):
+                TransportSnapshot(**values, place_xy=invalid)
+
     def paths(self):
         return [[[float(index)*.01, 0., 0., 0., 0.],
                  [float(index+1)*.01, -.0, .01, 0., 0.]] for index in range(5)]

@@ -137,7 +137,8 @@ class VisualGraspController:
     """Only the six-joint planning model, encoder arrays and RGB estimates enter."""
     def __init__(self, rig, target_xy, initial_q6, *, seed=0, target_timestamp_s=0.,
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
-                 release_rotation_mode='axis_aligned', release_pinch_height_m=.023):
+                 release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
+                 place_xy=None):
         if rig.nq != 6 or rig.nv != 6:
             raise ValueError('Use the six-joint planning rig without a free target')
         if (not np.isfinite(estimate_ttl_s) or not 0 < estimate_ttl_s <= 1
@@ -161,6 +162,7 @@ class VisualGraspController:
         self.servo_offset = np.zeros(5)
         self.servo_transitions = []
         self.target_xy = self._target(target_xy)
+        self.place_xy = finite_vector(PLACE_CENTER if place_xy is None else place_xy, 2, 'place_xy')
         self.target_timestamp = float(target_timestamp_s)
         self.estimate_ttl = float(estimate_ttl_s)
         self.payload_uncertainty = float(payload_uncertainty_m)
@@ -327,7 +329,7 @@ class VisualGraspController:
         names = ('stage_started', 'last_elapsed', 'observation_seq', 'observation',
                  'sweep_request_seq', 'jaw', 'reference', 'servo_offset', 'replans',
                  'transport_index', 'target_timestamp', 'target_frozen',
-                 'target_xy', 'payload_uncertainty',
+                 'target_xy', 'place_xy', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z',
                  'release_rotation_mode', 'release_pinch_height_m')
@@ -497,7 +499,8 @@ class VisualGraspController:
         snapshot = TransportSnapshot(q6, self.target_xy, self.payload_relative,
                                      self.payload_rotation, self.world,
                                      self.payload_uncertainty, self.last_elapsed,
-                                     getattr(self, 'release_pinch_height_m', .023))
+                                     getattr(self, 'release_pinch_height_m', .023),
+                                     place_xy=self.place_xy)
         # MjModel.__copy__ owns its arrays. No execution MjData reaches worker.
         job = TransportPlanningJob(binding)
         job.run(_run_transport_plan, copy.copy(self.rig), snapshot)
@@ -521,7 +524,7 @@ class VisualGraspController:
                 return tuple(snapshot(item) for item in value)
             return value
         names = ('transport_request_seq', 'stage_started', 'points', 'duration', 'jaw',
-                 'target_timestamp', 'target_frozen', 'target_xy', 'payload_uncertainty',
+                 'target_timestamp', 'target_frozen', 'target_xy', 'place_xy', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'seed', 'servo_offset',
                  'release_rotation_mode', 'release_pinch_height_m')
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
@@ -545,7 +548,8 @@ class VisualGraspController:
         snapshot = TransportSnapshot(q6, self.target_xy, self.payload_relative,
                                      self.payload_rotation, self.world,
                                      self.payload_uncertainty, elapsed,
-                                     getattr(self, 'release_pinch_height_m', .023))
+                                     getattr(self, 'release_pinch_height_m', .023),
+                                     place_xy=self.place_xy)
         self.transport_request_binding = self._async_transport_binding()
         self.transport_job = AsyncTransportPlanningJob(self.transport_request_binding)
         self.transport_wait = {'started_at_s': float(elapsed), 'pending_updates': 0,
@@ -554,9 +558,10 @@ class VisualGraspController:
                                       'request_seq': self.transport_request_seq,
                                       'snapshot_q6': list(snapshot.q6),
                                       'snapshot': {name: getattr(snapshot, name) for name in
-                                                   ('q6', 'target_xy', 'payload_relative',
+                                                   ('q6', 'target_xy', 'place_xy', 'payload_relative',
                                                     'payload_rotation', 'world',
-                                                    'payload_uncertainty', 'elapsed_s')}})
+                                                    'payload_uncertainty', 'elapsed_s',
+                                                    'release_pinch_height_m')}})
         # Model cloning remains main-thread cost and is measured in the cycle.
         self.transport_job.start(_run_transport_plan, copy.copy(self.rig), snapshot,
                                  self.transport_job.cancel_event)
@@ -650,11 +655,57 @@ class VisualGraspController:
 
     def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
-        centers = [current, [.18, self.target_xy[1], .06], [.18, 0, .06],
-                   [.18, PLACE_CENTER[1], .06], [*PLACE_CENTER, .06],
-                   [*PLACE_CENTER, getattr(self, 'release_pinch_height_m', .023)]]
+        release_height = getattr(self, 'release_pinch_height_m', .023)
+        # Every route must reach this same release pose; changing the hover
+        # preference cannot repair an unreachable task endpoint.
+        solve_pinch_ik(self.rig, np.r_[self.place_xy, release_height], q6[:5])
+        heights = [float(z) for z in np.arange(.06, release_height, -.003)] + [release_height]
+        attempts = []
+        for height in heights:
+            validation_stage = 'endpoint_ik'
+            try:
+                # Reject unreachable preferences before certifying every
+                # Cartesian sample. This never certifies an execution edge.
+                solve_pinch_ik(self.rig, np.r_[self.place_xy, height], q6[:5])
+                validation_stage = 'complete_route'
+                paths = self._transport_at_height(q6, current, height, release_height)
+            except RuntimeError as error:
+                if (str(error) != 'estimated_payload_route_collision' and
+                        not str(error).startswith('No vertical pinch IK candidate')):
+                    raise
+                attempts.append({'height_m': height, 'status': 'rejected',
+                                 'validation_stage': validation_stage, 'reason': str(error)})
+                if height == heights[-1]:
+                    raise
+            else:
+                attempts.append({'height_m': height, 'status': 'accepted',
+                                 'validation_stage': validation_stage})
+                break
+        self.transport = paths
+        self.transport_index = 0
+        legs = [{'index': index, 'stage': 'lower' if index == len(self.transport)-1 else 'transport',
+                 'path': points.tolist(), 'waypoint_count': len(points),
+                 'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
+                 'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
+                for index, points in enumerate(self.transport)]
+        duration = sum(leg['motion_duration_s']+.6 for leg in legs)
+        self.plan_reports.append({'stage': 'transport_execution_plan', 'planned_at_s': self.last_elapsed,
+                                  'place_xy': self.place_xy.tolist(),
+                                  'transition_height_m': height,
+                                  'transition_height_reason': ('original_height' if len(attempts) == 1
+                                                               else 'lower_certified_route'),
+                                  'transition_attempts': attempts,
+                                  'legs': legs, 'motion_and_arrival_s': duration,
+                                  'budget_finish_lower_bound_s': self.last_elapsed+duration+14.,
+                                  'budget_note': '14s includes release and minimum original safe-return reservation; necessary only'})
+
+    def _transport_at_height(self, q6, current, height, release_height):
+        """Certify all five original corridor legs before accepting a height."""
+        centers = [current, [.18, self.target_xy[1], height], [.18, 0, height],
+                   [.18, self.place_xy[1], height], [*self.place_xy, height],
+                   [*self.place_xy, release_height]]
         q = q6[:5].copy()
-        self.transport = []
+        paths = []
         for a, b in zip(centers, centers[1:]):
             a, b = np.asarray(a), np.asarray(b)
             points = [q.copy()]
@@ -664,18 +715,8 @@ class VisualGraspController:
                     raise ControllerFailure('estimated_payload_route_collision')
                 q = goal
                 points.append(q.copy())
-            self.transport.append(np.asarray(points))
-        self.transport_index = 0
-        legs = [{'index': index, 'stage': 'lower' if index == len(self.transport)-1 else 'transport',
-                 'path': points.tolist(), 'waypoint_count': len(points),
-                 'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
-                 'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
-                for index, points in enumerate(self.transport)]
-        duration = sum(leg['motion_duration_s']+.6 for leg in legs)
-        self.plan_reports.append({'stage': 'transport_execution_plan', 'planned_at_s': self.last_elapsed,
-                                  'legs': legs, 'motion_and_arrival_s': duration,
-                                  'budget_finish_lower_bound_s': self.last_elapsed+duration+14.,
-                                  'budget_note': '14s includes release and minimum original safe-return reservation; necessary only'})
+            paths.append(np.asarray(points))
+        return paths
 
     def _released_valid(self, q5, jaw=.5):
         return (self._arm_valid(q5, jaw)
@@ -720,7 +761,7 @@ class VisualGraspController:
             return value
         names = ('separation_request_seq', 'stage_started', 'points', 'duration',
                  'jaw', 'initial_q', 'seed', 'release_record', 'servo_offset',
-                 'world', 'last_command', 'release_rotation_mode', 'release_pinch_height_m')
+                 'world', 'last_command', 'place_xy', 'release_rotation_mode', 'release_pinch_height_m')
         released = vars(self.released_query) if self.released_query is not None else {}
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
         context += (('released_owner', id(self.released_query)),
@@ -877,6 +918,7 @@ class VisualGraspController:
                       initial_distances_m=self.separation_initial_distances.copy(),
                       separation_floors_m=self.separation_floors.copy(),
                       return_method=report['release_record']['return_method'],
+                      separation_end=report['release_record'].get('separation_end'),
                       planned_return_path=paths[1].tolist(), predicted_completion_s=elapsed+required_s)
         # No proposal becomes a live path until all current guards pass.
         self.separation_job.consume(self._separation_binding())
@@ -908,8 +950,22 @@ class VisualGraspController:
         self.separation_high_z = {name:v[:,2].copy() for name,v in self.separation_vertices.items()}
         points = [q6[:5].copy()]
         previous = distances
+        end = {'reason': 'original_vertical_height', 'requested_height_m': .037,
+               'height_m': 0.}
         for dz in np.linspace(0, .037, 14)[1:]:
-            q = solve_pinch_ik(self.rig, self.separation_pinch+[0, 0, dz], points[-1])
+            try:
+                q = solve_pinch_ik(self.rig, self.separation_pinch+[0, 0, dz], points[-1])
+            except RuntimeError as error:
+                if not str(error).startswith('No vertical pinch IK candidate'):
+                    raise
+                # The old 37 mm preference is not a clearance threshold. A
+                # reachable prefix is usable only after the unchanged full
+                # release clearance and return-path checks both succeed.
+                if len(points) < 2 or not self._released_valid(points[-1]):
+                    raise
+                end.update(reason='vertical_ik_limit_after_clearance',
+                           next_height_m=float(dz), ik_error=str(error))
+                break
             if not validate_joint_path([points[-1], q], self._separation_valid, .002)['valid']:
                 raise ControllerFailure('vertical_separation_invalid')
             current = self.released_query.distances(np.r_[q, .5])
@@ -918,6 +974,7 @@ class VisualGraspController:
                 raise ControllerFailure('vertical_separation_deepens_contact')
             previous = current
             points.append(q)
+            end['height_m'] = float(dz)
         if not self._released_valid(points[-1]):
             raise ControllerFailure('vertical_separation_did_not_clear')
         return_path, method = self._return_path(points[-1])
@@ -930,6 +987,7 @@ class VisualGraspController:
         if elapsed+required_s > 90:
             raise ControllerFailure('insufficient_time_for_safe_return')
         self.release_record.update(separation_path=np.asarray(points).tolist(),
+                                   separation_end=end,
                                    initial_distances_m=distances, separation_floors_m=self.separation_floors.copy(),
                                    return_method=method, planned_return_path=return_path.tolist(),
                                    predicted_completion_s=elapsed+required_s)
@@ -986,6 +1044,7 @@ class VisualGraspController:
                 else:
                     self.released_query.freeze(center)
                 self.release_record = {'estimated_center_m':center.tolist(),
+                                       'place_xy':self.place_xy.tolist(),
                                        'uncertainty_m':self.released_query.uncertainty_m,
                                        'estimate_frozen_at_s':elapsed,
                                        'source':'pre-opening FK and carried estimate; known support height'}
@@ -1157,6 +1216,7 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.query = mujoco.MjData(rig)
     context.gripper_id = rig.body('gripper').id
     context.target_xy = np.asarray(snapshot.target_xy)
+    context.place_xy = np.asarray(snapshot.place_xy)
     context.payload_relative = np.asarray(snapshot.payload_relative)
     context.payload_rotation = np.asarray(snapshot.payload_rotation)
     context.payload_uncertainty = snapshot.payload_uncertainty

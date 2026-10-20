@@ -215,6 +215,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         initial=data.qpos.copy()
         baseline_z=float(data.xpos[model.body('grasp_target').id,2])
         reset_record={'initial_qpos':initial.tolist(), 'initial_qvel':data.qvel.copy().tolist(),
+                      'place_goal_xy_m':data.geom_xpos[model.geom('place_floor').id, :2].tolist(),
                       'baseline_object_z_m':baseline_z, 'free_object':True,
                       'weld_count':int(model.neq), 'mocap_count':int(model.nmocap)}
         monitor=PhysicalTaskMonitor(baseline_z)

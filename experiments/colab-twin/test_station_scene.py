@@ -111,6 +111,25 @@ class SceneTests(unittest.TestCase):
         np.testing.assert_allclose(list(obstacle['pose']['position'].values()), [.4, .2, .065])
         self.assertEqual(len(entity['spheres']), 4)
 
+    def test_task_goal_builds_matching_physical_planning_and_preview_tray(self):
+        center = [.22, .17]
+        value = copy.deepcopy(station())
+        next(node for node in value['nodes'] if node['id'] == 'place')['position'][:2] = center
+        with tempfile.TemporaryDirectory() as folder:
+            physical, planning, _ = build_contact_scene(SOURCE, Path(folder), place_xy=center)
+        for model in (physical, planning):
+            np.testing.assert_array_equal(model.geom_pos[model.geom('place_floor').id, :2], center)
+            np.testing.assert_array_equal(model.geom_pos[model.geom('pick_floor').id, :2], [.24, -.13])
+        entity = preview(value)['entities'][0]
+        self.assertTrue(any(np.allclose(list(box['size'].values()), [.12, .12, .002])
+                            and np.allclose(list(box['pose']['position'].values()), [*center, .001])
+                            for box in entity['cubes']))
+
+    def test_tray_off_table_is_rejected_without_falling_back(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaisesRegex(ValueError, '台面'):
+                build_contact_scene(SOURCE, Path(folder), place_xy=[.8, .14])
+
     def rejected_episode(self, root, *, runner=None, **kwargs):
         """Stop at the existing initial vision rejection, without a renderer."""
         data = self.data()

@@ -1,5 +1,6 @@
 """Editable single-SO101 contact workcell, separate from the six-DOF planner."""
 from pathlib import Path
+import math
 import xml.etree.ElementTree as ET
 
 import mujoco
@@ -15,12 +16,16 @@ def numbers(values):
     return ' '.join(format(float(x), '.9g') for x in values)
 
 
-def build_workcell(source, output):
+def build_workcell(source, output, *, place_xy=None):
     """Reuse original arm geometry; add a freely moving 10g target and open trays.
 
     Dimensions/friction are simulation fixtures, not measured hardware values.
     No weld, adhesion, mocap parenting or scripted object movement is used.
     """
+    place_center = PLACE_CENTER if place_xy is None else tuple(place_xy)
+    if (len(place_center) != 2 or any(isinstance(x, bool) or not isinstance(x, (int, float))
+                                    or not math.isfinite(x) for x in place_center)):
+        raise ValueError('Blue tray XY must contain two finite numbers')
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     build_scene(source, output / 'arm-scene.xml', [], table_z=0)
@@ -74,8 +79,14 @@ def build_workcell(source, output):
         for y in (-.048,.048):
             geom(f'mount_bolt_{x}_{y}', 'cylinder', (x,y,.002), (.003,.002), '.13 .17 .20 1')
 
+    # Keep the physical tray footprint on the existing support surface.
+    table = world.find("geom[@name='worktable']")
+    table_center = list(map(float, table.get('pos').split()))
+    table_half = list(map(float, table.get('size').split()))
+    if any(abs(place_center[i]-table_center[i])+.06 > table_half[i]+1e-9 for i in (0, 1)):
+        raise ValueError('蓝盘必须完整放在当前工作台面上；目标不会回退到旧位置')
     for prefix, center, color in [('pick', PICK_CENTER, '.64 .30 .23 1'),
-                                   ('place', PLACE_CENTER, '.20 .39 .58 1')]:
+                                   ('place', place_center, '.20 .39 .58 1')]:
         x,y = center
         geom(prefix+'_floor', 'box', (x,y,.001), (.06,.06,.001), '.45 .49 .52 1', physical=True)
         for side in (-1,1):
