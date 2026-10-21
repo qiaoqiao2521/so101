@@ -27,7 +27,11 @@
 
 1. 复用现有transport/separation快照，接入不可变路线配置（complete）。
 2. 定向检查实际候选加载、非法配置明确失败、worker配置保持（complete：91 tests / 104 subtests）。
-3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（in_progress）。
-4. 对照结果、最短命令、限定同步与提交推送（pending）。
+3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（complete：4/4原裁判通过）。
+4. 对照结果和最短命令完成，限定同步与提交推送（in_progress）。
 
-Next Step：冻结本实现，串行运行原0mm/10mm×baseline/shorter_route四个完整回合。
+Next Step：限定同步与提交推送；默认仍为基线，厂区根从现有产物接续候选比较。
+
+## F2c CLI生成候选接续
+
+厂区根负责用现有CodeBuddy、关闭工具访问，在私有cache生成新候选并给精确路径。本SO101对话继续维护接口与评测；文件到位后只读审查route_preferences范围，再协调窗口并在原0mm/10mm各跑一轮。当前尚未收到候选路径，不提前声称生成或评测通过；不把手写shorter_route冒充CLI生成成果。

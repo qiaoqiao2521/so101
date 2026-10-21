@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2高度链路及10mm完整物理回合通过；网页编辑及原0高度API回归已通过，本地与远端交付完成，原认证阻碍已解除。
+2026-10-21 F2首片已交付。F2b最小路线策略插槽与四轮成对物理验证已完成（4/4通过），结果和接续见下文；候选未证明稳定收益，默认基线保持。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -44,3 +44,30 @@ already_covered：沿用Wiki ROS2与FishBot第20节，动作完成、真实接�
 F2b接口首轮定向回归暴露既有SweepBinding只接收标量/tuple，新增dataclass直接进入快照被拒绝；已复现并仅在控制器三处快照转换成原有标量tuple，不修改原守卫或阈值。初次批量补丁有一个过时上下文导致原子拒绝，未部分写入，已纠正。
 
 F2b接口定向91 tests / 104 subtests通过。路线配置只改候选顺序、原路点前缀和现有IK初值；scorer、模型、grasp_episode、placement、run_visual_grasp无diff。STATION_EXECUTOR旧“修改Z拒绝”已改为非负底座高度语义。
+
+## F2b 四轮结果（2026-10-21）
+
+实现固定于 `05142f276ab46cc4d70d7b10ece7fd354760b9a3`。原0mm/抬高10mm，各baseline与shorter_route一轮，四轮全部原裁判通过。
+
+| 场景 | 策略 | sim秒 | wall秒 | 实际运输高mm | 实际脱离mm | run_id |
+|---|---|---:|---:|---:|---:|---|
+| baseline-0mm | baseline | 74.78 | 69.060 | 60.000 | 37.000 | 65a76c62-820f-4f4e-a2b2-4c6cfc3bf6db |
+| baseline-0mm | shorter_route | 74.58 | 66.440 | 51.000 | 28.462 | 9370d0c9-b119-4483-bf75-99fe066b6025 |
+| raised-10mm | baseline | 74.44 | 65.965 | 67.000 | 28.462 | 7f90943c-4232-4979-afd4-c74df59cc641 |
+| raised-10mm | shorter_route | 74.40 | 75.093 | 61.000 | 28.462 | 6c745715-bffb-4e36-9031-817c7be05ad3 |
+
+结论：候选实际执行了不同路线，原高度总仿真时间少0.20s，高盘少0.04s；但运输motion_and_arrival从28.4265/28.3197s增至28.6111/28.4088s，候选高盘wall反而增加9.128s。没有足够的稳定收益证据，默认仍为baseline，不自动晋级。每布局每策略仅一轮，不能解释为统计鲁棒性或归因到某一个参数。
+
+独立读回：两组的初态qpos、实际contact XML、planning XML、裁判来源及释放阈值逐项相同。四轮free_object=true、weld=0、mocap=0，实际盘底接触true、末态双指力0。最大释放XY漂移0.297998mm，最大脱离后再接触力0.015559N；原2mm/0.02N判据保持。最大回位误差0.000102589rad。
+
+候选加载证据：每轮candidate.path/loaded_path/entrypoint_path指向实际baseline.py或shorter_route.py，commit均为上述实现提交；controller另有真实loaded_path。worker的policy_execution记录运输高度、原验证结果、脱离请求与实际目标，证明不是仅改变标签。IK neutral选择已做接口单测；本轮两个真实策略均使用continuation，未宣称neutral实测更优。
+
+原始产物：`experiments/colab-twin/output/route-policy-pair-20261021/65909715-aa81-46ff-8617-7fc14d2db2ed`。comparison.json含四轮命令、退出码、原裁判、metrics、候选引用和worker实际选择；independent-checks.json为只读复核，不另造评分。每个子目录保存evaluation、原report、trajectory、实际/规划XML和视频；均被Git忽略。
+
+最短调用见[执行器说明](../../experiments/colab-twin/STATION_EXECUTOR.md)：给evaluate_station.py增加 `--candidate experiments/colab-twin/route_strategies/shorter_route.py`，再以station选择原0mm或10mm。省略candidate会实际执行baseline.py；无效候选明确failed/unscored，不回退。
+
+范围：91 tests、104 subtests通过；本轮没有修改learning_env、placement、grasp_workcell、grasp_episode、run_visual_grasp或模型/场景文件。STATION_EXECUTOR残留“修改Z拒绝”已局部修正。四轮源代码一致；没有恢复50Hz、长扫掠、训练、Gazebo、实体或云GPU。5192/5187保持原服务，已结束本轮全部MuJoCo子进程。
+
+只读复核首次把XML误定位到episode根目录；实际在episode/scene，修正脚本后两组几何逐字节相同。未重跑或重判原物理回合。
+
+F2c接续：厂区根已独立读到本轮四个产物，暂不按0.20/0.04s选优。根负责CodeBuddy前台print生成新候选（工具关闭、私有cache）；本对话当前仅完成F2b，不把手写候选称为CLI生成。新文件精确路径到位后再审阅、协调窗口和跑两种盘高，不重复本轮四例。
