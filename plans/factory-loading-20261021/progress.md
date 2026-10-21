@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2首片及F2b已交付。F2c首个CodeBuddy生成候选在两盘高实际2/2通过，尚无稳定提速证据。两worker已结束并立即归还无人机窗口；第二候选已生成，后续交替复验与候选2实际评测等待明确新窗口，默认基线保持。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源；无新增仿真待运行。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -115,3 +115,27 @@ F2c补充只读阶段计时：nominal transport +0.04s、hold -0.04s，其他段
 
 
 资源接续：无人机owner最新明确暂不释放，箱顶取消网页runner仍active且可能接飞行；本对话遵守零新增MuJoCo。后续四回合仍not_run，pending原因是共享仿真资源在途，非物理失败或训练预算。owner仍为SO101本原对话；无人机在cancel实际terminal且进入纯分析后会明确释放2+2或整4回合。收到后最短入口：`python3 /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/run_followup.py --batch repeat`，完成即回告；另获第二窗口后以`--batch round2`运行候选2。若明确整4窗口，可一次`--batch all`。不要因看见terminal或服务空闲而自行执行。运行后回读新evaluation/原report/trajectory及实际路线，再写结果和交付；不把已生成候选称为实际评测完成。
+
+
+## F2c 当前交付：反馈生成与第二轮实际评测完成
+
+无人机owner后来明确释放整4回合约5分钟窗口，已按授权原序列串行完成，前述pending状态仅是释放前历史。runner始于08:12:54 UTC、08:17:06 UTC结束；四个subprocess全部exit0，终态均succeeded/pass。已立即逐run回告无人机owner归还资源，无追加批次，无5187/5192重启、Gazebo、ROS、build、实体、训练或云GPU。
+
+| 场景/候选 | run_id | sim秒 | wall秒 | 实际运输/脱离mm |
+|---|---|---:|---:|---|
+| raised baseline交替复验 | 674a0f41-f14a-4441-a8ca-fb21dcad8f75 | 74.38 | 75.102 | 67 / 28.462 |
+| raised CLI候选1交替复验 | 2d136324-66b8-408d-82cb-6e2a07f9706d | 74.30 | 65.745 | 67 / 28.462 |
+| nominal CLI候选2 | 42774180-48d9-49aa-b571-4101425773a0 | 74.50 | 53.396 | 57 / 28.462 |
+| raised CLI候选2 | 9e05c80c-72f3-49a8-9210-3d69e845cd2e | 74.32 | 53.524 | 67 / 28.462 |
+
+四轮源码固定于1e9d043364a413045ade8819126db38f1a5e15ef，运行时Git干净；相对75c67ad只有所属文档变化，原控制器/RoutePolicy/evaluate_station/learning_env无diff。candidate1/2的实际loaded_path、entrypoint与返回偏好对应真实cache文件，原文副本保留在series。候选2separation reason实际为policy_waypoint_prefix，请求/实际28.461538mm；不只是修改标签。
+
+只读回读原report、trajectory、XML：四轮原passed、grasp/place/controller_done=true，无安全停机、无障碍接触；free_object=true、weld=mocap=0。末态蓝盘底接触true、双指力0、物体速度约1e-11m/s，最大回位误差0.000102213rad。释放原审计全部通过，最大XY漂移0.297878mm、最大脱离后再接触力0.0155267N。对照初态qpos、contact/planning XML、原裁判路径和释放阈值均相同，未另造裁判或放宽阈值。
+
+区分结果：raised交替baseline74.38→候选1 74.30的-0.08s全部在hold，实际路线与规划时长不变；旧baseline74.44→新baseline74.38也有-0.06s hold变化。候选2nominal相对候选1：separate -0.32s、hold +0.04s、其他段相同，总-0.28s，运输规划只差0.00000029s。相对baseline则transport +0.04s、separate -0.32s，总-0.28s。候选2raised相对候选1复验反而+0.02s，仅hold变化。该局部动作缩短值得另行成对复验，不足以宣布稳定全程提速或选优；默认baseline不变。53s wall不归因模型/路线加速。
+
+当前闭环范围已完成：首CLI候选两盘高2轮、raised交替基线/候选1共2轮、反馈生成的第二候选两盘高2轮，本轮6/6通过。连同先前手写F2b的4轮是独立批次，不冒充20+20或泛化通过。没有第三轮CLI调用或持续后台Agent。
+
+证据仍在同series：followup-all-results.json、followup-independent-checks.json、四份原日志及各UUID完整evaluation/report/trajectory/XML/录像；所有物理结果和源码副本均Git忽略，CLI原始输出/receipt仅私有cache。nominal候选2录像ffprobe可读：H.264、640×480、466帧、74.56s；未以视频元数据替代物理判据。后续仅如需正式选优，再协调新窗口进行nominal baseline→候选2交替复验；本轮无该额外授权窗口内任务遗留。
+
+交付记录：前一次1e9d043推送45s超时，远端当时仍e277c0d；未将本地提交称为已交付。现合并本轮实际结果进行提交/推送与REST独立读回。canonical保留其他跟随器/设备/历史未跟踪工作，只有本计划三文件与忽略series同步。Knowledge：already_covered，现有ROS2/FishBot物理结果核验原则已覆盖，无新增共享知识或个人memory写入。

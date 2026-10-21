@@ -30,7 +30,7 @@
 3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（complete：4/4原裁判通过）。
 4. 对照结果、最短命令、限定同步、提交推送（complete）。
 
-Next Step：F2c首候选两盘高均通过，默认仍为基线；复跑和下一候选实际评测需协调无人机窗口。
+Next Step：F2c两轮CLI生成→实际评分→反馈接续已完成，本轮6/6通过；默认仍为基线。候选2原高度局部缩时仅单次观察，若要选优需另行成对复验。
 
 ## F2c CLI生成候选接续
 
@@ -38,6 +38,6 @@ Next Step：F2c首候选两盘高均通过，默认仍为基线；复跑和下�
 
 F2c执行：
 1. 根生成候选与本对话只读范围审查（complete）。
-2. 首候选两盘高实际评测（complete：2/2原裁判通过）；raised微小差异的baseline→candidate交替复验（pending，等待后续窗口）。
-3. 同一CodeBuddy前台CLI使用实际物理反馈生成下一候选（complete，57mm/10点/continuation）；下一候选两盘高实际评测（pending）。
-4. 保留所有失败、不晋级默认策略、源代码/结果/receipt关联及交付（pending）。
+2. 首候选两盘高实际评测及raised baseline→candidate交替复验（complete：4/4原裁判通过）。
+3. 同一CodeBuddy前台CLI使用实际反馈生成第二候选，并在两盘高实际评测（complete：57mm/10点/continuation，2/2原裁判通过）。
+4. 保留生成解析失败与错误说明；关联实际源码/receipt/原结果，不晋级默认策略，限定同步与交付（complete）。

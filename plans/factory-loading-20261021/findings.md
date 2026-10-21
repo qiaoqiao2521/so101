@@ -18,3 +18,8 @@ F2b只读阶段拆分：原高度候选transport增加0.18s、separate减少0.32
 
 
 F2c首个CodeBuddy候选57mm/13/continuation实际两轮通过。nominal运输改成57mm但motion_and_arrival比60mm基线长约0.0569s，总sim相同；raised首选67mm恰为基线70mm IK失败后的同一路线，运输规划28.3197s、脱离28.462mm亦相同，总sim少0.10s不能归因路线优化。下一候选必须接收实际采用路线和不确定性，baseline保持，微小差值用后续交替复验审查。
+
+
+F2c反馈轮次已实际闭合：同一前台CodeBuddy工作流消费首轮原物理结果，生成57mm/10点/continuation独立候选，并在两盘高通过。raised交替baseline→候选1为74.38→74.30sim s，全部差在hold；候选2raised74.32sim，比候选1复验多0.02s，亦只有hold差。候选2nominal相对候选1transport不变、separate少0.32s、hold多0.04s，总少0.28s；这是可复验局部收益，不能从单次观察宣布全任务稳定提速。默认基线保留。
+
+第二候选生成说明误述nominal实际高度，且附带未经核实的clearance/因果断言。保留原输出并用实际worker日志纠正：57mm而非60mm；只接受原RoutePolicy范围内的字面量源码，未把生成说明当评分或改写原裁判。后续改进先看实际采用路线、逐阶段时长、独立重复结果，而非仅看CLI退出或总wall时间。
