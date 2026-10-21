@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线的软件检查42 tests / 62 subtests通过，新选项物理A/B也已2/2通过；本布局多搜仅增加等待，默认1保持，两个进程已终态并归还窗口。一次负收益CLI文本反馈返回no_candidate，已独立纠错，无新可执行候选或待运行回合。
+2026-10-22 F2f第二放置工位200/200/0mm已固定并通过原静态parser/真实loader检查，同220/170工位的相同/不同条件与未来成对argv已保存。当前不构造模型、不运行物理/ROS/build/浏览器QA、不调用新模型，可达性和收益仍待原物理评测。此前F2e负收益与默认1保留结论不变。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -244,3 +244,34 @@ F2e接续由根明确授权先做纯软件：复用完整路线认证和原motio
 仅保留可证伪任务条件的范围说明：同一独立固定任务内，首个可行高度的关节路径费用需实质大于另一完整可行高度，并在实际原回合中覆盖附加认证等待。placeXY变化可改变IK姿态/路径曲率；历史已执行(.20,.20)m可作为未来原owner参考点，当前可达性/费用反转未测，不创建或运行新fixture，不故意削弱默认基线来制造胜利。当前五段固定走廊本身不提供新的XY绕行候选；额外加箱体不能当作这项能力已有。
 
 收尾：本pair2/2原物理通过、负收益保留、默认1不变、一次文本反馈已审。本切片无新待运行回合/独立后台Agent/轮询服务，不为继续工厂强造候选。canonical只同步所属文件与忽略证据，其他跟随器/设备工作保留；Knowledge：already_covered，物理/计量/模型说法需独立核对原则沿用已有知识。
+
+
+## F2f 第二放置工位：仅静态准备（2026-10-22）
+
+按根限定范围复用原场景族，新增`experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json`。业务含义为同一取料任务投递到第二放置工位，与既有220/170工位比较只改变目标、名称和说明；未采用模型“加箱自动绕行”的错误建议，没有新增/移除/移动障碍。
+
+| 条件 | 工位220/170 | 工位200/200 | 静态对照 |
+|---|---|---|---|
+| place世界位置m | (0.22,0.17,0) | (0.20,0.20,0) | 仅XY变化 |
+| release编辑世界位置m | (0.22,0.17,0.03) | (0.20,0.20,0.03) | 同父坐标相对偏移 |
+| clear编辑世界位置m | (0.22,0.17,0.10) | (0.20,0.20,0.10) | 同父坐标相对偏移 |
+| cube世界位置m | (0.24,-0.13,0.01) | (0.24,-0.13,0.01) | 相同 |
+| 底座高度/盘尺寸 | 原0mm/原尺寸 | 原0mm/原尺寸 | 相同 |
+| 原障碍/附加障碍 | 原内置保留/无附加 | 原内置保留/无附加 | 相同 |
+| 程序、其他节点与顺序 | 原八步、原全部其他节点 | 同左 | JSON逐项相同 |
+| 裁判、物理模型和阈值 | 原实现 | 原实现 | 本轮未改源码或构造模型 |
+
+原validate_station已接受新fixture，父坐标解析与上表一致。历史(0.20,0.20)m原执行记录只用于选择已有业务目标范围，不能证明当前版本、当前输入或候选可达/成功。上表release/clear为编辑模板世界坐标；实际指间释放/脱离仍由原执行器映射和安全规划，静态坐标不冒充物理认证。
+
+真实load_route_policy读回baseline（None/13/continuation/1）与原CLI候选2（57mm/10/continuation/1）的实际路径/entrypoint，未改写候选2、未新模型调用，也没有把手写shortest-two或source=null的round4当作候选2。该成对比较是两种既有配置，并不单独隔离运输高度和脱离前缀的因果作用。
+
+忽略series：`experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/`。prepared.json记录准确argv/环境/真实加载、condition-comparison.json记录相同与不同条件和节点逐项对照、cli-candidate2-source.py保留原文。mujoco_imported=false，状态static_pass_physical_not_run；没有实际evaluation/report或子进程任务，不会从旧回合读取成功。
+
+未来获得明确范围/窗口后，交付根可复用原入口（本轮只保存、不执行）：
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json --candidate experiments/colab-twin/route_strategies/baseline.py --output-dir experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/baseline
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json --candidate /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round2/candidate.py --output-dir experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/cli-candidate2
+```
+
+当前只静态软件，没有模型编译、MuJoCo推进、物理、ROS/build、浏览器QA、服务操作或新模型调用。执行owner本SO101对话，根负责后续资源协调；两条argv共用同一fixture及原判据，不加前序成功门禁、内容锁、调度平台或新原生队列服务。旧任务与负收益证据保留；本工位未测可达/收益明确待验，不宣称泛化或性能。Knowledge：already_covered，沿用原静态/物理结果边界原则，当前项目状态仅写本计划。

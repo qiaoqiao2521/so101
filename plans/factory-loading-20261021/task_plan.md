@@ -70,7 +70,7 @@ F2c执行：
 5. 新策略已在无人机另给的两回合窗口完成A/B（2/2原物理通过，但额外计算使总sim增加0.70s）；默认仍为1。不重跑旧八例、不自动晋级或修改场景。不重写规划器、不新造调度平台。
 
 
-F2e软件产物：RoutePolicy新增transport_candidates=1（默认首条），允许显式2/3比较；_compute_transport复用原完整认证与费用，只在完整通过结果中稳定取min。route_search/attempt诊断透传evaluation。手写示例route_strategies/shortest_two_routes.py只设2，不是CLI生成或已物理通过的候选。准确未来A/B命令与纯软件报告保存在`experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/prepared.json`。该A/B已实际完成并归还窗口，负收益不晋级；旧八个物理回合不重跑。
+F2e软件产物：RoutePolicy新增transport_candidates=1（默认首条），允许显式2/3比较；_compute_transport复用原完整认证与费用，只在完整通过结果中稳定取min。route_search/attempt诊断透传evaluation。手写示例route_strategies/shortest_two_routes.py只设2，并非CLI生成；其后原物理A/B已2/2通过，但本布局负收益不晋级。准确未来A/B命令与纯软件报告保存在`experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/prepared.json`。该A/B已实际完成并归还窗口，负收益不晋级；旧八个物理回合不重跑。
 
 
 F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第二条57mm原费用更高。两轮原物理通过，但候选hold+0.70sim s、worker+1.155632wall s，无路线收益，不晋级。根接续授权在同一前台CodeBuddy DeepSeek CLI仅做一次文本反馈，允许返回可证伪候选或明确无收益/转向理由；优先说明何种已有任务条件值得检查，不盲追hold噪声、不故意削弱基线。该后续不追加物理/native/服务，下一回合另约。
@@ -84,3 +84,15 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 
 
 接续最短入口（当前不执行）：先读本计划F2e结论、`progress.md`末两节和忽略series的`model-feedback-round4.json`；round4 source=null，没有新候选可运行。由原owner选定下一项业务任务后，复制现有Station配置并只做原validate_station静态解析，用原load_route_policy检查单变量候选，生成新的UUID输出目录及baseline/candidate准确argv。不得复用已完成9d8a71f1的pair-results或将旧回合当下一轮。场景由owner固定，候选只读同一输入，仍沿现有前台CLI/原evaluate_station，不设前序成功门锁、不另造平台。当前窗口仍归无人机，未释放SO/F1；新的原物理回合另获明确窗口后执行。
+
+
+## F2f 第二放置工位静态准备（2026-10-22）
+
+根明确只做软件静态，固定历史曾执行的placeXY=(0.20,0.20)m、tray0mm，与220/170形成两个业务放置工位；不是为了制造优化胜利的新障碍布局。
+
+1. 新fixture `experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json`，只改place.position、名称和说明，原八步程序/方块/障碍/裁判保持（complete）。
+2. 原validate_station解析两个工位，逐项记录相同/不同条件；真实load_route_policy读取baseline及原CLI候选2，缺省transport_candidates仍1（complete）。未导入MuJoCo，未构造模型，未发新模型调用。
+3. 保存可复跑argv、EGL环境与独立UUID输出根（complete），当前两回合physical_not_run，不将历史可达或静态合法当成当前物理成功/泛化/性能证据。
+4. 最小JSON/parser/路径检查、限定canonical同步、所属提交推送并回告（本轮收尾）。后续实际运行另约范围和明确窗口，不新平台/门禁/调度服务，不要求baseline先成功才允许候选运行。
+
+记录位于忽略series `experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/`：prepared.json含原入口两条准确argv，condition-comparison.json含全部节点/程序/父坐标差异，cli-candidate2-source.py保留原候选文本副本。执行owner仍为本SO101原对话，根协调后续窗口；当前不物理/ROS/build/浏览器QA，也不构造MuJoCo模型。

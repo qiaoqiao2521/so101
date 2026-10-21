@@ -41,6 +41,8 @@
 
 [独立XY复核输入](scenarios/factory-loading/layout-place-220-170-0mm.json)把蓝盘中心改为(0.22,0.17)m、高度0，其他节点、内置障碍和程序保持原值。该输入在2026-10-21的baseline/candidate2两个完整物理回合均通过（75.26/75.04sim秒）。每策略仅一次观察，默认基线保持；历史记录或本次局部缩时不代替其他布局验收。
 
+[第二放置工位输入](scenarios/factory-loading/layout-place-200-200-0mm.json)把蓝盘中心改为(0.20,0.20)m、高度0，与220/170工位共用原程序、方块、障碍和裁判。2026-10-22仅完成原静态parser及baseline/原CLI候选2真实loader检查，当前版本的可达性、物理结果和收益未测；未来比较须让两策略读取同一fixture。
+
 ### 最小路线候选
 
 `--candidate` 接受本地Python源码，实际执行其 `route_preferences()`。路线偏好包括：`transport_preference_m`重排原候选运输高度，`separation_steps`选择原13个上升路点的前缀，`ik_seed`选择原IK的延续初值或neutral初值。基线默认值为None、13、continuation；`route_strategies/shorter_route.py`选择51mm优先、前10点及continuation。所有碰撞采样、1mm净距、释放审计、时间判据和最终物理裁判均由原实现执行。
