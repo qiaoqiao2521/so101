@@ -16,6 +16,7 @@ import numpy as np
 
 from joint_planner import validate_joint_path
 from transport_worker import AsyncTransportPlanningJob
+from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
 
 def _vector(value, size, name):
@@ -69,8 +70,11 @@ class SeparationSnapshot:
     uncertainty: float
     rotation: tuple = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
     place_height_m: float = 0.
+    route_policy: RoutePolicy = DEFAULT_ROUTE_POLICY
 
     def __post_init__(self):
+        if not isinstance(self.route_policy, RoutePolicy):
+            raise ValueError('Separation requires immutable route preferences')
         for name in ('q6', 'initial_q6', 'last_command6'):
             object.__setattr__(self, name, _vector(getattr(self, name), 6, name))
         object.__setattr__(self, 'center', _vector(self.center, 3, 'center'))
@@ -251,6 +255,7 @@ def _planning_context(rig, released_model, snapshot):
     context.last_command = np.asarray(snapshot.last_command6)
     context.seed, context.last_elapsed = snapshot.seed, snapshot.elapsed
     context.place_height_m = snapshot.place_height_m
+    context.route_policy = snapshot.route_policy
     context.plan_reports, context.release_record, context.servo_transitions = [], {}, []
     query = ReleasedObjectQuery.__new__(ReleasedObjectQuery)
     query.model, query.data = released_model, mujoco.MjData(released_model)

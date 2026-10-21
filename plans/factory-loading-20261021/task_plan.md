@@ -20,3 +20,14 @@
 
 ## Next Step
 用户从5192导入高盘任务并修改高度；后续新高度逐任务验证。共享无人机树保持原owner。
+
+## F2b 最小路线策略插槽（2026-10-21）
+
+范围：候选源码只生成运输高度偏好、原脱离路点前缀长度及IK初值选择；仍运行同一evaluate_station、模型、物理裁判与安全阈值。不改学习/50Hz/长扫掠主线、不改前端或研究总文件。
+
+1. 复用现有transport/separation快照，接入不可变路线配置（complete）。
+2. 定向检查实际候选加载、非法配置明确失败、worker配置保持（complete：91 tests / 104 subtests）。
+3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（in_progress）。
+4. 对照结果、最短命令、限定同步与提交推送（pending）。
+
+Next Step：冻结本实现，串行运行原0mm/10mm×baseline/shorter_route四个完整回合。

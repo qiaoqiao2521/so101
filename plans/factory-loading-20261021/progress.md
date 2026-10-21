@@ -37,3 +37,10 @@ canonical `/home/muqiao/dev/ros2/projects/so101` 的跟随器、设备配置、�
 
 ## Knowledge
 already_covered：沿用Wiki ROS2与FishBot第20节，动作完成、真实接触和最终裁判分开核对；项目状态留此，不并发写研究总文件或知识库。
+
+## F2b 接续
+2026-10-21厂区根独立回读首片后，授权最小路线策略插槽及原0mm/10mm成对实际评测。当前接口实施中，未启动新物理回合；共享5192/5187及在途无人机核心保持原owner，已协调约8分钟本地MuJoCo串行窗口。
+
+F2b接口首轮定向回归暴露既有SweepBinding只接收标量/tuple，新增dataclass直接进入快照被拒绝；已复现并仅在控制器三处快照转换成原有标量tuple，不修改原守卫或阈值。初次批量补丁有一个过时上下文导致原子拒绝，未部分写入，已纠正。
+
+F2b接口定向91 tests / 104 subtests通过。路线配置只改候选顺序、原路点前缀和现有IK初值；scorer、模型、grasp_episode、placement、run_visual_grasp无diff。STATION_EXECUTOR旧“修改Z拒绝”已改为非负底座高度语义。

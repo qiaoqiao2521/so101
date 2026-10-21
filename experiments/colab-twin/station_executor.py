@@ -203,7 +203,7 @@ class StationVideo:
             renderer.close()
 
 
-def run(station_path, output, cancel_file):
+def run(station_path, output, cancel_file, *, route_policy=None):
     output.mkdir(parents=True, exist_ok=True)
     current = {'status': 'running', 'phase': 'validating', 'simulation_s': 0.,
                'message': '解析工作站草稿', 'simulation_only': True,
@@ -297,7 +297,8 @@ def run(station_path, output, cancel_file):
                     controller_options={'release_rotation_mode': 'floor_yaw',
                                         'release_pinch_height_m': .028,
                                         'place_xy': layout['place_xy_m'],
-                                        'place_height_m': layout['place_height_m']})
+                                        'place_height_m': layout['place_height_m'],
+                                        'route_policy': route_policy})
         cancelled = cancel_file is not None and cancel_file.exists()
         artifacts = {'report': str(output/'episode/report.json'),
                      'trajectory': str(output/'episode/trajectory.json'),

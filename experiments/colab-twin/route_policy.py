@@ -1,0 +1,55 @@
+"""Small route preferences; geometry, guards and physical scoring stay external."""
+from dataclasses import asdict, dataclass
+import math
+from pathlib import Path
+import runpy
+
+
+@dataclass(frozen=True)
+class RoutePolicy:
+    transport_preference_m: float | None = None
+    separation_steps: int = 13
+    ik_seed: str = 'continuation'
+
+    def __post_init__(self):
+        height = self.transport_preference_m
+        if height is not None and (isinstance(height, bool) or
+                not isinstance(height, (int, float)) or not math.isfinite(height) or
+                not .023 <= height <= .060):
+            raise ValueError('Transport preference must be 23..60 mm above the tray base')
+        if (isinstance(self.separation_steps, bool) or not isinstance(self.separation_steps, int)
+                or not 1 <= self.separation_steps <= 13):
+            raise ValueError('Separation selects a prefix of the original 13 waypoints')
+        if self.ik_seed not in ('continuation', 'neutral'):
+            raise ValueError('IK seed must be continuation or neutral')
+
+    def transport_heights(self, heights, base_height):
+        """Reorder existing choices only; retain every original fallback."""
+        heights = list(heights)
+        if self.transport_preference_m is not None:
+            target = base_height + self.transport_preference_m
+            chosen = min(range(len(heights)), key=lambda i: abs(heights[i]-target))
+            heights.insert(0, heights.pop(chosen))
+        return heights
+
+    def preferences(self):
+        return asdict(self)
+
+
+DEFAULT_ROUTE_POLICY = RoutePolicy()
+BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
+
+
+def load_route_policy(path=None):
+    """Execute the selected local source once and pass only immutable choices."""
+    path = Path(path or BASELINE_SOURCE).resolve()
+    namespace = runpy.run_path(str(path))
+    factory = namespace['route_preferences']
+    values = factory()
+    if not isinstance(values, dict):
+        raise ValueError('route_preferences() must return a preferences dictionary')
+    policy = RoutePolicy(**values)
+    return policy, {'loaded_path': str(Path(namespace['__file__']).resolve()),
+                    'entrypoint': 'route_preferences',
+                    'entrypoint_path': str(Path(factory.__code__.co_filename).resolve()),
+                    'preferences': policy.preferences()}

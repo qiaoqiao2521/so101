@@ -9,6 +9,7 @@ import sys
 import uuid
 
 from station_executor import atomic_json, run
+from route_policy import BASELINE_SOURCE, load_route_policy
 
 
 def source_reference(path):
@@ -55,21 +56,40 @@ def summarize(status, *, run_id, scenario_path, output, candidate, scorer):
     }
 
 
-def evaluate(station_path, output_root, cancel_file=None):
+def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None):
     station_path, output_root = Path(station_path).resolve(), Path(output_root).resolve()
     run_id = str(uuid.uuid4())
     output = output_root/run_id
     source = Path(__file__).parent
-    candidate = source_reference(source/'visual_grasp_controller.py')
+    candidate = source_reference(candidate_path or BASELINE_SOURCE)
+    candidate['controller'] = source_reference(source/'visual_grasp_controller.py')
     scorer = source_reference(source/'learning_env.py')
     # Each invocation owns a new result directory; stale results cannot pass a new run.
-    code = run(station_path, output, cancel_file)
+    try:
+        policy, loaded = load_route_policy(candidate['path'])
+        candidate.update(loaded)
+    except Exception as error:
+        output.mkdir(parents=True, exist_ok=True)
+        candidate.update(loaded_path=None, load_error_type=type(error).__name__)
+        atomic_json(output/'status.json', {'status': 'failed', 'phase': 'candidate_loading',
+                    'message': str(error), 'error_type': type(error).__name__})
+        code = 1
+    else:
+        code = run(station_path, output, cancel_file, route_policy=policy)
     status = json.loads((output/'status.json').read_text())
-    for reference, module_name in ((candidate, 'visual_grasp_controller'), (scorer, 'learning_env')):
+    for reference, module_name in ((candidate['controller'], 'visual_grasp_controller'), (scorer, 'learning_env')):
         module = sys.modules.get(module_name)
         reference['loaded_path'] = str(Path(module.__file__).resolve()) if module else None
     result = summarize(status, run_id=run_id, scenario_path=station_path,
                        output=output, candidate=candidate, scorer=scorer)
+    planning = output/'episode/planning.json'
+    if planning.is_file():
+        rows = json.loads(planning.read_text())
+        result['policy_execution'] = {
+            'transport': [{key: row.get(key) for key in ('route_policy', 'transition_height_m',
+                           'transition_attempts', 'motion_and_arrival_s')}
+                          for row in rows if row.get('stage') == 'transport_execution_plan'],
+            'separation': ((status.get('report') or {}).get('release_plan') or {}).get('separation_end')}
     atomic_json(output/'evaluation.json', result)
     atomic_json(output_root/'evaluation.json', result)
     print(json.dumps({'run_id': run_id, 'verdict': result['verdict'],
@@ -83,8 +103,9 @@ def main():
     parser.add_argument('--station', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--cancel-file', type=Path)
+    parser.add_argument('--candidate', type=Path, help='Local source exporting route_preferences()')
     args = parser.parse_args()
-    return evaluate(args.station, args.output_dir, args.cancel_file)
+    return evaluate(args.station, args.output_dir, args.cancel_file, candidate_path=args.candidate)
 
 
 if __name__ == '__main__':

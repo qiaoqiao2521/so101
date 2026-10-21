@@ -13,6 +13,7 @@ import threading
 import time
 
 import numpy as np
+from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
 
 def _vector(value, size, name):
@@ -41,8 +42,11 @@ class TransportSnapshot:
     release_pinch_height_m: float = .023
     place_xy: tuple | None = None
     place_height_m: float = 0.
+    route_policy: RoutePolicy = DEFAULT_ROUTE_POLICY
 
     def __post_init__(self):
+        if not isinstance(self.route_policy, RoutePolicy):
+            raise ValueError('Transport requires immutable route preferences')
         from grasp_workcell import PLACE_CENTER
         object.__setattr__(self, 'place_xy', _vector(
             PLACE_CENTER if self.place_xy is None else self.place_xy, 2, 'place_xy'))

@@ -39,6 +39,22 @@
 
 可用[原高度](scenarios/factory-loading/baseline-0mm.json)作回归，用[负高度](scenarios/factory-loading/invalid-negative-height.json)检查明确拒绝。不同布局应分别保留输入和结果；单场景成功不代表其他高度都能到达。策略改进可修改控制器或路线规划，比较时固定场景、评分器、物理参数和安全阈值。不得修改裁判来提高分数。本入口不启动训练、20+20评测或实体机械臂。
 
+### 最小路线候选
+
+`--candidate` 接受本地Python源码，实际执行其 `route_preferences()`。函数只返回三项路线偏好：`transport_preference_m`重排原候选运输高度，`separation_steps`选择原13个上升路点的前缀，`ik_seed`选择原IK的延续初值或neutral初值。基线默认值为None、13、continuation；`route_strategies/shorter_route.py`选择51mm优先、前10点及continuation。所有碰撞采样、1mm净距、释放审计、时间判据和最终物理裁判均由原实现执行。
+
+```bash
+~/.cache/so101-graspgenx/upstream/.venv/bin/python \
+  experiments/colab-twin/evaluate_station.py \
+  --station experiments/colab-twin/scenarios/factory-loading/raised-10mm.json \
+  --candidate experiments/colab-twin/route_strategies/shorter_route.py \
+  --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
+```
+
+省略candidate即实际加载 `route_strategies/baseline.py`。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+
+候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
+
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 
 2026-10-20：35项定向测试通过。默认CLI完整回合成功，74.76sim/53.13wall；修改方块X=.245m并添加障碍后25.30sim协作取消，初态与XML确认输入被消费。浏览器经HTTP重新启动的完整回合74.76sim/50.22wall成功，另一次网页取消在4.16sim结束；刷新未重发。首轮旧释放配置触发再次接触并正确终止，失败保留。
@@ -61,7 +77,7 @@
 
 `validate_station` 输出 `place_xy_m`；`build_contact_scene(..., place_xy=...)` 从同一workcell生成实际模型与规划模型，重新编译两套XML。控制器、异步搬运快照和规划报告都携带同一个目标。物理评分读取实际 `place_floor` 中心，完整物块外廓需在原58mm内边界、真实接触、低速度和原静稳时长条件内。报告 `place_goal_xy_m` 记录真实场景目标。
 
-修改place的XY不需要改Python。默认None保持旧中心；修改Z、释放/脱离点相对偏移或不支持的步骤仍明确拒绝。历史示范采集中的固定路径与state30语义保持，本次参数化对应工作台实际执行路径，不宣称所有旧实验入口都已泛化。
+修改place的XY不需要改Python。默认None保持旧中心；place的非负Z表示底座高度并贯穿执行/评分。释放/脱离点相对偏移或不支持的步骤仍明确拒绝。历史示范采集中的固定路径与state30语义保持，本次参数化对应工作台实际执行路径，不宣称所有旧实验入口都已泛化。
 
 新目标暴露了原37mm竖直脱离路径偏好的腕限假设。现在仍优先规划37mm；仅在后续IK不可达、已有前缀满足原全臂/已释放物体净距且完整回位路径通过时采用该前缀。IK精度、1mm净距、pad单调脱离、q6/jaw全程采样及原释放审计不变。`release_plan.separation_end`记录实际距离与原因，不能把较短距离单独计为安全成功。
 

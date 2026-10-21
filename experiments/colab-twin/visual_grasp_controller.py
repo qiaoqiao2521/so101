@@ -25,6 +25,7 @@ from transport_worker import TransportSnapshot, TransportPlan, TransportPlanning
 from separation_worker import (SeparationSnapshot, AsyncSeparationPlanningJob,
                                run_separation_plan, validate_separation_samples)
 from released_object import floor_yaw_rotation
+from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
 
 BOX_CORNERS = np.array([[x, y, z] for x in (-1., 1.)
@@ -138,7 +139,10 @@ class VisualGraspController:
     def __init__(self, rig, target_xy, initial_q6, *, seed=0, target_timestamp_s=0.,
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
-                 place_xy=None, place_height_m=0.):
+                 place_xy=None, place_height_m=0., route_policy=None):
+        self.route_policy = DEFAULT_ROUTE_POLICY if route_policy is None else route_policy
+        if not isinstance(self.route_policy, RoutePolicy):
+            raise ValueError('Use immutable route preferences')
         if rig.nq != 6 or rig.nv != 6:
             raise ValueError('Use the six-joint planning rig without a free target')
         if (not np.isfinite(estimate_ttl_s) or not 0 < estimate_ttl_s <= 1
@@ -323,6 +327,8 @@ class VisualGraspController:
         comes from the requested endpoint, never the current jaw command.
         """
         def snapshot(value):
+            if isinstance(value, RoutePolicy):
+                return tuple(value.preferences().items())
             if isinstance(value, np.ndarray):
                 return snapshot(value.tolist())
             if isinstance(value, dict):
@@ -334,7 +340,7 @@ class VisualGraspController:
         names = ('stage_started', 'last_elapsed', 'observation_seq', 'observation',
                  'sweep_request_seq', 'jaw', 'reference', 'servo_offset', 'replans',
                  'transport_index', 'target_timestamp', 'target_frozen',
-                 'target_xy', 'place_xy', 'place_height_m', 'payload_uncertainty',
+                 'target_xy', 'place_xy', 'place_height_m', 'route_policy', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z',
                  'release_rotation_mode', 'release_pinch_height_m')
@@ -506,7 +512,8 @@ class VisualGraspController:
                                      self.payload_uncertainty, self.last_elapsed,
                                      getattr(self, 'release_pinch_height_m', .023),
                                      place_xy=self.place_xy,
-                                     place_height_m=getattr(self, 'place_height_m', 0.))
+                                     place_height_m=getattr(self, 'place_height_m', 0.),
+                                     route_policy=getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY))
         # MjModel.__copy__ owns its arrays. No execution MjData reaches worker.
         job = TransportPlanningJob(binding)
         job.run(_run_transport_plan, copy.copy(self.rig), snapshot)
@@ -522,6 +529,8 @@ class VisualGraspController:
     def _async_transport_binding(self):
         """Stable hold assumptions; fresh observations are checked at admission."""
         def snapshot(value):
+            if isinstance(value, RoutePolicy):
+                return tuple(value.preferences().items())
             if isinstance(value, np.ndarray):
                 return snapshot(value.tolist())
             if isinstance(value, dict):
@@ -530,7 +539,7 @@ class VisualGraspController:
                 return tuple(snapshot(item) for item in value)
             return value
         names = ('transport_request_seq', 'stage_started', 'points', 'duration', 'jaw',
-                 'target_timestamp', 'target_frozen', 'target_xy', 'place_xy', 'place_height_m', 'payload_uncertainty',
+                 'target_timestamp', 'target_frozen', 'target_xy', 'place_xy', 'place_height_m', 'route_policy', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'seed', 'servo_offset',
                  'release_rotation_mode', 'release_pinch_height_m')
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
@@ -556,7 +565,8 @@ class VisualGraspController:
                                      self.payload_uncertainty, elapsed,
                                      getattr(self, 'release_pinch_height_m', .023),
                                      place_xy=self.place_xy,
-                                     place_height_m=getattr(self, 'place_height_m', 0.))
+                                     place_height_m=getattr(self, 'place_height_m', 0.),
+                                     route_policy=getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY))
         self.transport_request_binding = self._async_transport_binding()
         self.transport_job = AsyncTransportPlanningJob(self.transport_request_binding)
         self.transport_wait = {'started_at_s': float(elapsed), 'pending_updates': 0,
@@ -660,21 +670,27 @@ class VisualGraspController:
         if errors:
             raise errors[0]
 
+    def _route_ik(self, xyz, initial):
+        policy = getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY)
+        return solve_pinch_ik(self.rig, xyz, initial if policy.ik_seed == 'continuation' else None)
+
     def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
         place_height = getattr(self, 'place_height_m', 0.)
         release_height = place_height + getattr(self, 'release_pinch_height_m', .023)
         # Every route must reach this same release pose; changing the hover
         # preference cannot repair an unreachable task endpoint.
-        solve_pinch_ik(self.rig, np.r_[self.place_xy, release_height], q6[:5])
+        self._route_ik(np.r_[self.place_xy, release_height], q6[:5])
         heights = [float(z) for z in np.arange(.06 + place_height, release_height, -.003)] + [release_height]
+        policy = getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY)
+        heights = policy.transport_heights(heights, place_height)
         attempts = []
         for height in heights:
             validation_stage = 'endpoint_ik'
             try:
                 # Reject unreachable preferences before certifying every
                 # Cartesian sample. This never certifies an execution edge.
-                solve_pinch_ik(self.rig, np.r_[self.place_xy, height], q6[:5])
+                self._route_ik(np.r_[self.place_xy, height], q6[:5])
                 validation_stage = 'complete_route'
                 paths = self._transport_at_height(q6, current, height, release_height)
             except RuntimeError as error:
@@ -701,8 +717,10 @@ class VisualGraspController:
                                   'place_xy': self.place_xy.tolist(),
                                   'place_height_m': place_height,
                                   'release_world_height_m': release_height,
+                                  'route_policy': policy.preferences(),
                                   'transition_height_m': height,
-                                  'transition_height_reason': ('original_height' if len(attempts) == 1
+                                  'transition_height_reason': ('policy_ordered_certified_route' if policy.transport_preference_m is not None
+                                                               else 'original_height' if len(attempts) == 1
                                                                else 'lower_certified_route'),
                                   'transition_attempts': attempts,
                                   'legs': legs, 'motion_and_arrival_s': duration,
@@ -720,7 +738,7 @@ class VisualGraspController:
             a, b = np.asarray(a), np.asarray(b)
             points = [q.copy()]
             for fraction in np.linspace(0, 1, max(2, int(np.ceil(np.linalg.norm(b-a)/.003))+1))[1:]:
-                goal = solve_pinch_ik(self.rig, a+(b-a)*fraction, q)
+                goal = self._route_ik(a+(b-a)*fraction, q)
                 if not validate_joint_path([q, goal], self._payload_valid, .01)['valid']:
                     raise ControllerFailure('estimated_payload_route_collision')
                 q = goal
@@ -762,6 +780,8 @@ class VisualGraspController:
     def _separation_binding(self):
         """Bind stable release hypotheses, separately from fresh admission q."""
         def snapshot(value):
+            if isinstance(value, RoutePolicy):
+                return tuple(value.preferences().items())
             if isinstance(value, np.ndarray):
                 return snapshot(value.tolist())
             if isinstance(value, dict):
@@ -771,7 +791,7 @@ class VisualGraspController:
             return value
         names = ('separation_request_seq', 'stage_started', 'points', 'duration',
                  'jaw', 'initial_q', 'seed', 'release_record', 'servo_offset',
-                 'world', 'last_command', 'place_xy', 'place_height_m', 'release_rotation_mode', 'release_pinch_height_m')
+                 'world', 'last_command', 'place_xy', 'place_height_m', 'route_policy', 'release_rotation_mode', 'release_pinch_height_m')
         released = vars(self.released_query) if self.released_query is not None else {}
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
         context += (('released_owner', id(self.released_query)),
@@ -796,7 +816,8 @@ class VisualGraspController:
                                       elapsed, self.released_query.center,
                                       self.released_query.uncertainty_m,
                                       vars(self.released_query).get('rotation', np.eye(3)),
-                                      place_height_m=getattr(self, 'place_height_m', 0.))
+                                      place_height_m=getattr(self, 'place_height_m', 0.),
+                                      route_policy=getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY))
         self.separation_request_binding = self._separation_binding()
         self.separation_job = AsyncSeparationPlanningJob(self.separation_request_binding)
         self.separation_events.append({'event': 'request', 'elapsed_s': float(elapsed),
@@ -962,11 +983,14 @@ class VisualGraspController:
         self.separation_high_z = {name:v[:,2].copy() for name,v in self.separation_vertices.items()}
         points = [q6[:5].copy()]
         previous = distances
-        end = {'reason': 'original_vertical_height', 'requested_height_m': .037,
+        policy = getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY)
+        offsets = np.linspace(0, .037, 14)[1:policy.separation_steps+1]
+        end = {'reason': 'original_vertical_height' if policy.separation_steps == 13 else 'policy_waypoint_prefix',
+               'requested_height_m': float(offsets[-1]), 'route_policy': policy.preferences(),
                'height_m': 0.}
-        for dz in np.linspace(0, .037, 14)[1:]:
+        for dz in offsets:
             try:
-                q = solve_pinch_ik(self.rig, self.separation_pinch+[0, 0, dz], points[-1])
+                q = self._route_ik(self.separation_pinch+[0, 0, dz], points[-1])
             except RuntimeError as error:
                 if not str(error).startswith('No vertical pinch IK candidate'):
                     raise
@@ -1232,6 +1256,7 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.target_xy = np.asarray(snapshot.target_xy)
     context.place_xy = np.asarray(snapshot.place_xy)
     context.place_height_m = snapshot.place_height_m
+    context.route_policy = snapshot.route_policy
     context.payload_relative = np.asarray(snapshot.payload_relative)
     context.payload_rotation = np.asarray(snapshot.payload_rotation)
     context.payload_uncertainty = snapshot.payload_uncertainty
