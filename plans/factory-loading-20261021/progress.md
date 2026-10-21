@@ -134,8 +134,21 @@ F2c补充只读阶段计时：nominal transport +0.04s、hold -0.04s，其他段
 
 区分结果：raised交替baseline74.38→候选1 74.30的-0.08s全部在hold，实际路线与规划时长不变；旧baseline74.44→新baseline74.38也有-0.06s hold变化。候选2nominal相对候选1：separate -0.32s、hold +0.04s、其他段相同，总-0.28s，运输规划只差0.00000029s。相对baseline则transport +0.04s、separate -0.32s，总-0.28s。候选2raised相对候选1复验反而+0.02s，仅hold变化。该局部动作缩短值得另行成对复验，不足以宣布稳定全程提速或选优；默认baseline不变。53s wall不归因模型/路线加速。
 
-当前闭环范围已完成：首CLI候选两盘高2轮、raised交替基线/候选1共2轮、反馈生成的第二候选两盘高2轮，本轮6/6通过。连同先前手写F2b的4轮是独立批次，不冒充20+20或泛化通过。没有第三轮CLI调用或持续后台Agent。
+当前闭环范围已完成：首CLI候选两盘高2轮、raised交替基线/候选1共2轮、反馈生成的第二候选两盘高2轮，本轮6/6通过。连同先前手写F2b的4轮是独立批次，不冒充20+20或泛化通过。截至这六回合结束尚未调用第三轮CLI；后续文本反馈见下文，未运行持续后台Agent。
 
 证据仍在同series：followup-all-results.json、followup-independent-checks.json、四份原日志及各UUID完整evaluation/report/trajectory/XML/录像；所有物理结果和源码副本均Git忽略，CLI原始输出/receipt仅私有cache。nominal候选2录像ffprobe可读：H.264、640×480、466帧、74.56s；未以视频元数据替代物理判据。后续仅如需正式选优，再协调新窗口进行nominal baseline→候选2交替复验；本轮无该额外授权窗口内任务遗留。
 
 交付记录：前一次1e9d043推送45s超时，远端当时仍e277c0d；未将本地提交称为已交付。现合并本轮实际结果进行提交/推送与REST独立读回。canonical保留其他跟随器/设备/历史未跟踪工作，只有本计划三文件与忽略series同步。Knowledge：already_covered，现有ROS2/FishBot物理结果核验原则已覆盖，无新增共享知识或个人memory写入。
+
+
+## F2c 第三轮文本反馈与暂缓理由
+
+厂区根独立读回上述六份evaluation/原report和CLI事件后，要求继续把第二轮结果、分段耗时及错误说明送回同一前台CLI，且不要重跑六例。已完成该文本调用一次（41.666s，CLI success/is_error=false，请求与事件报告模型deepseek-v4.1-flash）。私有`~/.cache/ros2-factory/codebuddy-so101-20261021/round3/`保留prompt/stdout/stderr/parsed-result/receipt，实际生成原文字面量候选57mm/9点/continuation。AST纯函数与原loader读回通过，源码原文副本在series/candidate3-source.py。
+
+本owner决定defer_not_promoted：候选3 physical_status=not_run，不追加MuJoCo、无新的资源窗口申请。相对候选2只少一个2.846mm的脱离位移点，模型自己也未给出可信全程收益；继续追逐sub-0.1s总时间缺乏价值，先做独立布局复核及更大运动段的可测比较。不把文本模型decision当成物理拒绝或成功。
+
+仍需纠错：候选3说明将report.hold_duration_s约31.6s（物理持物累计时长）误当阶段hold等待。实际候选2nominal approach16.58s/transport25.92s/hold2.88s，raised16.58/25.76/2.86s。说明中的28.4834s规划运输只适用于nominal，raised是28.3197s；竖直IK上限也仅在当前姿态/布局观察到，不能推广。原生成文字保留，receipt.review_notes及series/round3-owner-decision.json明确纠正，未据此改控制器。
+
+三参数的具体边界：运输偏好仅重排既有离散高度，未改变五段走廊；脱离仅截取原路点前缀；IK参数仅换初值，不能直接优化关节路径或接近段。只读源码确认_compute_transport在首条通过完整认证的高度break，然后才统计motion_and_arrival_s（visual_grasp_controller.py:677–729）。因此下一项最小可扩展策略可复用现有_transport_at_height完整认证和motion_duration，对少量已有可行高度按原规划时长排序；默认仍首个可行，保持原worker快照、完成预算及全程物理检查。此处只列待验证方向，尚未改接口或实现；额外认证耗时必须计入规划等待，不能把优化计算隐藏。
+
+后续先由原owner固定独立XY/障碍布局变体，再将相同fixture用于baseline/candidate，不允许候选改场景/裁判。0/10mm仅同布局高度变化，不宣称跨布局提速。当前可交付仍是两轮生成候选的6次原物理通过与反馈链；第三候选仅保留为未测试提案，默认baseline不变。

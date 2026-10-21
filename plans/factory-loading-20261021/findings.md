@@ -23,3 +23,6 @@ F2c首个CodeBuddy候选57mm/13/continuation实际两轮通过。nominal运输�
 F2c反馈轮次已实际闭合：同一前台CodeBuddy工作流消费首轮原物理结果，生成57mm/10点/continuation独立候选，并在两盘高通过。raised交替baseline→候选1为74.38→74.30sim s，全部差在hold；候选2raised74.32sim，比候选1复验多0.02s，亦只有hold差。候选2nominal相对候选1transport不变、separate少0.32s、hold多0.04s，总少0.28s；这是可复验局部收益，不能从单次观察宣布全任务稳定提速。默认基线保留。
 
 第二候选生成说明误述nominal实际高度，且附带未经核实的clearance/因果断言。保留原输出并用实际worker日志纠正：57mm而非60mm；只接受原RoutePolicy范围内的字面量源码，未把生成说明当评分或改写原裁判。后续改进先看实际采用路线、逐阶段时长、独立重复结果，而非仅看CLI退出或总wall时间。
+
+
+候选3文本反馈误把持物累计31.6s当hold阶段；实际hold2.86s、approach16.58s、transport25.76s（raised候选2）。生成式解释即使已纠正上一轮高度错误，仍须与原分段数据对照。当前三参数只重排运输高度/截取脱离前缀/换IK初值；_compute_transport首个可行即break，费用统计在之后。若扩展，最小方向是复用原全路认证和motion_duration做已有可行路线排序，并计入额外规划耗时，尚未实施。
