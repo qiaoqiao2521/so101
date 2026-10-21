@@ -107,3 +107,8 @@ F2c第二候选已实际生成（前台CodeBuddy一次，28.392s、CLI success�
 生成说明不作为事实：模型将nominal实际57mm误写60mm，附带clearance与因果推断亦未经证实，receipt.review_notes已标明；未改写候选源码或原生成结果。首轮解析错误因CLI JSON顶层为事件list而非dict，已从同一次保存的末尾result事件重解析，未再次调用CLI。候选2物理status仍not_run。
 
 后续4条精确argv已保存series下followup-prepared.json：raised baseline→candidate1两轮，再candidate2两盘高各一轮。无人机已接收下一窗口协调请求；本轮生成期间仅文本CLI，无本机仿真/训练/build。等待明确释放再启动，仍不按小差值选优。
+
+
+F2c补充只读阶段计时：nominal transport +0.04s、hold -0.04s，其他段相同；raised仅hold -0.10s，运输/脱离/回位均无时长差。round1-stage-timing.json保留分段计数，支持暂不把微小总时长差归因路线。两个实际候选源码原文副本保存在同一忽略series的candidate1-source.py、candidate2-source.py，不设置内容锁，也不替代原实际加载路径。
+
+本轮文档交付e277c0d1615b1d5681b6b7604fb2103463f68357已推送并经REST读回一致；源码、默认路线及原评分未变。canonical只同步三份所属计划与忽略series，逐文件确认匹配前次交付后才覆盖，无冲突。
