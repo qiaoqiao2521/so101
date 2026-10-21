@@ -71,3 +71,10 @@ F2b接口定向91 tests / 104 subtests通过。路线配置只改候选顺序、
 只读复核首次把XML误定位到episode根目录；实际在episode/scene，修正脚本后两组几何逐字节相同。未重跑或重判原物理回合。
 
 F2c接续：厂区根已独立读到本轮四个产物，暂不按0.20/0.04s选优。根负责CodeBuddy前台print生成新候选（工具关闭、私有cache）；本对话当前仅完成F2b，不把手写候选称为CLI生成。新文件精确路径到位后再审阅、协调窗口和跑两种盘高，不重复本轮四例。
+
+F2c输入已到位：厂区根实际CodeBuddy候选 `/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/transport_057_full_separation.py`，receipt.json在同目录。根给出的工具禁用/前台调用由receipt追溯。本对话独立读回AST，仅有route_preferences函数及字面量返回：57mm偏好、13点、continuation；未改写该私有候选。CodeBuddy当前CLI2.168.2。计划先两盘高各候选一轮；若比相应基线小幅减少，则补该布局的baseline→候选交替复跑，不凭单次小差异选优；随后将物理结果送同CLI生成下一份独立候选并评测。当前等待新的本地仿真窗口，不启动Gazebo/云GPU。
+
+F2b推送尝试在45s网络等待后超时，REST仍指向19c17fe，最新本地结果提交cd6080a尚待重试；未把本地提交称远端完成。原14个独占文件与证据已无冲突同步canonical。
+
+F2b后续推送在命令级HTTP/1.1重试后成功（未修改全局网络），实现05142f2与结果cd6080a已交付；原45s失败记录保留，不将协议切换解释为已证明的网络根因。
+F2c窗口：无人机owner明确当前高墙构建/组件/实飞不可并发，暂不启动新的MuJoCo批次；收到明确释放后接续。已准备两条准确命令于忽略目录 `experiments/colab-twin/output/cli-route-rounds-20261021/5753e421-34d6-4378-9c62-87165b67aa99/prepared.json`。首次prepared路径误放experiments/output，已整体移入受忽略目录并校正argv，未提交或执行旧路径。

@@ -28,10 +28,16 @@
 1. 复用现有transport/separation快照，接入不可变路线配置（complete）。
 2. 定向检查实际候选加载、非法配置明确失败、worker配置保持（complete：91 tests / 104 subtests）。
 3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（complete：4/4原裁判通过）。
-4. 对照结果和最短命令完成，限定同步与提交推送（in_progress）。
+4. 对照结果、最短命令、限定同步、提交推送（complete）。
 
-Next Step：限定同步与提交推送；默认仍为基线，厂区根从现有产物接续候选比较。
+Next Step：F2c候选已审阅，等无人机高墙窗口明确释放后进行实际评测；默认仍为基线。
 
 ## F2c CLI生成候选接续
 
 厂区根负责用现有CodeBuddy、关闭工具访问，在私有cache生成新候选并给精确路径。本SO101对话继续维护接口与评测；文件到位后只读审查route_preferences范围，再协调窗口并在原0mm/10mm各跑一轮。当前尚未收到候选路径，不提前声称生成或评测通过；不把手写shorter_route冒充CLI生成成果。
+
+F2c执行：
+1. 根生成候选与本对话只读范围审查（complete）。
+2. 两盘高候选实际评测及必要交替复验（待窗口）。
+3. 同一CodeBuddy前台CLI使用实际物理反馈生成下一候选并实际评测（pending）。
+4. 保留所有失败、不晋级默认策略、源代码/结果/receipt关联及交付（pending）。
