@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2高度链路及10mm完整物理回合通过；网页编辑及原0高度API回归已通过，本地提交完成，远端推送受认证/网络阻塞。
+2026-10-21 F2高度链路及10mm完整物理回合通过；网页编辑及原0高度API回归已通过，本地与远端交付完成，原认证阻碍已解除。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -19,16 +19,18 @@
 SO101忽略目录 `experiments/colab-twin/output/factory-loading-20261021/` 保留上述evaluation、原报告、轨迹、XML和录像。UI独立树 `/home/muqiao/worktrees/fishbot-f2-workcell-20261021` 的 `apps/fishbot-control-station/workbench-review-tests/output/station-workcell-height/` 保存10项无运动检查与截图。15mm仅编辑预览通过，不冒充物理回合通过。首轮QA定位器失败保留在旁边 `station-workcell-height-selector-failure/`；首次构建局部依赖缺失日志保留/tmp，补全原安装后通过，未改上游源码/版本。
 
 ## Remaining
-源码/示例/评测及UI本地验收完成。远端推送待恢复命令级Git认证/连接后接续；共享无人机树和原服务未改动。本轮未运行20+20、训练、云GPU或实体。
+本轮F2无剩余实施项。共享无人机树保持原owner；本轮未运行20+20、训练、云GPU或实体。
 
 ## Next
-根Codex复核新账号认证后，仅推送两个既有分支并读回远端SHA；不重跑已通过的物理回合、不修改共享无人机树。
+用户在5192复制/导入并编辑工位；后续新布局逐任务验证，不用此单回合推断批次鲁棒性。
 
 ## Delivery
 - SO101实现提交 `15484b3`，分支 `codex/colab-twin-20261001`；工作台实现提交 `8005ea7`，分支 `codex/f2-workcell-20261021`。后续文档提交记录验收与推送阻碍。
-- GitHub API曾确认有效身份qiaoqiao2521 / 238822818，两个既有公开仓库身份一致。随后SO101推送连接github.com:443超时，UI推送无法取得密码；同命令环境的gh auth status返回账户登录超时，gh auth git-credential无法取得凭据，未修改凭据/全局网络/账号配置。远端推送尚未完成。接续owner为根Codex；先在隔离GH_CONFIG_DIR复验身份与凭据，再推送上述分支，不要求用户发送Token。
+- GitHub API曾确认有效身份qiaoqiao2521 / 238822818，两个既有公开仓库身份一致。随后SO101推送连接github.com:443超时，UI推送无法取得密码；同命令环境的gh auth status返回账户登录超时，gh auth git-credential无法取得凭据，未修改凭据/全局网络/账号配置。该阻碍已在2026-10-21后续quickstart交付时解除：官方CLI活动账号凭据可用，命令级helper调用同一隔离配置的gh auth token后完成推送；未保存或输出Token、未修改全局账号配置。
 - 本地入口 `http://127.0.0.1:5192/so101-station` HTTP200，隔离服务PID1927886；SO101_ROOT指向本交付树，独立任务目录在工作台workbench-tools/output/f2-height-20261021/tasks。普通5186当前未监听，未重启其他owner的服务。
 - UI最终专用10项、原草稿13项均通过。桌面和390×844手机各13个STL加载；现有baseline原station逐字段保持。最终专用证据在 `station-workcell-height-baseline-preserved/`，原草稿在 `station-task-drafts-f2/`；首轮手机全页截图超时保留，视口截图修正后通过。
+
+- 远端REST独立读回：SO101 `be48313b58cf6633346e388a64441a58261efa76`包含实现15484b3与两次交付记录；UI远端 `636d52b1863cd622c46ef979a57d02c506e91b70` 包含8005ea7及后续单回合QA选项。旧推送失败保留为历史，当前交付已完成。
 
 ## Preserved Work
 canonical `/home/muqiao/dev/ros2/projects/so101` 的跟随器、设备配置、记录及历史未跟踪文件保持原位。F2覆盖前逐文件比较交付基线15fa5bf，18个既有目标文件与基线一致；已限定同步26个本轮文件及忽略的物理证据，无冲突覆盖。其余有效遗留归原跟随器/迁移工作，由根Codex接续，最短入口为该树git status与原迁移计划；用户记录/配置不入本次提交。
