@@ -39,6 +39,8 @@
 
 可用[原高度](scenarios/factory-loading/baseline-0mm.json)作回归，用[负高度](scenarios/factory-loading/invalid-negative-height.json)检查明确拒绝。不同布局应分别保留输入和结果；单场景成功不代表其他高度都能到达。策略改进可修改控制器或路线规划，比较时固定场景、评分器、物理参数和安全阈值。不得修改裁判来提高分数。本入口不启动训练、20+20评测或实体机械臂。
 
+[独立XY复核输入](scenarios/factory-loading/layout-place-220-170-0mm.json)把蓝盘中心改为(0.22,0.17)m、高度0，其他节点、内置障碍和程序保持原值。该输入已通过原静态解析，当前baseline/candidate2成对物理复核尚未运行；历史同目标通过记录不代替本次验收。
+
 ### 最小路线候选
 
 `--candidate` 接受本地Python源码，实际执行其 `route_preferences()`。函数只返回三项路线偏好：`transport_preference_m`重排原候选运输高度，`separation_steps`选择原13个上升路点的前缀，`ik_seed`选择原IK的延续初值或neutral初值。基线默认值为None、13、continuation；`route_strategies/shorter_route.py`选择51mm优先、前10点及continuation。所有碰撞采样、1mm净距、释放审计、时间判据和最终物理裁判均由原实现执行。

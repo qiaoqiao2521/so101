@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "station": {
+    "platform": "so101",
+    "name": "F2 独立XY复核 place-220-170-0mm",
+    "notes": "固定独立XY布局复核：蓝盘中心(0.22,0.17)m、底座0；方块、内置障碍、盘尺寸和八步程序保持原值。该XY在历史原执行器有通过记录，但当前候选未在此评测。静态合法不代表物理可达。",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101 机械臂",
+        "kind": "robot",
+        "parent": "world",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "pick",
+        "name": "取料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "pick",
+        "position": [
+          0,
+          0,
+          0.01
+        ]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [
+          0,
+          0,
+          0.08
+        ]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [
+          0,
+          0,
+          0.02
+        ]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.22,
+          0.17,
+          0
+        ]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.03
+        ]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.1
+        ]
+      }
+    ],
+    "program": [
+      {
+        "id": "s1",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s2",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s3",
+        "action": "move",
+        "target": "grasp",
+        "seconds": 1
+      },
+      {
+        "id": "s4",
+        "action": "close",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s5",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s6",
+        "action": "move",
+        "target": "release",
+        "seconds": 1
+      },
+      {
+        "id": "s7",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s8",
+        "action": "move",
+        "target": "clear",
+        "seconds": 1
+      }
+    ]
+  }
+}

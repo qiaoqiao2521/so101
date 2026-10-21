@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源；无新增仿真待运行。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY输入现已静态准备，两个新物理回合尚未运行，等待后续明确共享窗口。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -152,3 +152,23 @@ F2c补充只读阶段计时：nominal transport +0.04s、hold -0.04s，其他段
 三参数的具体边界：运输偏好仅重排既有离散高度，未改变五段走廊；脱离仅截取原路点前缀；IK参数仅换初值，不能直接优化关节路径或接近段。只读源码确认_compute_transport在首条通过完整认证的高度break，然后才统计motion_and_arrival_s（visual_grasp_controller.py:677–729）。因此下一项最小可扩展策略可复用现有_transport_at_height完整认证和motion_duration，对少量已有可行高度按原规划时长排序；默认仍首个可行，保持原worker快照、完成预算及全程物理检查。此处只列待验证方向，尚未改接口或实现；额外认证耗时必须计入规划等待，不能把优化计算隐藏。
 
 后续先由原owner固定独立XY/障碍布局变体，再将相同fixture用于baseline/candidate，不允许候选改场景/裁判。0/10mm仅同布局高度变化，不宣称跨布局提速。当前可交付仍是两轮生成候选的6次原物理通过与反馈链；第三候选仅保留为未测试提案，默认baseline不变。
+
+
+## F2d 独立XY输入已准备，物理未运行
+
+根认可第三候选暂缓，接续要求优先独立变体实际复核；路线成本排序扩展继续只留计划。已新增`experiments/colab-twin/scenarios/factory-loading/layout-place-220-170-0mm.json`，由本owner固定，baseline/candidate2共享此输入。相对baseline-0mm只改place.position=(0.22,0.17,0)m及名称/说明，其他节点逐项相同、八步程序相同；release/clear经原父坐标系解析为(0.22,0.17,0.03)/(0.22,0.17,0.10)m。方块仍(0.24,-0.13,0.01)，原内置障碍及盘尺寸保持；没有增加或移除障碍。
+
+选择依据是STATION_EXECUTOR已有2026-10-20同目标原执行通过记录，优先复用已知可达范围。但旧回合不是此源码/候选的当前证明，也不是完全未见目标；本次只称F2候选的独立XY复核，0/10mm旧例不叫跨布局泛化。
+
+原validate_station静态通过，实际load_route_policy读回baseline(None/13/continuation)、候选2(57mm/10/continuation)及真实cache入口。Python模块检查mujoco_imported=false；没有模型编译、物理推进、浏览器QA、构建或服务重启。
+
+准确argv及静态解析保存在忽略series `experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/prepared.json`，源候选原文副本candidate2-source.py在同目录。两条命令共用同一station，分别给baseline/candidate2独立输出根；候选不修改fixture或评分。当前status=static_pass_physical_not_run，原执行器仍创建每次独立UUID。文件允许二改，不设置内容哈希锁。
+
+待明确窗口后，从SO101交付根按以下顺序运行，MUJOCO_GL=egl：
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-220-170-0mm.json --candidate experiments/colab-twin/route_strategies/baseline.py --output-dir experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/baseline
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-220-170-0mm.json --candidate /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round2/candidate.py --output-dir experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/candidate2
+```
+
+共享窗口当前仍归无人机规划构建/ground对照，FishBot已申请下一窗口先做occupied direct（原1000墙秒上限），via另约。本对话不抢占、不因看到空闲或其他任务终态而自行启动；待后续明确释放再做上面两个新回合，原六例不重跑。接续owner为本SO101原对话。结果需回读原report、真实场景和实际路线，保留失败，不按小差值晋级。Knowledge：already_covered，仍沿用原物理结果与消息/退出码分离原则。

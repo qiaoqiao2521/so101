@@ -46,3 +46,14 @@ F2c执行：
 ## 后续候选与接口边界
 
 根独立审阅六回合后，已将第二轮实际结果和说明错误反馈给同一前台CLI，第三候选57mm/9点/continuation已生成。当前暂缓/not_run，不自动追加仿真或晋级：其收益假设仅再缩少量脱离段，生成说明还混淆持物时长与hold阶段。先保留原owner固定的独立布局复核；再视需要比较现有认证运输高度的motion_duration，评估从“首个可行”扩展到“原认证路线中最短时长”的最小选择接口。仅列计划，未改模型、评分、执行器或原阈值，不恢复训练/50Hz/长扫掠或创建新平台。
+
+## F2d 独立XY变体复核
+
+根接续授权先验证独立配置，不实施路线排序扩展，不重跑原六例。
+
+1. 固定`scenarios/factory-loading/layout-place-220-170-0mm.json`：蓝盘XY从(0.24,0.14)改为(0.22,0.17)m，Z=0；方块、原障碍、其他节点和八步程序不变（complete）。该目标有历史原执行通过记录，但尚未用于本轮候选比较。
+2. 用原`validate_station`静态解析，读取实际baseline与候选2路径/偏好，准备同fixture两条准确argv（complete；未导入MuJoCo，未启动浏览器QA）。
+3. 等无人机/FishBot在途窗口明确释放后，串行baseline→候选2两个完整原物理回合（pending）。候选只读同一输入，不改fixture/裁判/阈值；保留原失败。
+4. 回读真实场景/报告/轨迹、实际采用路线与分段耗时，限定同步和交付（pending）。不按小差值晋级；此处仅独立放置目标复核，不宣称跨布局泛化或20+20。
+
+准备产物：`experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/prepared.json`。共享窗口先由无人机规划构建/ground对照、FishBot已排定occupied direct占用；本owner仅静态配置与文档，收到明确窗口前不运行物理。
