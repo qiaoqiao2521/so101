@@ -1265,6 +1265,29 @@ class VisualGraspController:
                 'replans': self.replans, 'controller_completion_is_task_success': False}
 
 
+def reuse_last_validity(callback):
+    """Reuse the last completed exact state result within one frozen worker."""
+    counters = {'calls': 0, 'hits': 0, 'computations': 0}
+    last_key = None
+    last_result = None
+
+    def cached(q5):
+        nonlocal last_key, last_result
+        counters['calls'] += 1
+        # Snapshot before callback: callbacks may mutate their list argument.
+        key = tuple(q5)
+        if key == last_key:
+            counters['hits'] += 1
+            return last_result
+        result = callback(q5)
+        counters['computations'] += 1
+        last_key, last_result = key, result
+        return result
+
+    cached.counters = counters
+    return cached
+
+
 def _run_transport_plan(rig, snapshot, cancel_event=None):
     """Own all planning data; never construct or mutate the live controller."""
     context = VisualGraspController.__new__(VisualGraspController)
@@ -1286,8 +1309,13 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.plan_reports = []
     context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
     try:
+        validity = context._payload_valid
+        cache = None
+        if snapshot.route_policy.reuse_adjacent_validity:
+            cache = reuse_last_validity(validity)
+            validity = cache
         if cancel_event is not None:
-            original_valid = context._payload_valid
+            original_valid = validity
             def cooperative_valid(q5):
                 if cancel_event.is_set():
                     raise ControllerFailure('transport_planning_cancelled')
@@ -1295,10 +1323,13 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
                 if cancel_event.is_set():
                     raise ControllerFailure('transport_planning_cancelled')
                 return valid
-            context._payload_valid = cooperative_valid
+            validity = cooperative_valid
             if cancel_event.is_set():
                 raise ControllerFailure('transport_planning_cancelled')
+        context._payload_valid = validity
         context._compute_transport(np.asarray(snapshot.q6))
+        if cache is not None:
+            context.plan_reports[-1]['payload_validation_cache'] = dict(cache.counters)
         proposal = TransportPlan(context.transport,
                                  json.dumps(context.plan_reports[-1], allow_nan=False))
     finally:

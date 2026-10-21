@@ -28,7 +28,8 @@ class RoutePolicyTests(unittest.TestCase):
         for options in ({'separation_steps': 0}, {'separation_steps': 14},
                         {'separation_steps': True}, {'separation_steps': 1.5},
                         {'transport_preference_m': float('nan')},
-                        {'transport_preference_m': .2}, {'ik_seed': 'change_tolerance'}):
+                        {'transport_preference_m': .2}, {'ik_seed': 'change_tolerance'},
+                        {'reuse_adjacent_validity': 1}):
             with self.subTest(options=options), self.assertRaises(ValueError):
                 RoutePolicy(**options)
         with self.assertRaises(FrozenInstanceError):
@@ -44,6 +45,22 @@ class RoutePolicyTests(unittest.TestCase):
                 controller._route_ik(xyz, previous)
                 solver.assert_called_once_with(controller.rig, xyz,
                                                previous if mode == 'continuation' else None)
+
+    def test_adjacent_validity_reuses_only_exact_completed_state(self):
+        from visual_grasp_controller import reuse_last_validity
+        calls = []
+        validate = reuse_last_validity(lambda q: calls.append(tuple(q)) or False)
+        self.assertFalse(validate([0., 0., 0., 0., 0.]))
+        self.assertFalse(validate([0., 0., 0., 0., 0.]))
+        self.assertEqual(calls, [(0., 0., 0., 0., 0.)])
+        self.assertEqual(validate.counters, {'calls': 2, 'hits': 1, 'computations': 1})
+
+        def fail(q):
+            raise RuntimeError('original validation exception')
+        failing = reuse_last_validity(fail)
+        with self.assertRaisesRegex(RuntimeError, 'original validation exception'):
+            failing([0.]*5)
+        self.assertEqual(failing.counters, {'calls': 1, 'hits': 0, 'computations': 0})
 
     def test_source_is_executed_fresh_and_records_real_entrypoint(self):
         with tempfile.TemporaryDirectory() as directory:

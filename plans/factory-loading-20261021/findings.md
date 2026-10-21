@@ -53,3 +53,6 @@ F2f200/200原物理2/2通过，但旧CLI2与baseline最终都回退到54mm运输
 0075f323实际两回合均wall_time_limit且未进入运输；不是054收益或退化证据。阶段日志与planning条目不是同一事实：前者包含approach/descend/close，后者仅已有接近规划。原超时保持。高主机负载仅相关证据，process CPU未采集。
 
 优先筛选候选的等值与局部实际成本，通过后才完整原裁判及第二已有工位；淘汰可早停，成功不能靠早停认定。Mint产品动作/发布/运行记录和已有ROS2导出可复用，官方单位与URDF/MuJoCo弧度分开；现有导出不支持运行时任意多点模板。canonical 22 tracked改动及私有数据保持，owner核对后分项收口。详见progress F2g。
+
+## F2h 实测边界
+054只在已知200/200减少失败端点；220/170完整任务无收益。相邻validity复用局部减少147/146次几何调用，但三组完整wall无稳定一致收益，故默认false。候选profile只在冻结worker、单一精确状态、原callback完成时复用；不得跨线程或把wall candidate/base轮次当固定节省。原裁判与所有物理同条件。

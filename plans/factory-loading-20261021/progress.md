@@ -350,3 +350,19 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 ```
 
 Knowledge: already_covered。全局产品组合与Mint收口仍按上一节，不以这次局部成本冒充产品交付。
+
+## F2h 原物理跨工位与相邻认证复用（2026-10-22）
+
+054在200/200新独立A/B `0ee57351...` 2/2原pass：baseline `488f6815...` 76.98sim/112.810wall，候选 `cb06b525...` 76.84/88.075；原search3.437598→1.564480wall s、worker3.504207→1.619765，sim差仅hold152→145。总墙差显著大于search差，不能把24.736s全归因54mm。220/170重测`f5f63a48...` 2/2 pass：baseline `2f350e20...` 75.20sim/68.462wall，候选75.26/69.704，search1.559964→1.521077，实际整回合反差1.243s。结论：54mm是200/200工位条件优化，不是跨工位稳定性能或默认方案；默认保持baseline。
+
+局部`probe_transport_endpoints.py`三次交替：200/200端点medianwall .538936→.035347s；220/170 .026109→.026942s。局部只判暂停点，不能替代完整路线/物理判定。结果在`output/prefer-054-screen-20261022/`。
+
+CLI allocation-only MjData候选在17个原IK目标/seed五次交替精确等值，但medianwall .376892→.381975s，淘汰。CLI首两次DSML/截断及最终有效源全部保留private cache，生产未应用。
+
+新增CLI+owner最小接入的相邻validity复用，开关`reuse_adjacent_validity`默认false，仅`route_strategies/reuse_adjacent_validity.py`开启。只缓存同一冻结worker上一完成的精确q5结果；异常传播，不量化float，cache命中仍位于原取消wrapper内，因此每次调用先/后cancellation检查。200/200生产路径局部148边五轮精确equal，agent回调670→523、medianwall .430670→.324788s。原物理`9481868e...` 2/2 pass，search1.896608→1.578326、worker3.504?→见原t；完整wall69.077→69.624，未获益。220/170 `1d8019a1...` 2/2 pass，search3.030143→1.481029、wall110.717→102.227；反向`fe53ff24...` 2/2 pass，search2.249474→2.002898，但候选完整wall99.579 vs baseline92.273。三组完整任务墙钟方向不一致，故不晋级。所有run原grasp/place/release/return、free-object、video、cleanup均已独立保存；owned_active_remaining=[]。完整局部/轨迹/评测在对应输出。
+
+复跑原物理入口与原`evaluate_station.py`不变；候选：
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-220-170-0mm.json --candidate experiments/colab-twin/route_strategies/reuse_adjacent_validity.py --output-dir <new-dir>
+```
+测试38项通过（transport_worker+route_policy+route_selection），但测试不替代完整物理。下一轮从原report/trace找IK重复或路径认证之外的实证瓶颈；新候选必须先局部等值/成本，再完整原裁判。早停不能记成功。
