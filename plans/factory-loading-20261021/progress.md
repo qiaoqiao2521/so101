@@ -309,3 +309,44 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 ```
 
 该prepared另存同fixture的baseline argv；两项互相独立，不加前序成功门锁。交付仅原审计/计划/说明与这个5行手写静态提案，不改规划器/裁判或全局平台；后续实际窗口由根另约。Knowledge：already_covered，仍区分退出、原物理通过、候选收益及两个时钟，原状态写所属计划。
+
+## F2g 实际054对照未达运输，保留超时证据（2026-10-22）
+
+用户已直接授权持续优化；此前“仅静态/另等授权”的状态被本轮接续替代。研究根明确交资源后，干净1480457源码按0075f323 prepared原baseline→手写prefer054串行实际执行。原场景/裁判/90sim与120wall保持。
+
+| 配置 | run_id | 原判定 | sim秒 | report wall秒 | 运输搜索 |
+|---|---|---|---:|---:|---|
+| baseline | e1d2c7c0-8df4-4034-8dd6-e6fa50097c63 | fail: wall_time_limit | 21.20 | 123.378898 | 未进入 |
+| prefer-054 | 005c610b-6019-4bba-802f-30a04b603491 | fail: wall_time_limit | 19.88 | 123.535861 | 未进入 |
+
+两轮原grasp/place/release均未通过，无安全停机，不能把缺少碰撞误记成完整任务安全成功；同initial_qpos、同原scorer，运输route_search/worker尚未启动，不填0充当提速。物理已到approach/descend/close附近，而planning.json只有approach条目；已纠正先前消息“仅approach规划”的歧义。report wall含终止清理因此可超过120s；没有放宽预算。runner已完成，owned_active_remaining=[]。完整报告、轨迹、录像状态、独立读回均保留该series。
+
+现场/proc/loadavg33.18/26.38/16.84；根另核16逻辑CPU、load42.60/30.39/18.82，额外blender属media-studio，两个python3.12属reviewer统计，均非本SO101，不终止或调整其他owner。高负载与超时相关，但未证明唯一原因。本runner未收集process CPU及逐阶段wall，这些字段标unknown而不事后估计。结论：本组无法判断054算法收益，保留候选、不晋级、不认定算法失败；先局部筛选，低竞争再原同输入A/B。
+
+CLI第5轮已使用现有前台CodeBuddy/deepseek-v4.1-flash，工具关闭；输入原源码及实测搜索1.696311s，其中完整路线1.379748s。方向仅检查每个IK调用新建MjData的开销。首返回虽CLI exit0，却是DSML Bash文本而非JSON补丁；工具未执行，未应用候选。错误原文/receipt保留private round5-ik-workspace并反馈同原CLI纠正，不能记作候选生成成功。
+
+## 用户纠偏：复用能力优先，最小可判定集与Mint收口
+
+1. 当前station_executor.TEMPLATE及validate_station仍逐项限制八步。这是实际边界，不能把界面编辑称通用技能编排。能力接续以现有接近/夹持/运输/释放/脱离回位为动作段，先明确输入、持物前后条件和失败/停止语义，再接现有执行器；不能仅放宽数组长度或删除校验宣称自由组合。实现尚未完成。
+2. 最小可判定集分层：先同原输入的局部等值/规划成本，明确不等值或无成本收益即淘汰；通过才进入固定200/200与220/170已有工位完整对照。等待帧减少单独报告；完整抓放/碰撞/释放/回位及120s原超时仍由原裁判决定。局部提前结束标screen_rejected/incomplete，不能改原score或当成功。后续记录process CPU和分阶段wall，不仅sim/hold；暂不新增调度平台。
+3. canonical projects/so101当前22个tracked变动确含Mint录制大幅重写与两份DOCX删除，另有未跟踪源码/计划。仅核状态与源码，未读凭据配置、未覆盖/提交/删除。PRODUCT_PLAN.md已有产品动作/发布/运行记录；mint_follower_demo/app.py具备对应功能，tools/export_action_to_ros2.py已有官方单位→URDF弧度映射和JointTrajectory/启动模板导出，不能误称为运行时任意轨迹接口。采用同一产品、轻量现场入口与研究工作台两后端的接续方向，优先复用动作资产和结果语义，不把ROS强加Mint。导出不等于当前MuJoCo可执行。
+4. Mint遗留收口owner根Codex（本SO101），已向研究根核在途owner，未确认前保护全部录制、标定、日志和删除状态。最短入口：git diff --stat -- mint_follower_demo；随后app.py/static的代码差异与config单位转换独立检查。录制/登录/串口/业务日志不直接入库；DOCX删除需核实际意图，不擅自恢复或提交。现阶段不因代码存在宣称轻量终端已交付，也不整包git add -A。
+
+Knowledge: already_covered；沿用原物理结果与消息/退出码分离原则。上述状态写本计划，不改研究根三文件。
+
+## F2g 最小判定集已实际运行，淘汰一次无收益改动
+
+新增手写离线工具`probe_transport_endpoints.py`，只重放已保存planning里的snapshot_q6/place/release与同一grasp-planning.xml，调用原solve_pinch_ik；三次baseline/candidate交替计时，含原共同释放端点。没有物理推进，不读取物体真值，不跳过原完整路线认证来批准执行。输出明确physical_success=null/full_route_certified=false。
+
+200/200端点baseline60→57拒绝→54可达，候选先54；median wall0.538936→0.035347s，CPU0.536241→0.035347s。220/170原60可达，候选54可达；median wall0.026109→0.026942s，CPU0.026109→0.026918s，无局部收益。输出`output/prefer-054-screen-20261022/{200-200,220-170}.json`完整保留六条/工位记录。只支持200/200局部减少失败求解，不证明通用/完整路线/整回合提速；不切默认。
+
+CLI5缩窄纠错后实际返回完整allocation-only函数，原文在private round5-ik-workspace/narrow-correction/candidate.py，receipt记录CodeBuddy/deepseek-v4.1-flash、32.043s、exit0。AST与原函数仅可选query=None及条件MjData分配不同；不是手写后冒称模型生成。保存原五运输段的17组精确Cartesian目标及seed（15可达+60/57两不可达），五次交替重复结果精确一致（解与拒绝文本）；median wall0.376892→0.381975s，CPU0.376296→0.381929s。局部无收益，淘汰，不应用生产、不再付完整抓放代价。原失败DSML与截断输出也保留，未隐去。
+
+实际probe及逐输入结果在`output/ik-workspace-screen-20261022/report.json`。CLI6已接该负反馈，下一假设为同一worker内相邻边界q5重复认证；只提出缓存最后一个精确输入，原取消检查仍必须在外层每次运行。尚未接入生产或认定收益。
+
+复跑局部端点（仅筛选，不是物理验收）：
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/probe_transport_endpoints.py --episode experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/baseline/8b42f4a9-4419-451e-9648-622114214b85/episode --candidate experiments/colab-twin/route_strategies/prefer_054.py --output /tmp/so101-endpoint-screen.json
+```
+
+Knowledge: already_covered。全局产品组合与Mint收口仍按上一节，不以这次局部成本冒充产品交付。
