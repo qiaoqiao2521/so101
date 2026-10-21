@@ -10,6 +10,7 @@ class RoutePolicy:
     transport_preference_m: float | None = None
     separation_steps: int = 13
     ik_seed: str = 'continuation'
+    transport_candidates: int = 1
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -22,6 +23,10 @@ class RoutePolicy:
             raise ValueError('Separation selects a prefix of the original 13 waypoints')
         if self.ik_seed not in ('continuation', 'neutral'):
             raise ValueError('IK seed must be continuation or neutral')
+        if (isinstance(self.transport_candidates, bool)
+                or not isinstance(self.transport_candidates, int)
+                or not 1 <= self.transport_candidates <= 3):
+            raise ValueError('Transport compares 1..3 fully certified routes')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

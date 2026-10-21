@@ -32,3 +32,6 @@ F2d固定输入只移动蓝盘XY到(0.22,0.17)m，保持高度/方块/障碍/程
 
 
 F2d独立XY220/170两回合原裁判均通过；候选2较基线少0.22sim s，但原运输规划时长增加0.021567s，总改善主要来自短脱离和hold变化。默认基线保留。当前_transport_at_height已经全程认证，motion_duration已经统一；缺口仅_compute_transport首个可行即break，尚无可选的少量认证路线费用比较，适合只改该外层选择。
+
+
+F2e无需新增规划器或worker协议：现有完整认证与motion_duration可直接复用，RoutePolicy的items快照也自动携带新字段。缺省transport_candidates=1保持首可行，显式2/3稳定选原费用最小者。额外认证开销属于原worker墙钟和实际hold阶段，单独route_search诊断是其子区间；不可拿较短规划时长自动推断更短端到端任务，也不可重复加两个墙钟。42项纯合同/62子测试不替代新物理A/B。

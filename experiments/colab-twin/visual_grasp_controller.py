@@ -675,6 +675,7 @@ class VisualGraspController:
         return solve_pinch_ik(self.rig, xyz, initial if policy.ik_seed == 'continuation' else None)
 
     def _compute_transport(self, q6):
+        search_started = time.perf_counter()
         _, _, current = self._fk(q6)
         place_height = getattr(self, 'place_height_m', 0.)
         release_height = place_height + getattr(self, 'release_pinch_height_m', .023)
@@ -685,8 +686,10 @@ class VisualGraspController:
         policy = getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY)
         heights = policy.transport_heights(heights, place_height)
         attempts = []
+        feasible = []
         for height in heights:
             validation_stage = 'endpoint_ik'
+            candidate_started = time.perf_counter()
             try:
                 # Reject unreachable preferences before certifying every
                 # Cartesian sample. This never certifies an execution edge.
@@ -698,31 +701,46 @@ class VisualGraspController:
                         not str(error).startswith('No vertical pinch IK candidate')):
                     raise
                 attempts.append({'height_m': height, 'status': 'rejected',
-                                 'validation_stage': validation_stage, 'reason': str(error)})
-                if height == heights[-1]:
+                                 'validation_stage': validation_stage, 'reason': str(error),
+                                 'validation_wall_s': time.perf_counter()-candidate_started})
+                if height == heights[-1] and not feasible:
                     raise
             else:
-                attempts.append({'height_m': height, 'status': 'accepted',
-                                 'validation_stage': validation_stage})
-                break
+                validation_wall_s = time.perf_counter()-candidate_started
+                legs = [{'index': index, 'stage': 'lower' if index == len(paths)-1 else 'transport',
+                         'path': points.tolist(), 'waypoint_count': len(points),
+                         'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
+                         'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
+                        for index, points in enumerate(paths)]
+                duration = sum(leg['motion_duration_s']+.6 for leg in legs)
+                attempt = {'height_m': height, 'status': 'accepted',
+                           'validation_stage': validation_stage,
+                           'validation_wall_s': validation_wall_s,
+                           'motion_and_arrival_s': duration, 'selected': False}
+                attempts.append(attempt)
+                feasible.append((duration, height, paths, legs, attempt))
+                if len(feasible) >= policy.transport_candidates:
+                    break
+        # Stable ties retain the original preference order. Only complete-route
+        # successes enter this comparison; extra search never weakens a guard.
+        duration, height, paths, legs, selected = min(feasible, key=lambda item: item[0])
+        selected['selected'] = True
         self.transport = paths
         self.transport_index = 0
-        legs = [{'index': index, 'stage': 'lower' if index == len(self.transport)-1 else 'transport',
-                 'path': points.tolist(), 'waypoint_count': len(points),
-                 'path_length_rad': float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()),
-                 'motion_duration_s': motion_duration(points), 'arrival_guard_s': .6}
-                for index, points in enumerate(self.transport)]
-        duration = sum(leg['motion_duration_s']+.6 for leg in legs)
         self.plan_reports.append({'stage': 'transport_execution_plan', 'planned_at_s': self.last_elapsed,
                                   'place_xy': self.place_xy.tolist(),
                                   'place_height_m': place_height,
                                   'release_world_height_m': release_height,
                                   'route_policy': policy.preferences(),
                                   'transition_height_m': height,
-                                  'transition_height_reason': ('policy_ordered_certified_route' if policy.transport_preference_m is not None
+                                  'transition_height_reason': ('minimum_duration_certified_route' if policy.transport_candidates > 1
+                                                               else 'policy_ordered_certified_route' if policy.transport_preference_m is not None
                                                                else 'original_height' if len(attempts) == 1
                                                                else 'lower_certified_route'),
                                   'transition_attempts': attempts,
+                                  'route_search': {'requested_feasible_routes': policy.transport_candidates,
+                                                   'certified_routes': len(feasible),
+                                                   'wall_s': time.perf_counter()-search_started},
                                   'legs': legs, 'motion_and_arrival_s': duration,
                                   'budget_finish_lower_bound_s': self.last_elapsed+duration+14.,
                                   'budget_note': '14s includes release and minimum original safe-return reservation; necessary only'})

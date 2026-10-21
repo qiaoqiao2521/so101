@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线按原时长选择进入纯软件实现，暂无新物理窗口。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线按原时长选择的软件实现已完成，42 tests / 62 subtests通过；新选项物理A/B未运行，等待独立窗口。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -185,3 +185,21 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 证据在原series `experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/`：pair-results.json含准确argv/实际PID/终态/owned清理，independent-checks.json含原报告与几何/时序对照；两个UUID保留原report/evaluation/trajectory/XML/录像。根亦已独立核对，原失败无覆盖，本轮没有新增物理失败。
 
 F2e接续由根明确授权先做纯软件：复用完整路线认证和原motion_duration，默认首个可行，显式可比较少量可行高度。保持快照/回退/预算/原物理判据，额外认证耗时记录在原worker等待和总墙钟中。暂不模型编译/重native/ROS/build/浏览器QA；新的物理A/B需另获窗口。
+
+
+## F2e 软件实现与合同检查完成，物理待验
+
+新增RoutePolicy.transport_candidates，默认1保留首条完整认证可行路线；显式2/3时沿原高度顺序收集前N条完整可行路线，按原motion_duration加每段0.6s到达守卫稳定取最短。没有替换_transport_at_height、IK、完整五段认证或物理裁判。原高度顺序/回退保留；仅完整通过者入选，等值保持顺序，可行者不足N则保留已认证结果，无可行者原失败，未知错误/取消仍向外传播。
+
+原快照与binding已经通过preferences().items()携带新字段，不改worker或SweepBinding。原90s/14s预算、到达/释放/回位阈值保持。transport计划新增route_search（实际认证数量/请求数量/总墙钟）和各attempt认证耗时/原规划时长/selected，evaluate_station只做诊断透传；原worker等待与总墙钟包含额外搜索，motion_and_arrival不扣除搜索时间，两个墙钟指标不可重复相加。额外认证可能消耗既有预算，物理A/B可失败，不作实时或提速承诺。
+
+手写示例`experiments/colab-twin/route_strategies/shortest_two_routes.py`仅返回transport_candidates=2，其余默认，用于后续单变量A/B；没有将手写示例冒充CLI候选。旧CLI1/2/3未改写，缺省新字段均为1。
+
+轻量验证：`test_route_selection.py`新增11项合成路径/桩认证合同，阻止MjModel.from_xml_path/from_xml_string与MjData构造，覆盖默认不多搜、较短选择、不完整认证不入选、回退不足、等值稳定、原失败/取消传播、目标释放端点仍必需、实际计时、源加载/快照绑定及evaluation失败不变。连同原route_policy/transport_worker/evaluate_station纯软件测试，最终42 tests、62 subtests全部通过（pytest 0.75s）。未构造MuJoCo模型或推进物理，无ROS/Gz/build/浏览器QA。首轮新fixture用了旧同步binding，先缺q6、补q6后缺旧同步状态；已改为本次实际异步binding后通过，未改生产守卫。日志`/tmp/f2e-route-contracts.log`及忽略series副本保留。
+
+未来成对入口已准备于`experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/prepared.json`：同独立XY220/170 fixture，baseline→shortest-two两个argv，MUJOCO_GL=egl。仅stdlib原静态解析与真实load_route_policy读回（mujoco_imported=false），输出根尚未生成物理evaluation。该新选项原物理A/B仍not_run，需无人机另给明确窗口；本次归还窗口不得复用。后续无人机先native48/箱顶取消，再由原owner安排FishBot fixed-direct，不自动抢占。
+
+限定交付包含上述3个源文件、手写示例、纯合同测试和原说明/计划；learning_env、模型、场景fixture、worker生命周期、SweepBinding及其他物理阈值无修改。F2d2/2是旧ef94271上的证据，不能拿它冒充新选择选项通过。Knowledge：already_covered，原物理验收/计时边界原则已覆盖，项目实现状态留本计划。
+
+
+计量补充：候选费用以原冻结worker起态比较，既有入场桥接/重验证仍会重新计算最终motion_and_arrival_s；attempt中记录的是各认证候选的起态费用，不能与桥接后总值硬等同。该选择不是完整任务墙钟优化保证。原桥接、上下文拒绝、14s回位保留与90s预算代码未修改。

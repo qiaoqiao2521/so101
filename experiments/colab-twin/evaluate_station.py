@@ -87,7 +87,7 @@ def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None
         rows = json.loads(planning.read_text())
         result['policy_execution'] = {
             'transport': [{key: row.get(key) for key in ('route_policy', 'transition_height_m',
-                           'transition_attempts', 'motion_and_arrival_s')}
+                           'transition_attempts', 'motion_and_arrival_s', 'route_search')}
                           for row in rows if row.get('stage') == 'transport_execution_plan'],
             'separation': ((status.get('report') or {}).get('release_plan') or {}).get('separation_end')}
     atomic_json(output/'evaluation.json', result)
