@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY输入现已静态准备，两个新物理回合尚未运行，等待后续明确共享窗口。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线按原时长选择进入纯软件实现，暂无新物理窗口。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -172,3 +172,16 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 ```
 
 共享窗口当前仍归无人机规划构建/ground对照，FishBot已申请下一窗口先做occupied direct（原1000墙秒上限），via另约。本对话不抢占、不因看到空闲或其他任务终态而自行启动；待后续明确释放再做上面两个新回合，原六例不重跑。接续owner为本SO101原对话。结果需回读原report、真实场景和实际路线，保留失败，不按小差值晋级。Knowledge：already_covered，仍沿用原物理结果与消息/退出码分离原则。
+
+
+## F2d 独立XY实际2/2通过，窗口已归还
+
+无人机明确释放后，按原prepared两条argv在干净ef94271源码串行运行：baseline `2a5ef58f-0c0b-4cd1-b6ae-5f5dbec9e9af` succeeded/pass，75.26sim/97.781wall；候选2 `5831a62c-5435-4486-a65e-2e03627455ad` succeeded/pass，75.04sim/95.763wall。目标均(0.22,0.17)m，原0高度、方块/障碍/程序/评分不变。runner于08:55:56–08:59:12 UTC完成，两个subprocess均exit0，观测owned活动进程剩余=[]。已立即同时回告无人机与研究协调根归还，未扩批次或重启5187/5192，未跑ROS/Gz/build/浏览器QA。
+
+本owner独立回读原报告/轨迹：两轮grasp/place/controller_done/release_audit通过，无安全停机/障碍接触；free_object=true、weld=mocap=0，末态盘底接触true、双指力0。最大释放XY漂移0.269350mm、脱离后接触力0，回位最大误差0.000101197rad。同初态qpos、contact/planning XML、裁判引用及释放阈值；未重新评分。
+
+实际路线变化：运输60→57mm，规划motion_and_arrival 28.998944→29.020510s（反增0.021567s）；脱离34.153846→28.461538mm。分段差：transport+0.04、lower-0.04、separate-0.16、hold-0.06，其余相同，净-0.22sim。单次局部缩时不晋级，默认仍baseline；这是独立XY任务复核，不代表跨布局泛化。
+
+证据在原series `experiments/colab-twin/output/independent-layout-20261021/92c6ff57-e579-4355-bdf4-069d5fc05100/`：pair-results.json含准确argv/实际PID/终态/owned清理，independent-checks.json含原报告与几何/时序对照；两个UUID保留原report/evaluation/trajectory/XML/录像。根亦已独立核对，原失败无覆盖，本轮没有新增物理失败。
+
+F2e接续由根明确授权先做纯软件：复用完整路线认证和原motion_duration，默认首个可行，显式可比较少量可行高度。保持快照/回退/预算/原物理判据，额外认证耗时记录在原worker等待和总墙钟中。暂不模型编译/重native/ROS/build/浏览器QA；新的物理A/B需另获窗口。
