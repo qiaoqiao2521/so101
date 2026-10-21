@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2首片及F2b已交付。F2c首个CodeBuddy生成候选在两盘高实际2/2通过，尚无稳定提速证据。两worker已结束并立即归还无人机窗口；当前只读审计与前台CLI反馈生成，默认基线保持。
+2026-10-21 F2首片及F2b已交付。F2c首个CodeBuddy生成候选在两盘高实际2/2通过，尚无稳定提速证据。两worker已结束并立即归还无人机窗口；第二候选已生成，后续交替复验与候选2实际评测等待明确新窗口，默认基线保持。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -112,3 +112,6 @@ F2c第二候选已实际生成（前台CodeBuddy一次，28.392s、CLI success�
 F2c补充只读阶段计时：nominal transport +0.04s、hold -0.04s，其他段相同；raised仅hold -0.10s，运输/脱离/回位均无时长差。round1-stage-timing.json保留分段计数，支持暂不把微小总时长差归因路线。两个实际候选源码原文副本保存在同一忽略series的candidate1-source.py、candidate2-source.py，不设置内容锁，也不替代原实际加载路径。
 
 本轮文档交付e277c0d1615b1d5681b6b7604fb2103463f68357已推送并经REST读回一致；源码、默认路线及原评分未变。canonical只同步三份所属计划与忽略series，逐文件确认匹配前次交付后才覆盖，无冲突。
+
+
+资源接续：无人机owner最新明确暂不释放，箱顶取消网页runner仍active且可能接飞行；本对话遵守零新增MuJoCo。后续四回合仍not_run，pending原因是共享仿真资源在途，非物理失败或训练预算。owner仍为SO101本原对话；无人机在cancel实际terminal且进入纯分析后会明确释放2+2或整4回合。收到后最短入口：`python3 /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/run_followup.py --batch repeat`，完成即回告；另获第二窗口后以`--batch round2`运行候选2。若明确整4窗口，可一次`--batch all`。不要因看见terminal或服务空闲而自行执行。运行后回读新evaluation/原report/trajectory及实际路线，再写结果和交付；不把已生成候选称为实际评测完成。
