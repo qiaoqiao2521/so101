@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2首片已交付。F2b最小路线策略插槽与四轮成对物理验证已完成（4/4通过），结果和接续见下文；候选未证明稳定收益，默认基线保持。
+2026-10-21 F2首片及F2b已交付。F2c首个CodeBuddy生成候选在两盘高实际2/2通过，尚无稳定提速证据。两worker已结束并立即归还无人机窗口；当前只读审计与前台CLI反馈生成，默认基线保持。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -79,4 +79,31 @@ F2b推送尝试在45s网络等待后超时，REST仍指向19c17fe，最新本地
 F2b后续推送在命令级HTTP/1.1重试后成功（未修改全局网络），实现05142f2与结果cd6080a已交付；原45s失败记录保留，不将协议切换解释为已证明的网络根因。
 F2c窗口：无人机owner明确当前高墙构建/组件/实飞不可并发，暂不启动新的MuJoCo批次；收到明确释放后接续。已准备两条准确命令于忽略目录 `experiments/colab-twin/output/cli-route-rounds-20261021/5753e421-34d6-4378-9c62-87165b67aa99/prepared.json`。首次prepared路径误放experiments/output，已整体移入受忽略目录并校正argv，未提交或执行旧路径。
 
-F2c可恢复接续（本轮尚未实跑）：候选AST/实际load_route_policy读回完成，CodeBuddy receipt报告requested/reported模型均为deepseek-v4.1-flash、foreground_print=true、tools_disabled=true；这些只证明生成与加载，不是物理成绩。无人机owner明确暂不释放新15分钟批次，后已将两个短回合排在当前计时检查之后；截至本条尚无明确释放消息，因此物理运行数0，下一轮CLI反馈生成也未调用。执行owner仍为本SO101原对话；原线程收到资源释放消息即可用prepared.json两条argv接续，不需重开线程、重跑F2b或新建调度平台。基线固定，出现小增益再补相应布局baseline→candidate交替，之后才把真实结果送前台CLI生成下一候选并评测。
+F2c窗口释放前历史状态（已由下文实跑结果更新）：候选AST/实际load_route_policy读回完成，CodeBuddy receipt报告requested/reported模型均为deepseek-v4.1-flash、foreground_print=true、tools_disabled=true；这些只证明生成与加载，不是物理成绩。无人机owner明确暂不释放新15分钟批次，后已将两个短回合排在当前计时检查之后；截至本条尚无明确释放消息，因此物理运行数0，下一轮CLI反馈生成也未调用。执行owner仍为本SO101原对话；原线程收到资源释放消息即可用prepared.json两条argv接续，不需重开线程、重跑F2b或新建调度平台。基线固定，出现小增益再补相应布局baseline→candidate交替，之后才把真实结果送前台CLI生成下一候选并评测。
+
+
+## F2c 第一轮真实CLI候选结果（2026-10-21）
+
+无人机owner明确释放仅两个MuJoCo回合窗口后，执行series `5753e421-34d6-4378-9c62-87165b67aa99`；两个worker与串行runner在07:53:58 UTC全部结束，已立即回告并归还窗口。没有扩展物理批次、运行Gazebo/ROS/build或重启5187/5192。
+
+候选为根实际生成的 `~/.cache/ros2-factory/codebuddy-so101-20261021/transport_057_full_separation.py`，原文不改。请求/报告模型名均为deepseek-v4.1-flash；实际load路径、entrypoint与worker偏好均匹配57mm/13/continuation。生成receipt只作来源，不代替原物理裁判。
+
+| 场景 | run_id | 原裁判 | sim秒 | wall秒 | 实际运输/脱离mm |
+|---|---|---|---:|---:|---|
+| baseline-0mm | 49d4aa69-2972-4dda-a1b0-3c82975cb162 | pass/succeeded | 74.78 | 66.265 | 57 / 37 |
+| raised-10mm | 9821a567-7e3b-4867-9955-4b68b4dc55b9 | pass/succeeded | 74.34 | 66.860 | 67 / 28.462 |
+
+只读独立回读原report和trajectory：两轮grasp/place/controller_done=true、safety_stop=false、obstacle_contact_steps=0；free_object=true、weld=0、mocap=0，末态蓝盘底接触true、双指力0、物体速度约1e-11m/s。释放审计通过，最大漂移0.297798mm、脱离后最大力0.0155083N，回位最大误差0.000102589rad。各自与F2b baseline的初态qpos、contact/planning XML、裁判路径和释放阈值相同；未重新评分。
+
+不选优：nominal总sim与基线相同，规划运输28.4834s反比基线28.4265s长；raised总sim只少0.10s，实际运输67mm、脱离28.462mm及运输规划28.3197s均与基线相同，尚无几何收益证据。必要交替baseline→candidate复验保留到下一窗口，不在已归还窗口追加。之后的CLI提示必须携带这一不确定性，不拿单次差值当成稳定改善。
+
+产物位于 `experiments/colab-twin/output/cli-route-rounds-20261021/5753e421-34d6-4378-9c62-87165b67aa99/`：prepared.json、round1-results.json、round1-independent-checks.json、两轮原日志、evaluation及UUID完整轨迹/场景/报告/录像。全部受Git忽略。只读脚本首次将planning XML误写为planning-workcell.xml，实际grasp-planning.xml；修正后比较相同，无重跑/改判。
+
+当前接续owner仍为本SO101原对话：以该真实反馈进行同CodeBuddy前台调用生成第二候选，保留私有prompt/stdout/stderr/receipt；实际仿真及raised交替复验等待无人机明确新窗口。无训练、云GPU、实体或默认策略变更。Knowledge：already_covered，沿用现有物理结果与命令完成分离原则。
+
+
+F2c第二候选已实际生成（前台CodeBuddy一次，28.392s、CLI success、is_error=false）：`~/.cache/ros2-factory/codebuddy-so101-20261021/round2/candidate.py`，原文字面量57mm/10点/continuation。相对首CLI候选只改13→10。请求及事件报告模型名为deepseek-v4.1-flash，AST仅纯函数字面量、原RoutePolicy及load_route_policy实际读回通过。prompt包含首轮真实metrics/worker路线/单次噪声边界；原prompt、stdout.json、stderr.txt、parsed-result.json、receipt.json均在该私有目录，不入Git。
+
+生成说明不作为事实：模型将nominal实际57mm误写60mm，附带clearance与因果推断亦未经证实，receipt.review_notes已标明；未改写候选源码或原生成结果。首轮解析错误因CLI JSON顶层为事件list而非dict，已从同一次保存的末尾result事件重解析，未再次调用CLI。候选2物理status仍not_run。
+
+后续4条精确argv已保存series下followup-prepared.json：raised baseline→candidate1两轮，再candidate2两盘高各一轮。无人机已接收下一窗口协调请求；本轮生成期间仅文本CLI，无本机仿真/训练/build。等待明确释放再启动，仍不按小差值选优。

@@ -15,3 +15,6 @@
 复用现有transport/separation快照，以冻结RoutePolicy仅携带三项偏好。候选源码在evaluate_station实际执行，worker只接收选择结果；没有新增插件框架、裁判、模型或内容锁。shorter_route是候选名，不是性能结论：实测4/4通过但运输规划时长稍增，仿真总时长仅少0.20/0.04s，高盘wall增9.128s，不自动替换基线。
 
 F2b只读阶段拆分：原高度候选transport增加0.18s、separate减少0.32s、hold减少0.06s，总减少0.20s；高盘transport增加0.10s、hold减少0.14s，其他段相同，总减少0.04s。hold包含异步规划等待，这些单次总时长小差异不能当成稳定路线优势。stage-timing.json保存于原series目录，未改变物理裁判。
+
+
+F2c首个CodeBuddy候选57mm/13/continuation实际两轮通过。nominal运输改成57mm但motion_and_arrival比60mm基线长约0.0569s，总sim相同；raised首选67mm恰为基线70mm IK失败后的同一路线，运输规划28.3197s、脱离28.462mm亦相同，总sim少0.10s不能归因路线优化。下一候选必须接收实际采用路线和不确定性，baseline保持，微小差值用后续交替复验审查。

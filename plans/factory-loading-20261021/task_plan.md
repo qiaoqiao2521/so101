@@ -30,14 +30,14 @@
 3. 原0mm/10mm各baseline/candidate一轮，串行完整物理评测（complete：4/4原裁判通过）。
 4. 对照结果、最短命令、限定同步、提交推送（complete）。
 
-Next Step：F2c候选已审阅，等无人机高墙窗口明确释放后进行实际评测；默认仍为基线。
+Next Step：F2c首候选两盘高均通过，默认仍为基线；复跑和下一候选实际评测需协调无人机窗口。
 
 ## F2c CLI生成候选接续
 
-厂区根负责用现有CodeBuddy、关闭工具访问，在私有cache生成新候选并给精确路径。本SO101对话继续维护接口与评测；文件到位后只读审查route_preferences范围，再协调窗口并在原0mm/10mm各跑一轮。当前尚未收到候选路径，不提前声称生成或评测通过；不把手写shorter_route冒充CLI生成成果。
+厂区根用现有CodeBuddy、关闭工具访问，在私有cache生成首候选。本SO101对话维护接口与评测，并将实际反馈送同一前台CLI生成下一候选；每次先审查route_preferences范围，再协调窗口实际运行。不把手写shorter_route冒充CLI生成成果。
 
 F2c执行：
 1. 根生成候选与本对话只读范围审查（complete）。
-2. 两盘高候选实际评测及必要交替复验（待窗口）。
-3. 同一CodeBuddy前台CLI使用实际物理反馈生成下一候选并实际评测（pending）。
+2. 首候选两盘高实际评测（complete：2/2原裁判通过）；raised微小差异的baseline→candidate交替复验（pending，等待后续窗口）。
+3. 同一CodeBuddy前台CLI使用实际物理反馈生成下一候选（complete，57mm/10点/continuation）；下一候选两盘高实际评测（pending）。
 4. 保留所有失败、不晋级默认策略、源代码/结果/receipt关联及交付（pending）。
