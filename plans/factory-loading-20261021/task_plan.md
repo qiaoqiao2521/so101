@@ -67,7 +67,10 @@ F2c执行：
 2. 既有高度列表、失败回退、未知错误/取消传播、快照上下文、90s/14s预算与原物理检查保持。若可行路线不足N条，保留已认证者；无可行路线保留原失败。
 3. 报告每个实际尝试的认证耗时/原规划时长、最终选择及整个搜索墙钟；复用原异步worker的等待/墙钟计量，不隐藏额外规划成本。只增加评价JSON的诊断透传，不改裁判。
 4. 已用不构造MuJoCo模型的合成路径/桩认证完成42 tests / 62 subtests；覆盖：默认不多搜、较短者选择、仅完整认证可参选、回退不足N、等值稳定、未知错误传播、快照绑定新字段与时间记录。当前禁止模型编译、重native、ROS/build或浏览器QA。
-5. 新策略物理A/B等无人机另给明确窗口；不重跑旧八例，不自动晋级或修改场景。不重写规划器、不新造调度平台。
+5. 新策略已在无人机另给的两回合窗口完成A/B（2/2原物理通过，但额外计算使总sim增加0.70s）；默认仍为1。不重跑旧八例、不自动晋级或修改场景。不重写规划器、不新造调度平台。
 
 
-F2e软件产物：RoutePolicy新增transport_candidates=1（默认首条），允许显式2/3比较；_compute_transport复用原完整认证与费用，只在完整通过结果中稳定取min。route_search/attempt诊断透传evaluation。手写示例route_strategies/shortest_two_routes.py只设2，不是CLI生成或已物理通过的候选。准确未来A/B命令与纯软件报告保存在`experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/prepared.json`。该A/B仍pending；旧八个物理回合不重跑。
+F2e软件产物：RoutePolicy新增transport_candidates=1（默认首条），允许显式2/3比较；_compute_transport复用原完整认证与费用，只在完整通过结果中稳定取min。route_search/attempt诊断透传evaluation。手写示例route_strategies/shortest_two_routes.py只设2，不是CLI生成或已物理通过的候选。准确未来A/B命令与纯软件报告保存在`experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/prepared.json`。该A/B已实际完成并归还窗口，负收益不晋级；旧八个物理回合不重跑。
+
+
+F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第二条57mm原费用更高。两轮原物理通过，但候选hold+0.70sim s、worker+1.155632wall s，无路线收益，不晋级。根接续授权在同一前台CodeBuddy DeepSeek CLI仅做一次文本反馈，允许返回可证伪候选或明确无收益/转向理由；优先说明何种已有任务条件值得检查，不盲追hold噪声、不故意削弱基线。该后续不追加物理/native/服务，下一回合另约。

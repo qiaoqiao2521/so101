@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线按原时长选择的软件实现已完成，42 tests / 62 subtests通过；新选项物理A/B未运行，等待独立窗口。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线的软件检查42 tests / 62 subtests通过，新选项物理A/B也已2/2通过；本布局多搜仅增加等待，默认1保持，两个进程已终态并归还窗口。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -203,3 +203,25 @@ F2e接续由根明确授权先做纯软件：复用完整路线认证和原motio
 
 
 计量补充：候选费用以原冻结worker起态比较，既有入场桥接/重验证仍会重新计算最终motion_and_arrival_s；attempt中记录的是各认证候选的起态费用，不能与桥接后总值硬等同。该选择不是完整任务墙钟优化保证。原桥接、上下文拒绝、14s回位保留与90s预算代码未修改。
+
+
+## F2e 新版本原物理A/B实际完成：功能通过，未获提速
+
+在无人机明确释放、协调根确认的同一两回合窗口中，只运行原prepared两个argv。干净源码a089eae，两轮同XY220/170 fixture，原90s/14s预算、模型/裁判/阈值不变。runner于09:29:48–09:31:38 UTC完成，两个subprocess均exit0，已观测owned活动进程剩余=[]，立即同时回告无人机与研究协调根归还，无扩批次/旧例重跑、无5187/5192服务重启、无ROS/Gz/build/浏览器QA。
+
+| 候选 | run_id | 原裁判 | sim秒 | 总wall秒 | 搜索wall秒 | worker wall秒 |
+|---|---|---|---:|---:|---:|---:|
+| baseline（认证1条） | be979351-8463-4156-a96e-82fcd9901d6a | succeeded/pass | 75.20 | 53.539450 | 1.110915 | 1.156478 |
+| 手写shortest-two（认证2条） | 4a730145-f108-412b-a1ae-d0fe3d388d64 | succeeded/pass | 75.90 | 54.801624 | 2.272846 | 2.312110 |
+
+实际候选加载/entrypoint与偏好对应baseline.py（transport_candidates=1）和手写shortest_two_routes.py（2），不冒充CLI生成。baseline完整认证60mm；shortest-two完整认证60mm、57mm，原起态费用分别28.998936900/29.020503877s，正确选较短60mm，第二条selected=false。两轮最终桥接费用28.998943327/28.998948604s，微小差来自入场桥接，不是搜索费用漏记。两轮实际脱离均34.153846mm、同原IK回退理由。
+
+独立原报告/trajectory读回：两轮passed/grasp/place/controller_done/release_audit=true，无安全停机/障碍接触；free_object=true、weld=mocap=0，末态盘底真实接触、双指力0，最大释放XY漂移0.269188mm、脱离后接触力0，回位最大误差0.000101077rad。原初态qpos、contact/planning XML、裁判引用及release阈值逐项相同，运行时Git干净；未重新评分。
+
+额外计算实际没有隐藏：stage hold从2.88→3.58s，其他阶段逐项相同，净+0.70sim s；transport request→admission从0.76→1.46sim s。搜索+1.161931wall s、worker+1.155632wall s、整回合+1.262174wall s；这些指标重叠，不重复相加。原worker joined=true、cleanup_unconfirmed=false，任务/runner与已观测子进程都终态。report.hold_duration_s31.98/32.68s仍指持物累计，不当作等待阶段。
+
+决定：功能和两条完整认证/选择/执行链已验证；该布局首可行已经更短，多搜没有路线收益，反增等待。默认transport_candidates=1保持，不晋级，不因测试通过宣称优化成功，也不为寻找胜利追加3路搜索或重跑旧八例。每策略一次观察，不推出其他布局必然无收益或全局泛化结论。
+
+证据保存在原series `experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/`：pair-results.json含实际argv/PID/终态/owned检查，independent-checks.json含原报告/几何/阶段/worker审计，两个UUID保留evaluation、原report/trajectory/planning/XML/录像。协调根亦已独立读回，默认保留结论一致。物理完成后仅更新手写示例的过时docstring与文档，运行逻辑未再修改；无新物理失败被覆盖。
+
+根接续要求仅一次同前台CodeBuddy DeepSeek文本反馈：将以上负收益、worker成本、新字段范围及持物/hold边界送回，允许明确无候选/转向；不得改裁判、制造较弱基线或追逐hold噪声。当前先完成本pair所属审计/提交推送，然后仅文本/静态准备，不追加物理/native/服务，下一窗口另约。Knowledge：already_covered，原物理/开销/消息边界原则已覆盖。

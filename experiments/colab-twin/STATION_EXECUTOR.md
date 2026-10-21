@@ -47,7 +47,7 @@
 
 可选`transport_candidates`默认为1，保留首条完整认证可行路线。设为2或3时，沿原高度顺序寻找前N条完整可行路线，按原`motion_duration`加各段0.6s到达守卫取最短；等值保留原顺序。拒绝的高度不计入N，原高度回退列表保留；可行数量不足N时使用已认证者，无可行路线或未知错误仍明确失败。原90s/14s预算、异步快照和物理检查不变。
 
-手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项通过纯软件合同检查，尚未做新物理A/B，不代表更快或已通过抓放。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。
+手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项在2026-10-21独立XY的baseline/shortest-two两个完整物理回合均通过，但都选择60mm路线；多搜一条使该次hold增加0.70sim秒，默认仍为1，不将其当作提速成果。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。
 
 ```bash
 ~/.cache/so101-graspgenx/upstream/.venv/bin/python \

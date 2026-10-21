@@ -1,4 +1,4 @@
-"""Manual diagnostic option; original physics A/B has not run."""
+"""Manual diagnostic option comparing two fully certified route costs."""
 
 
 def route_preferences():
