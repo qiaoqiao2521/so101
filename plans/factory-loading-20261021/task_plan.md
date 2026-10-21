@@ -92,7 +92,14 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 
 1. 新fixture `experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json`，只改place.position、名称和说明，原八步程序/方块/障碍/裁判保持（complete）。
 2. 原validate_station解析两个工位，逐项记录相同/不同条件；真实load_route_policy读取baseline及原CLI候选2，缺省transport_candidates仍1（complete）。未导入MuJoCo，未构造模型，未发新模型调用。
-3. 保存可复跑argv、EGL环境与独立UUID输出根（complete），当前两回合physical_not_run，不将历史可达或静态合法当成当前物理成功/泛化/性能证据。
-4. 最小JSON/parser/路径检查、限定canonical同步、所属提交推送并回告（本轮收尾）。后续实际运行另约范围和明确窗口，不新平台/门禁/调度服务，不要求baseline先成功才允许候选运行。
+3. 保存可复跑argv、EGL环境与独立UUID输出根（complete）；准备时为physical_not_run，后来根明确窗口内的两回合已原物理2/2通过，不以静态合法推导泛化/性能。
+4. 静态交付5822529已完成最小检查/限定同步/提交推送及回告；后续根授权的两回合也已终态清理并归还。当前仅备下一静态提案，新物理另约，不加平台/门禁或baseline前序成功要求。
 
 记录位于忽略series `experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/`：prepared.json含原入口两条准确argv，condition-comparison.json含全部节点/程序/父坐标差异，cli-candidate2-source.py保留原候选文本副本。执行owner仍为本SO101原对话，根协调后续窗口；当前不物理/ROS/build/浏览器QA，也不构造MuJoCo模型。
+
+
+## F2f 当前实际结果与下一静态方向
+
+根明确给的两回合窗口已执行完：干净5822529、同200/200/0mm输入，baseline/旧CLI2均原完整物理通过（77.04/77.00sim秒；81.985/111.061wall秒）。两者实际同54mm运输、25.615mm脱离；差仅hold -0.04sim，默认不变。两个subprocess/runner终态与owned清理已核，立即向根/无人机归还，无扩批次/新模型调用。
+
+根在独立读原数据后仅要求下一静态方向，已备手写`route_strategies/prefer_054.py`：只改transport_preference_m为.054，其他维持baseline的13/continuation/1。目标是减少当前已测失败的60mm/57mm端点IK尝试，非缩短运动路径。原loader与已观测高度顺序重排检查通过，备选不删除、完整认证不省略。静态prepared和原评测A/B argv位于`experiments/colab-twin/output/prefer-054-static-20261022/0075f323-8e42-4e49-947e-34bd91db3ef7/`；该新提案physical_not_run，未构造模型，需另获范围/窗口才运行。不扫参数，不改judge，不据单次端点耗时承诺总收益。

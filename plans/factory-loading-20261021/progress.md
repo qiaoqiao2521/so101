@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-22 F2f第二放置工位200/200/0mm已固定并通过原静态parser/真实loader检查，同220/170工位的相同/不同条件与未来成对argv已保存。当前不构造模型、不运行物理/ROS/build/浏览器QA、不调用新模型，可达性和收益仍待原物理评测。此前F2e负收益与默认1保留结论不变。
+2026-10-22 F2f第二工位200/200/0mm的baseline与旧CLI2原物理2/2通过，实际路线相同，未性能晋级；owned清理后窗口已归还。按根要求仅静态准备prefer_054单变量提案及原评测入口，该新提案未运行/未构造模型，无新模型调用。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -275,3 +275,37 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 ```
 
 当前只静态软件，没有模型编译、MuJoCo推进、物理、ROS/build、浏览器QA、服务操作或新模型调用。执行owner本SO101对话，根负责后续资源协调；两条argv共用同一fixture及原判据，不加前序成功门禁、内容锁、调度平台或新原生队列服务。旧任务与负收益证据保留；本工位未测可达/收益明确待验，不宣称泛化或性能。Knowledge：already_covered，沿用原静态/物理结果边界原则，当前项目状态仅写本计划。
+
+
+## F2f 第二放置工位实际2/2通过（2026-10-22）
+
+协调根明确分配的有限两回合窗口内，干净5822529源码按原prepared串行运行，同200/200/0mm fixture、原裁判/模型/碰撞/90s与墙钟预算保持。runner在北京时间2026-10-22 01:27:49–01:31:05完成，两个subprocess均exit0，已观测owned活动进程剩余=[]。已立即同时回告协调根与无人机明确归还，不扩批次、不测试旧候选3、不扫参数或新模型，不动5187/5192或他仓在途。
+
+| 配置 | run_id | 原终态/判定 | sim秒 | wall秒 | 搜索wall秒 | worker wall秒 |
+|---|---|---|---:|---:|---:|---:|
+| baseline | 8b42f4a9-4419-451e-9648-622114214b85 | succeeded/pass | 77.04 | 81.985163 | 1.696311 | 1.764526 |
+| 原CLI候选2 | d0e2f4f1-b148-4355-ac1f-0099f5592904 | succeeded/pass | 77.00 | 111.061456 | 2.835881 | 2.912566 |
+
+本owner独立回读原report/trajectory/resolved_station/XML：两轮passed/grasp/place/controller_done/release_audit=true，无安全停机/障碍接触；free_object=true、weld=mocap=0，末态盘底真实接触、双指力0、物体近静止。最大释放XY漂移0.267353mm、脱离后接触力0，回位最大误差0.000101346rad。同初态qpos、resolved_station、contact/planning XML、原scorer及release阈值，原90s/14s预算不变。两轮录制器complete=true，captured/encoded均482帧；没有用编码元数据代替物理判据。
+
+实际执行：两者60mm、57mm端点IK均拒绝，再完整认证54mm。baseline尝试顺序60→57→54，CLI2为57→60→54；原起态路线费用均30.508508541s，最终入场桥接后30.508516595/30.508516296s。baseline请求37mm脱离、CLI2请求28.461538mm，均在下一IK不可达后原安全回退至25.615385mm。不是修改目标或放宽守卫强行成功。
+
+原阶段计数仅hold155→153拍（3.10→3.06s，-0.04sim），其他阶段样本数相同，不能称逐点轨迹相同；transport request→admission0.98→0.94sim s。report.hold_duration_s33.56/33.52s是物理持物累计，不当成等待阶段。CLI2总wall反增29.076294s，搜索与worker分别增1.139570/1.148040wall s；这些指标重叠，不能重复相加或把全部wall差归因已定位的规划因素，剩余墙钟成因未诊断。本轮不晋级，默认baseline保持。
+
+原产物在`experiments/colab-twin/output/station-family-20261022/6c536ef6-e8a1-4846-82cb-c22d474726eb/`：pair-results.json含精确argv/实际PID/终态/owned检查，independent-checks.json含原物理/释放/阶段/worker/场景对照；两个UUID完整保留evaluation、原report/trajectory/planning/XML/录像。根亦已独立读原文件确认。没有新增物理失败被覆盖；这两个业务工位的有限复核不构成广泛泛化或性能证明。
+
+## F2f 下一候选仅静态提出：优先已测可行54mm
+
+根要求只静态提出一个直接作用于已测瓶颈、复用现有接口的方向及原评测入口。已新增手写`experiments/colab-twin/route_strategies/prefer_054.py`，仅返回transport_preference_m=.054，其余为baseline默认separation_steps13、continuation、transport_candidates1；并非CLI/模型生成，不激活为默认。
+
+依据：当前baseline失败的60/57mm端点IK实际分别耗时0.150964/0.154562wall s，合计0.305526s；旧CLI2也做了相同两次拒绝，但耗时不同，不当固定节省承诺。方向是用原transport_heights把已完整认证的54mm移到首位，若它仍可行则避免前面两次失败求解；不删除其他高度、不省略共同释放端点或全路线认证、IK/碰撞/预算均不变。该候选不试图改变运输几何，主要完整认证工作仍保留；实际worker/整回合净收益可能不存在，需未来原A/B裁决。
+
+原load_route_policy实际加载新文件，参数为.054/13/continuation/1。用当前记录的高度前缀60/57/54静态重排为54/60/57，原前缀各选择完整保留；原类本身仍保留全部其余回退。原validate_station解析同200/200输入通过，mujoco_imported=false，没有构造新模型、物理/native/ROS/build/浏览器QA/服务或新模型调用。
+
+静态证据与未来同输入准确argv在`experiments/colab-twin/output/prefer-054-static-20261022/0075f323-8e42-4e49-947e-34bd91db3ef7/prepared.json`，新候选原文副本在同目录。status=static_proposal_physical_not_run；本次窗口已归还，不在本轮运行新候选或基线重测。原入口不变，未来明确范围/窗口后可复用：
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-200-200-0mm.json --candidate experiments/colab-twin/route_strategies/prefer_054.py --output-dir experiments/colab-twin/output/prefer-054-static-20261022/0075f323-8e42-4e49-947e-34bd91db3ef7/prefer-054
+```
+
+该prepared另存同fixture的baseline argv；两项互相独立，不加前序成功门锁。交付仅原审计/计划/说明与这个5行手写静态提案，不改规划器/裁判或全局平台；后续实际窗口由根另约。Knowledge：already_covered，仍区分退出、原物理通过、候选收益及两个时钟，原状态写所属计划。

@@ -41,7 +41,7 @@
 
 [独立XY复核输入](scenarios/factory-loading/layout-place-220-170-0mm.json)把蓝盘中心改为(0.22,0.17)m、高度0，其他节点、内置障碍和程序保持原值。该输入在2026-10-21的baseline/candidate2两个完整物理回合均通过（75.26/75.04sim秒）。每策略仅一次观察，默认基线保持；历史记录或本次局部缩时不代替其他布局验收。
 
-[第二放置工位输入](scenarios/factory-loading/layout-place-200-200-0mm.json)把蓝盘中心改为(0.20,0.20)m、高度0，与220/170工位共用原程序、方块、障碍和裁判。2026-10-22仅完成原静态parser及baseline/原CLI候选2真实loader检查，当前版本的可达性、物理结果和收益未测；未来比较须让两策略读取同一fixture。
+[第二放置工位输入](scenarios/factory-loading/layout-place-200-200-0mm.json)把蓝盘中心改为(0.20,0.20)m、高度0，与220/170工位共用原程序、方块、障碍和裁判。2026-10-22的baseline/原CLI候选2同输入完整回合均通过（77.04/77.00sim秒），都采用54mm运输和25.615mm脱离；0.04秒差仅在hold，默认保持，不宣称性能或泛化。
 
 ### 最小路线候选
 
@@ -49,7 +49,7 @@
 
 可选`transport_candidates`默认为1，保留首条完整认证可行路线。设为2或3时，沿原高度顺序寻找前N条完整可行路线，按原`motion_duration`加各段0.6s到达守卫取最短；等值保留原顺序。拒绝的高度不计入N，原高度回退列表保留；可行数量不足N时使用已认证者，无可行路线或未知错误仍明确失败。原90s/14s预算、异步快照和物理检查不变。
 
-手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项在2026-10-21独立XY的baseline/shortest-two两个完整物理回合均通过，但都选择60mm路线；多搜一条使该次hold增加0.70sim秒，默认仍为1，不将其当作提速成果。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。
+手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项在2026-10-21独立XY的baseline/shortest-two两个完整物理回合均通过，但都选择60mm路线；多搜一条使该次hold增加0.70sim秒，默认仍为1，不将其当作提速成果。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。另有手写静态提案`route_strategies/prefer_054.py`，只把54mm移到高度顺序首位，针对200/200/0mm工位已测失败的60/57mm端点IK尝试；原回退、完整认证及其他默认值不变。此提案尚未物理运行，不承诺提速。
 
 ```bash
 ~/.cache/so101-graspgenx/upstream/.venv/bin/python \
