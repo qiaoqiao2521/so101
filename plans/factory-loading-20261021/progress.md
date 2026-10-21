@@ -78,3 +78,5 @@ F2b推送尝试在45s网络等待后超时，REST仍指向19c17fe，最新本地
 
 F2b后续推送在命令级HTTP/1.1重试后成功（未修改全局网络），实现05142f2与结果cd6080a已交付；原45s失败记录保留，不将协议切换解释为已证明的网络根因。
 F2c窗口：无人机owner明确当前高墙构建/组件/实飞不可并发，暂不启动新的MuJoCo批次；收到明确释放后接续。已准备两条准确命令于忽略目录 `experiments/colab-twin/output/cli-route-rounds-20261021/5753e421-34d6-4378-9c62-87165b67aa99/prepared.json`。首次prepared路径误放experiments/output，已整体移入受忽略目录并校正argv，未提交或执行旧路径。
+
+F2c可恢复接续（本轮尚未实跑）：候选AST/实际load_route_policy读回完成，CodeBuddy receipt报告requested/reported模型均为deepseek-v4.1-flash、foreground_print=true、tools_disabled=true；这些只证明生成与加载，不是物理成绩。无人机owner明确暂不释放新15分钟批次，后已将两个短回合排在当前计时检查之后；截至本条尚无明确释放消息，因此物理运行数0，下一轮CLI反馈生成也未调用。执行owner仍为本SO101原对话；原线程收到资源释放消息即可用prepared.json两条argv接续，不需重开线程、重跑F2b或新建调度平台。基线固定，出现小增益再补相应布局baseline→candidate交替，之后才把真实结果送前台CLI生成下一候选并评测。

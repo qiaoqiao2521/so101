@@ -13,3 +13,5 @@
 ## F2b 策略选择
 
 复用现有transport/separation快照，以冻结RoutePolicy仅携带三项偏好。候选源码在evaluate_station实际执行，worker只接收选择结果；没有新增插件框架、裁判、模型或内容锁。shorter_route是候选名，不是性能结论：实测4/4通过但运输规划时长稍增，仿真总时长仅少0.20/0.04s，高盘wall增9.128s，不自动替换基线。
+
+F2b只读阶段拆分：原高度候选transport增加0.18s、separate减少0.32s、hold减少0.06s，总减少0.20s；高盘transport增加0.10s、hold减少0.14s，其他段相同，总减少0.04s。hold包含异步规划等待，这些单次总时长小差异不能当成稳定路线优势。stage-timing.json保存于原series目录，未改变物理裁判。
