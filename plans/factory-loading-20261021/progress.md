@@ -1,7 +1,7 @@
 # Progress
 
 ## Current
-2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线的软件检查42 tests / 62 subtests通过，新选项物理A/B也已2/2通过；本布局多搜仅增加等待，默认1保持，两个进程已终态并归还窗口。
+2026-10-21 F2c两轮真实CLI生成与物理反馈接续已完成，本轮6/6原裁判通过。第二候选原高度仅观察到局部脱离缩时，默认基线保持。四个后续worker已全部结束并归还资源。F2d独立XY成对实际2/2通过并归还窗口。F2e少量认证路线的软件检查42 tests / 62 subtests通过，新选项物理A/B也已2/2通过；本布局多搜仅增加等待，默认1保持，两个进程已终态并归还窗口。一次负收益CLI文本反馈返回no_candidate，已独立纠错，无新可执行候选或待运行回合。
 
 ## Done
 - 新增place世界Z作为非负蓝盘底座高度。真实/规划XML、实体底座、编辑预览、控制器、异步快照与评分已贯通，默认0兼容。
@@ -187,7 +187,7 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 F2e接续由根明确授权先做纯软件：复用完整路线认证和原motion_duration，默认首个可行，显式可比较少量可行高度。保持快照/回退/预算/原物理判据，额外认证耗时记录在原worker等待和总墙钟中。暂不模型编译/重native/ROS/build/浏览器QA；新的物理A/B需另获窗口。
 
 
-## F2e 软件实现与合同检查完成，物理待验
+## F2e 软件阶段记录（当时物理待验）
 
 新增RoutePolicy.transport_candidates，默认1保留首条完整认证可行路线；显式2/3时沿原高度顺序收集前N条完整可行路线，按原motion_duration加每段0.6s到达守卫稳定取最短。没有替换_transport_at_height、IK、完整五段认证或物理裁判。原高度顺序/回退保留；仅完整通过者入选，等值保持顺序，可行者不足N则保留已认证结果，无可行者原失败，未知错误/取消仍向外传播。
 
@@ -225,3 +225,22 @@ F2e接续由根明确授权先做纯软件：复用完整路线认证和原motio
 证据保存在原series `experiments/colab-twin/output/route-selection-ab-20261021/9d8a71f1-d133-41a5-922e-b0957c261237/`：pair-results.json含实际argv/PID/终态/owned检查，independent-checks.json含原报告/几何/阶段/worker审计，两个UUID保留evaluation、原report/trajectory/planning/XML/录像。协调根亦已独立读回，默认保留结论一致。物理完成后仅更新手写示例的过时docstring与文档，运行逻辑未再修改；无新物理失败被覆盖。
 
 根接续要求仅一次同前台CodeBuddy DeepSeek文本反馈：将以上负收益、worker成本、新字段范围及持物/hold边界送回，允许明确无候选/转向；不得改裁判、制造较弱基线或追逐hold噪声。当前先完成本pair所属审计/提交推送，然后仅文本/静态准备，不追加物理/native/服务，下一窗口另约。Knowledge：already_covered，原物理/开销/消息边界原则已覆盖。
+
+
+## F2e 一次负收益CLI反馈：无新候选，理由独立纠错
+
+按根授权，在pair审计8ad596f提交推送、REST读回后，仅前台调用同CodeBuddy一次：请求/事件报告模型均deepseek-v4.1-flash，tools禁用、无session持久化，21.884509s，CLI success/is_error=false。真实反馈含两候选/两高度原费用、route_search、worker、request→admission、全部阶段和总sim/wall，并明确持物累计/hold阶段、费用/墙钟的不同。最终decision=no_candidate、source=null，因此未创建新候选源码、未调用任何新物理/native/服务。
+
+原prompt/stdout/stderr/parsed-result/receipt仅保留私有`~/.cache/ros2-factory/codebuddy-so101-20261021/round4/`；series中的model-feedback-round4.json保存来源、原决定与本owner审计，均受Git忽略。接受当前pair不出新可执行候选、默认1保留，不把该文本结论称为全局最优或物理淘汰证明。
+
+独立纠错已写receipt.owner_review_notes并保留原文：
+- “没有更短脱离前缀”错误；1..13仍可选，先前独立XY prefix10已观察到更短separate阶段，34.154mm IK回退不消灭更低前缀。
+- “neutral已由之前结果排除”无证据；此前物理候选都continuation，neutral只有接口合同。
+- “四字段已无任何更优可能”过度外推；本pair只比较60/57mm，未覆盖其他高度/布局或IK分支。
+- 模型建议附加箱体迫使不同高度走新detour，但现有_transport_at_height仍是固定五段XY走廊，只改变高度；130mm箱体可能把全部高度堵住，不会自动生成新绕行，未采用该布局建议。
+- 不采纳其“baseline必须先成功否则不跑候选”的新前序门控；既有独立评测不新增这项锁。失败保留。
+- 模型给的固定盈亏阈值混合sim/wall时间，且只来自一次观察，不作为准入；阶段采样时长相等不等于轨迹逐位相同，也不能称原规划浮点费用低于某个统一测量分辨率。
+
+仅保留可证伪任务条件的范围说明：同一独立固定任务内，首个可行高度的关节路径费用需实质大于另一完整可行高度，并在实际原回合中覆盖附加认证等待。placeXY变化可改变IK姿态/路径曲率；历史已执行(.20,.20)m可作为未来原owner参考点，当前可达性/费用反转未测，不创建或运行新fixture，不故意削弱默认基线来制造胜利。当前五段固定走廊本身不提供新的XY绕行候选；额外加箱体不能当作这项能力已有。
+
+收尾：本pair2/2原物理通过、负收益保留、默认1不变、一次文本反馈已审。本切片无新待运行回合/独立后台Agent/轮询服务，不为继续工厂强造候选。canonical只同步所属文件与忽略证据，其他跟随器/设备工作保留；Knowledge：already_covered，物理/计量/模型说法需独立核对原则沿用已有知识。
