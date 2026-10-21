@@ -81,3 +81,6 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 原pair审计已提交推送8ad596f后，同一前台CodeBuddy DeepSeek只调用一次（21.8845s、success、source=null/no_candidate）。接受“当前pair不提出新可执行候选”这一范围内决定，默认1保持；不采纳它关于参数空间已耗尽、无更短前缀、neutral已验证或箱体可生成新detour的错误/无证据断言，不新增前序成功门锁或固定盈亏阈值。
 
 仅保留待核条件说明：已有placeXY可改变关节路径费用；历史已执行(.20,.20)m可作为将来原owner选点的参考，但当前没有新fixture/模型编译/物理任务，不承诺首可行会劣于下一条。需要的证据是同一固定任务中至少两条原路线完整可行、原费用有实质反转且端到端节省能覆盖实际额外等待；附加障碍只可能影响当前固定走廊可行性，不自动产生新XY绕行。本切片到此无待运行回合；新的行动由后续明确范围与窗口接续。
+
+
+接续最短入口（当前不执行）：先读本计划F2e结论、`progress.md`末两节和忽略series的`model-feedback-round4.json`；round4 source=null，没有新候选可运行。由原owner选定下一项业务任务后，复制现有Station配置并只做原validate_station静态解析，用原load_route_policy检查单变量候选，生成新的UUID输出目录及baseline/candidate准确argv。不得复用已完成9d8a71f1的pair-results或将旧回合当下一轮。场景由owner固定，候选只读同一输入，仍沿现有前台CLI/原evaluate_station，不设前序成功门锁、不另造平台。当前窗口仍归无人机，未释放SO/F1；新的原物理回合另获明确窗口后执行。
