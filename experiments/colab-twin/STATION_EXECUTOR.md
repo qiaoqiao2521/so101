@@ -65,6 +65,35 @@
 
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 
+### 能力段与局部判定
+
+工作站 `program` 可以直接保存原八步原子动作，也可以保存三段能力：
+
+```json
+"program": [
+  {"id": "s1", "capability": "pick", "seconds": 1},
+  {"id": "s2", "capability": "transfer", "seconds": 1},
+  {"id": "s3", "capability": "place", "seconds": 1}
+]
+```
+
+验证时分别展开为 `open→approach→grasp→close`、`approach→release`、`open→clear`，由同一控制器执行。当前只接受完整抓放组合；缺段、重复、错误次序、原子动作与能力段混写都会在模型装载前明确失败。`station_executor.py --describe-json` 的 `segments` 是网页读取的能力目录，不是任意代码执行入口。
+
+[能力段0mm工位](scenarios/factory-loading/capability-segments-0mm.json)只把原程序的表达从八条原子动作改成 `pick→transfer→place`，节点、坐标、方块、障碍和任务目标均与原高度工位相同。2026-10-22 该输入完成原完整物理回合 `1fccf040-0dc6-49e7-9502-37e071273bb1`：74.78sim/60.748wall秒，抓取、放置、静稳、释放脱离与回位均通过，安全停机0、障碍接触0。
+
+候选局部筛选可用：
+
+```bash
+python3 experiments/colab-twin/factory_minimum_suite.py \
+  --baseline baseline-measurements.json \
+  --candidate candidate-measurements.json \
+  --output screen.json
+```
+
+两份输入均含 `measurements` 数组；每对记录 `source`、原 `verdict`、`output_equivalent`、`measurement_s`。基线与候选的 `verdict` 必须都精确等于 `pass`；缺失、`unknown`、`unscored` 和 `fail` 均淘汰。工具只输出是否值得进入原物理 A/B；没有运行仿真、没有替代120s/90s原裁判，也不把局部失败当成任务完成。
+
+能力段的原子版兼容回合 `416351fe-b43b-4b04-b45d-6dc538f4916a` 在57.90sim/121.276wall秒触发原120秒上限，保留为失败；其抓取成功、持物30.42秒、无安全停机，停在搬运后的lower早期。能力段回合在上述负载下完成74.78sim/60.748wall秒，因此该失败不能归因于能力段展开，也不能将任一回合计为性能基准。
+
 2026-10-20：35项定向测试通过。默认CLI完整回合成功，74.76sim/53.13wall；修改方块X=.245m并添加障碍后25.30sim协作取消，初态与XML确认输入被消费。浏览器经HTTP重新启动的完整回合74.76sim/50.22wall成功，另一次网页取消在4.16sim结束；刷新未重发。首轮旧释放配置触发再次接触并正确终止，失败保留。
 
 证据在 canonical `experiments/colab-twin/output/station-integration-20261020/` 及工作台忽略的 `workbench-tools/output/station-tasks/`；运行产物不入 Git。上述是固定任务接入验收，不代替20+20鲁棒性评测、实时50Hz或实机验证。

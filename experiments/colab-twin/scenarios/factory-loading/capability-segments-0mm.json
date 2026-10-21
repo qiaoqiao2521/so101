@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "station": {
+    "platform": "so101",
+    "name": "F2 工位上下料能力段 baseline-0mm",
+    "notes": "使用 pick→transfer→place 能力段；验证后展开为同一原八步，执行器和物理裁判不变。",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101 机械臂",
+        "kind": "robot",
+        "parent": "world",
+        "position": [0, 0, 0]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [0, 0, 0]
+      },
+      {
+        "id": "pick",
+        "name": "取料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [0.24, -0.13, 0]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "pick",
+        "position": [0, 0, 0.01]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [0, 0, 0.08]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [0, 0, 0.02]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [0.24, 0.14, 0]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [0, 0, 0.03]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [0, 0, 0.1]
+      }
+    ],
+    "program": [
+      {
+        "id": "pick-cube",
+        "capability": "pick",
+        "seconds": 1
+      },
+      {
+        "id": "move-to-tray",
+        "capability": "transfer",
+        "seconds": 1
+      },
+      {
+        "id": "release-and-clear",
+        "capability": "place",
+        "seconds": 1
+      }
+    ]
+  }
+}

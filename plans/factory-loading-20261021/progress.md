@@ -366,3 +366,26 @@ CLI allocation-only MjData候选在17个原IK目标/seed五次交替精确等值
 MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/layout-place-220-170-0mm.json --candidate experiments/colab-twin/route_strategies/reuse_adjacent_validity.py --output-dir <new-dir>
 ```
 测试38项通过（transport_worker+route_policy+route_selection），但测试不替代完整物理。下一轮从原report/trace找IK重复或路径认证之外的实证瓶颈；新候选必须先局部等值/成本，再完整原裁判。早停不能记成功。
+
+## F2i 能力段与最小判定集实现（2026-10-22）
+
+`station_executor.py` 新增能力目录与 `compile_program()`。旧八步原子程序和 `pick→transfer→place` 三种能力段均可验证；能力段在输出中展开为逐项相同的八步。当前只接受完整抓放序列，缺段、重复、错误次序、混写和未知能力在构造模型前明确 `UnsupportedStation`。`describe()` 暴露能力清单，供网页读取真实边界。
+
+`test_station_executor.py`、`test_evaluate_station.py`、`test_factory_minimum_suite.py` 与原 `test_station_scene.py` 共40项通过。原 `baseline-0mm.json` 读回为 atomic 模式、三段及原八步顺序，place仍为 `(0.24,0.14,0)`；新增 `capability-segments-0mm.json` 读回为 segments 模式，几何与原工位逐项相同并展开为同一八步。
+
+新增 `factory_minimum_suite.py`：同原输入至少三对局部测量；输出不等价、任一 verdict 不是精确 `pass`、样本不足或中位收益未达门槛即淘汰；逐对耗时不一致为 inconclusive；只有一致局部收益才 `eligible_for_physical_ab`。该工具不运行物理，不替原裁判判成功。测试覆盖快失败、输出不等价伪造成功、缺失/unknown/unscored 和阈值边界。
+
+原物理执行已接续完成：
+
+| 输入 | run_id | 原裁判 | sim/wall秒 | 结果 |
+|---|---|---|---:|---|
+| capability-segments-0mm | `1fccf040-0dc6-49e7-9502-37e071273bb1` | pass | 74.78 / 60.748 | 抓取、放置、静稳、释放脱离、回位通过；安全停机0、障碍接触0；录像468/468帧 |
+| baseline-0mm兼容轮 | `416351fe-b43b-4b04-b45d-6dc538f4916a` | fail | 57.90 / 121.276 | 原120秒墙钟上限；抓取成功、持物30.42秒、无安全停机，停在lower早期，失败保留 |
+
+能力段轮的释放审计通过：67.44秒发生实际脱离，锚点XY最大漂移0.265805mm（原2mm阈值），脱离后最大接触力0N（原0.02N阈值）；`free_object=true`、`weld=0`、`mocap=0`。最终物块中心Z=9.960725mm，实际盘顶2mm，settle 7.52秒。两回合未修改评分器、碰撞守卫、释放审计、90s/120s上限或默认候选，owned MuJoCo子进程运行后剩余为空。
+
+原子版兼容轮的超时不能判为能力段功能失败：它运行时候选/控制器/评分器的 `loaded_path` 指向本树原模块，resolved program确为 atomic；能力段输入随后在相同源码状态下通过。相邻轮次受宿主负载影响，不构成性能比较，也不重写失败。原始 `evaluation/report/trajectory/XML/录像` 位于Git忽略的 `experiments/colab-twin/output/composable-regression-20261022/` 和 `.../composable-segments-regression-20261022/`。
+
+产品归口：Mint跟随器继续作为 SO101 同产品的低配现场终端，与 Lichtblick/ROS 研究工作台并行。共享层起点仅为版本化产品动作和结果语义；现有关节轨迹导出不是 MuJoCo 运行接口。canonical 22项受控变动、未跟踪源码/计划及DOCX删除保护原位，不纳入本交付。
+
+Knowledge：already_covered。沿用现有ROS2/GUI物理裁判分离和动作资产单位边界，无新增共享知识写入。

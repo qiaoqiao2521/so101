@@ -16,6 +16,12 @@ import xml.etree.ElementTree as ET
 
 TEMPLATE = [('open', ''), ('move', 'approach'), ('move', 'grasp'), ('close', ''),
             ('move', 'approach'), ('move', 'release'), ('open', ''), ('move', 'clear')]
+SEGMENTS = {
+    'pick': (('open', ''), ('move', 'approach'), ('move', 'grasp'), ('close', '')),
+    'transfer': (('move', 'approach'), ('move', 'release')),
+    'place': (('open', ''), ('move', 'clear')),
+}
+SUPPORTED_SEGMENTS = ('pick', 'transfer', 'place')
 FIXED_NODES = {
     'base': ('robot', [0, 0, 0]), 'jaw': ('tool', [0, 0, 0]),
     'pick': ('frame', [.24, -.13, 0]), 'place': ('frame', [.24, .14, 0]),
@@ -29,9 +35,13 @@ def describe():
     return {
         'executor': 'so101-mujoco-visual-grasp', 'simulation_only': True,
         'message': '已接入本机 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
-        'capabilities': ['复制并运行八步搬运任务', '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '方块 XY 各 ±10mm',
+        'capabilities': ['按 pick → transfer → place 动作段组合搬运任务', '八步原程序仍可直接运行',
+                         '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '方块 XY 各 ±10mm',
                          '固定尺寸附加障碍', '协作停止', '新回合录像和物理报告'],
         'template': 'open → approach → grasp → close → approach → release → open → clear',
+        'segments': {name: [{'action': action, 'target': target} for action, target in steps]
+                     for name, steps in SEGMENTS.items()},
+        'supported_segment_sequences': [list(SUPPORTED_SEGMENTS)],
         'supported_cube_xy_m': {'center': [.24, -.13], 'half_extent': [.01, .01]},
         'cube_z_m': .01, 'cube_size_m': [.018, .018, .016],
         'fixed_nodes_world_m': {name: xyz for name, (_, xyz) in FIXED_NODES.items()
@@ -45,7 +55,9 @@ def describe():
                              'size_m': [2*x for x in OBSTACLE_HALF_SIZE]},
         'limits': {'simulation_s': 90, 'wall_s': 120, 'collision_margin_m': .001},
         'notes': [
-            '八步搬运任务支持修改place坐标系XYZ，Z表示蓝盘底座相对桌面的非负高度，release/clear保持相对偏移；其他步骤组合尚未实现。',
+            'program可直接使用原八步原子动作，也可使用pick→transfer→place三个能力段；能力段在验证时展开为同一原子动作。',
+            '当前物理执行器支持完整抓放组合；缺段、重复段或其他次序会在仿真前明确失败。',
+            '八步搬运任务支持修改place坐标系XYZ，Z表示蓝盘底座相对桌面的非负高度，release/clear保持相对偏移。',
             '默认设计高度映射为现有规划指间高度：接近/抬升60mm、抓取19mm、释放为蓝盘底座上方28mm；释放采用floor_yaw估计，脱离与回位由安全规划产生。',
             'seconds=1保留为模板草稿值；实际运动时长由原控制器规划，不按一秒强行插值。',
             '坐标系平移逐级累加；蓝盘保持同尺寸，抬高时添加实体底座，可达性与碰撞由现有规划器检查。',
@@ -58,6 +70,43 @@ class UnsupportedStation(ValueError):
     def __init__(self, issues):
         self.issues = issues
         super().__init__('；'.join(issues))
+
+
+def compile_program(program):
+    """Compile a legacy atomic program or reusable capability segments."""
+    if not isinstance(program, list):
+        raise UnsupportedStation(['program 必须为数组'])
+    if any(isinstance(step, dict) and 'capability' in step for step in program):
+        if not all(isinstance(step, dict) and 'capability' in step for step in program):
+            raise UnsupportedStation(['原子动作与能力段不能混写'])
+        segments = []
+        for index, step in enumerate(program):
+            capability = step.get('capability')
+            if capability not in SEGMENTS:
+                raise UnsupportedStation([f'程序第 {index+1} 段的 capability 不受支持：{capability}'])
+            if isinstance(step.get('seconds'), bool) or step.get('seconds') != 1:
+                raise UnsupportedStation([f'程序第 {index+1} 段 seconds 需保留模板值 1；自定义时长尚未实现'])
+            segments.append(capability)
+        if tuple(segments) != SUPPORTED_SEGMENTS:
+            raise UnsupportedStation([
+                f'当前完整抓放执行器要求能力段依次为 {", ".join(SUPPORTED_SEGMENTS)}；'
+                f'收到 {", ".join(segments) if segments else "空序列"}'])
+        steps = [row for capability in segments for row in SEGMENTS[capability]]
+        return {'mode': 'segments', 'segments': segments, 'steps': steps}
+    steps = []
+    for index, step in enumerate(program):
+        if not isinstance(step, dict):
+            raise UnsupportedStation([f'程序第 {index+1} 步必须为对象'])
+        action, target = step.get('action'), step.get('target', '')
+        if index >= len(TEMPLATE) or (action, target) != TEMPLATE[index]:
+            expected = TEMPLATE[index] if index < len(TEMPLATE) else ('<程序结束>', '')
+            raise UnsupportedStation([f'程序第 {index+1} 步需为 {expected[0]} {expected[1]}'])
+        if isinstance(step.get('seconds'), bool) or step.get('seconds') != 1:
+            raise UnsupportedStation([f'程序第 {index+1} 步 seconds 需保留模板值 1；自定义时长尚未实现'])
+        steps.append((action, target))
+    if len(steps) != len(TEMPLATE):
+        raise UnsupportedStation(['当前只支持原始八步完整抓放模板或 pick→transfer→place 能力段'])
+    return {'mode': 'atomic', 'segments': list(SUPPORTED_SEGMENTS), 'steps': steps}
 
 
 def validate_station(station):
@@ -131,21 +180,18 @@ def validate_station(station):
                               'geom_name': f'station_obstacle_{len(obstacles)}'})
         elif node.get('kind') != 'frame':
             issues.append(f'暂不支持额外 {node.get("kind")} 节点：{ident}')
-    program = station.get('program')
-    if not isinstance(program, list) or len(program) != len(TEMPLATE):
-        issues.append('当前只支持原始八步完整抓放模板')
-    else:
-        for index, (step, (action, target)) in enumerate(zip(program, TEMPLATE)):
-            if not isinstance(step, dict) or (step.get('action'), step.get('target', '')) != (action, target):
-                issues.append(f'程序第 {index+1} 步需为 {action} {target}')
-            elif isinstance(step.get('seconds'), bool) or step.get('seconds') != 1:
-                issues.append(f'程序第 {index+1} 步 seconds 需保留模板值 1；自定义时长尚未实现')
+    try:
+        program_plan = compile_program(station.get('program'))
+    except UnsupportedStation as error:
+        issues.extend(error.issues)
+        program_plan = None
     if issues:
         raise UnsupportedStation(issues)
     return {'cube_xyz_m': resolved['cube'], 'place_xy_m': resolved['place'][:2],
             'place_height_m': resolved['place'][2],
             'additional_obstacles': obstacles,
-            'resolved_positions_m': resolved, 'mapping': describe()['notes']}
+            'resolved_positions_m': resolved, 'program': program_plan,
+            'mapping': describe()['notes']}
 
 
 def atomic_json(path, value):

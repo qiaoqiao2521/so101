@@ -5,7 +5,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from station_executor import FIXED_NODES, TEMPLATE, UnsupportedStation, run, validate_station
+from station_executor import (FIXED_NODES, SEGMENTS, TEMPLATE, UnsupportedStation,
+                              compile_program, run, validate_station)
 
 
 def station():
@@ -95,6 +96,39 @@ class AdmissionTests(unittest.TestCase):
                 value['program'][0]['seconds'] = 2
             with self.assertRaises(UnsupportedStation):
                 validate_station(value)
+
+    def test_capability_segments_expand_to_reusable_atomic_plan(self):
+        value = station()
+        value['program'] = [
+            {'id': 's1', 'capability': 'pick', 'seconds': 1},
+            {'id': 's2', 'capability': 'transfer', 'seconds': 1},
+            {'id': 's3', 'capability': 'place', 'seconds': 1},
+        ]
+        result = validate_station(value)
+        self.assertEqual(result['program']['mode'], 'segments')
+        self.assertEqual(tuple(result['program']['segments']), ('pick', 'transfer', 'place'))
+        self.assertEqual(result['program']['steps'], TEMPLATE)
+        self.assertEqual(tuple(SEGMENTS), ('pick', 'transfer', 'place'))
+
+    def test_capability_plan_rejects_missing_duplicate_or_unknown_segments(self):
+        for program, message in (
+                ([], '八步完整抓放模板或 pick'),
+                ([{'capability': 'pick', 'seconds': 1},
+                  {'capability': 'pick', 'seconds': 1}], '要求能力段'),
+                ([{'capability': 'pick', 'seconds': 1},
+                  {'capability': 'transport', 'seconds': 1},
+                  {'capability': 'place', 'seconds': 1}],
+                 '不受支持')):
+            with self.subTest(program=program), self.assertRaisesRegex(UnsupportedStation, message):
+                compile_program(program)
+
+    def test_capability_segment_ids_may_be_edited_without_changing_intent(self):
+        program = [{'id': 'my-pick', 'capability': 'pick', 'seconds': 1},
+                   {'id': 'custom', 'capability': 'transfer', 'seconds': 1},
+                   {'id': 'my-place', 'capability': 'place', 'seconds': 1}]
+        self.assertEqual(compile_program(program)['steps'], TEMPLATE)
+        program[1].pop('id')
+        self.assertEqual(compile_program(program)['steps'], TEMPLATE)
 
     def test_missing_parent_cycle_and_nonfinite_rejected(self):
         for parent, xyz in [('missing', [0, 0, .01]), ('cube', [0, 0, .01]), ('pick', [float('nan'), 0, .01])]:
