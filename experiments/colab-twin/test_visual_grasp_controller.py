@@ -74,6 +74,74 @@ class VisualControllerTests(unittest.TestCase):
                 self.assertEqual(controller.plan_reports[-1]['transition_height_reason'], 'original_height')
                 self.assertEqual(len(controller.plan_reports[-1]['transition_attempts']), 1)
 
+    def test_raised_tray_moves_certified_transport_and_release_world_height(self):
+        controller = self.controller(place_height_m=.010, release_pinch_height_m=.028)
+        controller.stage, controller.last_elapsed = 'hold', 3.
+        controller.payload_relative, controller.payload_rotation = np.zeros(3), np.eye(3)
+        controller._plan_transport(np.r_[controller.lift, .015])
+        np.testing.assert_allclose(controller.transport[3][-1][:3], [*module.PLACE_CENTER, .070])
+        np.testing.assert_allclose(controller.transport[4][-1][:3], [*module.PLACE_CENTER, .038])
+        self.assertEqual(controller.plan_reports[-1]['place_height_m'], .010)
+        self.assertAlmostEqual(controller.plan_reports[-1]['release_world_height_m'], .038)
+        self.assertEqual(controller.release_pinch_height_m, .028)
+        for height in (-.001, np.nan, np.inf, True):
+            with self.subTest(height=height), self.assertRaisesRegex(ValueError, 'place_height_m'):
+                self.controller(place_height_m=height)
+
+    def test_unreachable_raised_release_cannot_fall_back_to_table_height(self):
+        controller = self.controller(place_height_m=.010, release_pinch_height_m=.028)
+        with patch.object(module, 'solve_pinch_ik', side_effect=RuntimeError('No vertical pinch IK candidate')) as solve, \
+                patch.object(controller, '_transport_at_height') as route, \
+                self.assertRaisesRegex(RuntimeError, 'No vertical pinch IK candidate'):
+            controller._compute_transport(np.r_[controller.lift, .015])
+        np.testing.assert_allclose(solve.call_args.args[1], [*module.PLACE_CENTER, .038])
+        route.assert_not_called()
+        self.assertEqual(controller.transport, [])
+
+    def test_release_estimate_uses_raised_support_in_both_rotation_modes(self):
+        for mode in ('axis_aligned', 'floor_yaw'):
+            with self.subTest(mode=mode):
+                controller = self.controller(place_height_m=.010, release_rotation_mode=mode)
+                controller.stage, controller.transport_index = 'lower', -1
+                controller.payload_relative, controller.payload_rotation = np.zeros(3), np.eye(3)
+                controller._fk = Mock(return_value=(np.array([.24, .14, .038]), np.eye(3), np.zeros(3)))
+                controller.released_query = Mock(uncertainty_m=.002)
+                controller._transition(controller.initial_q.copy(), 40.)
+                frozen_center = controller.released_query.freeze.call_args.args[0]
+                np.testing.assert_allclose(frozen_center, [.24, .14, .020])
+                self.assertEqual(controller.release_record['place_height_m'], .010)
+                self.assertEqual(controller.stage, 'release')
+
+    def test_raised_tray_height_is_frozen_for_transport_and_separation_jobs(self):
+        controller = self.controller(place_height_m=.010)
+        controller.stage, controller.last_elapsed = 'hold', 3.
+        controller.payload_relative, controller.payload_rotation = np.zeros(3), np.eye(3)
+        job = Mock()
+        with patch.object(module, 'AsyncTransportPlanningJob', return_value=job):
+            controller._start_transport(np.r_[controller.lift, .015], 3.)
+        snapshot = job.start.call_args.args[2]
+        self.assertEqual(snapshot.place_height_m, .010)
+        self.assertEqual(controller.transport_events[-1]['snapshot']['place_height_m'], .010)
+        controller.place_height_m = .020
+        with self.assertRaisesRegex(module.ControllerFailure, 'transport_context_changed'):
+            controller._check_transport_context()
+        self.assertEqual(snapshot.place_height_m, .010)
+
+        controller = self.controller(place_height_m=.010)
+        controller.stage = 'release'
+        controller.released_query = SimpleNamespace(center=np.array([.24, .14, .020]),
+                                                    uncertainty_m=.002, model=object(), rotation=np.eye(3))
+        job = Mock()
+        with patch.object(module, 'AsyncSeparationPlanningJob', return_value=job):
+            controller._start_separation(controller.initial_q.copy(), 40.)
+        snapshot = job.start.call_args.args[3]
+        self.assertEqual(snapshot.place_height_m, .010)
+        self.assertEqual(snapshot.center, (.24, .14, .020))
+        self.assertEqual(controller.separation_events[-1]['place_height_m'], .010)
+        controller.place_height_m = .020
+        with self.assertRaisesRegex(module.ControllerFailure, 'separation_context_changed'):
+            controller._check_separation_context()
+
     def test_lower_transition_requires_complete_route_after_endpoint_ik_precheck(self):
         controller = self.controller(place_xy=[.252, .124])
         def limited_ik(rig, xyz, initial=None):

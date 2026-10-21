@@ -125,6 +125,80 @@ class SceneTests(unittest.TestCase):
                             and np.allclose(list(box['pose']['position'].values()), [*center, .001])
                             for box in entity['cubes']))
 
+    def test_raised_tray_and_solid_base_match_execution_planning_and_preview(self):
+        center, height = [.22, .17], .010
+        value = copy.deepcopy(station())
+        next(node for node in value['nodes'] if node['id'] == 'place')['position'] = [*center, height]
+        with tempfile.TemporaryDirectory() as folder:
+            physical, planning, _ = build_contact_scene(SOURCE, Path(folder),
+                                                        place_xy=center, place_height_m=height)
+        names = ['place_floor', 'place_wall_x_-1', 'place_wall_x_1',
+                 'place_wall_y_-1', 'place_wall_y_1', 'place_plaque', 'place_pedestal']
+        with patch.object(mujoco, 'mj_step', side_effect=AssertionError('preview integrated physics')):
+            entity = preview(value)['entities'][0]
+        for name in names:
+            actual, planned = physical.geom(name).id, planning.geom(name).id
+            np.testing.assert_array_equal(physical.geom_pos[actual], planning.geom_pos[planned])
+            np.testing.assert_array_equal(physical.geom_size[actual], planning.geom_size[planned])
+            self.assertTrue(any(np.allclose(list(box['size'].values()), physical.geom_size[actual]*2)
+                                and np.allclose(list(box['pose']['position'].values()), physical.geom_pos[actual])
+                                for box in entity['cubes']), name)
+        pedestal = physical.geom('place_pedestal').id
+        np.testing.assert_allclose(physical.geom_pos[pedestal], [*center, .005])
+        np.testing.assert_allclose(physical.geom_size[pedestal], [.06, .06, .005])
+        self.assertEqual(physical.geom_contype[pedestal], 1)
+        self.assertEqual(physical.geom_conaffinity[pedestal], 3)
+        np.testing.assert_allclose(physical.geom_pos[physical.geom('place_floor').id], [*center, .011])
+        np.testing.assert_allclose(physical.geom_pos[physical.geom('pick_floor').id], [.24, -.13, .001])
+        data = mujoco.MjData(physical)
+        data.qpos[6:9] = [*center, .005]
+        data.qpos[9:13] = [1, 0, 0, 0]
+        mujoco.mj_forward(physical, data)
+        target = physical.geom('target_collision').id
+        self.assertTrue(any({contact.geom1, contact.geom2} == {target, pedestal}
+                            for contact in data.contact))
+
+    def test_zero_height_keeps_default_geometry_and_invalid_height_is_not_previewed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            physical, planning, _ = build_contact_scene(SOURCE, Path(folder), place_height_m=0.)
+        for old, new in ((self.model, physical), (self.rig, planning)):
+            for field in ('geom_pos', 'geom_size', 'geom_type', 'geom_contype', 'geom_conaffinity'):
+                np.testing.assert_array_equal(getattr(old, field), getattr(new, field))
+        for height in (-.001, float('nan'), float('inf'), True):
+            with self.subTest(height=height), tempfile.TemporaryDirectory() as folder, \
+                 self.assertRaisesRegex(ValueError, 'place_height_m'):
+                build_contact_scene(SOURCE, Path(folder), place_height_m=height)
+        value = station()
+        next(node for node in value['nodes'] if node['id'] == 'place')['position'][2] = -.001
+        with self.assertRaisesRegex(ValueError, 'place_height_m'):
+            preview(value)
+
+    def test_executor_forwards_raised_height_into_scene_and_controller(self):
+        value = station()
+        for node in value['nodes']:
+            if node['id'] in ('place', 'release', 'clear'):
+                node['position'][2] += .010
+
+        def inspect_inputs(source, output, protocol, case, deadline, **options):
+            self.assertEqual(options['controller_options']['place_height_m'], .010)
+            self.assertEqual(options['controller_options']['release_pinch_height_m'], .028)
+            physical, planning, _ = options['scene_builder'](source, output/'scene', noslip_iterations=10)
+            for model in (physical, planning):
+                self.assertAlmostEqual(model.geom_pos[model.geom('place_floor').id, 2], .011)
+                self.assertEqual(model.geom_conaffinity[model.geom('place_pedestal').id], 3)
+            return {'passed': False, 'failure_reason': 'test_inspection_complete'}
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            request = root/'request.json'
+            request.write_text(json.dumps(value))
+            with patch.object(run_visual_grasp, 'run_physical_episode', side_effect=inspect_inputs) as runner:
+                code = station_executor.run(request, root/'output', None)
+            self.assertEqual(code, 1)
+            runner.assert_called_once()
+            status = json.loads((root/'output/status.json').read_text())
+        self.assertEqual(status['report']['failure_reason'], 'test_inspection_complete')
+
     def test_tray_off_table_is_rejected_without_falling_back(self):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(ValueError, '台面'):

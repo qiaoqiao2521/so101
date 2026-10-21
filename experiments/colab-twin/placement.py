@@ -124,7 +124,8 @@ def placement_acceptance(rows):
     held = bool(carried) and all(min(r['tip_forces_n']) > .02 and not r['floor_contact'] and not r['place_floor_contact'] for r in carried)
     good = all(r['in_place_tray'] and r['place_floor_contact'] and
                max(r['tip_forces_n']) < .02 and r['object_speed_m_s'] < .002
-               and abs(r['object_z_m']-.01) < .002 for r in settled)
+               and abs(r['object_z_m']-(r.get('place_support_z_m', .002) + TARGET_SIZE[2]/2)) < .002
+               for r in settled)
     duration = settled[-1]['time_s']-settled[0]['time_s']
     return {'place_success': bool(good and held and duration >= 1),
             'settled_duration_s': duration, 'transport_held': held, 'final_object_xyz_m': final['object_xyz_m'],

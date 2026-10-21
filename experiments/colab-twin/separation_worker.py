@@ -68,6 +68,7 @@ class SeparationSnapshot:
     center: tuple
     uncertainty: float
     rotation: tuple = ((1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
+    place_height_m: float = 0.
 
     def __post_init__(self):
         for name in ('q6', 'initial_q6', 'last_command6'):
@@ -83,6 +84,10 @@ class SeparationSnapshot:
             raise ValueError('Released-object uncertainty must be 2..5 mm')
         object.__setattr__(self, 'elapsed', elapsed)
         object.__setattr__(self, 'uncertainty', uncertainty)
+        height = float(self.place_height_m)
+        if isinstance(self.place_height_m, (bool, np.bool_)) or not math.isfinite(height) or height < 0:
+            raise ValueError('place_height_m requires a finite nonnegative height')
+        object.__setattr__(self, 'place_height_m', height)
         from released_object import rotation_matrix
         object.__setattr__(self, 'rotation', tuple(tuple(row) for row in rotation_matrix(self.rotation)))
 
@@ -245,6 +250,7 @@ def _planning_context(rig, released_model, snapshot):
     context.initial_q = np.asarray(snapshot.initial_q6)
     context.last_command = np.asarray(snapshot.last_command6)
     context.seed, context.last_elapsed = snapshot.seed, snapshot.elapsed
+    context.place_height_m = snapshot.place_height_m
     context.plan_reports, context.release_record, context.servo_transitions = [], {}, []
     query = ReleasedObjectQuery.__new__(ReleasedObjectQuery)
     query.model, query.data = released_model, mujoco.MjData(released_model)

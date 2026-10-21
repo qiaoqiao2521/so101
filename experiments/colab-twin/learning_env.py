@@ -12,7 +12,7 @@ import mujoco
 import numpy as np
 
 from collision_scene import CollisionChecker
-from grasp_workcell import PLACE_CENTER
+from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 
 
 class SafetyStop(RuntimeError):
@@ -42,10 +42,12 @@ def diagnostics(model, data, checker):
     from placement import object_inside_tray
     names = [(model.geom(c.geom1).name, model.geom(c.geom2).name) for c in data.contact]
     target = model.body('grasp_target').id
-    tray_center = data.geom_xpos[model.geom('place_floor').id]
+    tray_floor = model.geom('place_floor')
+    tray_center = data.geom_xpos[tray_floor.id]
     return {'time_s': float(data.time), 'object_z_m': float(data.xpos[target, 2]),
             'object_xyz_m': data.xpos[target].tolist(),
             'object_speed_m_s': float(np.linalg.norm(data.qvel[6:9])),
+            'place_support_z_m': float(tray_center[2] + tray_floor.size[2]),
             'in_place_tray': object_inside_tray(data.xmat[target].reshape(3, 3), data.xpos[target], tray_center),
             'place_floor_contact': any('target_collision' in p and 'place_floor' in p for p in names),
             'tip_forces_n': list(grasp_contacts(model, data).values()),
@@ -76,13 +78,16 @@ class PhysicalTaskMonitor:
         if self.lift_start is not None:
             self.hold_duration = max(self.hold_duration, t - self.lift_start)
             self.grasp_success |= self.hold_duration >= 1.0 - 1e-8
+        # The task's horizontal tray may be raised. Legacy rows retain the
+        # original 2mm support plane; lift is still measured from the pick tray.
+        support_z = row.get('place_support_z_m', .002)
         settled = (self.grasp_success and row['in_place_tray'] and row['place_floor_contact'] and
                    max(row['tip_forces_n']) < .02 and row['object_speed_m_s'] < .002 and
-                   abs(row['object_z_m'] - .01) < .002)
+                   abs(row['object_z_m'] - (support_z + TARGET_SIZE[2]/2)) < .002)
         self.settle_start = (t if self.settle_start is None else self.settle_start) if settled else None
         self.settled_duration = t-self.settle_start if self.settle_start is not None else 0.0
         self.place_success = self.settled_duration >= 1.0 - 1e-8
-        supported_release = (row['in_place_tray'] and row['object_z_m'] < .025 and
+        supported_release = (row['in_place_tray'] and row['object_z_m'] < support_z + .023 and
                              row['object_speed_m_s'] < .05)
         lost = self.grasp_success and min(row['tip_forces_n']) < .02 and not supported_release
         self.loss_start = (t if self.loss_start is None else self.loss_start) if lost else None

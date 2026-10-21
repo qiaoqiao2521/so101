@@ -52,6 +52,16 @@ class TransportWorkerTests(unittest.TestCase):
             with self.subTest(place_xy=invalid), self.assertRaisesRegex(ValueError, 'place_xy'):
                 TransportSnapshot(**values, place_xy=invalid)
 
+    def test_place_height_is_relative_to_table_and_preserves_release_offset(self):
+        values = self.snapshot_values()
+        self.assertEqual(TransportSnapshot(**values).place_height_m, 0.)
+        raised = TransportSnapshot(**values, place_height_m=.010, release_pinch_height_m=.028)
+        self.assertEqual(raised.place_height_m, .010)
+        self.assertEqual(raised.release_pinch_height_m, .028)
+        for height in (-.001, math.nan, math.inf, True):
+            with self.subTest(height=height), self.assertRaisesRegex(ValueError, 'place_height_m'):
+                TransportSnapshot(**values, place_height_m=height)
+
     def paths(self):
         return [[[float(index)*.01, 0., 0., 0., 0.],
                  [float(index+1)*.01, -.0, .01, 0., 0.]] for index in range(5)]

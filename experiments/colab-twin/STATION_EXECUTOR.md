@@ -16,11 +16,28 @@
 
 - 方块世界坐标支持 X=0.24±0.01m、Y=-0.13±0.01m、Z=0.01m。
 - 附加 obstacle 节点采用 50×56×130mm 轴对齐方盒，原内置障碍同时保留。
-- 参考系逐级平移求和；机器人与取料区域保持原值。place 坐标系的 XY 为当前任务蓝盘中心，release/clear 随同移动并保持原相对高度。
-- 蓝盘保持同高度同尺寸，需完整位于原工作台上；可达性和碰撞由现有规划器逐任务检查。其他目标偏移、额外物体、程序重排和时长仍会列出具体原因；不会回退到旧场景。
-- 释放复用已有 floor_yaw 和 28mm 指间高度；1mm 净距、释放2mm漂移/0.02N再接触等原物理标准不变。
+- 参考系逐级平移求和；机器人与取料区域保持原值。place 坐标系的 XY 为当前任务蓝盘中心，Z 为高出台面的底座高度，release/clear 随同移动并保持原相对偏移。
+- 蓝盘保持同尺寸，底座投影需完整位于原工作台上；非负高度的可达性和碰撞由现有规划器逐任务检查。其他目标偏移、额外物体、程序重排和时长仍会列出具体原因；不会回退到旧场景。
+- 释放复用已有 floor_yaw 和距底座28mm的指间高度；1mm 净距、释放2mm漂移/0.02N再接触等原物理标准不变。
 
 输出包括 `resolved-station.json`、`episode/report.json`、轨迹、定位图和本次录像。录像以真实物理状态快照后置渲染，640×480、6.25fps；不推进物理、不制作脚本附着物体动画。无新内容哈希门锁或前序任务依赖，每个输出目录是独立回合。
+
+## F2 工位高度与评测入口
+
+[抬高10mm示例](scenarios/factory-loading/raised-10mm.json)可直接导入工作台。选择“放料坐标系”修改Z，释放点与脱离点沿父坐标系平移。实际托盘、碰撞底座、规划副本和预览使用同一高度。比如Z=0.01时，盘底顶面为0.012m，方块静稳中心为0.020m；原静稳高度容差仍为2mm。旧任务Z=0保持原几何和判定。
+
+从本项目根调用已有物理评测：
+
+```bash
+~/.cache/so101-graspgenx/upstream/.venv/bin/python \
+  experiments/colab-twin/evaluate_station.py \
+  --station experiments/colab-twin/scenarios/factory-loading/raised-10mm.json \
+  --output-dir experiments/colab-twin/output/factory-loading-local
+```
+
+每次调用创建独立run目录，输出`evaluation.json`和原始报告；根输出目录的同名JSON指向最近一次结果。字段含scenario_id、run_id、mode、state、verdict、metrics、units、failure_reason、candidate、scorer和artifacts。候选引用记录本次源码路径、Git提交、未提交文件及实际加载模块路径；它是来源描述，不是禁止二改的锁。进程返回0须原物理报告通过；未运行或缺报告记unscored，取消不算通过。
+
+可用[原高度](scenarios/factory-loading/baseline-0mm.json)作回归，用[负高度](scenarios/factory-loading/invalid-negative-height.json)检查明确拒绝。不同布局应分别保留输入和结果；单场景成功不代表其他高度都能到达。策略改进可修改控制器或路线规划，比较时固定场景、评分器、物理参数和安全阈值。不得修改裁判来提高分数。本入口不启动训练、20+20评测或实体机械臂。
 
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 

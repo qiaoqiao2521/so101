@@ -31,11 +31,26 @@ class AdmissionTests(unittest.TestCase):
         self.assertEqual(result['resolved_positions_m']['release'], [.22, .17, .03])
         self.assertEqual(result['resolved_positions_m']['clear'], [.22, .17, .1])
 
-    def test_place_height_is_still_explicitly_unsupported(self):
+    def test_place_height_follows_parent_and_keeps_relative_release_clear(self):
         value = station()
-        next(node for node in value['nodes'] if node['id'] == 'place')['position'][2] = .02
-        with self.assertRaisesRegex(UnsupportedStation, 'place'):
-            validate_station(value)
+        for node in value['nodes']:
+            if node['id'] == 'place':
+                node['position'][2] = .010
+            elif node['id'] in ('release', 'clear'):
+                node['parent'] = 'place'
+                node['position'][:2] = [0, 0]
+        result = validate_station(value)
+        self.assertEqual(result['place_height_m'], .010)
+        self.assertEqual(result['resolved_positions_m']['release'], [.24, .14, .040])
+        self.assertEqual(result['resolved_positions_m']['clear'], [.24, .14, .110])
+        self.assertEqual(result['cube_xyz_m'], [.24, -.13, .010])
+
+    def test_place_height_rejects_negative_and_unshifted_release_targets(self):
+        for height in (-.010, .010):
+            value = station()
+            next(node for node in value['nodes'] if node['id'] == 'place')['position'][2] = height
+            with self.subTest(height=height), self.assertRaisesRegex(UnsupportedStation, 'place|release'):
+                validate_station(value)
 
     def test_nondefault_goal_does_not_need_python_coordinate_whitelist(self):
         value = station()
@@ -46,6 +61,7 @@ class AdmissionTests(unittest.TestCase):
 
     def test_default_and_changed_cube_are_resolved(self):
         value = station()
+        self.assertEqual(validate_station(value)['place_height_m'], 0.)
         self.assertEqual(validate_station(value)['cube_xyz_m'], [.24, -.13, .01])
         value['nodes'][-1]['position'][0] = .009
         self.assertAlmostEqual(validate_station(value)['cube_xyz_m'][0], .249)

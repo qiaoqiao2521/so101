@@ -19,6 +19,17 @@ from transport_worker import AsyncTransportPlanningJob, TransportPlan
 
 
 class SeparationWorkerTests(unittest.TestCase):
+    def test_snapshot_preserves_raised_support_and_rejects_invalid_height(self):
+        self.assertEqual(self.snapshot().place_height_m, 0.)
+        raised = self.snapshot(place_height_m=.010, center=[.24, .13, .020])
+        self.assertEqual(raised.place_height_m, .010)
+        self.assertEqual(raised.center, (.24, .13, .020))
+        with self.assertRaises(FrozenInstanceError):
+            raised.place_height_m = .015
+        for height in (-.001, math.nan, math.inf, True):
+            with self.subTest(height=height), self.assertRaisesRegex(ValueError, 'place_height_m'):
+                self.snapshot(place_height_m=height)
+
     def test_rotation_snapshot_owns_values_and_rejects_invalid_pose(self):
         angle=.53;rotation=np.array([[np.cos(angle),-np.sin(angle),0],
                                   [np.sin(angle),np.cos(angle),0],[0,0,1]])

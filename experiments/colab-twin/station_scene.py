@@ -138,15 +138,19 @@ def preview(station=None, *, source=SOURCE):
     from grasp_episode import build_contact_scene, solve_pinch_ik
     station = {} if station is None else station
     nodes, positions = preview_positions(station)
+    if 'place' in nodes and 'place' not in positions:
+        raise ValueError('Cannot preview an invalid place frame')
+    place = positions.get('place', np.array([.24, .14, 0.]))
     with tempfile.TemporaryDirectory(prefix='so101-scene-') as folder:
-        model, rig, _ = build_contact_scene(Path(source), Path(folder), noslip_iterations=10)
+        model, rig, _ = build_contact_scene(Path(source), Path(folder), noslip_iterations=10,
+                                           place_xy=place[:2].tolist(), place_height_m=float(place[2]))
         data = mujoco.MjData(model)
         data.qpos[:6] = np.r_[solve_pinch_ik(rig, np.array([.24, .14, .06])), .5]
         data.qpos[6:9] = positions.get('cube', [.24, -.13, .01])
         data.ctrl[:] = data.qpos[:6]
         if 'base' in positions:
             model.body_pos[model.body('base').id] = positions['base']
-        for prefix, original in [('pick', [.24, -.13, 0.]), ('place', [.24, .14, 0.])]:
+        for prefix, original in [('pick', [.24, -.13, 0.])]:
             if prefix in positions:
                 shift = positions[prefix] - original
                 for index in range(model.ngeom):

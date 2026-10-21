@@ -29,24 +29,26 @@ def describe():
     return {
         'executor': 'so101-mujoco-visual-grasp', 'simulation_only': True,
         'message': '已接入本机 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
-        'capabilities': ['复制并运行八步搬运任务', '蓝盘放置 XY 可修改，逐任务检查规划', '方块 XY 各 ±10mm',
+        'capabilities': ['复制并运行八步搬运任务', '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '方块 XY 各 ±10mm',
                          '固定尺寸附加障碍', '协作停止', '新回合录像和物理报告'],
         'template': 'open → approach → grasp → close → approach → release → open → clear',
         'supported_cube_xy_m': {'center': [.24, -.13], 'half_extent': [.01, .01]},
         'cube_z_m': .01, 'cube_size_m': [.018, .018, .016],
         'fixed_nodes_world_m': {name: xyz for name, (_, xyz) in FIXED_NODES.items()
                                 if name not in ('place', 'release', 'clear')},
-        'placement': {'mode': 'same_height_tray_xy', 'default_center_m': [.24, .14],
+        'placement': {'mode': 'tray_xy_and_base_height', 'default_center_m': [.24, .14],
+                      'default_base_height_m': 0., 'base_height_min_m': 0.,
+                      'base_height_source': 'place_world_z',
                       'reachability': 'checked_by_existing_planner'},
         'additional_obstacle_size_m': [2*x for x in OBSTACLE_HALF_SIZE],
         'default_obstacle': {'center_m': [.265, 0, .065],
                              'size_m': [2*x for x in OBSTACLE_HALF_SIZE]},
         'limits': {'simulation_s': 90, 'wall_s': 120, 'collision_margin_m': .001},
         'notes': [
-            '八步搬运任务支持修改place坐标系XY，release/clear保持相对偏移；其他步骤组合尚未实现。',
-            '默认设计高度映射为现有规划指间高度：接近/抬升60mm、抓取19mm、释放28mm；释放采用floor_yaw估计，脱离与回位由安全规划产生。',
+            '八步搬运任务支持修改place坐标系XYZ，Z表示蓝盘底座相对桌面的非负高度，release/clear保持相对偏移；其他步骤组合尚未实现。',
+            '默认设计高度映射为现有规划指间高度：接近/抬升60mm、抓取19mm、释放为蓝盘底座上方28mm；释放采用floor_yaw估计，脱离与回位由安全规划产生。',
             'seconds=1保留为模板草稿值；实际运动时长由原控制器规划，不按一秒强行插值。',
-            '坐标系平移逐级累加；蓝盘保持同高度同尺寸，可达性与碰撞由现有规划器检查。',
+            '坐标系平移逐级累加；蓝盘保持同尺寸，抬高时添加实体底座，可达性与碰撞由现有规划器检查。',
             '新增障碍为50×56×130mm轴对齐方盒；原有默认障碍同时保留。',
         ],
     }
@@ -100,7 +102,9 @@ def validate_station(station):
         except (ValueError, TypeError) as error:
             issues.append(str(error))
     place = resolved.get('place', FIXED_NODES['place'][1])
-    place_shift = [place[0]-.24, place[1]-.14, 0.]
+    if place[2] < 0:
+        issues.append('place 世界Z表示蓝盘底座高度，必须大于等于0')
+    place_shift = [place[0]-.24, place[1]-.14, place[2]]
     for ident, (kind, original) in FIXED_NODES.items():
         xyz = [a+b for a, b in zip(original, place_shift)] if ident in ('place', 'release', 'clear') else original
         node = by_id.get(ident)
@@ -139,6 +143,7 @@ def validate_station(station):
     if issues:
         raise UnsupportedStation(issues)
     return {'cube_xyz_m': resolved['cube'], 'place_xy_m': resolved['place'][:2],
+            'place_height_m': resolved['place'][2],
             'additional_obstacles': obstacles,
             'resolved_positions_m': resolved, 'mapping': describe()['notes']}
 
@@ -230,7 +235,8 @@ def run(station_path, output, cancel_file):
 
         def build_scene(source, folder, **kwargs):
             check_cancel()
-            model, rig, path = build_contact_scene(source, folder, place_xy=layout['place_xy_m'], **kwargs)
+            model, rig, path = build_contact_scene(source, folder, place_xy=layout['place_xy_m'],
+                                                   place_height_m=layout['place_height_m'], **kwargs)
             for name in ('contact-workcell.xml', 'grasp-planning.xml'):
                 filename = folder/name
                 tree = ET.parse(filename)
@@ -290,7 +296,8 @@ def run(station_path, output, cancel_file):
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options={'release_rotation_mode': 'floor_yaw',
                                         'release_pinch_height_m': .028,
-                                        'place_xy': layout['place_xy_m']})
+                                        'place_xy': layout['place_xy_m'],
+                                        'place_height_m': layout['place_height_m']})
         cancelled = cancel_file is not None and cancel_file.exists()
         artifacts = {'report': str(output/'episode/report.json'),
                      'trajectory': str(output/'episode/trajectory.json'),

@@ -40,11 +40,16 @@ class TransportSnapshot:
     elapsed_s: float
     release_pinch_height_m: float = .023
     place_xy: tuple | None = None
+    place_height_m: float = 0.
 
     def __post_init__(self):
         from grasp_workcell import PLACE_CENTER
         object.__setattr__(self, 'place_xy', _vector(
             PLACE_CENTER if self.place_xy is None else self.place_xy, 2, 'place_xy'))
+        place_height = float(self.place_height_m)
+        if isinstance(self.place_height_m, (bool, np.bool_)) or not math.isfinite(place_height) or place_height < 0:
+            raise ValueError('place_height_m requires a finite nonnegative height')
+        object.__setattr__(self, 'place_height_m', place_height)
         for name, size in (('q6', 6), ('target_xy', 2), ('payload_relative', 3)):
             object.__setattr__(self, name, _vector(getattr(self, name), size, name))
         object.__setattr__(self, 'payload_rotation', _rotation(self.payload_rotation))
@@ -62,7 +67,7 @@ class TransportSnapshot:
             object.__setattr__(self, name, value)
         height = float(self.release_pinch_height_m)
         if not math.isfinite(height) or not .023 <= height <= .030:
-            raise ValueError('Release pinch height must be 23..30 mm in this fixed box workcell')
+            raise ValueError('Release pinch height must be 23..30 mm above the target tray base')
         object.__setattr__(self, 'release_pinch_height_m', height)
 
 

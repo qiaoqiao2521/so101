@@ -16,7 +16,7 @@ def numbers(values):
     return ' '.join(format(float(x), '.9g') for x in values)
 
 
-def build_workcell(source, output, *, place_xy=None):
+def build_workcell(source, output, *, place_xy=None, place_height_m=0.):
     """Reuse original arm geometry; add a freely moving 10g target and open trays.
 
     Dimensions/friction are simulation fixtures, not measured hardware values.
@@ -26,6 +26,10 @@ def build_workcell(source, output, *, place_xy=None):
     if (len(place_center) != 2 or any(isinstance(x, bool) or not isinstance(x, (int, float))
                                     or not math.isfinite(x) for x in place_center)):
         raise ValueError('Blue tray XY must contain two finite numbers')
+    if (isinstance(place_height_m, bool) or not isinstance(place_height_m, (int, float))
+            or not math.isfinite(place_height_m) or place_height_m < 0):
+        raise ValueError('place_height_m must be a finite nonnegative tray base height')
+    place_height_m = float(place_height_m)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     build_scene(source, output / 'arm-scene.xml', [], table_z=0)
@@ -88,12 +92,16 @@ def build_workcell(source, output, *, place_xy=None):
     for prefix, center, color in [('pick', PICK_CENTER, '.64 .30 .23 1'),
                                    ('place', place_center, '.20 .39 .58 1')]:
         x,y = center
-        geom(prefix+'_floor', 'box', (x,y,.001), (.06,.06,.001), '.45 .49 .52 1', physical=True)
+        height = place_height_m if prefix == 'place' else 0.
+        if height > 0:
+            geom('place_pedestal', 'box', (x,y,height/2), (.06,.06,height/2),
+                 '.30 .35 .40 1', physical=True)
+        geom(prefix+'_floor', 'box', (x,y,height+.001), (.06,.06,.001), '.45 .49 .52 1', physical=True)
         for side in (-1,1):
-            geom(f'{prefix}_wall_x_{side}', 'box', (x+side*.059,y,.009), (.001,.06,.009), color, physical=True)
-            geom(f'{prefix}_wall_y_{side}', 'box', (x,y+side*.059,.009), (.06,.001,.009), color, physical=True)
+            geom(f'{prefix}_wall_x_{side}', 'box', (x+side*.059,y,height+.009), (.001,.06,.009), color, physical=True)
+            geom(f'{prefix}_wall_y_{side}', 'box', (x,y+side*.059,height+.009), (.06,.001,.009), color, physical=True)
         # Front plaque and a category strip give visual identity without obstructing the arm.
-        geom(prefix+'_plaque', 'box', (x,y-.075,.001), (.038,.008,.001), color)
+        geom(prefix+'_plaque', 'box', (x,y-.075,height+.001), (.038,.008,.001), color)
     body = ET.SubElement(world, 'body', name='grasp_target', pos=numbers((*PICK_CENTER,.012)))
     ET.SubElement(body, 'freejoint', name='target_free')
     ET.SubElement(body, 'geom', name='target_collision', type='box', size=numbers([x/2 for x in TARGET_SIZE]),

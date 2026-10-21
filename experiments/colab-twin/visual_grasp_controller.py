@@ -138,7 +138,7 @@ class VisualGraspController:
     def __init__(self, rig, target_xy, initial_q6, *, seed=0, target_timestamp_s=0.,
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
-                 place_xy=None):
+                 place_xy=None, place_height_m=0.):
         if rig.nq != 6 or rig.nv != 6:
             raise ValueError('Use the six-joint planning rig without a free target')
         if (not np.isfinite(estimate_ttl_s) or not 0 < estimate_ttl_s <= 1
@@ -163,6 +163,10 @@ class VisualGraspController:
         self.servo_transitions = []
         self.target_xy = self._target(target_xy)
         self.place_xy = finite_vector(PLACE_CENTER if place_xy is None else place_xy, 2, 'place_xy')
+        height = float(place_height_m)
+        if isinstance(place_height_m, (bool, np.bool_)) or not np.isfinite(height) or height < 0:
+            raise ValueError('place_height_m requires a finite nonnegative height')
+        self.place_height_m = height
         self.target_timestamp = float(target_timestamp_s)
         self.estimate_ttl = float(estimate_ttl_s)
         self.payload_uncertainty = float(payload_uncertainty_m)
@@ -198,7 +202,8 @@ class VisualGraspController:
             raise ValueError('Unsupported release rotation mode')
         self.release_rotation_mode = release_rotation_mode
         if not np.isfinite(release_pinch_height_m) or not .023 <= release_pinch_height_m <= .030:
-            raise ValueError('Release pinch height must be 23..30 mm in this fixed box workcell')
+            raise ValueError('Release pinch height must be 23..30 mm above the target tray base')
+        # This is relative to the tray base, whose world Z is place_height_m.
         self.release_pinch_height_m = float(release_pinch_height_m)
         self.release_record = None
         self.plan_reports = []
@@ -329,7 +334,7 @@ class VisualGraspController:
         names = ('stage_started', 'last_elapsed', 'observation_seq', 'observation',
                  'sweep_request_seq', 'jaw', 'reference', 'servo_offset', 'replans',
                  'transport_index', 'target_timestamp', 'target_frozen',
-                 'target_xy', 'place_xy', 'payload_uncertainty',
+                 'target_xy', 'place_xy', 'place_height_m', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z',
                  'release_rotation_mode', 'release_pinch_height_m')
@@ -500,7 +505,8 @@ class VisualGraspController:
                                      self.payload_rotation, self.world,
                                      self.payload_uncertainty, self.last_elapsed,
                                      getattr(self, 'release_pinch_height_m', .023),
-                                     place_xy=self.place_xy)
+                                     place_xy=self.place_xy,
+                                     place_height_m=getattr(self, 'place_height_m', 0.))
         # MjModel.__copy__ owns its arrays. No execution MjData reaches worker.
         job = TransportPlanningJob(binding)
         job.run(_run_transport_plan, copy.copy(self.rig), snapshot)
@@ -524,7 +530,7 @@ class VisualGraspController:
                 return tuple(snapshot(item) for item in value)
             return value
         names = ('transport_request_seq', 'stage_started', 'points', 'duration', 'jaw',
-                 'target_timestamp', 'target_frozen', 'target_xy', 'place_xy', 'payload_uncertainty',
+                 'target_timestamp', 'target_frozen', 'target_xy', 'place_xy', 'place_height_m', 'payload_uncertainty',
                  'payload_relative', 'payload_rotation', 'world', 'seed', 'servo_offset',
                  'release_rotation_mode', 'release_pinch_height_m')
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
@@ -549,7 +555,8 @@ class VisualGraspController:
                                      self.payload_rotation, self.world,
                                      self.payload_uncertainty, elapsed,
                                      getattr(self, 'release_pinch_height_m', .023),
-                                     place_xy=self.place_xy)
+                                     place_xy=self.place_xy,
+                                     place_height_m=getattr(self, 'place_height_m', 0.))
         self.transport_request_binding = self._async_transport_binding()
         self.transport_job = AsyncTransportPlanningJob(self.transport_request_binding)
         self.transport_wait = {'started_at_s': float(elapsed), 'pending_updates': 0,
@@ -558,7 +565,7 @@ class VisualGraspController:
                                       'request_seq': self.transport_request_seq,
                                       'snapshot_q6': list(snapshot.q6),
                                       'snapshot': {name: getattr(snapshot, name) for name in
-                                                   ('q6', 'target_xy', 'place_xy', 'payload_relative',
+                                                   ('q6', 'target_xy', 'place_xy', 'place_height_m', 'payload_relative',
                                                     'payload_rotation', 'world',
                                                     'payload_uncertainty', 'elapsed_s',
                                                     'release_pinch_height_m')}})
@@ -655,11 +662,12 @@ class VisualGraspController:
 
     def _compute_transport(self, q6):
         _, _, current = self._fk(q6)
-        release_height = getattr(self, 'release_pinch_height_m', .023)
+        place_height = getattr(self, 'place_height_m', 0.)
+        release_height = place_height + getattr(self, 'release_pinch_height_m', .023)
         # Every route must reach this same release pose; changing the hover
         # preference cannot repair an unreachable task endpoint.
         solve_pinch_ik(self.rig, np.r_[self.place_xy, release_height], q6[:5])
-        heights = [float(z) for z in np.arange(.06, release_height, -.003)] + [release_height]
+        heights = [float(z) for z in np.arange(.06 + place_height, release_height, -.003)] + [release_height]
         attempts = []
         for height in heights:
             validation_stage = 'endpoint_ik'
@@ -691,6 +699,8 @@ class VisualGraspController:
         duration = sum(leg['motion_duration_s']+.6 for leg in legs)
         self.plan_reports.append({'stage': 'transport_execution_plan', 'planned_at_s': self.last_elapsed,
                                   'place_xy': self.place_xy.tolist(),
+                                  'place_height_m': place_height,
+                                  'release_world_height_m': release_height,
                                   'transition_height_m': height,
                                   'transition_height_reason': ('original_height' if len(attempts) == 1
                                                                else 'lower_certified_route'),
@@ -761,7 +771,7 @@ class VisualGraspController:
             return value
         names = ('separation_request_seq', 'stage_started', 'points', 'duration',
                  'jaw', 'initial_q', 'seed', 'release_record', 'servo_offset',
-                 'world', 'last_command', 'place_xy', 'release_rotation_mode', 'release_pinch_height_m')
+                 'world', 'last_command', 'place_xy', 'place_height_m', 'release_rotation_mode', 'release_pinch_height_m')
         released = vars(self.released_query) if self.released_query is not None else {}
         context = tuple((name, snapshot(vars(self).get(name))) for name in names)
         context += (('released_owner', id(self.released_query)),
@@ -785,13 +795,15 @@ class VisualGraspController:
         snapshot = SeparationSnapshot(q6, self.initial_q, self.last_command, self.seed,
                                       elapsed, self.released_query.center,
                                       self.released_query.uncertainty_m,
-                                      vars(self.released_query).get('rotation', np.eye(3)))
+                                      vars(self.released_query).get('rotation', np.eye(3)),
+                                      place_height_m=getattr(self, 'place_height_m', 0.))
         self.separation_request_binding = self._separation_binding()
         self.separation_job = AsyncSeparationPlanningJob(self.separation_request_binding)
         self.separation_events.append({'event': 'request', 'elapsed_s': float(elapsed),
                                        'request_seq': self.separation_request_seq,
                                        'snapshot_q6': list(snapshot.q6),
                                        'snapshot_elapsed_s': snapshot.elapsed,
+                                       'place_height_m': snapshot.place_height_m,
                                        'release_stage_started_s': self.stage_started})
         # Cloning is main-loop cost. Both MjData instances are worker-owned.
         self.separation_job.start(run_separation_plan, copy.copy(self.rig),
@@ -1032,7 +1044,8 @@ class VisualGraspController:
                     raise ControllerFailure('released_object_query_missing')
                 origin, rotation, _ = self._fk(q6)
                 center = origin+rotation @ self.payload_relative
-                center[2] = .010  # Known tray support height; no execution pose.
+                # Known horizontal tray support, independent of execution pose.
+                center[2] = .010 + getattr(self, 'place_height_m', 0.)
                 if getattr(self, 'release_rotation_mode', 'axis_aligned') == 'floor_yaw':
                     carried_rotation = rotation @ self.payload_rotation
                     settled_rotation = floor_yaw_rotation(carried_rotation)
@@ -1045,6 +1058,7 @@ class VisualGraspController:
                     self.released_query.freeze(center)
                 self.release_record = {'estimated_center_m':center.tolist(),
                                        'place_xy':self.place_xy.tolist(),
+                                       'place_height_m':getattr(self, 'place_height_m', 0.),
                                        'uncertainty_m':self.released_query.uncertainty_m,
                                        'estimate_frozen_at_s':elapsed,
                                        'source':'pre-opening FK and carried estimate; known support height'}
@@ -1217,6 +1231,7 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.gripper_id = rig.body('gripper').id
     context.target_xy = np.asarray(snapshot.target_xy)
     context.place_xy = np.asarray(snapshot.place_xy)
+    context.place_height_m = snapshot.place_height_m
     context.payload_relative = np.asarray(snapshot.payload_relative)
     context.payload_rotation = np.asarray(snapshot.payload_rotation)
     context.payload_uncertainty = snapshot.payload_uncertainty
