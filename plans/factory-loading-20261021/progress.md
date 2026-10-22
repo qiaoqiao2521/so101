@@ -454,3 +454,35 @@ Knowledge：already_covered；沿用Wiki《ROS2 与 FishBot》第20节的独立�
 CLI11负反馈已闭合：同一前台CodeBuddy/DeepSeek Pro消费上述真实A/B与源码边界，67.103s、success，工具关闭。返回下一步先做窄wall/CPU诊断，没有新候选应用或额外物理。私有round11-post-sat-feedback保留prompt/stdout/stderr/receipt/原答复。owner只采纳分段计时方向，拒绝“查询/样本数量相等足以排除几何原因”的过度断言；两物理轨迹有小差异，计数不证明数值相等。worker也不在run_physical_episode内部，具体打点须按真实源码落位。
 
 当前最短接续：先复用run_physical_episode原循环和既有回调做小规模分段wall/CPU测量，分别覆盖controller.update、10次物理积分、diagnostics/monitor与录像记账。局部截断仍记incomplete；先确认昂贵阶段再生成下一策略/实现候选，不盲加完整抓放批次。当前没有后台运行。
+
+## F2l 100拍真实循环分段计时（2026-10-22）
+
+新增默认关闭的timing边界与probe_episode_timing.py，仍调用原evaluate_station。100拍主动停止是DiagnosticCycleLimit，原verdict=fail、passed=false，探针physical_success=null；没有抓放验收或50Hz通过声明。计时只用当前线程CPU，规划线程/编码子进程另记，不将重叠指标相加。代码相关25项测试通过。
+
+原nominal无计时d3234253-c62e-436d-b381-8217ec2e2a81与有计时835c11b0-8bc6-4ae1-90cc-d50e3456ba21均运行100拍/2sim秒；全部trajectory字段相等，elapsed/q6/qvel/command/geometric_reference/servo_offset/object_xyz/tip_forces及初态逐binary64相等。各13帧完整录像、safety_stop=false。评测调用区间wall4.377499/4.235059s仅为透明性对照，不是性能收益证据。原探针process字段实际排除了导入和最后写探针报告，不是全进程；后续工具已改名evaluation_interval，full_process留null，原文件保留。
+
+有计时100拍：完整周期wall中位5.406075ms、P95 8.216732ms，当前线程CPU中位5.406184ms。总循环wall0.582502s，其中controller0.384576s（66.0%）、物理与2ms守卫0.107100s（18.4%）、diagnostics/记账0.056028s（9.6%）、callbacks0.019207s、定位0.011158s。初始化3.254750s，录像收尾0.332112s另列。仅approach，不涵盖持物、释放、回位、异步等待或长扫掠，不能解释此前完整70→104s差异。
+
+独立第三个100拍只对原controller.update开cProfile，保存于同series/controller-profile。5800次projected_box_bounds、6700次np.r_，遮挡预测为可测子成本；剖析开销不作微基准。CodeBuddy/DeepSeek Pro round12正在消费该证据，只允许像素包围盒单函数实现候选，不改变遮挡范围、角点、保守判定、阈值或任务条件。局部淘汰后不机械追加完整物理。
+
+产物：experiments/colab-twin/output/episode-loop-timing-20261022/short-100/{control,timed}/timing-probe.json及transparency-readback.json。复跑：在experiments/colab-twin使用原Python执行probe_episode_timing.py --station scenarios/factory-loading/capability-segments-0mm.json --output-dir output/<新目录> --cycles 100；透明性对照另加--no-timing。实际资源已归还FishBot，无owned物理残留。
+
+Knowledge：already_covered，沿用Wiki《ROS2 与 FishBot》第20节双时钟、独立验收及局部证据边界。
+
+### F2l 完整原版与后续局部候选
+
+一次原baseline完整计时ef1db833-45a4-49f1-a796-a54d11f4fd4d已原pass：74.78sim、grasp/place/controller_done=true，持物31.42s、静稳7.52s、抬升41.271785mm、障碍接触0、安全停机false、free_object=true、weld=mocap=0；释放后力0N、XY漂移0.265805mm，468/468录像。与历史原baseline afdb6cfc的3739拍全部trajectory字段相等，八组数值逐binary64及两场景XML字节相等。此对照只核透明性，不是不同宿主时刻的性能A/B。
+
+主循环3739周期合计49.132078wall/48.592849当前线程CPU；controller39.464553wall/39.050429CPU，物理＋2ms守卫5.447515wall，诊断2.494416、callbacks1.416229、实时定位0.095707；初始化3.226248、录像收尾1.407813另列。运输控制18.376051s、闭爪控制6.805051s。全周期wall中位15.068856ms、P95 27.443683ms、最大154.894327ms，259/3739超过20ms，完整50Hz未通过。
+
+时钟口径修正：原探针process字段54.270431wall、55.847570self CPU、3.317409children CPU实际是evaluate()调用区间，排除探针导入和最后探针JSON序列化。全进程wall/CPU未外层测量，留null；不可与旧70.319986全进程数算收益，也不可将children CPU重复加到当前线程阶段。原timing-probe保留，analysis和independent-readback明确修正；工具后续字段改evaluation_interval，并将每次报告保存在原UUID内，避免同root重跑覆盖证据。
+
+CLI12像素拼装局部screen原eligible，所有6092输出逐位相等，三对局部wall省18.590/20.338/18.239ms；但只影响前6.54sim秒，按前100拍粗算约0.06s潜在整轮收益，并非实测提速。该候选暂缓完整A/B，默认不变。原响应解析首次把消息数组误当对象，已保留解析错误并从同一原stdout恢复，无额外模型调用。
+
+100个已记录运输guard-core输入局部复算全valid，无mj_step/无任务成绩。5500个configuration-sweep状态与5800次checker表明完整夹爪扫掠是主要成本。cProfile带额外开销：core1.663s、sweep1.492、native summary-frame1.048、binding0.194；不将剖析比例当未剖析成本。仅部分上下文从现有构造器与记录重建，不能称完整update重放。保存transport-core/profile_core.py、results.json及pstats。
+
+CLI13只尝试减少snapshot数组逐标量递归，保留原全部字段、独立所有权、signed zero、原_immutable_context与全部扫掠点。首版真实调用snapshot_context(np.zeros(3))因缺RoutePolicy导入NameError；failure-v0.json与candidate-v0.py保留，已通过CodeBuddy原native session反馈实际错误及ndarray subclass回退边界。修正8.438s完成，100绑定context.matches、30边界与修改原数组后副本保持均通过；原三对局部wall省3.697/4.275/4.458ms，中位4.275ms低于原5ms门槛，reject，不进生产/完整A/B。初版局部比较器另有基线函数抽取后未绑定递归名称的错误，local-screen-v0-harness-error保留；只纠正边界读回并保留三对原计时，没有重测挑有利批次。后续native原始认证计算是主要成本，不删5500状态。
+
+当前27相关测试通过（含原验证失败不因缺report崩溃、异常后原入口恢复）；原生OpenGL导入出现第三方/proc/cpuinfo ResourceWarning，测试仍正常通过，未因此改依赖。FishBot实际sim/bridge已占用，后续仅CLI/native局部检查，不并发新SO101物理、没有默认变更或20＋20/实体。
+
+完整复跑：原Python执行probe_episode_timing.py --station scenarios/factory-loading/capability-segments-0mm.json --output-dir output/<新目录> --full-episode。仍为原90sim/120wall；analysis.json和independent-readback.json位于同series/full-baseline。

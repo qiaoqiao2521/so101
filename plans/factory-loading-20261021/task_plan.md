@@ -138,3 +138,13 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 ## F2k 最新结果与接续
 
 干净5d1bc1c按原prepared的nominal完整A/B已2/2pass，候选全进程wall与CPU均增加；仅hold少2拍。原baseline保持，SAT不晋级、不扩第二工位物理。两进程终态/owned清理与原释放/录像已核，资源已回告FishBot。下一步复用现有CLI消费真实负结果，先量出主循环分段wall/CPU及同窗宿主状态，再生成有证据的小补丁；原物理和计时准则不改。
+
+## F2l 原循环短诊断（2026-10-22）
+
+1. 默认关闭的边界计时接入原run_physical_episode，记录独占wall与当前线程CPU。保留原执行器、评分、录像和90sim/120wall。短探针用既有cancel_check在100拍后停止，原fail/incomplete不改写（complete）。
+2. 原nominal工位100拍无计时→有计时串行对照，轨迹所有字段相等；八组数值字段与初态逐binary64相等，视频各13/13。周期中位5.406ms，controller占总循环wall66.0%、物理18.4%。仅approach 2sim秒，不外推完整任务/50Hz或上轮变慢原因（complete）。
+3. 独立100拍只剖原controller.update，显示_occlusion_warning的5800次包围盒投影及通用np.r_拼装是可测子成本。cProfile有额外开销，不作为候选提速成绩（complete）。
+4. 原CodeBuddy/DeepSeek Pro生成像素包围盒拼装候选，5800个FK查询＋292边界逐位同值，三对局部改善18.24–20.34ms、原screen为eligible。但原遮挡预警在6.54sim秒结束，按前缀粗算仅约0.06s潜在整轮收益；暂不做完整候选A/B，不切默认（complete）。
+5. 单次原baseline完整计时，原物理pass、74.78sim，3739拍全部轨迹字段与八组binary64字段同旧baseline，原场景XML相同。循环49.132s中controller39.465s；transport控制18.376s、close6.805s。P95 27.444ms、259周期超过20ms，50Hz仍未通过（complete）。
+6. 只复算100条已记录运输认证输入：5800次checker、5500全夹爪扫掠状态全部通过。原CLI快照复制首版NameError已反馈原native会话修正，100绑定/30边界/持有副本检查同值；原三对仅省3.697/4.275/4.458ms，中位低于5ms，reject，不改阈值、不重测。比较器递归名称缺口已单独纠正，保留原成本（complete）。
+7. 现有FishBot物理占用期间，只通过原CLI和私有编译做单一native实现实验；保留所有采样、严格浮点和原裁判。局部不胜出不追加完整抓放，默认继续baseline（in_progress）。

@@ -175,12 +175,13 @@ def run_p0(source, out, protocol, deadline):
 def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                          scene_builder=None, progress_callback=None, cancel_check=None,
                          video_factory=None, video_stride=2, controller_options=None,
-                         scene_callback=None):
+                         scene_callback=None, timing=None):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
     from deferred_video import DeferredVideo
     out.mkdir(exist_ok=False)
     start_wall=time.monotonic()
+    if timing is not None: timing.start()
     case_deadline=start_wall+protocol['max_episode_wall_s']
     deadline=case_deadline if deadline is None else min(deadline,case_deadline)
     rows=[]; observations=[]; frame_count=0; renderer=None; writer=None; monitor=None; controller=None; checker=None
@@ -238,11 +239,14 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             writer=factory(model,out/'grasp-place.mp4',max_frames=2250,deadline=deadline)
         time0=float(data.time); tick=0; next_image=.5
         last={'target_frozen':False,'stage':'approach'}
+        if timing is not None: timing.mark('initialization')
         while float(data.time)-time0 < protocol['max_sim_s']-1e-9:
+            if timing is not None: timing.begin_cycle(float(data.time)-time0)
             if cancel_check is not None:
                 cancel_check()
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit')
             elapsed=float(data.time)-time0
+            if timing is not None: timing.mark('poll_and_clock')
             estimate=None
             if not last['target_frozen'] and elapsed>=next_image-1e-9:
                 rgb=render_rgb(renderer,data)
@@ -252,8 +256,10 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                 next_image+=.5
                 if not detected.valid:
                     save_overlay(out/'rejected-localization.png',rgb,detected)
+            if timing is not None: timing.mark('perception')
             before=data.qpos[:6].copy()
             last=controller.update(before,data.qvel[:6].copy(),elapsed,estimate=estimate)
+            if timing is not None: timing.mark('controller')
             if last['status']=='failed':
                 if last['failure_reason'] in ('measured_arm_configuration_invalid','current_pose_command_chord_invalid',
                                               'measured_closure_sweep_invalid','measured_separation_invalid',
@@ -301,6 +307,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             obstacle_ids = {model.geom(name).id for name in
                             case.get('obstacle_geom_names', ['approach_obstacle'])}
             release_force_peak=0.
+            if timing is not None: timing.mark('command_checks')
             for _ in range(10):
                 mujoco.mj_step(model,data)
                 if release_audit.anchor is not None:
@@ -318,6 +325,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                     obstacle_steps+=1
                     break  # Abort at the first 2 ms contact, before another integration.
             mujoco.mj_forward(model,data)
+            if timing is not None: timing.mark('physics_and_guards')
             row=diagnostics(model,data,checker)
             row.update(stage=last['stage'],elapsed_s=float(data.time)-time0,
                        q6=data.qpos[:6].tolist(),command=command.tolist(),
@@ -329,18 +337,23 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                        robot_target_force_peak_n=release_force_peak,
                        released_detached=release_audit.detached)
             rows.append(row)
+            if timing is not None: timing.mark('diagnostics_and_record')
             if progress_callback is not None:
                 progress_callback(row)
             emit_scene(row=row)
+            if timing is not None: timing.mark('callbacks')
             status=monitor.update(row)
             if release_audit.failure_reason:
                 status['safety_stop']=True
                 raise RuntimeError(release_audit.failure_reason)
             if injected and pulse_count==10 and pulse_after is None:
                 pulse_after=data.qpos[:6].tolist()
+            if timing is not None: timing.mark('task_monitor')
             if writer is not None and tick%video_stride==0:
                 writer.capture(data,tick); frame_count+=1
+            if timing is not None: timing.mark('video_capture')
             tick+=1
+            if timing is not None: timing.end_cycle(last['stage'], float(data.time)-time0)
             if obstacle_steps or status['safety_stop']:
                 status['safety_stop']=True
                 raise RuntimeError('safety_stop')
@@ -370,6 +383,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         status.update(passed=False,error_type=type(error).__name__,error=str(error))
         if not status.get('failure_reason'): status['failure_reason']=str(error)
     finally:
+        if timing is not None: timing.begin_cleanup()
         # Capture the actual final physical state even when cancellation or a
         # guard interrupts between sparse updates. Deferred video uses its own
         # MjData and cannot overwrite this terminal scene.
@@ -397,8 +411,11 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                 'paths': proposal.paths,
                 'samples': [{name: getattr(row, name) for name in
                              ('q5', 'pinch3', 'distances', 'pad_vertices')} for row in proposal.samples]}
+        if timing is not None: timing.mark('controller_cleanup')
         finalize_episode_video(writer,status,frame_count)
+        if timing is not None: timing.mark('video_finalize')
         if renderer is not None: renderer.close()
+        if timing is not None: timing.mark('renderer_close')
         status.update(case=case,wall_s=time.monotonic()-start_wall,steps=len(rows),
                       release_audit=release_audit.report(),
                       simulation_s=rows[-1]['elapsed_s'] if rows else 0.,
@@ -426,10 +443,12 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         write_json(out/'trajectory.json',rows)
         write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)
+        if timing is not None: timing.mark('artifact_write')
         status['wall_s'] = time.monotonic()-start_wall
         if time.monotonic()>=deadline:
             status.update(passed=False,failure_reason='wall_time_limit')
         write_json(out/'report.json',status)
+        if timing is not None: timing.mark('report_write')
     return status
 
 

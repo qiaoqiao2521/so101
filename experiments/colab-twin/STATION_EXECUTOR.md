@@ -144,3 +144,14 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 
 
 `route_strategies/batch_separation_axes.py`是独立的默认关闭候选，只将冻结分离worker的SAT叉积构造批量执行；原标量实现、全部查询和采样仍保留。可用同一保存快照探针加`--candidate experiments/colab-twin/route_strategies/batch_separation_axes.py`检查实际接入路径。开发与物理成绩以原计划最新段落为准，局部通过不等于完整抓放或整回合提速。
+
+原循环分段计时沿用同一工位执行器、评分、录像和90sim/120wall。默认运行100拍后主动截断，原verdict仍为fail，探针记录diagnostic_truncated；这不是抓放验收。
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
+  experiments/colab-twin/probe_episode_timing.py \
+  --station experiments/colab-twin/scenarios/factory-loading/capability-segments-0mm.json \
+  --output-dir experiments/colab-twin/output/<新目录> --cycles 100
+```
+
+无计时透明性对照另加`--no-timing`；完整诊断改用`--full-episode`，仍由原判据结束。报告逐周期区分wall和当前线程CPU，并将初始化、控制后录像、清理另列；规划线程和编码子进程不能重复加到当前线程分项。`evaluation_interval`仅为原evaluate调用区间，不是全进程；`full_process`未外层测量时留null。每次timing-probe保存在该UUID目录，并在输出根保留最新读回。计时默认关闭，不改变原网页或evaluate_station普通调用。
