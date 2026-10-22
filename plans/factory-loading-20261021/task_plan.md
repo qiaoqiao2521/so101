@@ -133,3 +133,8 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 ## F2k 当前接续
 
 批量SAT轴候选已通过实际nominal/200-200局部成本与三个工位逐位等值；220-170成本不一致。128相关测试通过。下一项只接nominal原完整A/B（prepared见progress），当前FishBot实际占用；不因未回消息创建新的人工审批，不与活实例并发。default-off候选不会因本地绿灯或单次墙钟差自动切默认。
+
+
+## F2k 最新结果与接续
+
+干净5d1bc1c按原prepared的nominal完整A/B已2/2pass，候选全进程wall与CPU均增加；仅hold少2拍。原baseline保持，SAT不晋级、不扩第二工位物理。两进程终态/owned清理与原释放/录像已核，资源已回告FishBot。下一步复用现有CLI消费真实负结果，先量出主循环分段wall/CPU及同窗宿主状态，再生成有证据的小补丁；原物理和计时准则不改。

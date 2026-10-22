@@ -411,7 +411,7 @@ Next：CLI10 Flash的429/exit0/空stdout原样保留，未称候选成功；同h
 Knowledge：already_covered；沿用Wiki《ROS2 与 FishBot》第20节的独立物理评分/候选晋级边界与双时钟解释。当前计时、失败和来源留本计划，无个人memory写入。
 
 
-## F2k 当前：批量SAT轴局部通过，等待原物理空档
+## F2k 批量SAT轴局部通过，完整物理结果见后续接续
 
 Done：原生CodeBuddy/DeepSeek Pro生成源码，owner仅做现有接口接入；`batch_separation_axes`默认false，候选入口`route_strategies/batch_separation_axes.py`。数学body与私有CLI源码AST比较相同。128项相关回归通过，其中新增462组阈值邻域/旋转的SAT逐位对照及真实query/pad位姿对照。主控制器、评分、碰撞阈值和回退不变。
 
@@ -422,10 +422,35 @@ Next：原nominal完整baseline→candidate命令与输入已保存`output/separ
 Knowledge：already_covered，沿用上述独立评分、双时钟与默认不晋级原则。
 
 
-F2j/F2k 软件交付775d658已推至`qiaoqiao2521/so101`的`codex/colab-twin-20261001`；Git ls-remote和GitHub REST均独立读回相同完整提交。默认候选仍baseline。最后现场核查FishBot141/9111的sim/bridge仍active，owner正在执行第二单，没有启动新的SO101评测、也未停其他owner实例。资源占用是当前物理阻塞；无owned SO101运行或后台自续承诺。下一owner根Codex，空档先核实际重实例，再运行下列已准备的原CLI二轮；完整结果前不写F2k已验收。
+此前资源阻塞时的交接记录（已由下节实际结果接续）：F2j/F2k 软件交付775d658已推至`qiaoqiao2521/so101`的`codex/colab-twin-20261001`；Git ls-remote和GitHub REST均独立读回相同完整提交。默认候选仍baseline。最后现场核查FishBot141/9111的sim/bridge仍active，owner正在执行第二单，没有启动新的SO101评测、也未停其他owner实例。资源占用是当前物理阻塞；无owned SO101运行或后台自续承诺。下一owner根Codex，空档先核实际重实例，再运行下列已准备的原CLI二轮；完整结果前不写F2k已验收。
 
 ```bash
 python3 /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round10-batched-cross-axes/run_pair.py /home/muqiao/dev/ros2/_delivery/so101-colab-20261001/experiments/colab-twin/output/separation-cross-axes-20261022/dba35cbb-0660-4d66-b7b4-7054ae69a5c2/prepared.json
 ```
 
 该helper只串行调用prepared内两条原evaluate_station argv，逐轮保存进程wall/CPU；未知/失败保留，原任务时限不改。不能为等待资源机械重跑已完成局部批次或只取有利结果。
+
+
+## F2k 完整物理A/B已完成：2/2通过，无端到端净收益（2026-10-22）
+
+Current：原baseline保持；SAT批量轴默认关闭，本组不晋级、不扩第二工位完整抓放。启动前现场已无其他机器人重实例，沿原prepared串行执行，源为干净5d1bc1c。
+
+| 配置 | run_id | 原判定 | sim秒 | report wall秒 | 全进程wall秒 | 全进程CPU秒 |
+|---|---|---|---:|---:|---:|---:|
+| baseline | afdb6cfc-84b3-454f-a8e0-1bcedf5ec76d | pass | 74.78 | 68.644547 | 70.319986 | 76.864662 |
+| batch-SAT | 44ec6f60-5a04-409c-8b98-d34074a7a0c4 | pass | 74.74 | 103.930547 | 104.705051 | 106.869326 |
+
+Done：两轮原抓取/搬运/放置/静稳/释放/回位均通过，safety_stop=false、障碍接触0、free_object=true、weld=mocap=0，录像各468/468。释放XY最大漂移0.265805/0.265783mm，脱离后峰值力0N，静稳均7.52s。resolved_station、初态qpos和四XML逐字节相同，实际评分器引用相同；候选实际记录distance_kernel=batched_cross_axes，233次查询与205个保存样本完整保留。
+
+分段回读：hold144→142拍，其他阶段计数相同；0.04sim差仅hold。分离worker墙钟0.594886→1.813300s，未改的运输worker也从1.277194→2.118864s，运输search1.233085→2.036460s。整进程wall增加34.385066s、CPU增加30.004664s；这些重叠指标不能相加。原轨迹没有逐阶段wall/CPU或连续宿主频率/争用记录，不能把全差归因于SAT、GIL、GPU或宿主调度。局部数学等值/成本通过没有转化为本组端到端收益。
+
+产物仍在原dba35cbb目录：pair-process-results.json包含准确argv/PID/退出和两时钟；pair-readback.json独立汇总原report/trajectory/planning/释放/录像及输入对照，原两UUID产物完整保留。本次helper无修改评分、物理阈值、90sim/120wall或场景。两个进程exit0；现场核无owned evaluate_station/run_visual_grasp残留，已向FishBot回告资源归还。
+
+Next：将本组实际负结果送同一CodeBuddy/DeepSeek Pro，先分离真实循环计算与宿主条件，再提下一小改动。短探针若提前停止仍记incomplete，不得算抓放成功；不重复完整A/B直到原数据支持新假设。本轮没有默认变更、训练、实体操作或新调度器。
+
+Knowledge：already_covered；沿用Wiki《ROS2 与 FishBot》第20节的独立物理评分和候选晋级边界。项目结果留本计划，不写个人memory。
+
+
+CLI11负反馈已闭合：同一前台CodeBuddy/DeepSeek Pro消费上述真实A/B与源码边界，67.103s、success，工具关闭。返回下一步先做窄wall/CPU诊断，没有新候选应用或额外物理。私有round11-post-sat-feedback保留prompt/stdout/stderr/receipt/原答复。owner只采纳分段计时方向，拒绝“查询/样本数量相等足以排除几何原因”的过度断言；两物理轨迹有小差异，计数不证明数值相等。worker也不在run_physical_episode内部，具体打点须按真实源码落位。
+
+当前最短接续：先复用run_physical_episode原循环和既有回调做小规模分段wall/CPU测量，分别覆盖controller.update、10次物理积分、diagnostics/monitor与录像记账。局部截断仍记incomplete；先确认昂贵阶段再生成下一策略/实现候选，不盲加完整抓放批次。当前没有后台运行。

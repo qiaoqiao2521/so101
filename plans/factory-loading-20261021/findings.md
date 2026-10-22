@@ -80,3 +80,6 @@ Mint 跟随器已有低配现场动作资产产品，研究工位已有 Lichtbli
 CodeBuddy/DeepSeek Pro实际输出将9个a-major/b-minor叉积合并为单次广播；生产数学body与CLI源码AST相同，仅重命名和docstring不同。原逐轴范数、1e-10跳过、归一化、投影和max保持；原box_separation仍保留。ReleasedObjectQuery新增显式选项，仅冻结分离worker用partial开启；主控制器/实时检查默认路径保持，独立reuse缓存关闭，避免多变量。
 
 当前三已有工位全部路径/205或191保存样本/距离/守卫/数学报告逐位等值。原nominal集成三对中位-46.035ms、200/200三对-39.106ms，均逐对wall下降；220/170中位-77.351ms但一对+16.477ms，原成本筛选inconclusive。全部wall/CPU原值保留，不将最初低频/负载下CLI探针的较大绝对差外推。完整任务待原物理评测，默认保持baseline。
+
+
+F2k后续原物理结果：两轮pass，但SAT全进程wall70.320→104.705s、CPU76.865→106.869s，分离worker也未兑现局部收益。未改运输worker同时变慢，说明现有记录不足以单独归因SAT；同场景、评分和初态已核，不等于已控制整个宿主条件。保持原默认，不扩完整抓放。下一项应测原循环分段wall/CPU和同窗宿主条件，先用短探针取得可区分假设的证据，不能继续只比较hold帧或挑有利计时。
