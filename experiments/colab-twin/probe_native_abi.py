@@ -174,6 +174,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--station', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--candidate', type=Path,
+                        help='Explicit route source; diagnostics default to original baseline.py')
     parser.add_argument('--sample-cap', type=int, default=256)
     args = parser.parse_args()
     if args.sample_cap < 1:
@@ -181,7 +183,8 @@ def main():
     observer = NativeObserver(args.sample_cap)
     observer.install()
     try:
-        original = run_probe(args.station.resolve(), args.output_dir.resolve(), cycles=None)
+        original = run_probe(args.station.resolve(), args.output_dir.resolve(), cycles=None,
+                             candidate_path=args.candidate)
     finally:
         observer.uninstall()
     total = original['summary']['sections'].get('controller', {}).get('wall_s', {}).get('total_s')

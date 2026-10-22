@@ -672,4 +672,42 @@ F2u闭合：CLI27同native会话80.385s/success，私有SUPPORT_BOX_DIRECT宏控
 
 下一项只量原seed/DFS叶中同一批顶点的64-byte存储足迹。私有round28-leaf-layout/count_layout.py沿真实2816 ABI输入/原提示，原逐点计算不变，仅整数计数；同时给出原存储涉及行数与同顺序连续数组的保守行数上界。该值不是硬件cache miss或CPU收益，不在未计数前宣称缓存瓶颈。当前无新候选、树/点集合/数学/评分/默认均未改；有依据才交原CLI提出小布局适配。
 
+F2v原工作量已回读：2816份真实输入共DFS899502叶/9535033顶点，原涉及7084261条64-byte存储行；按同顺序连续数组的保守上界4735042条。seed50876叶/600593点，对应456103→286682条。该度量不是CPU cache miss；原计数版12numeric/6flag/hint_out0差异、超16点叶0。
+
+CLI28同native会话126.247s/success，返回纯make_candidate。SUPPORT_LEAF_PACKED仅对scalar seed/DFS叶使用geom.order顺序的拥有坐标副本；原points/order/tree、初始vertex0、witness、full_scan和全部数学/有限检查/同值索引保持。可选副本分配失败回原points，未组合旧quad/smallcache/leaf8。owner纠正说明中“单几何约950点”的无依据估计：实际17个mesh、198900个顶点，596700个binary64值，副本约4.55MiB。
+
+私有原full-scan oracle正常/强制分配失败各9项、各96对照行均通过；实际所有596700个副本值逐位一致，强制失败时17个mesh副本全空、原数据仍完整。首轮复用测试harness漏kernel_sha256元数据，9项主体通过但tearDown报错，保留tree-readback-initial-missing-metadata.json；仅修复既有测试元数据后重跑，未删除或放宽任何原oracle。
+
+2816真实ABI输入恢复原hint_in，原numeric/flags/raw hint_out/提交hint、macro-disabled和强制空副本控制0差异，实际10135626次叶顶点读取走packed。三对0.521978→0.483332、0.510603→0.476287、0.512787→0.476933s，effect −38.646/−34.315/−35.854ms，原screen=eligible_for_physical_ab。只表示局部通过，不当作整回合收益。
+
+现已默认关闭接入原RoutePolicy/native build/station_executor/route_strategies/leaf_packed.py。67相关回归通过，含正常/强制分配失败的原full-scan oracle。集成default预处理同原c77d6ff、enabled同CLI原型；生产两库预热完成，实际2816输入再与原库逐位同值，NaN/Inf/零margin及原FE_DOWNWARD、FTZ_DAZ拒绝行为保持。未新增C ABI、内容锁或物理规则。
+
+即将原nominal baseline→candidate两轮，prepared：experiments/colab-twin/output/packed-leaf-factory-20261023/f6ee53dd-c6ee-4ebc-af26-4aa23fdd5aa4/prepared.json。原90sim/120wall、完整视频与评分保持，用原run_pair量完整process wall/CPU及原timing分段；测量期间冻结全部源码/文档/HEAD与dirty路径，不改默认。两根已通知；无人机明确未开新仿真，FishBot明确已清理。未有本候选物理结果，只有有净收益才进已有第二工位。
+
+### F2v 第一工位原物理2/2pass，进入既有第二工位
+
+baseline a3dee934-9768-4a88-bded-30ba7c3e113d：74.78sim、53.338079全process wall、60.628044CPU；candidate 0853db70-beb1-41b1-a7a9-435c17216a44：74.82sim、51.413476wall、58.451418CPU。实测wall少1.924603s（3.6083%）、CPU少2.176626s，controller wall38.058793→36.428636、同线程CPU37.731216→36.080063。候选hold144→146拍（多2拍），其他阶段拍数全同，不把少等待当提速。
+
+规划分列：transport worker wall1.061594→1.049835s，原route_search1.021650→1.006519s；separation worker0.530913→0.538116s，没有虚称所有规划都更快。原resolved输入、四XML、初始qpos/qvel、裁判与释放阈值均相等，实际native flags只差SUPPORT_LEAF_PACKED。两轮完整抓放/静稳/释放脱离/回位通过，safety=false、障碍0、free_object=true、weld=mocap=0、录像各468帧；释放漂移0.265805/0.265827mm、脱离后力0N。P95 25.794732→25.393870ms，仍有234/227拍超过20ms，50Hz未通过。独立回读在原pair目录independent-pair-readback.json。
+
+按既有规则不凭单工位切默认。下一组是已有200/200工位candidate→baseline，prepared：experiments/colab-twin/output/packed-leaf-factory-20261023/bffaf73d-f3b7-4d15-9683-6fffabf16ab6/prepared.json。两库复用已预热版本，源/默认/裁判均不改，反转顺序；已通知两根继续串行占用，无并发机器人重实例。尚无第二工位结果。
+
+### F2v 第二工位通过，采用工厂默认入口
+
+200/200反序实跑：candidate f82a4d50-5d1c-4a60-b880-db919d68af42，77.10sim、53.916716全process wall、61.517536CPU；baseline 990054ff-077e-494f-b28f-7b5e2c387f4f，77.06sim、55.171011wall、62.905704CPU。两轮原pass，候选wall少1.254295s（2.2735%）、CPU少1.388168s，controller wall少1.083668s、线程CPU少1.021668s；sim反多0.04s，仍不是少等拍。
+
+运输worker wall1.430474→1.342000s，分离worker0.706425→0.709473s，分别记录，不宣称分离加速。P95 26.773985→25.502755ms，超过20ms的周期245→241，50Hz仍未通过。原输入/四XML/初态/裁判/释放阈值与实际flags均独立核对；抓放/释放脱离/回位、零障碍接触及自由物体条件通过。完整读回在该pair的independent-pair-readback.json，两组原所有四轮与失败前代均保留。两组终态确认，已回告两根释放资源。
+
+基于原局部三对一致、两既有工位反序全process/CPU/controller均下降，以及完整原裁判4/4通过，保留CLI28并在工厂入口采用。RoutePolicy()及baseline.py仍原版；DEFAULT_SOURCE仅指向leaf_packed.py，evaluate_station与直接station_executor.run缺省时复用同loader。显式其他旧候选仍按原字段缺省false，不自动叠加；底层native API缺省与全局模型不改。新增默认/原版分离及原失败透传测试，36相关入口测试通过。
+
+当前验证唯一新内容是“不带--candidate”的默认入口：prepared：experiments/colab-twin/output/packed-leaf-default-20261023/e2c24c9a-1f6c-4c88-a297-27609bcedc13/prepared.json。单回合原90sim/120wall/评分/录像保持，不与前轮异时序数据算新收益。已通知两根串行占用一次；开始后冻结源码/HEAD/dirty路径，尚无默认入口物理结果。
+
+默认入口4f59686e-4e80-4612-9d13-81521777b8e9已完成：原pass，74.82sim、51.695749全process wall、59.048693CPU。实际loaded_path/entrypoint均leaf_packed.py，preferences只开leaf_packed，实际flags仅加SUPPORT_LEAF_PACKED。抓放/释放脱离/回位通过，safety=false、障碍0、free_object=true、weld=mocap=0；释放漂移0.265827mm、脱离后力0N。默认与前轮显式候选3741拍trajectory所有字段按binary64字节完全相同，独立读回在该目录default-independent-readback.json。这是默认接线验证，不从51.696s再推新收益。进程结束，已向两根释放仿真资源。
+
+默认升级的兼容收口：probe_episode_timing/run_probe及probe_native_abi默认显式传baseline.py，避免历史原版诊断被新的工厂默认选择影响；两探针可用--candidate显式测已采用版本。8诊断相关回归通过，原异常恢复和显式候选转发仍保持。此补丁不改物理执行或评分，无需重复原五轮物理。
+
+Knowledge：updated。既有Wiki《ROS2 与 FishBot》第20节新增“性能微基准要保留真实调用状态”段，既有《开发知识入口》补hint_in/阶段覆盖/组件与整回合的入口。已读回原页410行与入口95行，确认来源是本项目ABI观察及原任务对照。保留该独立vault原有403行等未提交工作，没有覆盖或把它们混入本仓发布；本轮仅新增一段与一条入口，不宣称vault已提交推送。
+
+当前本轮实现、五轮原物理、局部/默认/诊断检查与文档已完成；根Codex串行提交推送后继续读实际剩余热点，原裁判、计时、失败证据与原版复跑均保留。不追加20+20、训练、实体动作或无依据参数扫描。
+
 Knowledge：pending。候选经验是稀疏微基准必须保存每条真实hint_in，组件收益不替代全任务；后者已由Wiki《ROS2 与 FishBot》第20节覆盖。原Wiki及问题入口已有未提交工作，先保留，不并发改写。根Codex在本轮收尾协调后判断是否补充输入历史的适用条件；最短证据是本节native-abi.json与leaf8-replay-diagnostic.json。

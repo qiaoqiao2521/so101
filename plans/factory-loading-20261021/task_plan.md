@@ -160,4 +160,5 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 15. 沿原baseline真实循环采native ABI各阶段wall/线程CPU及拥有的p/R/pairs/margin/hint_in。原裁判pass，151589次main-update查询占插桩controller墙钟62.6%，11阶段各256个真实输入。2816份基线重算与叶8结果逐位同值，但不改变叶8整回合无收益结论（complete）。
 16. 同一online守卫端点复用：三次CLI修正均保留；最终200保存输入等值，但局部三对−14.451/+19.071/−13.849ms且绕过原FE_DOWNWARD拒绝，reject，不应用生产或追加物理（complete）。
 17. 原_summarize实测整个组件估1.039s，不为此新建C ABI。CLI27盒子非轴直算204边界/2816真实输入同值，实际16676次分支覆盖；三对+2.325/+4.597/+5.379ms，reject，不应用生产或跑物理（complete）。
-18. 基于原顶点遍历而非参数扫描，核算真实ABI样本中的叶顶点存储足迹；保持完整原顶点/顺序/数学/提示/回退。先量读取是否分散，确认后才交原CLI提出最小布局候选，不改变树或组合旧候选（in_progress）。
+18. CLI28叶顶点连续副本：原点/order/tree/数学/索引/提示不变，可选复制失败保留原路径。2816真实输入、原full-scan oracle、67相关回归同值；三对局部省34–39ms。两个既有工位四轮原裁判pass，反序实测wall分别少1.925s/1.254s，CPU与controller同降，候选sim反而都多0.04s，保留有效改进（complete）。
+19. 工厂默认source选leaf_packed.py，显式baseline.py及RoutePolicy()保留原版，其他旧候选不叠加；36入口相关回归通过。不带--candidate的原完整抓放pass，实际加载路径/flags及自由物体条件已回读，与显式候选3741拍轨迹逐位相同。提交推送后接下一实测热点，不重复跑旧对照（implementation_complete，publication_in_progress）。

@@ -57,10 +57,11 @@ def summarize(timing):
                          for name, rows in sections.items()}}
 
 
-def run_probe(station, output, *, cycles=100, collect_timing=True):
+def run_probe(station, output, *, cycles=100, collect_timing=True, candidate_path=None):
     # Import before process measurements; import time is not a control-cycle cost.
     import evaluate_station
     import run_visual_grasp
+    from route_policy import BASELINE_SOURCE
 
     timing = EpisodeTiming()
     count = 0
@@ -92,7 +93,8 @@ def run_probe(station, output, *, cycles=100, collect_timing=True):
     started = time.perf_counter()
     run_visual_grasp.run_physical_episode = measured_episode
     try:
-        evaluator_code = evaluate_station.evaluate(station, output)
+        evaluator_code = evaluate_station.evaluate(
+            station, output, candidate_path=candidate_path or BASELINE_SOURCE)
     finally:
         run_visual_grasp.run_physical_episode = original_episode
     wall_s = time.perf_counter()-started
@@ -141,6 +143,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--station', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--candidate', type=Path,
+                        help='Explicit route source; diagnostics default to original baseline.py')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--cycles', type=int, default=100)
     mode.add_argument('--full-episode', action='store_true',
@@ -151,7 +155,7 @@ def main():
         parser.error('--cycles must be positive')
     result = run_probe(args.station.resolve(), args.output_dir.resolve(),
                        cycles=None if args.full_episode else args.cycles,
-                       collect_timing=not args.no_timing)
+                       collect_timing=not args.no_timing, candidate_path=args.candidate)
     if args.full_episode:
         return result['original_exit_code']
     return 0 if result['mode'] == 'diagnostic_truncated' and result['observed_rows'] == args.cycles else 1

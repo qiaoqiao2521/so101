@@ -148,6 +148,11 @@ struct Geometry {
     int kind=0; // 0 finite box, 1 original mesh.
     // All original vertices remain owned. The tree indexes every vertex once.
     std::vector<std::size_t> order;
+#if defined(SUPPORT_LEAF_PACKED) && !defined(SUPPORT_VERTEX_QUAD_ENABLED)
+    // Optional exact copy of points in geom.order order, built once
+    // after build_node. Empty means the original points stay available.
+    std::vector<double> packed;
+#endif
     std::vector<Node> nodes;
 };
 
@@ -189,6 +194,49 @@ bool vertex_interval(const Geometry& geom,std::size_t vertex,
     }
     out={low,high};return true;
 }
+
+#if defined(SUPPORT_LEAF_PACKED) && !defined(SUPPORT_VERTEX_QUAD_ENABLED)
+// Exact body of vertex_interval, reading the leaf vertex from the packed
+// copy when present, else the original points via geom.order. Keyed by the
+// order position so one leaf streams contiguous coordinates.
+bool leaf_vertex_interval_packed(const Geometry& geom,std::size_t order_k,
+                                 const std::array<Interval,3>& local,Interval& out) {
+    const double* coords = geom.packed.empty()
+        ? geom.points.data()+3*geom.order[order_k] : geom.packed.data()+3*order_k;
+    double low=0.,high=0.;
+    for (int j=0;j<3;++j) {
+        const double first=coords[j]*local[j].lo;
+        const double second=coords[j]*local[j].hi;
+        if (!std::isfinite(first)||!std::isfinite(second)) return false;
+        const double term_low=down(first<second?first:second);
+        const double term_high=up(first>second?first:second);
+        low=down(low+term_low);high=up(high+term_high);
+        if (!std::isfinite(low)||!std::isfinite(high)) return false;
+    }
+    out={low,high};return true;
+}
+
+// Owned binary64 copy of geom.points in geom.order order, built once after
+// build_node finalizes geom.order. On allocation failure geom.packed stays
+// empty and every caller falls back to the original scattered-points path.
+void build_packed(Geometry& geom) {
+    if (geom.order.empty()) return;
+    std::vector<double> packed;
+    try {
+#if defined(SUPPORT_TREE_TESTS) && defined(SUPPORT_LEAF_PACKED_EMPTY_TEST)
+        throw std::bad_alloc();
+#endif
+        packed.reserve(geom.order.size()*3);
+        for (std::size_t k=0;k<geom.order.size();++k) {
+            const auto v=geom.order[k];
+            packed.push_back(geom.points[3*v+0]);
+            packed.push_back(geom.points[3*v+1]);
+            packed.push_back(geom.points[3*v+2]);
+        }
+    } catch (...) { return; }
+    geom.packed.swap(packed);
+}
+#endif
 
 bool full_scan(const Geometry& geom,const std::array<Interval,3>& local,Interval& out) {
     double minimum=INF,maximum=-INF;
@@ -346,6 +394,8 @@ bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
     vertex=geom.order[leaf.begin];
 #if defined(SUPPORT_VERTEX_QUAD_ENABLED)
     if (!leaf_vertex_interval_quad(geom,leaf,leaf.begin,local,cache,point)) return false;
+#elif defined(SUPPORT_LEAF_PACKED)
+    if (!leaf_vertex_interval_packed(geom,leaf.begin,local,point)) return false;
 #else
     if (!vertex_interval(geom,vertex,local,point)) return false;
 #endif
@@ -353,6 +403,8 @@ bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
         const auto v=geom.order[k];Interval candidate;
 #if defined(SUPPORT_VERTEX_QUAD_ENABLED)
         if (!leaf_vertex_interval_quad(geom,leaf,k,local,cache,candidate)) return false;
+#elif defined(SUPPORT_LEAF_PACKED)
+        if (!leaf_vertex_interval_packed(geom,k,local,candidate)) return false;
 #else
         if (!vertex_interval(geom,v,local,candidate)) return false;
 #endif
@@ -439,6 +491,8 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
                 const auto v=geom.order[k];Interval point;
 #if defined(SUPPORT_VERTEX_QUAD_ENABLED)
                 if (!leaf_vertex_interval_quad(geom,node,k,local,cache,point)) return false;
+#elif defined(SUPPORT_LEAF_PACKED)
+                if (!leaf_vertex_interval_packed(geom,k,local,point)) return false;
 #else
                 if (!vertex_interval(geom,v,local,point)) return false;
 #endif
@@ -708,6 +762,9 @@ void* ns_create(std::int64_t count,const std::int64_t* offsets,const double* poi
                     std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
                     geom.nodes.reserve(geom.order.size()*2/LEAF_SIZE+1);
                     build_node(geom,0,geom.order.size());
+#if defined(SUPPORT_LEAF_PACKED) && !defined(SUPPORT_VERTEX_QUAD_ENABLED)
+build_packed(geom);
+#endif
                 }
                 context->geoms.push_back(std::move(geom));
             }
@@ -828,6 +885,9 @@ int ns_test_full_vertices(std::int64_t count,const double* points,const double* 
         geom.order.resize(static_cast<std::size_t>(count));
         std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
         build_node(geom,0,geom.order.size());
+#if defined(SUPPORT_LEAF_PACKED) && !defined(SUPPORT_VERTEX_QUAD_ENABLED)
+build_packed(geom);
+#endif
         std::vector<int> seen(geom.order.size(),0);
         std::size_t largest=0;
         for (const auto& node:geom.nodes) if (node.left==NO_CHILD) {
@@ -861,6 +921,9 @@ int ns_test_full_vertices_hinted(std::int64_t count,const double* points,const d
         geom.order.resize(static_cast<std::size_t>(count));
         std::iota(geom.order.begin(),geom.order.end(),std::size_t{0});
         build_node(geom,0,geom.order.size());
+#if defined(SUPPORT_LEAF_PACKED) && !defined(SUPPORT_VERTEX_QUAD_ENABLED)
+build_packed(geom);
+#endif
         std::array<Interval,3> local;
         for (int j=0;j<3;++j) local[j]={coefficients[2*j],coefficients[2*j+1]};
         WitnessTrace trace;TraceGuard guard(&trace);

@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from evaluate_station import evaluate
-from route_policy import RoutePolicy, load_route_policy
+from route_policy import BASELINE_SOURCE, DEFAULT_SOURCE, RoutePolicy, load_route_policy
 from station_executor import atomic_json
 from visual_grasp_controller import VisualGraspController
 
@@ -42,6 +42,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(small_direction_cache=1)
         with self.assertRaises(ValueError):
             RoutePolicy(tree_leaf8=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(leaf_packed=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -104,6 +106,43 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertFalse(policy.quad_vertices)
         self.assertFalse(policy.small_direction_cache)
         self.assertEqual(loaded['preferences']['tree_leaf8'], True)
+
+    def test_packed_candidate_only_selects_immutable_storage(self):
+        self.assertFalse(load_route_policy(BASELINE_SOURCE)[0].leaf_packed)
+        policy, loaded = load_route_policy(Path(__file__).parent/'route_strategies/leaf_packed.py')
+        self.assertTrue(policy.leaf_packed)
+        self.assertFalse(policy.quad_vertices)
+        self.assertFalse(policy.small_direction_cache)
+        self.assertFalse(policy.tree_leaf8)
+        self.assertEqual(loaded['preferences']['leaf_packed'], True)
+
+    def test_factory_default_and_explicit_original_remain_distinct(self):
+        recommended, source = load_route_policy()
+        self.assertTrue(recommended.leaf_packed)
+        self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
+        original, source = load_route_policy(BASELINE_SOURCE)
+        self.assertFalse(original.leaf_packed)
+        self.assertEqual(original, RoutePolicy())
+        self.assertEqual(source['entrypoint_path'], str(BASELINE_SOURCE.resolve()))
+
+    def test_evaluator_default_passes_the_recommended_policy_to_original_executor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            observed = []
+
+            def execute(station, output, cancel, *, route_policy):
+                observed.append(route_policy)
+                output.mkdir(parents=True)
+                atomic_json(output/'status.json', {'status': 'failed', 'report': {
+                    'passed': False, 'failure_reason': 'original_failure'}})
+                return 1
+
+            with patch('evaluate_station.run', execute):
+                evaluate(root/'station.json', root/'output')
+            self.assertTrue(observed[0].leaf_packed)
+            result = json.loads((root/'output/evaluation.json').read_text())
+            self.assertEqual(result['candidate']['loaded_path'], str(DEFAULT_SOURCE.resolve()))
+            self.assertEqual(result['verdict'], 'fail')
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:

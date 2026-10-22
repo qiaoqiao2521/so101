@@ -17,6 +17,7 @@ class RoutePolicy:
     quad_vertices: bool = False
     small_direction_cache: bool = False
     tree_leaf8: bool = False
+    leaf_packed: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -45,6 +46,8 @@ class RoutePolicy:
             raise ValueError('Small direction cache must be a boolean')
         if not isinstance(self.tree_leaf8, bool):
             raise ValueError('Eight-vertex tree leaves must be a boolean')
+        if not isinstance(self.leaf_packed, bool):
+            raise ValueError('Packed leaf storage must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
@@ -61,11 +64,12 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/leaf_packed.py'
 
 
 def load_route_policy(path=None):
     """Execute the selected local source once and pass only immutable choices."""
-    path = Path(path or BASELINE_SOURCE).resolve()
+    path = Path(path or DEFAULT_SOURCE).resolve()
     namespace = runpy.run_path(str(path))
     factory = namespace['route_preferences']
     values = factory()

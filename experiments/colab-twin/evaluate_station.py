@@ -9,7 +9,7 @@ import sys
 import uuid
 
 from station_executor import atomic_json, run
-from route_policy import BASELINE_SOURCE, load_route_policy
+from route_policy import BASELINE_SOURCE, DEFAULT_SOURCE, load_route_policy
 
 
 def source_reference(path):
@@ -61,7 +61,7 @@ def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None
     run_id = str(uuid.uuid4())
     output = output_root/run_id
     source = Path(__file__).parent
-    candidate = source_reference(candidate_path or BASELINE_SOURCE)
+    candidate = source_reference(candidate_path or DEFAULT_SOURCE)
     candidate['controller'] = source_reference(source/'visual_grasp_controller.py')
     scorer = source_reference(source/'learning_env.py')
     # Each invocation owns a new result directory; stale results cannot pass a new run.
@@ -110,7 +110,8 @@ def main():
     parser.add_argument('--station', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--cancel-file', type=Path)
-    parser.add_argument('--candidate', type=Path, help='Local source exporting route_preferences()')
+    parser.add_argument('--candidate', type=Path,
+                        help='Local route_preferences() source; default: verified leaf_packed.py')
     parser.add_argument('--timing', action='store_true', help='Record exclusive original-loop timings')
     args = parser.parse_args()
     return evaluate(args.station, args.output_dir, args.cancel_file,

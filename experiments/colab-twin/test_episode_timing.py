@@ -72,11 +72,19 @@ class TimingTests(unittest.TestCase):
 
     def test_probe_restores_original_entrypoint_when_evaluator_raises(self):
         import run_visual_grasp
+        from route_policy import BASELINE_SOURCE
         original = run_visual_grasp.run_physical_episode
         with tempfile.TemporaryDirectory() as folder:
-            with patch('evaluate_station.evaluate', side_effect=RuntimeError('source error')):
-                with self.assertRaisesRegex(RuntimeError, 'source error'):
-                    run_probe(Path(folder)/'station.json', Path(folder)/'output')
+            for selected in (None, Path(folder)/'candidate.py'):
+                with self.subTest(selected=selected):
+                    with patch('evaluate_station.evaluate',
+                               side_effect=RuntimeError('source error')) as evaluate:
+                        with self.assertRaisesRegex(RuntimeError, 'source error'):
+                            run_probe(Path(folder)/'station.json', Path(folder)/'output',
+                                      candidate_path=selected)
+                    self.assertEqual(evaluate.call_args.kwargs['candidate_path'],
+                                     selected or BASELINE_SOURCE)
+                    self.assertIs(run_visual_grasp.run_physical_episode, original)
         self.assertIs(run_visual_grasp.run_physical_episode, original)
 
 

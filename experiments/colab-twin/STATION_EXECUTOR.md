@@ -59,7 +59,7 @@
   --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
 ```
 
-省略candidate即实际加载 `route_strategies/baseline.py`。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+省略candidate实际加载已通过两工位对照的 `route_strategies/leaf_packed.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，RoutePolicy()及其他显式旧候选不叠加packed。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
@@ -170,9 +170,22 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 
 可选ABI观察沿原完整执行入口运行，不替换原生结果，也不改变原90sim/120wall。按真实阶段记录调用wall/线程CPU，并保存拥有的几何、p/R/pairs/margin/hint_in。回放每条采样时恢复其原hint_in，不能从稀疏样本自行推导提示历史。worker墙钟可能重叠，不并入主循环总和。当前探针没有保存原始输出；离线两实现相等不等于与当时输出逐位核对。
 
+两个诊断入口默认显式选择原版baseline.py，避免工厂默认升级后改变历史对照。需要测量已采用实现时，在probe_episode_timing.py或probe_native_abi.py添加`--candidate experiments/colab-twin/route_strategies/leaf_packed.py`。
+
 ```bash
 MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
   experiments/colab-twin/probe_native_abi.py \
   --station experiments/colab-twin/scenarios/factory-loading/capability-segments-0mm.json \
   --output-dir <新的诊断目录>
 ```
+
+### 已采用：叶顶点连续存储
+
+CLI28只复制原mesh顶点为geom.order顺序的连续数组，约增加4.55MiB主机内存。原points/order/tree、逐点标量数学、全部路径采样/碰撞pair/安全阈值保持；可选副本分配失败时使用原数组。没有改变路线、IK初值或物体状态输入。
+
+| 已有工位 | 原版全进程墙钟 | packed全进程墙钟 | CPU原版→packed | 原物理结果 |
+| --- | ---: | ---: | ---: | --- |
+| nominal，baseline→candidate | 53.338s | 51.413s | 60.628→58.451s | 两轮通过 |
+| 200/200，candidate→baseline | 55.171s | 53.917s | 62.906→61.518s | 两轮通过 |
+
+两个工位候选都反多0.04sim秒，controller墙钟分别少1.630/1.084s，收益不来自少等待。规划分项、释放/碰撞结果及原对照保存在[当前计划](../../plans/factory-loading-20261021/progress.md)。完整50Hz仍未通过。不带candidate的默认入口另有完整抓放通过记录，并与显式候选3741拍轨迹全字段逐位相同；该单回合用于接线验证，不当成额外性能对照。
