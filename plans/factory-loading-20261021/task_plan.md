@@ -177,3 +177,14 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 - [x] 原DFS栈计数与CLI36固定inline32候选完成，28原边界/2816 raw通过，原三对中位更慢4.093ms，淘汰，不接生产/物理。
 
 Next Step：核算批量执行原FK与原逐姿态证书的最小接入成本，禁止减244点或改原裁判/90sim120wall；当前无在途实例，默认保持summary_fast。
+
+
+## F2ab 原扫掠批量执行
+
+- [x] 本机MuJoCo 3.15.0官方头/库与model/data地址接口已核对，原kernel/lib不改。
+- [x] 私有直接C-FK桥40实弦/失败前缀同值、原三对组件约21%更快；因错误作用域缺口未接入生产/物理。
+- [x] 原Python FK保护版及生产40实弦/16边界同值，三对整guard可靠更快。
+- [x] 默认关闭薄接入、133相关回归、两工位反序原物理4/4通过，完整墙钟/CPU/nonhold成本均下降。
+- [x] 采用batch_configuration_sweep.py为工厂默认；77项默认/报告/原loader检查通过，保留原版和summary_fast父版。
+
+Next Step：依据本轮余下close/release超时拍核验夹爪目标变化，再给原CLI一个连续目标策略；未实施，不降采样或改原门槛。当前P95 19.14/22.30ms且168/231拍超20ms，完整50Hz仍未通过。

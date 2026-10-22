@@ -876,3 +876,37 @@ Next：真实原生full_tree DFS待处理栈存在每投影新建vector，先在
 原三对完整ABI+summary：412.167→418.932、486.080→439.361、426.523→430.616ms；两对变慢，中位effect +4.093ms，原screen reject/no_median_local_effect。保留全部原数，不重计或扫描容量挑绿，不接生产、不新增物理。私有round37-pending-stack保存count_pending/ask/compile_and_check/probe_actual及原CLI、边界、raw和成本。减少vector增长事件没有产生可靠局部收益，不推断分配器或宿主根因。
 
 本轮已完成3个原CLI候选与4轮原物理：CLI34和CLI36实现优化淘汰；CLI35行为修复保留显式default-off，默认summary_fast不动。完整50Hz仍未过，close/release的原逐姿态C ABI成本仍为实测主项。当前无本owner CLI/物理实例或待执行prepared；下一步先核算批量执行原FK+原逐姿态认证是否值得最小薄接入，不减244点或改原物理门槛。Knowledge：already_covered。
+
+
+### F2ab 原逐姿态批量执行可行性（2026-10-23，进行中）
+
+CLI37提供私有独立C桥，不改原kernel/lib：同244点列表，逐点原FK+原ns_evaluate_hinted，首失败立即停止，提示仅全cert通过才提交。40条保存弦原报告/完整FK/末次numeric+flags/输入输出+commit hints同位，关节限位首/中/末失败和首native坏pair前缀同值。原三对完整guard 1.669490→1.323839、1.645638→1.296297、1.634328→1.269720s，组件约21%收益；这不是原物理/50Hz成绩。
+
+owner不接入该直接C-FK版：它绕开原Python MuJoCo错误作用域，不能用正常模型成功代替异常语义。CLI说明中mjERROR/mjcb_error/mjcb_errore/mj_abort等符号未由安装头文件支持，不采纳；本机官方头实际为mju_user_error/mju_error。运行时mujoco.FatalError不是RuntimeError子类，原checker对它会向外传播。未用此版启动物理，不改原裁判/默认或新增源码门锁。
+
+CLI38已按原native会话生成最小保护版：C桥逐样本回调原Python mujoco.mj_kinematics，Python闭包捕获BaseException返回C状态；发布原已通过前缀提示后，仅RuntimeError/ValueError转原invalid谓词，其余原异常对象重抛。当前只在私有round39-protected-batch核对40真实弦、逐位置RuntimeError/ValueError/FatalError/KeyboardInterrupt和三对完整guard成本；尚无新物理或默认变化。私有round38-batch-sweep保留最初性能与未采用原因。
+
+83498db8725fd5f197424379785fd007edbbc102已作为前一完整实验checkpoint提交推送原分支，REST和ls-remote读回一致；它只含显式CLI35候选、相关回归和原计划，不含此新私有桥。
+
+
+### F2ab CLI38保护桥与原物理采用结果
+
+保护版私有40实弦+16边界（首/中/末joint、native坏pair、RuntimeError/ValueError/FatalError/KeyboardInterrupt）原报告、末FK、raw和hint全同值；保留原异常对象。原三对整guard 1.377288→1.076827、1.394164→1.086046、1.371518→1.072414s。生产薄接入后40实弦+16边界复核通过，三对1.383222→1.074783、1.376299→1.076907、1.387016→1.094805s，原screen eligible；没有对同源码重复计时挑绿。
+
+生产sweep_batch.cpp仅顺序调用原Python FK闭包和原ns_evaluate_hinted，保留所有244点、原spacing/budget、首次失败前缀和末Data/raw/hints；无mj_step/forward/实体/物体真值、新几何算法或结果缓存。锁内借用独立六轴规划Model/Data；FK仍走原绑定的错误作用域。缺g++/匹配header或lib、编译失败/超时、非支持checker/姿态shape、观察器替换原C函数或重入均退回原逐点路径；非RuntimeError/ValueError按原对象传播。依赖仅本机已有MuJoCo 3.15.0和g++，每个选用进程初始化时编译独立桥，其成本包含全process，guard循环内不编译。
+
+初软件命令误写不存在test_transport_admission，113有效用例通过但整命令failed；改为既有test_transport_worker后补19/19，随后正确组合133/133。生产回读私有适配器一度把np info改list却仍tolist而报AttributeError，未进入计时；保留初稿和harness-initial-error.json，仅修私有返回类型后取得上述完整生产读回。两工位之间仅补类级自定义checker谓词回退的准入检查，标准checker和C/几何/math/采样不变，7项回退测试通过；准确变更写入第二prepared。
+
+nominal父cc92c707-da81-48c8-a25a-a96a739522f0→子f3b7fb70-9e56-4abd-b06a-0e6772a3fcf1原pass/pass，全process47.949689→42.018465s，省5.931224s（12.37%）；CPU55.002758→49.236698s，controller wall33.119688→27.229834s。sim74.84→75.02，子hold多9拍；非hold各阶段拍数同值，完整nonhold loop39.815954→33.902045s（省5.913910s），线程CPU39.626171→33.724194s。P95 23.578420→19.138303ms，最大134.202398→124.756459ms，超20ms217→168；仍非完整50Hz。运输worker1.057778→.999820s，分离worker.549802→.595929s变慢，不能虚称两规划都加速。原抓放/释放脱离/回位及自由物体/零障碍通过，释放漂移父.265838/子.265938mm、脱离后力0N；视频468/468与469/469。桥实际3757调用/140243原姿态查询、fallback0。
+
+已有200/200反序子b6d64ad8-c7cd-4bb4-98a1-03468bbbe6b7→父05c1016a-3c87-4ae2-b2a6-e7a7ff7b47a6均原pass。按父→子：全process59.347783→52.192728s，省7.155055s（12.06%）；CPU67.449874→60.246449s，controller wall41.225268→34.068271s。sim77.10→77.36，子hold多13拍；非hold各阶段同拍数，完整loop49.214419→42.494980s（省6.719440s），线程CPU48.883354→42.189238s。P95 28.575248→22.297695ms，最大173.066534→165.311884ms，超20ms296→231，仍失败。运输worker1.865651→1.572211s、分离1.019702→1.058987s变慢。释放漂移父.267470/子.267976mm，子脱离后峰力.003610844N仍低于原.02N（非零力），原release_audit/抓放/脱离/回位全pass；视频482/482与484/484。桥实际3874调用/146683原查询、fallback0。
+
+独立两pair的四XML/初态/目标/原裁判/1mm与释放阈值均同值，原C kernel/lib/flags/python_summary完全相同；不叠加未晋级的refresh_leg_age，双方该值均false。原件在output/batch-sweep-factory-20261023/{b393c1e6-7ecf-48c3-9263-a493ff926869,b23c653f-07fb-488e-af97-375831b7c843}/；各含prepared、pair-process-results、independent-pair-readback、batch-selection-nonhold-readback。所有所属进程终态、休眠抑制句柄释放，已向研究根归还共享资源。
+
+按原三对可靠组件收益、两工位反序全任务/CPU/非等待收益及4轮原物理pass，采用batch_configuration_sweep.py为工厂默认。低层RoutePolicy()、baseline.py和直接summary_fast父版保持原路径；不是把少等若干拍当算法提速。P95仅nominal进入20ms内，另一工位仍22.30ms，且各有168/231拍超时，完整50Hz未通过。
+
+默认/报告收口：新桥最初通过native.library_metadata附加进程统计，造成仅import桥却未选用时原loader五个子断言失败；未放宽原测试。已将统计移到选用本策略的单回合record_collision_backend报告，support_native.py恢复原样。原native_provenance失败仍按原规则记录，附加统计失败仅WARNING且保留原任务结果。默认入口/原失败透传、报告及两个原loader用例共77项通过；新增报告三项分别覆盖选用计数、原provenance失败不被覆盖和诊断缺失不改物理结果。除这项报告修复和默认指针外，原物理执行路径/C桥保持测试版本，不机械再发第五完整回合。
+
+Next：从本轮余下close/release超时拍核验期望夹爪目标的一拍变化，优先评估复用既有dwell时长的连续目标轨迹；planned/measured完整闭爪扫掠和实际下发弦仍须全部检查，任何新策略先由原CLI单变量生成并保留原stage等待/超时/碰撞/释放。此方向尚未实施，不混入本次采用。
+
+F2ab Knowledge closeout：pending。既有Wiki/ROS2 与 FishBot第20节与开发知识入口均有其他未提交工作，本轮不并发改写共享页。新增可复用结论为“C ABI批量化仍须保留原Python FK错误作用域、首失败前缀与已提交hint；FatalError不是RuntimeError，可选计数失败不得改物理结果”。已在本findings F2ab留下具体源和实测。owner=研究根Codex串行整合；最短回读为sweep_batch.py及保护版16边界报告。前文already_covered只对应F2aa旧原则，不冒充本新增知识已写回。

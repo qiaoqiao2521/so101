@@ -99,6 +99,42 @@ class PhaseAdmissionTests(unittest.TestCase):
         self.assertEqual(status['failure_reason'], 'physical_task_not_complete')
         checker.native.close.assert_called_once_with()
 
+    def test_selected_batch_records_counts_without_changing_task_verdict(self):
+        checker = Mock(distance_kind='certified_lower_bound', margin_m=.001)
+        status = {'passed':True, 'failure_reason':None}
+        with patch('run_visual_grasp.library_metadata', return_value={'kernel':'original'}), \
+                patch('sweep_batch.runtime_metadata', return_value={'calls':7}) as counts:
+            record_collision_backend(status, checker, batch_sweep=True)
+        self.assertTrue(status['passed'])
+        self.assertIsNone(status['failure_reason'])
+        self.assertEqual(status['collision_backend']['library']['process_sweep_bridge'], {'calls':7})
+        counts.assert_called_once_with()
+        checker.native.close.assert_called_once_with()
+
+    def test_optional_batch_metadata_does_not_replace_provenance_failure(self):
+        checker = Mock(distance_kind='certified_lower_bound', margin_m=.001)
+        status = {'passed':False, 'failure_reason':'physical_task_not_complete'}
+        with patch('run_visual_grasp.library_metadata', side_effect=RuntimeError('unavailable')), \
+                patch('sweep_batch.runtime_metadata') as counts:
+            record_collision_backend(status, checker, batch_sweep=True)
+        self.assertFalse(status['passed'])
+        self.assertEqual(status['failure_reason'], 'physical_task_not_complete')
+        counts.assert_not_called()
+        checker.native.close.assert_called_once_with()
+
+    def test_optional_count_failure_keeps_the_original_physical_result(self):
+        checker = Mock(distance_kind='certified_lower_bound', margin_m=.001)
+        status = {'passed':True, 'failure_reason':None}
+        with patch('run_visual_grasp.library_metadata', return_value={'kernel':'original'}), \
+                patch('sweep_batch.runtime_metadata', side_effect=RuntimeError('counter unavailable')), \
+                self.assertWarnsRegex(RuntimeWarning, 'Sweep diagnostics unavailable'):
+            record_collision_backend(status, checker, batch_sweep=True)
+        self.assertTrue(status['passed'])
+        self.assertIsNone(status['failure_reason'])
+        self.assertNotIn('safety_stop', status)
+        self.assertFalse(status['collision_backend']['library']['process_sweep_bridge']['available'])
+        checker.native.close.assert_called_once_with()
+
 
 class VideoFinalizationTests(unittest.TestCase):
     def writer(self, **changes):

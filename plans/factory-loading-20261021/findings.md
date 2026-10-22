@@ -168,3 +168,14 @@ CLI30排序/二分种子节点界表局部成本不一致，未应用生产。CL
 - 原2816实输入下full_tree待处理vector新建25438次、容量增长97559次，最大待处理12。计数版raw/hints与父版一致；这些是增长事件，不是实测malloc次数或提速。下一候选只改同投影栈存储，溢出必须原vector回退。
 
 来源和复跑：私有ros2-factory/codebuddy-so101-20261021/round34-tail-audit、round35-axis-norm、round36-leg-age、round37-pending-stack；原物理准确argv及独立回读在output/leg-age-factory-20261023两个既有pair目录。采用的长期原则见Wiki/ROS2 与 FishBot第20节；本轮不新增共享知识机制。
+
+
+## F2ab 保持原错误作用域的批量扫掠（2026-10-23）
+
+- 只复用现有MuJoCo Python FK和现有C证书，按原顺序逐样本执行，不新造几何判据。直接C-FK原型虽约21%更快，但因绕过Python错误作用域未进入生产；保护版回调原Python FK，RuntimeError/ValueError按原invalid处理，FatalError/KeyboardInterrupt原对象传播，失败前缀/Data/raw/hints同值。
+- 40保存实弦+16异常/拒绝边界生产读回同值，原三对整guard中位省.299391s。每进程初始化编译独立桥，原kernel/lib/flags不改，guard循环不编译；构建不可用回原路径，无新内容哈希门锁。
+- 两工位反序4轮原物理pass，整进程省5.931/7.155s；剔除hold后仍省5.914/6.719s，候选反多9/13拍hold。分离worker两处都略慢，保留原时钟，不把它称规划加速。
+- P95 19.138/22.298ms，超20ms168/231；只有一处P95进入20ms，完整50Hz未过。原1mm、释放2mm/.02N、90sim120wall及自由物体条件保持。第二工位子释放峰力.003611N在原界内，不称零力。
+- 批量统计只属于本次选用的运行报告，不能因import一个模块就改变原native库元数据；可选诊断失败不得改写物理结果。默认入口与原报告/loader兼容77项检查通过。
+
+采用源route_strategies/batch_configuration_sweep.py；原版与summary_fast父版保留，不叠加未晋级的换段修复。原两pair独立读回及非等待/规划/视频时钟在output/batch-sweep-factory-20261023/，原CLI和复跑在私有round38-batch-sweep、round39-protected-batch。

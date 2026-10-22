@@ -52,6 +52,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(summary_fast=1)
         with self.assertRaises(ValueError):
             RoutePolicy(refresh_leg_age=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(batch_configuration_sweep=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -131,6 +133,8 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(recommended.packed_inline)
         self.assertTrue(recommended.seed_bound_direct)
         self.assertTrue(recommended.summary_fast)
+        self.assertTrue(recommended.batch_configuration_sweep)
+        self.assertFalse(recommended.refresh_leg_age)
         self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
         original, source = load_route_policy(BASELINE_SOURCE)
         self.assertFalse(original.leaf_packed)
@@ -168,6 +172,8 @@ class RoutePolicyTests(unittest.TestCase):
             self.assertTrue(observed[0].packed_inline)
             self.assertTrue(observed[0].seed_bound_direct)
             self.assertTrue(observed[0].summary_fast)
+            self.assertTrue(observed[0].batch_configuration_sweep)
+            self.assertFalse(observed[0].refresh_leg_age)
             result = json.loads((root/'output/evaluation.json').read_text())
             self.assertEqual(result['candidate']['loaded_path'], str(DEFAULT_SOURCE.resolve()))
             self.assertEqual(result['verdict'], 'fail')
@@ -186,14 +192,15 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(parent.packed_inline)
         self.assertEqual(load_route_policy(BASELINE_SOURCE)[0], RoutePolicy())
 
-    def test_summary_default_keeps_the_native_parent_available(self):
+    def test_summary_parent_remains_explicit_after_batch_adoption(self):
         child, source = load_route_policy(Path(__file__).parent/'route_strategies/summary_fast.py')
         self.assertTrue(child.summary_fast)
         self.assertTrue(child.seed_bound_direct)
         self.assertTrue(child.packed_inline)
         self.assertTrue(child.leaf_packed)
         self.assertEqual(source['preferences']['summary_fast'], True)
-        self.assertEqual(load_route_policy()[0], child)
+        self.assertFalse(child.batch_configuration_sweep)
+        self.assertTrue(load_route_policy()[0].batch_configuration_sweep)
         parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/seed_bound_direct.py')
         self.assertFalse(parent.summary_fast)
         self.assertTrue(parent.seed_bound_direct)

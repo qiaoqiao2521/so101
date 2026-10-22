@@ -160,6 +160,10 @@ class VisualGraspController:
                 self.visible_robot_geoms.append(i)
         self.gripper_id = rig.body('gripper').id
         self.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
+        self.batch_sweep_validator = None
+        if self.route_policy.batch_configuration_sweep:
+            from sweep_batch import make_validator
+            self.batch_sweep_validator = make_validator(self.checker)
         self.initial_q = finite_vector(initial_q6, 6, 'initial_q6')
         self.last_command = self.initial_q.copy()
         self.reference = self.initial_q.copy()
@@ -317,7 +321,8 @@ class VisualGraspController:
             start, end, binding=binding,
             arm_resolution_rad=.005, jaw_resolution_rad=.002, max_samples=4096)
         invocation.execute(
-            lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'])
+            lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'],
+            batch_valid=getattr(self, 'batch_sweep_validator', None))
         return invocation.consume(self._sweep_binding(start, end, purpose))
 
     def _sweep_binding(self, start, end, purpose):

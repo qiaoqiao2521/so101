@@ -20,6 +20,7 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-23 原CLI37/38保护扫掠桥已采用，工厂默认batch_configuration_sweep.py。两个已有工位反序原物理4/4通过，全process47.950→42.018s、59.348→52.193s，剔除全部hold后仍省5.914/6.719s，候选反多9/13拍hold。所有244点及原FK/证书/错误作用域保留，原C kernel/lib/flags不改、无结果缓存。P95 23.578→19.138ms、28.575→22.298ms，但仍168/231拍超20ms，完整50Hz未过。原版/summary_fast父版保留，CLI35换段修复仍default-off；详见[原证据F2ab](plans/factory-loading-20261021/progress.md#f2ab-cli38保护桥与原物理采用结果)。
 2026-10-23 CLI33原Python全通过汇总已采用，默认source选择summary_fast.py，C++/C ABI/原生库与flags不改。两工位反序原物理4/4通过，观测wall53.075→49.698s、56.878→55.756s，CPU/controller同降；第二工位3857拍轨迹JSON完全相同。原汇总/直接父版/最初baseline均保留，未改变碰撞、释放与90sim120wall。全差不单独归因约7us组件，也不与前轮相加；完整50Hz仍未过。CLI32叶值复用局部无可靠收益，未接入生产；[本轮原证据](plans/factory-loading-20261021/progress.md#f2z-原python汇总的全通过分支2026-10-23)。
 2026-10-23 CLI31同投影有限seed节点界复用已采用。两个已有工位反序原物理4/4通过，相对packed+inline父版全进程墙钟55.582→51.401s、57.113→52.710s；两边剔除全部hold周期，非等待阶段拍数相同，controller仍少3.333/3.440s。工厂默认source选seed_bound_direct.py，原版、packed及packed+inline均显式保留。原点/采样/碰撞/释放/90sim120wall保持，完整50Hz仍未过。CLI30成本不一致淘汰，CLI31原无效交付及修复留证；[原计划F2x](plans/factory-loading-20261021/progress.md#f2x-同次树投影的节点界重复计算2026-10-23)记录实测、来源与复跑。
 2026-10-23 CLI29在已采用packed父版上仅内联叶顶点helper。三个局部成对测试均更快，两个已有工位反序原物理4/4通过，全进程墙钟53.339→52.863s、56.511→55.244s，CPU/controller均下降。工厂默认source现选leaf_packed_inline.py，packed父版与最初baseline均显式保留。nominal P95略退化，200/200改善，完整50Hz仍未过；原点/采样/碰撞、释放条件及90sim/120wall保持。详见[采用依据](plans/factory-loading-20261021/progress.md#f2w-已采用packed的实际编译后调用2026-10-23)。
@@ -117,7 +118,7 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 2026-10-01 主线接续：新增本地 `experiments/colab-twin/run_staged.py` 四层单回合入口。复用已安装 MuJoCo3.3.7/Mink1.1.0/OMPL2.0.1；依赖导入、reset/10步、单次绕障和位置伺服执行均实际通过。TCP误差0.549mm，20ms碰撞无无效采样，关节限位超出0；378帧视频完整解码通过。32项回归检查通过，缺失依赖入口实际拒绝并保留阶段报告。输出按UUID分轮保留且被Git忽略。执行只覆盖静态路径和仿真位置伺服反馈，动态重规划、抓放、视觉和实体同步继续待办；GR00T云端尝试保持停止。
 
 ## Current Priority
-2026-10-23 用户明确本轮主攻完整50Hz长尾，按原真实输入、原CLI、小成本筛选与两工位反序物理比较持续推进。已定位同名transport换段计时缺陷，显式候选消除一拍目标突跳且四轮原物理通过，但第二工位P95和整任务退化，默认保持summary_fast。接续原几何查询的真实工作量，不放宽原物理/采样/90sim120wall，不恢复训练或实机。详见[厂区计划F2aa](plans/factory-loading-20261021/progress.md#f2aa-50hz超时拍定位2026-10-23进行中)。
+2026-10-23 用户明确本轮主攻完整50Hz长尾，按原真实输入、原CLI、小成本筛选与两工位反序物理比较持续推进。已采用保持原FK/逐点证书的保护批量桥，两工位全任务更快，但完整50Hz仍未过。接续close/release目标连续性及余下同步尖峰；换段计时修复因跨工位性能不一致仍仅显式候选。不放宽原物理/采样/90sim120wall，不恢复训练或实机。详见[厂区计划F2aa](plans/factory-loading-20261021/progress.md#f2aa-50hz超时拍定位2026-10-23进行中)。
 
 以下保留此前优先级及当时状态：
 2026-10-14：对照、完整夹爪几何/框架和静态闭爪筛查已完成。先核准模型内侧区域/参考点，再冻结物理姿态准入、接入全路径和目标接触；不将31个静态候选直接下发。API/CLI参数分别记录，模型最高分不代替SO101约束。具体接续见 [当前候选计划](plans/graspgenx-feasibility-20261014/progress.md)，旧训练、50Hz、20+20与实体仍暂停/未运行。

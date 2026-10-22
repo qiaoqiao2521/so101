@@ -234,3 +234,12 @@ CLI33只减少汇总结果中的重复数组转换。创建查询绑定时选择
 `route_strategies/refresh_leg_age.py` 复用当前summary_fast父版，只启用`refresh_leg_age=True`。进入下一路径段后按其`stage_started`重算采样时间；阶段名仍为transport时也从新段起点开始。原版阶段名判断、全部扫掠、物理评分与90sim/120wall均保留。
 
 两工位反序四轮原物理均通过，候选消除了原0.78/0.83rad一拍参考突跳，但完整运行耗时与P95收益不一致。它仅是显式复跑的行为修复候选，不是工厂默认，也不是50Hz通过。复跑沿用本文件原evaluate_station命令，只将`--candidate`设为上述源；原证据与两工位准确argv见厂区计划F2aa。
+
+
+### 已采用原逐姿态保护批量检查
+
+工厂默认`route_strategies/batch_configuration_sweep.py`在summary_fast父版上只启用`batch_configuration_sweep`。原244点、.005rad臂/.002rad夹爪密度、首失败停止、1mm碰撞、释放与90sim/120wall保持。逐点FK仍调用原Python MuJoCo接口，原ns_evaluate_hinted库、数学与flags不变；仅减少Python逐姿态打包与汇总。无跨姿态证书缓存，不操作实体。
+
+桥在每个选用进程初始化时，用现有g++和匹配MuJoCo头/库编译，耗时计入完整进程。缺依赖、编译失败/超时或不支持的checker/观察器等情况退回原检查。规划副本保留原标量路径。单回合`collision_backend.library.process_sweep_bridge`记录实际查询数和回退数；诊断缺失不修改原物理判定。`summary_fast.py`和`baseline.py`仍可显式复跑，`refresh_leg_age`不与默认组合。
+
+两工位反序四轮原物理全部通过，完整进程47.950→42.018s、59.348→52.193s；候选分别多9/13拍hold，剔除hold后仍更快。P95由23.578/28.575降至19.138/22.298ms，但仍168/231拍超20ms，完整50Hz未通过。准确argv、原报告和规划耗时见厂区计划F2ab。

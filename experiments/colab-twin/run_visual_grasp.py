@@ -48,7 +48,7 @@ def native_binding():
                                            'compiler_identity_sha256', 'flags_sha256')}
 
 
-def record_collision_backend(status, checker):
+def record_collision_backend(status, checker, *, batch_sweep=False):
     """Preserve case evidence when provenance verification fails at closeout."""
     status['collision_backend'] = {'method':'conservative_support_projection',
                                    'distance_kind':checker.distance_kind,
@@ -58,6 +58,15 @@ def record_collision_backend(status, checker):
     except RuntimeError as error:
         status.update(passed=False, safety_stop=True, native_provenance_error=str(error))
         status['failure_reason'] = status.get('failure_reason') or 'native_runtime_provenance_invalid'
+    else:
+        if batch_sweep:
+            try:
+                from sweep_batch import runtime_metadata
+                status['collision_backend']['library']['process_sweep_bridge'] = runtime_metadata()
+            except Exception as error:
+                warnings.warn('Sweep diagnostics unavailable: '+str(error), RuntimeWarning)
+                status['collision_backend']['library']['process_sweep_bridge'] = {
+                    'available':False, 'diagnostic_error':str(error)}
     finally:
         checker.native.close()
 
@@ -439,7 +448,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         if initialization_checker is not None:
             initialization_checker.native.close()
         if checker is not None:
-            record_collision_backend(status, checker)
+            record_collision_backend(status, checker, batch_sweep=bool(
+                getattr(getattr(controller, 'route_policy', None), 'batch_configuration_sweep', False)))
         write_json(out/'trajectory.json',rows)
         write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)

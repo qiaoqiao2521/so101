@@ -43,7 +43,8 @@ def _segments(length, resolution):
 
 
 def validate_configuration_path(startq6, endq6, valid, *, arm_resolution_rad=.005,
-                                jaw_resolution_rad=.002, max_samples=4096):
+                                jaw_resolution_rad=.002, max_samples=4096,
+                                batch_valid=None):
     """Check a sampled q6 chord, preserving both supplied endpoints.
 
     A budget rejection invokes no callback. No samples are dropped to fit.
@@ -98,6 +99,21 @@ def validate_configuration_path(startq6, endq6, valid, *, arm_resolution_rad=.00
         report.update(reason='sample_spacing_exceeded', invalid_sample_index=spacing_failure,
                       invalid_state=states[spacing_failure].copy())
         return report
+    if batch_valid is not None:
+        result = batch_valid(states)
+        if result is not None:
+            checked, invalid = result
+            if (not 0 < checked <= len(states)
+                    or (invalid == -1 and checked != len(states))
+                    or (invalid != -1 and (invalid != checked-1 or invalid < 0))):
+                raise ValueError('Batch sweep returned an invalid checked prefix')
+            report['checked_states'] = checked
+            if invalid >= 0:
+                report.update(reason='invalid_state', invalid_sample_index=invalid,
+                              invalid_state=states[invalid].copy())
+            else:
+                report.update(valid=True, reason='clear')
+            return report
     for index, state in enumerate(states):
         report['checked_states'] += 1
         if not bool(valid(state.copy())):
@@ -202,7 +218,7 @@ class ConfigurationSweepInvocation:
     def state(self):
         return self._state
 
-    def execute(self, valid):
+    def execute(self, valid, *, batch_valid=None):
         if self._state != 'new':
             raise RuntimeError('Sweep invocation has already started')
         self._state = 'running'
@@ -211,7 +227,8 @@ class ConfigurationSweepInvocation:
             self._report = validate_configuration_path(
                 request.startq6, request.endq6, valid,
                 arm_resolution_rad=request.arm_resolution_rad,
-                jaw_resolution_rad=request.jaw_resolution_rad, max_samples=request.max_samples)
+                jaw_resolution_rad=request.jaw_resolution_rad, max_samples=request.max_samples,
+                batch_valid=batch_valid)
         except BaseException:
             self._state = 'failed'
             raise
