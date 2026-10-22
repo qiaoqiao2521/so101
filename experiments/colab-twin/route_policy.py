@@ -18,6 +18,7 @@ class RoutePolicy:
     small_direction_cache: bool = False
     tree_leaf8: bool = False
     leaf_packed: bool = False
+    packed_inline: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -48,6 +49,8 @@ class RoutePolicy:
             raise ValueError('Eight-vertex tree leaves must be a boolean')
         if not isinstance(self.leaf_packed, bool):
             raise ValueError('Packed leaf storage must be a boolean')
+        if not isinstance(self.packed_inline, bool):
+            raise ValueError('Packed helper inlining must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
@@ -64,7 +67,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/leaf_packed.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/leaf_packed_inline.py'
 
 
 def load_route_policy(path=None):

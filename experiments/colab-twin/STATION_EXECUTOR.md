@@ -59,7 +59,7 @@
   --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
 ```
 
-省略candidate实际加载已通过两工位对照的 `route_strategies/leaf_packed.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，RoutePolicy()及其他显式旧候选不叠加packed。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+省略candidate实际加载已通过两工位对照的 `route_strategies/leaf_packed_inline.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`leaf_packed.py`可复跑已采用父版；RoutePolicy()及其他显式旧候选不叠加packed或inline。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
@@ -181,7 +181,7 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 
 ### 已采用：叶顶点连续存储
 
-CLI28只复制原mesh顶点为geom.order顺序的连续数组，约增加4.55MiB主机内存。原points/order/tree、逐点标量数学、全部路径采样/碰撞pair/安全阈值保持；可选副本分配失败时使用原数组。没有改变路线、IK初值或物体状态输入。
+CLI28只复制原mesh顶点为geom.order顺序的连续数组，每个同规模NativeSupport几何句柄约增加4.55MiB坐标副本，不是整个进程的RSS增量。原points/order/tree、逐点标量数学、全部路径采样/碰撞pair/安全阈值保持；可选副本分配失败时使用原数组。没有改变路线、IK初值或物体状态输入。
 
 | 已有工位 | 原版全进程墙钟 | packed全进程墙钟 | CPU原版→packed | 原物理结果 |
 | --- | ---: | ---: | ---: | --- |
@@ -189,3 +189,14 @@ CLI28只复制原mesh顶点为geom.order顺序的连续数组，约增加4.55MiB
 | 200/200，candidate→baseline | 55.171s | 53.917s | 62.906→61.518s | 两轮通过 |
 
 两个工位候选都反多0.04sim秒，controller墙钟分别少1.630/1.084s，收益不来自少等待。规划分项、释放/碰撞结果及原对照保存在[当前计划](../../plans/factory-loading-20261021/progress.md)。完整50Hz仍未通过。不带candidate的默认入口另有完整抓放通过记录，并与显式候选3741拍轨迹全字段逐位相同；该单回合用于接线验证，不当成额外性能对照。
+
+### 已采用：packed叶函数内联
+
+CLI29沿用CLI28的点集合、顺序和数学，仅在支持的GCC兼容编译器下内联`leaf_vertex_interval_packed`。显式`leaf_packed.py`保留父版，`baseline.py`保留最初原版；其他候选不自动叠加。低层开关仍默认关闭，由工厂默认source选用已验证组合。
+
+| 已有工位 | packed父版全进程墙钟 | packed+inline全进程墙钟 | CPU父版→子版 | 原物理结果 |
+| --- | ---: | ---: | ---: | --- |
+| nominal，child→parent | 53.339s | 52.863s | 61.054→59.864s | 两轮通过 |
+| 200/200，parent→child | 56.511s | 55.244s | 63.473→63.003s | 两轮通过 |
+
+两工位controller墙钟分别少0.395/0.938s，各少一拍hold；不把等待差视作全部提速。nominal的运输和分离worker反而更慢，完整周期P95从25.819增至26.142ms；200/200的P95从26.681降至25.947ms。采用依据是当前三对局部和两个已有工位的全任务/CPU收益，不宣称所有规划更快、统计稳定性或完整50Hz通过。四回合原抓放、释放脱离、回位、自由物体与全部安全判据通过；证据和复跑入口见原计划F2w。

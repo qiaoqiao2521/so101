@@ -37,6 +37,7 @@ _QUAD_VERTICES = False
 _SMALL_DIRECTION_CACHE = False
 _TREE_LEAF8 = False
 _LEAF_PACKED = False
+_PACKED_INLINE = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -92,11 +93,23 @@ def configure_leaf_packed(enabled=False):
         _LEAF_PACKED = enabled
 
 
+def configure_packed_inline(enabled=False):
+    """Select the optional call-site implementation before loading its library."""
+    global _PACKED_INLINE
+    if not isinstance(enabled, bool):
+        raise ValueError('Packed helper inlining must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _PACKED_INLINE:
+            raise RuntimeError('Run the other native variant in a fresh evaluation process')
+        _PACKED_INLINE = enabled
+
+
 def _build_flags():
     flags = _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
     flags += (('-DSUPPORT_SMALL_DIRECTION_CACHE',) if _SMALL_DIRECTION_CACHE else ())
     flags += (('-DSUPPORT_TREE_LEAF8',) if _TREE_LEAF8 else ())
-    return flags + (('-DSUPPORT_LEAF_PACKED',) if _LEAF_PACKED else ())
+    flags += (('-DSUPPORT_LEAF_PACKED',) if _LEAF_PACKED else ())
+    return flags + (('-DSUPPORT_PACKED_INLINE',) if _PACKED_INLINE else ())
 
 
 def _sha(path):

@@ -199,6 +199,9 @@ bool vertex_interval(const Geometry& geom,std::size_t vertex,
 // Exact body of vertex_interval, reading the leaf vertex from the packed
 // copy when present, else the original points via geom.order. Keyed by the
 // order position so one leaf streams contiguous coordinates.
+#if defined(SUPPORT_PACKED_INLINE) && defined(__GNUC__)
+__attribute__((always_inline)) inline
+#endif
 bool leaf_vertex_interval_packed(const Geometry& geom,std::size_t order_k,
                                  const std::array<Interval,3>& local,Interval& out) {
     const double* coords = geom.packed.empty()

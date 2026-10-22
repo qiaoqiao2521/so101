@@ -710,4 +710,40 @@ Knowledge：updated。既有Wiki《ROS2 与 FishBot》第20节新增“性能微
 
 当前本轮实现、五轮原物理、局部/默认/诊断检查与文档已完成；根Codex串行提交推送后继续读实际剩余热点，原裁判、计时、失败证据与原版复跑均保留。不追加20+20、训练、实体动作或无依据参数扫描。
 
+发布已完成：e18f5802d6f1fee81824852b46b8745a942b9392推送原qiaoqiao2521/so101分支，GitHub REST及Git ls-remote独立读回一致。源与两个新增测试/候选文件均已入库；private CLI回执、全部原运行报告/录像仍留忽略目录，不提交运行时日志。发布时本交付仓库干净；独立Mint与原vault遗留均保留。
+
+## F2w 已采用packed的实际编译后调用（2026-10-23）
+
+沿已预热生产PACKED库的nm、objdump和相同严格flags的GCC unswitch报告核查，不凭源码猜已内联。实际保留leaf_vertex_interval_packed约1.6KiB独立函数；objdump有4处直接CALL（三个seed_extreme constprop路径、一处project内DFS循环），函数入口仍比较packed start/finish再选坐标源。前轮真实2816输入有10135626次packed顶点求值，不把该逻辑计数冒充硬件性能计数。
+
+与旧CLI22“原scalar函数已经内联”属于不同源码。CLI29同native会话仅请求SUPPORT_PACKED_INLINE宏使这一现有helper在已验证GCC编译器always_inline，其他平台/关闭宏保留原路径；不改函数体、FPE/finite检查、加载策略或循环，不加SIMD。先与e18 PACKED父版比较，原非packed与disabled作等值控制；三对局部收益需胜过当前已采用父版，不能靠旧原版较慢掩盖子改动退化。当前CLI前台运行，尚无新候选或物理成绩，无owned重仿真。
+
+CLI29已success/50.130s，只在原helper前加宏控制always_inline+inline。owner不采纳“没有inline关键字就是未内联原因”“必然消除empty dispatch”“函数体不变即可先称位等价”等泛化，实际检查编译后输出。四个原CALL在child均消失，parent/disabled各仍4处，主体/所有算术检查/迭代次序均未改。
+
+私有验证初轮工具失败：本目录inspect.py遮蔽Python标准库inspect，NumPy导入报缺cleandoc，未形成任何候选或成本判定；记录harness-name-collision.json，仅改名probe_compiler_lowering.py并移除其自有pyc后重跑工具。生产版本及原五轮结果不受该私有命名问题影响；不是重跑成本挑绿。
+
+正常/强制空副本原full-scan oracle各9项通过、全部596700个副本值同位。2816真实输入及原hint_in、原非packed、parent、disabled和强制空副本控制，raw numeric/flags/hint_out/提交hint及summary均同值；原FE_DOWNWARD/FTZ_DAZ拒绝保持，实际packed求值10135626次。原三对父版→child：0.477809→0.471918、0.479515→0.469166、0.477512→0.466503s，effect −5.891/−10.349/−11.009ms，原screen=eligible_for_physical_ab；只与已采用e18父版比，不拿最初原版掩盖子改动。
+
+默认关闭接入packed_inline字段、原native flag选择及leaf_packed_inline.py，仅此显式源同时开packed+inline；默认仍leaf_packed.py。71相关回归通过，含原full-scan正常/空副本；生产parent预处理同e18、child同CLI原型，2816集成再同值、非有限/零margin/原两种算术拒绝同值。两库已预热，无重训/评分/物理改动。
+
+下一组原nominal child→e18 parent，prepared：experiments/colab-twin/output/packed-inline-factory-20261023/e98e198d-3f69-47b9-9fe4-6c09b38892eb/prepared.json。label baseline实际source是leaf_packed.py（已采用父版），child是leaf_packed_inline.py，原baseline.py仍可显式复跑。原90sim/120wall和所有录像/评分保持，源/HEAD/dirty路径在整个pair冻结。有实际净收益才进已有第二工位；尚无本候选物理结果。
+
+F2w首组已完成：child 7cb861f8-1abc-4408-bf7f-e8c0501e7142原pass，74.76sim、52.862758全process wall、59.864069CPU；parent 8b0cd05c-ab90-48b2-8dc5-cfe506cdb6b1原pass，74.78sim、53.339244wall、61.054488CPU。child观测wall少0.476486s（0.8933%）、CPU少1.190419s，controller wall少0.394674s/线程CPU少0.440362s；只少1拍hold，不将其视为全部收益。原输入/四XML/初态/裁判/释放阈值同值、实际flags只多INLINE，完整抓放/释放脱离/回位与自由物体条件均原pass。
+
+如实保留代价：transport worker child1.166213对parent1.068233s、separation0.575688对0.559937s，两项都未提速；完整P95 child26.142244对parent25.818598ms，超过20ms周期250对247，尾部未改善，50Hz未过。此处只是一组成对观察，不据此切默认或作全部因果归因。完整报告在原pair的independent-pair-readback.json。
+
+按用户要求进已有200/200工位反序parent→child，prepared：experiments/colab-twin/output/packed-inline-factory-20261023/28aa2baf-1b18-43cd-b0aa-cdebff7df2c5/prepared.json。无新场景/源改动，仍原90sim/120wall/录像/评分；下一组完成后综合总耗时、CPU和完整周期记录决定保留，不把首组少量正差称稳定收益。当前默认仍已采用e18 packed。
+
 Knowledge：pending。候选经验是稀疏微基准必须保存每条真实hint_in，组件收益不替代全任务；后者已由Wiki《ROS2 与 FishBot》第20节覆盖。原Wiki及问题入口已有未提交工作，先保留，不并发改写。根Codex在本轮收尾协调后判断是否补充输入历史的适用条件；最短证据是本节native-abi.json与leaf8-replay-diagnostic.json。
+
+### F2w 第二工位及采用结果
+
+200/200反序parent→child两轮完成：parent 27d3e593-8291-4bf6-a9f8-d6dcc11e5dea原pass，77.10sim、56.511005全process wall、63.473038CPU；child e0f97eb3-f4a8-49e1-a47c-cd64d968c712原pass，77.08sim、55.244056wall、63.003495CPU。实测wall少1.266950s（2.24195%）、CPU少0.469543s，controller wall少0.937665s、线程CPU少0.923485s；hold158→157拍，其他阶段拍数相同。运输worker1.479782→1.416425s，分离worker0.717557→0.735930s，分离没有提速。P95 26.681323→25.946717ms，超过20ms周期280→268，仍不通过50Hz。
+
+四回合原抓放、静稳、释放脱离、回位均pass，safety=false、障碍接触0、free_object=true、weld=mocap=0。第二工位原输入/四XML/初态/裁判/释放阈值相同，实际flags只多INLINE；释放漂移0.267470/0.267431mm、脱离后力0N、录像各482/482。独立回读保存于28aa2baf-1b18-43cd-b0aa-cdebff7df2c5/independent-pair-readback.json。owned进程已结束，已向FishBot/Drone归还资源。
+
+三对局部与两个已有工位全process、CPU及controller均下降，保留CLI29并令DEFAULT_SOURCE选择leaf_packed_inline.py；leaf_packed.py保留e18父版、baseline.py与RoutePolicy()保留最初原版。只变默认source，不叠加旧候选、不改原裁判或物理。首工位P95与两worker回退完整保留，采用是当前观察到的吞吐收益，不宣称全部阶段更快、统计稳定或50Hz成功。默认路径转发和原失败透传已定向验证；不为一次source指针变更机械追加第五个完整物理回合。
+
+本次回归命令误写不存在的test_probe_episode_timing模块：73个有效用例通过、1个模块加载失败。纠正为既有test_episode_timing后补验6/6通过；没有修改测试或生产源码来消除命令错误。原71项集成回归、两份原full-scan正常/空副本oracle与2816逐位证据仍在。git diff --check通过。发布前再次验证qiaoqiao2521用户ID238822818及原so101 fetch/push目标，不触碰Mint或独立vault。
+
+Knowledge：already_covered。上一pending由本轮收口：Wiki《ROS2 与 FishBot》第20节及《开发知识入口》已包含真实hint_in、阶段覆盖和组件/整任务边界；本轮只是该原则的又一个实例，没有新增通用机制或修改独立vault的必要。

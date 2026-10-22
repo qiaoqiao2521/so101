@@ -44,6 +44,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(tree_leaf8=1)
         with self.assertRaises(ValueError):
             RoutePolicy(leaf_packed=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(packed_inline=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -111,6 +113,7 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertFalse(load_route_policy(BASELINE_SOURCE)[0].leaf_packed)
         policy, loaded = load_route_policy(Path(__file__).parent/'route_strategies/leaf_packed.py')
         self.assertTrue(policy.leaf_packed)
+        self.assertFalse(policy.packed_inline)
         self.assertFalse(policy.quad_vertices)
         self.assertFalse(policy.small_direction_cache)
         self.assertFalse(policy.tree_leaf8)
@@ -119,11 +122,25 @@ class RoutePolicyTests(unittest.TestCase):
     def test_factory_default_and_explicit_original_remain_distinct(self):
         recommended, source = load_route_policy()
         self.assertTrue(recommended.leaf_packed)
+        self.assertTrue(recommended.packed_inline)
         self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
         original, source = load_route_policy(BASELINE_SOURCE)
         self.assertFalse(original.leaf_packed)
         self.assertEqual(original, RoutePolicy())
         self.assertEqual(source['entrypoint_path'], str(BASELINE_SOURCE.resolve()))
+
+    def test_inline_child_keeps_the_adopted_parent_and_original_available(self):
+        child, source = load_route_policy(
+            Path(__file__).parent/'route_strategies/leaf_packed_inline.py')
+        self.assertTrue(child.leaf_packed)
+        self.assertTrue(child.packed_inline)
+        self.assertFalse(child.quad_vertices)
+        self.assertEqual(source['preferences']['packed_inline'], True)
+        self.assertEqual(load_route_policy()[0], child)
+        parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/leaf_packed.py')
+        self.assertTrue(parent.leaf_packed)
+        self.assertFalse(parent.packed_inline)
+        self.assertEqual(load_route_policy(BASELINE_SOURCE)[0], RoutePolicy())
 
     def test_evaluator_default_passes_the_recommended_policy_to_original_executor(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -140,6 +157,7 @@ class RoutePolicyTests(unittest.TestCase):
             with patch('evaluate_station.run', execute):
                 evaluate(root/'station.json', root/'output')
             self.assertTrue(observed[0].leaf_packed)
+            self.assertTrue(observed[0].packed_inline)
             result = json.loads((root/'output/evaluation.json').read_text())
             self.assertEqual(result['candidate']['loaded_path'], str(DEFAULT_SOURCE.resolve()))
             self.assertEqual(result['verdict'], 'fail')

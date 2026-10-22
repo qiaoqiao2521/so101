@@ -82,6 +82,21 @@ class NativeLoaderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.configure_leaf_packed(1)
 
+    def test_inline_child_is_an_explicit_build_over_the_packed_parent(self):
+        module = fresh_module()
+        self.assertEqual(module._build_flags(), module._FLAGS)
+        module.configure_leaf_packed(True)
+        module.configure_packed_inline(True)
+        self.assertEqual(module._build_flags(),
+                         (*module._FLAGS, '-DSUPPORT_LEAF_PACKED', '-DSUPPORT_PACKED_INLINE'))
+        self.assertIsNone(module._LIB)
+        module._LIB = object()
+        module.configure_packed_inline(True)
+        with self.assertRaisesRegex(RuntimeError, 'fresh evaluation process'):
+            module.configure_packed_inline(False)
+        with self.assertRaises(ValueError):
+            module.configure_packed_inline(1)
+
     def test_import_has_no_compile_or_library_load(self):
         with mock.patch("subprocess.run", side_effect=AssertionError("Import must not run compiler")), \
              mock.patch("ctypes.CDLL", side_effect=AssertionError("Import must not load library")):
