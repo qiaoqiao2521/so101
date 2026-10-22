@@ -275,9 +275,11 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                 station_name=station.get('name', 'SO101'), layout=layout,
                 capability=describe())
         os.environ.setdefault('MUJOCO_GL', 'egl')
-        from support_native import configure_quad_vertices, configure_small_direction_cache
+        from support_native import (configure_quad_vertices, configure_small_direction_cache,
+                                    configure_tree_leaf8)
         configure_quad_vertices(bool(route_policy and route_policy.quad_vertices))
         configure_small_direction_cache(bool(route_policy and route_policy.small_direction_cache))
+        configure_tree_leaf8(bool(route_policy and route_policy.tree_leaf8))
         import mujoco
         from grasp_episode import build_contact_scene, numbers
         from run_visual_grasp import SOURCE, run_physical_episode

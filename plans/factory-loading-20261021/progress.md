@@ -575,3 +575,77 @@ nominal baseline 5ad3e1b5-00bd-482f-a916-57356c8efeb4：原pass，74.76sim、65.
 实际小成本支持一次非常小的单遍历候选，不支持大改或宣称数秒收益。CLI21同native会话已收到两工位正负结果、200输入加法计时、原_sweep_binding与配置绑定源码；仅允许所有字段/归属/上下文变更失效/浮点位值及public原行为保持的小实现。先局部三对，收益不足即淘汰；不得复用上一绑定、去掉consume检查、增加hash/版本门或改变评分/物理。当前CLI前台运行，无owned物理进程。
 
 Knowledge：already_covered，维持双时钟与原裁判；根Codex接续。
+
+F2p闭合：CLI21原native会话145.585s/success，没有make_candidate。owner接受“收益上限有限、需保留混合raw/snapshot字段与错误顺序，当前不值得扩大接口”的结论，不把约23ms二次校验全部视为可消除，也不采纳不存在的额外physical bar或“禁止所有私有已验证包装”的误读。原_sweep_binding与普通SweepBinding一行未改，未为此追加物理。
+
+新的窄只读核查：原full_tree在DFS节点已计算向外舍入AABB投影并确认finite(bound)后，叶顶点仍重复执行逐轴finite分类。先只数此严格位置覆盖多少实际顶点、保持所有原检查；不碰种子/witness/full_scan或放宽非有限回退。旧2026-10-08 finite报告已精读：它基于query guard＋quad，逐packet延迟检查，variable8.526%未达其旧10%门。当前只查scalar DFS有限包围盒证明的工作量，不能冒充旧候选已过门或直接复活旧实现。
+
+F2q实际计数已回读：原5500帧×285pair共有18500621次vertex_interval，其中17192933次在原DFS叶finite(bound)之后，失败顶点0。12numeric/6flag/hint ID同原版0差异；计数版不计收益。额外核验发现synthetic helper只校验finite points、不校验local coefficients，而interval mul可能忽略非首NaN乘积。因此单凭finite(bound)不够，任何候选必须使非有限local endpoints走完整原checked路径，不能新提前返回或改首失败prefix。
+
+CLI22原native会话正在核实finite local＋原向外包围盒界对scalar DFS逐点finite分类的证明，只允许一处叶循环快路，seed/witness/full_scan/遍历/数学DAG/全部采样与物理阈值均不变。未产候选前不改生产、不宣称能省12×1719万次就必然提速，也不组合quad/小表。
+
+## F2q DFS有限包围盒快路：等值通过，原局部成本inconclusive（2026-10-23）
+
+CLI22同native会话228.920s/success给出纯make_candidate，只在scalar DFS叶循环选择相同DAG、无重复finite分类的helper。helper由SUPPORT_LEAF_BOUND_FAST显式开启且不组合quad/map；local endpoints仍须finite，非有限系数保留完整原checked路径。原seed/witness/full_scan/有限bound检查/遍历/提示/数学次序一行未改。当前只在私有源码编译，未应用生产。
+
+独立原tree＋full_scan对照1324边界/随机用例0差异，包括NaN/Inf局部系数、signedzero/subnormal、尾数/极端neighbor溢出与宽界回退；非有限系数快路调用0，实际快路39505个顶点，避免测到纯fallback误认优化。5500真实帧×285pair的12numeric/6flag/hints及macro-disabled控制均0差异；非有限frame、FE_DOWNWARD、FTZ/DAZ原拒绝行为相同。边界报告完成至成本前raw-readback间隔2.945s，边界编译/执行已结束，不将并发编译计入成本；原全部批次保留。
+
+原三对summary baseline1.870493/1.607353/1.496730s，candidate1.717648/1.609244/1.351118s，effect −152.846/+1.890/−145.612ms，中位relative8.171%。原factory screen=inconclusive/pair_has_no_consistent_wall_reduction；不因中位好看忽略第二对，不进物理、不改默认、不重跑本源码找绿。root正在查看实际编译循环是否已有unswitch/inlining，只有明确的新实现假设才再交CLI。
+
+复跑私有round22-bounded-leaf/{compile.py,check_boundaries.py,probe_native.py}；实际报告同series/bounded-leaf/{boundary-readback.json,raw-readback.json,local-screen.json}。算法正确性与成本结论分开；尚未证明任意binary64全集或sticky FP异常位等值，不作其声明。
+
+6f3df7a1cdd98542a8da522d840ad182bcd46e35已推原qiaoqiao2521分支，GitHub REST与重试后Git ls-remote均读回一致；首次ls-remote超时保留为网络检查失败，不当成push失败或两路验证成功。当前生产无新改动，无owned物理运行。Knowledge：already_covered。
+
+F2q编译检查已闭合：严格原flags生成assembly/objdump，未见full_tree/leaf-fast独立符号或直接helper调用，GCC已内联；不为不存在的调用开销再提always_inline。原成本inconclusive保留，无相同源码复测或新物理。
+
+## F2r 原BVH工作量与单一分叶假设（2026-10-23）
+
+新增原默认整数计数（非22候选）：5500帧×285pair，18500621vertex调用、其中17192933在DFS叶，9642174节点bound、1648430访问叶，平均每访问叶10.43点、原max16。全部raw/hints0差异，不用instrumented时间算收益。
+
+同native CLI23正在根据节点界与逐点工作量选择唯一有依据的leaf常量改动或明确拒绝，不扫8/16/32网格；只允许改原LEAF_SIZE，其余树构造算法/全顶点拥有/精确一次叶覆盖/严格bound/全部原finite检查/种子见证/full_scan与物理判据保持。当前只有生成请求，未改生产或有新物理。Knowledge：already_covered，根Codex接续。
+
+### F2r LEAF_SIZE=8局部通过，原nominal物理执行中
+
+CLI23同native会话107.493s/success选择唯一8并返回仅替换原常量的一行纯变换。owner不采纳其把per-pair计数称per-full_tree以及“bounds增长15%/整体18–20%”的估算；实际计数与成本如下，不用模型估值作收益。
+
+原5500帧等值计数：总vertex18500621→12639103，叶内17192933→11843122；node bounds9642174→12136172，访问叶1648430→1977319。原所有顶点仍拥有且恰好一次入叶，只是原严格BVH多做界检查、少扫描被其认证排除的内部顶点。不是删除路径/夹爪采样或碰撞pair，原finite/scalar/full_scan一行未改；未组合22快路/quad/短表。
+
+1324独立原tree/full-scan边界状态与端点0差异、1204案例实际树结构变化、顶点覆盖全部完整；结构node数/最大叶数按意图不同，不伪称字节相等。5500帧×285pair原12numeric/6flag/hints与恢复16控制0差异，非有限frame/FE_DOWNWARD/FTZ_DAZ原拒绝同值。原三对summary1.371987→1.297591、1.344439→1.219665、1.467567→1.292590s，各省74.396/124.774/174.976ms，中位relative9.281%，原screen=eligible_for_physical_ab。边界先结束再运行成本，不混并发。
+
+默认关闭tree_leaf8接原RoutePolicy/native编译/执行器。集成default preprocess同6f3df7a原代码、enabled同已测CLI23原型；新两库5500帧仍0差异。62相关回归通过，含真实叶8 split结构、全覆盖与原full-scan oracle，diff check通过。
+
+原nominal现在candidate→baseline执行（反转前轮primary顺序），prepared：experiments/colab-twin/output/tree-leaf8-factory-20261023/c6815941-fb67-427e-8b2d-ba81d674a344/prepared.json。两库已同窗预编译，原90sim/120wall、全部安全与评分/录像保持；未有新物理结果，不切默认。启动前计数/测试进程均结束、无其他机器人重实例，Drone快照idle，FishBot/Drone已收到串行资源占用通知。
+
+Knowledge：already_covered；根Codex接续，有实际净收益才另工位反转复测。
+
+### F2r 原nominal完成：行为逐位同原版，未提速，不晋级
+
+candidate 942864f6-2295-430f-b634-73b8221c7c1e原pass，74.80sim、61.300829全进程wall、68.894366CPU；baseline e95c0346-5f74-4144-a713-494c8c414da3原pass，74.80sim、60.937976wall、68.534318CPU。候选wall多0.362854s/CPU多0.360048s，controller wall43.325426对43.210704、线程CPU42.898801对42.825183，未有净收益。
+
+同工位resolved-station、四XML、初态/裁判/实际native宏选择均已核。两轮全部3740行trajectory各字段递归按float64字节比较完全相同（trajectory-transparency.json），包括所有阶段/hold145拍均相同，确非少等拍。原完整抓放/静稳/释放脱离/回位全pass，safety=false、障碍0、free_object=true、weld=mocap=0。P95候选30.971402ms对原29.540441ms，50Hz仍未过。
+
+结论：不晋级、不切默认，不跑另一工位、不扫4/32或改阈值。显式default-off代码保留原样复跑。两轮原process/report/planning/timing/录像与输入完备，源/结果见c6815941目录；已向FishBot/Drone回告此组结束。
+
+后续先核微基准代表性：旧fixture只收100条运输sweep的5500帧，guard-core还有300次其他checker调用；旧成本脚本从hint=-1开始只回放5500帧，没有证明与原整轮每次ns_evaluate_hinted的输入提示及调用历史相同。普通online_chord端点确为self.reference，与记录geometric_reference一致，不能误称已发现命令端点重建Bug。真正缺口是阶段覆盖、查询顺序和hint输入未直接采集。
+
+准备沿原probe_episode_timing/evaluate_station做一次原baseline实时ABI加法计时与每阶段固定seed reservoir输入采样，记录实际p/R/pairs/margin/hint_in及拥有几何副本，不从q6重建，不干预原返回/动作。诊断不是新算法验收；原90sim/120wall保持，若终止仍保存原fail和仅已观测阶段，不追加配额。当前原source/评分冻结，无owned物理，待探针检查与资源空档后串行。Knowledge：pending，微基准提示状态的可复用结论待真实ABI证据完成后由根Codex回读原第20节判断补写。
+
+## F2s 真实循环ABI计时与拥有输入采样（2026-10-23，已完成）
+
+沿原run_probe/evaluate_station新增可选probe_native_abi.py：只包ns_evaluate_hinted的真实调用，按main_update/live stage、main_other与worker线程分别量wall/线程CPU；worker墙钟重叠不相加。主循环每owner/stage/pair_count用独立seed reservoir最多保存256个真实p/R/pairs/margin/hint_in拥有副本，保存原Geometry/kinds，不从q6构造输入，不替换原参数或返回值。原库/类/函数入口在finally恢复；可选采样错误只warn并保留原原生结果。
+
+8相关测试通过，实际小几何原native查询验证返回不变、修改原输入后已采副本不变、初始hint=-1完整保存、异常构造仍原失败和采样故障不改变原结果、入口恢复。原叶8相关62项与5500集成同值已通过；未因此改其他源码或扩展评分。
+
+原baseline诊断691d01ca-4091-404d-8f86-d7b1976e03a4完成，原裁判pass，74.78sim、59.279612全进程wall、66.866704CPU，抓放/释放脱离/回位通过，safety=false、hold31.42s、静稳7.52s。prepared：experiments/colab-twin/output/actual-native-abi-20261023/9c766cda-6ded-41fc-aa62-701d705511a7/prepared.json。原90sim/120wall、全部安全/录像与评价保持；时钟/复制开销包含在诊断时间，不与未插桩旧回合算提速。外层沿用run_pair，不新增调度平台。
+
+main_update共151589次native调用，wall26.483208s，占插桩controller42.276892s的62.6423%。其中transport76024次/12.634672s，close30546次/5.188880s，release12930次/2.510419s，其余阶段见native-abi.json。main_other及worker另列，worker墙钟不累加。11阶段各256份、共2816份真实p/R/pairs/margin/hint_in，拥有原几何副本；独立回读输入形状/有限值/索引/序号均通过、warnings为空。探针没有保存当时numeric/flags/hint_out，不虚称与当时输出逐位核对。P95插桩29.042647ms，仍不宣称50Hz。
+
+私有round24在2816份确切ABI输入上逐条恢复原hint_in，baseline重算与CLI23叶8的12numeric/6flag/hint_out逐位相同。11阶段native-only中位均有局部收益（5.93%–9.29%），但这不是全回合计时，不能翻转已完成的叶8物理无收益结论。原诊断回合已退出、资源已回告FishBot/Drone释放。
+
+## F2t 同一在线守卫的端点重复认证（2026-10-23）
+
+原update先认证实测q6，_configuration_sweep保留并认证首末q6，再由原validate_joint_path调用_arm_valid及持物/已释放物体检查；存在重复端点的源码依据，真实重复数与可复用份额仍待局部核算。旧5500份仅sweep内全唯一，不代表这些外围查询也唯一。原reuse_adjacent_validity仅用于冻结worker规划，不冒充在线已实现。
+
+CLI25复用同native会话、关闭工具、前台等待，输入真实原结果和上述原函数，仅允许同一online守卫内、完全相同float64姿态的默认关闭候选，保留所有原采样/阈值/绑定和额外物体检查。不得跨update/stage/model/checker复用，不缓存未完成查询，不从输入真值救策略。当前尚未生成或应用候选，无新物理回合。
+
+Knowledge：pending。候选经验是稀疏微基准必须保存每条真实hint_in，组件收益不替代全任务；后者已由Wiki《ROS2 与 FishBot》第20节覆盖。原Wiki及问题入口已有未提交工作，先保留，不并发改写。根Codex在本轮收尾协调后判断是否补充输入历史的适用条件；最短证据是本节native-abi.json与leaf8-replay-diagnostic.json。

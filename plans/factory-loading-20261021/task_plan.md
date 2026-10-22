@@ -152,4 +152,10 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 9. CLI17四顶点AVX2在原5500帧上逐位等值，三对局部收益13.3–14.5%、中位13.914%；runtime不支持时保留scalar。CLI18首轴加法消除比CLI17三对更慢，淘汰，不组合。四顶点已接入默认关闭的RoutePolicy与原评测入口，90相关测试及集成5500帧同值。原nominal完整A/B两轮pass，但全进程60.874→64.892s、控制器+2.432s，reject、不扩第二工位，不切默认；原90sim/120wall及裁判不改（complete）。
 10. CLI19已success，未产候选；owner只采纳ns_evaluate_hinted加法计时，拒绝宿主归因、将transport控制误写为planning及新增10%硬门。200保存输入实际局部测量已完成（complete）。
 11. 非轴向cache原5500帧计数319000次插入/0命中，159500个Frame中137500空、11000为13项、11000为16项，原raw字段/hints同值。CLI20仅尝试按需小方向表＋原unordered_map溢出；不取消缓存、不复用跨帧证书，原5500帧逐位与强制溢出同值，三对中位省5.561%、原screen通过；默认关闭集成与52相关测试完成，原nominal完整A/B两轮pass、实测全进程少2.170s/CPU少2.257s，等待反而多1拍；200/200反转顺序候选反而多1.224s/CPU多1.629s，四物理pass但收益不稳定，整体不晋级、不切默认（complete）。
-12. 先对已保存200条guard输入量snapshot与immutable重复遍历，再将实测与原源码送同CLI，只考虑保持全部绑定/float位值/失效检查的一次遍历实现（in_progress）。
+12. 先对已保存200条guard输入量snapshot与immutable重复遍历，再将实测与原源码送同CLI，只考虑保持全部绑定/float位值/失效检查的一次遍历实现；CLI21未产候选，实测可消除份额有限且会扩大接口/错误顺序范围，原实现保持，未追加物理（complete）。
+13. 只计数原scalar DFS已finite(bound)叶中重复顶点finite分类，核清可复用的现有证明；不删任何点或pair、不修改种子/见证/原full_scan回退；CLI22私有版本1324边界/5500真实帧同值，但一对成本+1.890ms，原screen=inconclusive，未应用生产或进物理。只查编译后新瓶颈，不重测挑绿（complete）。
+
+14. 原树实际9642174节点界/1648430叶/17192933叶顶点；GCC已内联排除调用假设。CLI23据此只选择一个现有LEAF_SIZE值或拒绝，不网格扫描、不动原finite与裁判，CLI23只选8，实际1324边界/5500原字段与hint同值，三对中位省9.281%、62集成回归通过。原nominal2/2pass且3740轨迹全字段逐位相同，但候选wall多0.363s，未提速；不晋级/不跨工位，默认保持16（complete）。
+
+15. 沿原baseline真实循环采native ABI各阶段wall/线程CPU及拥有的p/R/pairs/margin/hint_in。原裁判pass，151589次main-update查询占插桩controller墙钟62.6%，11阶段各256个真实输入。2816份基线重算与叶8结果逐位同值，但不改变叶8整回合无收益结论（complete）。
+16. 基于真实ABI成本检查同一online守卫内的重复端点认证。原CLI25只允许本拍同float64姿态的最小复用候选，保留全部扫掠/路径样本及持物、释放额外检查；先局部计数、等值与三对成本，有收益再原物理，不改默认（in_progress）。

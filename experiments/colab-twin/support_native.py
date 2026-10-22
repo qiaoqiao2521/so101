@@ -35,6 +35,7 @@ _METADATA = None
 _LOAD_LOCK = RLock()
 _QUAD_VERTICES = False
 _SMALL_DIRECTION_CACHE = False
+_TREE_LEAF8 = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -68,9 +69,21 @@ def configure_small_direction_cache(enabled=False):
         _SMALL_DIRECTION_CACHE = enabled
 
 
+def configure_tree_leaf8(enabled=False):
+    """Select a different tree partition without changing owned geometry or guards."""
+    global _TREE_LEAF8
+    if not isinstance(enabled, bool):
+        raise ValueError('Eight-vertex tree leaves must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _TREE_LEAF8:
+            raise RuntimeError('Run the other native variant in a fresh evaluation process')
+        _TREE_LEAF8 = enabled
+
+
 def _build_flags():
     flags = _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
-    return flags + (('-DSUPPORT_SMALL_DIRECTION_CACHE',) if _SMALL_DIRECTION_CACHE else ())
+    flags += (('-DSUPPORT_SMALL_DIRECTION_CACHE',) if _SMALL_DIRECTION_CACHE else ())
+    return flags + (('-DSUPPORT_TREE_LEAF8',) if _TREE_LEAF8 else ())
 
 
 def _sha(path):

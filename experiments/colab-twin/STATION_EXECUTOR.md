@@ -165,3 +165,14 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 2026-10-22该实验原nominal A/B两轮均完成抓放/释放/回位，但60.874→64.892全进程秒、controller+2.432秒，因此不晋级、不切默认。局部13.9%收益没有转化为整轮收益，候选仅保留供原样复跑。完整50Hz仍未通过，结果见原厂区计划F2m。
 
 `route_strategies/small_direction_cache.py` 是CLI20独立候选，默认关闭且不组合quad。只将每帧非轴投影缓存改为按需16项小表；第17个不同键迁移至原unordered_map，空表不分配。全部方向投影、碰撞pair、扫掠与原数学仍保留。当前局部5500帧/强制溢出同值、三对中位省5.561%，原两工位四轮抓放均通过，但nominal省2.170s、200/200反而多1.224s，收益不稳定，不晋级或切默认。局部筛选不是任务成功或默认采用。
+
+`route_strategies/tree_leaf8.py` 是CLI23独立候选，只改变BVH分叶大小，保留全部顶点、碰撞pair、路径采样与原保守计算。默认关闭；原三对局部成本下降，但完整抓放61.301对原60.938秒，未提速，不晋级。两轮3740拍轨迹全字段逐位相同；不将局部省时称为整回合收益。
+
+可选ABI观察沿原完整执行入口运行，不替换原生结果，也不改变原90sim/120wall。按真实阶段记录调用wall/线程CPU，并保存拥有的几何、p/R/pairs/margin/hint_in。回放每条采样时恢复其原hint_in，不能从稀疏样本自行推导提示历史。worker墙钟可能重叠，不并入主循环总和。当前探针没有保存原始输出；离线两实现相等不等于与当时输出逐位核对。
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
+  experiments/colab-twin/probe_native_abi.py \
+  --station experiments/colab-twin/scenarios/factory-loading/capability-segments-0mm.json \
+  --output-dir <新的诊断目录>
+```

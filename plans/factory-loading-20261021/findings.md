@@ -121,3 +121,10 @@ CLI19从原目录native会话接续151.201s，success但未产算法候选。own
 F2o小方向表跨工位未保住收益：nominal原A/B wall65.635→63.464s（候选少2.170s），200/200反转顺序baseline62.706/candidate63.931s（候选多1.224s）。四轮原物理均通过、同工位输入/裁判/库选项已核，但收益不稳定，整体不晋级，不将两组相加取平均冒充广泛提升。默认保持scalar/map，保留显式default-off候选。下一有证据方向为上下文snapshot与immutable的重复遍历，不继续扫缓存容量。
 
 绑定二次遍历真实局部计时：close100 snapshot11.251ms＋ordinary validation11.266ms，transport100 12.136ms＋11.815ms，200原bindings完全.matches。二次校验共23.082ms，不是旧cProfile97ms；下一小候选只可用这一真实规模评估，不大改，不以本数冒充完整update或任务提速。
+
+F2q有限包围盒scalar快路的证明需额外finite(local endpoints)，否则interval mul可掩盖非首NaN乘积。私有版本1324边界＋5500真实帧/raw+hints同值，实际快路39505顶点。但原三对−152.846/+1.890/−145.612ms，一对无改善，原screen=inconclusive；不忽略该对或追加完整物理。当前只查编译后是否有新的确定调用开销，不复跑相同源码。
+### 2026-10-23 真实ABI输入与整回合判定
+
+CLI23叶8局部中位省9.281%，但原nominal2/2物理通过时全进程61.300829对60.937976s，3740拍轨迹逐位同值而未提速，不晋级。新的原baseline ABI观察151589次main-update调用、26.483208s，占插桩controller62.6423%；原抓放仍pass，不能把该诊断59.279612s与旧未插桩回合作算法比较。
+
+2816份拥有的真实输入覆盖11阶段，每条保存原hint_in。离线重新计算的基线与叶8numeric/flags/hint_out逐位同值、native-only省时，但探针未保存当时输出，不能宣称与当时输出同值或整回合已经获益。候选hint状态和阶段覆盖属于微基准代表性的输入条件，不能从稀疏重放自己重建原历史。

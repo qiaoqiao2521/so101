@@ -133,7 +133,11 @@ bool environment(int* rounding=nullptr, std::uint32_t* control=nullptr,
            !(csr&(UINT32_C(1)<<15)) && !(csr&(UINT32_C(1)<<6)) && input && output;
 }
 
+#if defined(SUPPORT_TREE_LEAF8)
+constexpr std::size_t LEAF_SIZE=8, NO_CHILD=std::numeric_limits<std::size_t>::max();
+#else
 constexpr std::size_t LEAF_SIZE=16, NO_CHILD=std::numeric_limits<std::size_t>::max();
+#endif
 struct Node {
     Vec low{},high{};
     std::size_t begin=0,end=0,left=NO_CHILD,right=NO_CHILD;

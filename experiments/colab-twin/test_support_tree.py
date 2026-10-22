@@ -23,7 +23,7 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def build_test_library(*, quad_vertices=False):
+def build_test_library(*, quad_vertices=False, tree_leaf8=False):
     spec = importlib.util.spec_from_file_location("support_tree_test_loader", HERE / "support_native.py")
     loader = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(loader)
@@ -32,9 +32,13 @@ def build_test_library(*, quad_vertices=False):
     flags = [*loader._FLAGS, "-DSUPPORT_TREE_TESTS"]
     if quad_vertices:
         flags.append('-DSUPPORT_VERTEX_QUAD_ENABLED')
+    if tree_leaf8:
+        flags.append('-DSUPPORT_TREE_LEAF8')
     build_dir = HERE / "output" / "support-tree-tests" / source_hash
     if quad_vertices:
         build_dir = build_dir/'quad'
+    if tree_leaf8:
+        build_dir = build_dir/'leaf8'
     build_dir.mkdir(parents=True, exist_ok=True)
     library = build_dir / "libsupport_tree_tests.so"
     command = [identity["path"], *flags, str(KERNEL), "-o", str(library)]

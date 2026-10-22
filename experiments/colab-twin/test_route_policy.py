@@ -40,6 +40,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(quad_vertices=1)
         with self.assertRaises(ValueError):
             RoutePolicy(small_direction_cache=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(tree_leaf8=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -94,6 +96,14 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(policy.small_direction_cache)
         self.assertFalse(policy.quad_vertices)
         self.assertEqual(loaded['preferences']['small_direction_cache'], True)
+
+    def test_leaf8_only_changes_the_tree_partition(self):
+        self.assertFalse(load_route_policy()[0].tree_leaf8)
+        policy, loaded = load_route_policy(Path(__file__).parent/'route_strategies/tree_leaf8.py')
+        self.assertTrue(policy.tree_leaf8)
+        self.assertFalse(policy.quad_vertices)
+        self.assertFalse(policy.small_direction_cache)
+        self.assertEqual(loaded['preferences']['tree_leaf8'], True)
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:
