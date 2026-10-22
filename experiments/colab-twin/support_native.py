@@ -38,6 +38,7 @@ _SMALL_DIRECTION_CACHE = False
 _TREE_LEAF8 = False
 _LEAF_PACKED = False
 _PACKED_INLINE = False
+_SEED_BOUND_DIRECT = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -104,12 +105,24 @@ def configure_packed_inline(enabled=False):
         _PACKED_INLINE = enabled
 
 
+def configure_seed_bound_direct(enabled=False):
+    """Select same-projection finite seed-bound reuse before loading its library."""
+    global _SEED_BOUND_DIRECT
+    if not isinstance(enabled, bool):
+        raise ValueError('Seed-bound reuse must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _SEED_BOUND_DIRECT:
+            raise RuntimeError('Run the other native variant in a fresh evaluation process')
+        _SEED_BOUND_DIRECT = enabled
+
+
 def _build_flags():
     flags = _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
     flags += (('-DSUPPORT_SMALL_DIRECTION_CACHE',) if _SMALL_DIRECTION_CACHE else ())
     flags += (('-DSUPPORT_TREE_LEAF8',) if _TREE_LEAF8 else ())
     flags += (('-DSUPPORT_LEAF_PACKED',) if _LEAF_PACKED else ())
-    return flags + (('-DSUPPORT_PACKED_INLINE',) if _PACKED_INLINE else ())
+    flags += (('-DSUPPORT_PACKED_INLINE',) if _PACKED_INLINE else ())
+    return flags + (('-DSUPPORT_SEED_BOUND_DIRECT',) if _SEED_BOUND_DIRECT else ())
 
 
 def _sha(path):

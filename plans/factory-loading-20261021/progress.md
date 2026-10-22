@@ -747,3 +747,45 @@ Knowledge：pending。候选经验是稀疏微基准必须保存每条真实hint
 本次回归命令误写不存在的test_probe_episode_timing模块：73个有效用例通过、1个模块加载失败。纠正为既有test_episode_timing后补验6/6通过；没有修改测试或生产源码来消除命令错误。原71项集成回归、两份原full-scan正常/空副本oracle与2816逐位证据仍在。git diff --check通过。发布前再次验证qiaoqiao2521用户ID238822818及原so101 fetch/push目标，不触碰Mint或独立vault。
 
 Knowledge：already_covered。上一pending由本轮收口：Wiki《ROS2 与 FishBot》第20节及《开发知识入口》已包含真实hint_in、阶段覆盖和组件/整任务边界；本轮只是该原则的又一个实例，没有新增通用机制或修改独立vault的必要。
+
+发布完成：678c5e3a212ab4b5d2caf713134d87370c18c203已推送原qiaoqiao2521/so101分支，GitHub REST与git ls-remote独立读回一致。发布时工作树干净；无新增物理任务或独立Mint/vault变更。
+
+## F2x 同次树投影的节点界重复计算（2026-10-23）
+
+私有round30-node-bounds/count_bounds.py沿2816真实ABI输入逐条恢复hint_in，仅在full_tree单次投影内计数精确node ID与已完成的原区间值。25438投影，seed1051428次、DFS5210500次，共6261928次bound dot；seed重复56096、DFS重复966084，共1022180次。所有重复lo/hi逐位相同、非有限重复0；计数版与678c5e3已采用父版的numeric/flags/raw hint_out/提交hint全部同位。最大已观测425个不同节点不是算法容量保证；该计数不是CPU cache miss或速度测量。
+
+原CodeBuddy/DeepSeek Pro同native会话已收到计数和完整seed/full_tree源码，仅请求一个默认关闭的同投影有限节点界复用候选。保持min seed→max seed→witness→DFS、全部节点/点/判定、原dot DAG、非有限回退与算术环境行为；不跨投影/帧/模型复用，不新造调度器。先用原oracle/真实输入和原三对成本判定，未有候选或物理结果，不修改生产默认。候选来源与复跑在私有round30-node-bounds/{ask.py,count_bounds.py}。
+
+CLI30首版153.377s/success，返回每次full_tree独占128项种子节点界、排序后DFS二分查找；非有限不存、超容量重算。owner不采纳其“跳过重复计算必然使浮点状态位不同且不可观察”的说明，该说法未独立验证，不能代替原算术环境/异常行为核验。
+
+私有正常、packed可选分配失败、节点缓存容量强制2项三份原full-scan oracle各9/9通过。2816真实输入逐条原hint恢复，parent/child/disabled/original/counter/empty-copy/tiny-capacity的numeric/flags/raw hint_out/提交hint及summary均同值；原FE_DOWNWARD和FTZ_DAZ拒绝保持，实际DFS复用966084次。但原三对0.486975→0.487173、0.491731→0.476390、0.509387→0.447467s，effect +0.199/−15.341/−61.920ms，原screen=inconclusive/pair_has_no_consistent_wall_reduction。保留所有原成本，不重跑同源码，不应用生产或进物理。后续只允许基于该lookup成本的具体源码修正或明确no_candidate，不扫容量参数。
+
+原count_direct.py只在原节点事件中做整数模拟，固定同128槽、node_index&127，有限seed界写tag、冲突覆盖可选项。2816原raw输出仍同位，预测DFS可复用637288次、种子tag冲突374491次；不是新速度测量、没有重跑原成本。CLI31同native会话已收到首版完整不一致成本、预测与原源码，只允许由排序/二分变成这一固定直接索引，容量/哈希不扫描。当前前台生成中；先等独立等值及原三对，生产仍678c5e3。
+
+CLI31首返回68.463s/success，但纯Python转换器第15行在字符串外混入C++ //注释，compile即SyntaxError。这是实际无效交付，未进入C++编译、等值或计时，更无生产/物理更改。保留candidate-initial-invalid.py及syntax-initial-failure.json，已回同一native CLI仅修这一Python语法错误，禁止借机改算法/槽数；原首回执不覆盖。
+
+原CLI语法修复11.420s/success，独立diff确认只删字符串外的一条//注释，未改算法。CLI31固定128直接索引、原math/seed/witness/DFS顺序与有限检查保持，私有正常/empty-copy/tiny2槽原full-scan各9/9。2816真实输入及原hint逐条重置，所有原numeric/flags/hints/summary与disabled/original/fallback/tiny控制同位；实际DFS命中637288次，正好对应原整数预测。原三对678父版→child：0.480618→0.455136、0.469096→0.440490、0.481249→0.434199s，省25.482/28.606/47.049ms，原screen=eligible_for_physical_ab。
+
+现默认关闭接入seed_bound_direct字段、原native selector与显式seed_bound_direct.py（只在父版packed+inline上加direct）。82相关回归通过，含原full-scan与强制碰撞回退；生产disabled预处理同678父版、enabled同CLI原型。生产2816集成raw同位，NaN/Inf/零margin及FE_DOWNWARD/FTZ_DAZ原拒绝保持。另在C内即时读回88份真实输入的FP状态位与原输出，全部同值；复用原witness隔离子进程的x87/SSE未屏蔽及rounding/FTZ/DAZ检查均通过，不宣称通用数学证明。两生产库已预热，没有重跑同源码成本挑绿。
+
+下一组原nominal parent→child，prepared：experiments/colab-twin/output/seed-direct-factory-20261023/00d8bfd2-3c05-43a0-9fbb-3ffe7e60091d/prepared.json。父版是已采用678 packed+inline，默认不变；最初baseline及e18 packed父版均可显式复跑。原90sim/120wall/录像/完整评分保持，两根已通知，owned重仿真为空。整个pair冻结源码/文档/HEAD/dirty路径；原run_pair量全process wall/CPU及原timing分项，只有真实收益才进第二已有工位。
+
+### F2x 首工位原物理结果
+
+parent be41ca39-a4ba-4c41-bba5-73f5b31da9d5原pass，74.84sim、55.582362全process wall、62.136900CPU；child f0c88f2b-e228-4e65-896d-56505029f827原pass，74.86sim、51.401387wall、58.763475CPU。wall少4.180975s（7.5221%），CPU少3.373425s，controller wall少3.365320s、线程CPU少3.397510s。candidate hold147→148拍，其他阶段拍数同值，不能把收益归因于少等。两项worker反更慢：transport1.165475→1.241709s，separation0.567046→0.611382s，不虚称规划提速。
+
+P95 27.596599→24.830588ms，超过20ms周期340→235，50Hz仍不通过。两轮原抓放/静稳/释放脱离/回位完整，safety=false、障碍0、free_object=true、weld=mocap=0；释放漂移0.265838/0.265849mm、脱离后力0N，视频各468/468。原输入/四XML/初态/裁判/释放阈值相同，实际flags只差SUPPORT_SEED_BOUND_DIRECT，独立读回在原pair的independent-pair-readback.json。所有原进程终态已核，不用该一对宣称统计稳定性或普遍提速。
+
+按原规则进已有200/200工位反序child→parent，prepared：experiments/colab-twin/output/seed-direct-factory-20261023/4e888841-f669-4622-a8de-3116430cec75/prepared.json。无源码/裁判/默认改动，仍原90sim/120wall/录像和评分；两根已告知继续串行窗口，开始后冻结全部源码/文档/HEAD/dirty路径。第二工位尚无结果，未据首组切默认。
+
+### F2x 第二工位与采用结果
+
+200/200反序child e8ef2de2-9e1e-4da4-b794-54f2ddaa2ec5原pass，77.10sim、52.710026全process wall、60.308955CPU；parent 05a94efa-0887-4336-bf63-97f3147321b3原pass，77.20sim、57.113497wall、65.196461CPU。候选wall少4.403471s（7.7100%）、CPU少4.887506s；controller wall少3.782178s、线程CPU少3.777279s。candidate hold163→158拍，其他阶段拍数相同；transport worker1.616450→1.383226s、separation0.894036→0.758531s。P95 26.590691→25.166472ms、超20ms周期294→249，50Hz仍失败。
+
+独立读回原输入/四XML/初态/裁判/释放阈值同值，flags只差DIRECT。两轮抓放/静稳/释放脱离/回位pass，safety=false、障碍0、free_object=true、weld=mocap=0，释放漂移parent0.267664/child0.267470mm、脱离后力0N；录像parent483/483、child482/482，帧差随0.10sim持物等待差如实保留。报告在原pair的independent-pair-readback.json，owned进程全部终态，已向两根释放共享窗口。
+
+专门排除“少等几帧冒充提速”：从两组原timing逐周期剔除双方全部hold，不调整裁判或原运行。两工位非hold各阶段拍数完全相同，controller wall分别36.579552→33.246910s、37.497988→34.057721s，省3.332642/3.440267s；非hold完整loop wall省3.776156/3.915652s、线程CPU省3.750371/3.936326s。原nonhold-timing-readback.json同时保存两边全部阶段计数与两种时钟，不把worker重复加到主线程，不推断普遍或统计保证。
+
+基于原三对一致成本、两已有工位反序全任务/CPU/非等待阶段收益及四轮原物理pass，保留CLI31并将DEFAULT_SOURCE改为seed_bound_direct.py；低层RoutePolicy()/baseline.py不变，leaf_packed_inline.py保留直接父版，旧候选不叠加。仅默认source选择更新，38项入口与原失败透传检查通过；没有为指针改动机械追加第五轮抓放。82相关源码回归和私有原oracle/2816/FP证据均保留，不改原评分、碰撞点集、超时或物体输入。
+
+Knowledge：already_covered。已有Wiki《ROS2 与 FishBot》第20节覆盖真实输入/提示/阶段与组件-整任务区分；这次增加的hold排除只是本项目的具体归因证据，写入原计划，无需再改独立vault或Codex memory。根Codex继续串行提交推送后，从原实际工作量选择下一小候选；不重复成本挑绿、不发20+20或实体动作。

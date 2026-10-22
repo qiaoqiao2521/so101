@@ -19,6 +19,7 @@ class RoutePolicy:
     tree_leaf8: bool = False
     leaf_packed: bool = False
     packed_inline: bool = False
+    seed_bound_direct: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -51,6 +52,8 @@ class RoutePolicy:
             raise ValueError('Packed leaf storage must be a boolean')
         if not isinstance(self.packed_inline, bool):
             raise ValueError('Packed helper inlining must be a boolean')
+        if not isinstance(self.seed_bound_direct, bool):
+            raise ValueError('Seed-bound reuse must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
@@ -67,7 +70,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/leaf_packed_inline.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/seed_bound_direct.py'
 
 
 def load_route_policy(path=None):

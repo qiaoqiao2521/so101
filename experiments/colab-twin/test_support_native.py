@@ -97,6 +97,22 @@ class NativeLoaderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.configure_packed_inline(1)
 
+    def test_seed_bounds_are_selected_before_loading_a_fresh_library(self):
+        module = fresh_module()
+        self.assertEqual(module._build_flags(), module._FLAGS)
+        module.configure_leaf_packed(True)
+        module.configure_packed_inline(True)
+        module.configure_seed_bound_direct(True)
+        self.assertEqual(module._build_flags(), (*module._FLAGS, '-DSUPPORT_LEAF_PACKED',
+                         '-DSUPPORT_PACKED_INLINE', '-DSUPPORT_SEED_BOUND_DIRECT'))
+        self.assertIsNone(module._LIB)
+        module._LIB = object()
+        module.configure_seed_bound_direct(True)
+        with self.assertRaisesRegex(RuntimeError, 'fresh evaluation process'):
+            module.configure_seed_bound_direct(False)
+        with self.assertRaises(ValueError):
+            module.configure_seed_bound_direct(1)
+
     def test_import_has_no_compile_or_library_load(self):
         with mock.patch("subprocess.run", side_effect=AssertionError("Import must not run compiler")), \
              mock.patch("ctypes.CDLL", side_effect=AssertionError("Import must not load library")):

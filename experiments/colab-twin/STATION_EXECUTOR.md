@@ -59,7 +59,7 @@
   --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
 ```
 
-省略candidate实际加载已通过两工位对照的 `route_strategies/leaf_packed_inline.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`leaf_packed.py`可复跑已采用父版；RoutePolicy()及其他显式旧候选不叠加packed或inline。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+省略candidate实际加载已通过两工位对照的 `route_strategies/seed_bound_direct.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`leaf_packed_inline.py`可复跑直接父版，`leaf_packed.py`可复跑此前packed版；RoutePolicy()及其他显式旧候选不叠加packed、inline或节点界复用。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
@@ -188,7 +188,7 @@ CLI28只复制原mesh顶点为geom.order顺序的连续数组，每个同规模N
 | nominal，baseline→candidate | 53.338s | 51.413s | 60.628→58.451s | 两轮通过 |
 | 200/200，candidate→baseline | 55.171s | 53.917s | 62.906→61.518s | 两轮通过 |
 
-两个工位候选都反多0.04sim秒，controller墙钟分别少1.630/1.084s，收益不来自少等待。规划分项、释放/碰撞结果及原对照保存在[当前计划](../../plans/factory-loading-20261021/progress.md)。完整50Hz仍未通过。不带candidate的默认入口另有完整抓放通过记录，并与显式候选3741拍轨迹全字段逐位相同；该单回合用于接线验证，不当成额外性能对照。
+两个工位候选都反多0.04sim秒，controller墙钟分别少1.630/1.084s，收益不来自少等待。规划分项、释放/碰撞结果及原对照保存在[当前计划](../../plans/factory-loading-20261021/progress.md)。完整50Hz仍未通过。CLI28采用时的不带candidate入口另有完整抓放通过记录，并与该版本显式候选3741拍轨迹全字段逐位相同；该历史单回合用于接线验证，不当成额外性能对照或后续版本的默认实跑。
 
 ### 已采用：packed叶函数内联
 
@@ -200,3 +200,16 @@ CLI29沿用CLI28的点集合、顺序和数学，仅在支持的GCC兼容编译�
 | 200/200，parent→child | 56.511s | 55.244s | 63.473→63.003s | 两轮通过 |
 
 两工位controller墙钟分别少0.395/0.938s，各少一拍hold；不把等待差视作全部提速。nominal的运输和分离worker反而更慢，完整周期P95从25.819增至26.142ms；200/200的P95从26.681降至25.947ms。采用依据是当前三对局部和两个已有工位的全任务/CPU收益，不宣称所有规划更快、统计稳定性或完整50Hz通过。四回合原抓放、释放脱离、回位、自由物体与全部安全判据通过；证据和复跑入口见原计划F2w。
+
+### 已采用：同投影节点界复用
+
+`route_strategies/seed_bound_direct.py`是CLI31已采用实现：保留packed+inline父版，只在一次full_tree调用内用128槽保存已计算的有限seed节点界。DFS按同node ID精确命中；冲突、缺项或非有限仍执行原dot/finite/full_scan。缓存不跨投影、姿态、帧或模型。CLI30排序/二分版成本不一致，未应用生产；CLI31首个无效Python交付及原CLI语法修复均留证。
+
+| 已有工位 | packed+inline父版全进程墙钟 | 加节点界复用后墙钟 | CPU父版→子版 | 原物理结果 |
+| --- | ---: | ---: | ---: | --- |
+| nominal，parent→child | 55.582s | 51.401s | 62.137→58.763s | 两轮通过 |
+| 200/200，child→parent | 57.113s | 52.710s | 65.196→60.309s | 两轮通过 |
+
+两边均剔除全部hold周期后，非等待阶段拍数完全相同，controller仍分别少3.333/3.440s，非等待循环少3.776/3.916s。全进程差分别4.181/4.403s，不将任何少等拍当作算法提速。nominal两worker反而更慢；200/200两worker改善，分项保留。两工位P95分别27.597→24.831ms、26.591→25.166ms，完整50Hz仍未通过。
+
+原四轮抓放、释放脱离、回位、碰撞与自由物体条件全部通过，原90sim/120wall/阈值保持。82项相关回归、2816真实输入及强制碰撞/空副本控制同值；默认选择变更另有38项入口/失败透传检查。原全量结果、失败、候选来源及准确复跑见[原计划F2x](../../plans/factory-loading-20261021/progress.md#f2x-同次树投影的节点界重复计算2026-10-23)。

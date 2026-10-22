@@ -373,9 +373,40 @@ bool leaf_vertex_interval_quad(const Geometry& geom, const Node& leaf, std::size
 
 #endif
 
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+// Per full_tree call, direct-mapped 128-slot scratch of the finite child
+// bound intervals the two seeds already computed (node index & 127 tag).
+// Only already-computed finite values are cached; a tag collision or
+// nonfinite value recomputes the exact original dot/finite/fallback path.
+// Bounded owned storage inside full_tree; no allocation, no global state.
+struct NodeBoundDirect {
+#if defined(SUPPORT_TREE_TESTS) && defined(SUPPORT_SEED_BOUND_DIRECT_TINY_TEST)
+    static constexpr std::size_t SLOTS = 2;
+#else
+    static constexpr std::size_t SLOTS = 128;
+#endif
+    struct Entry { std::size_t index; Interval value; bool valid; };
+    std::array<Entry, SLOTS> slot{};
+    void insert(std::size_t index, Interval value) {
+        if (finite(value)) {
+            auto& e = slot[index & (SLOTS - 1)];
+            e.index = index; e.value = value; e.valid = true;
+        }
+    }
+    const Interval* find(std::size_t index) const {
+        const auto& e = slot[index & (SLOTS - 1)];
+        return (e.valid && e.index == index) ? &e.value : nullptr;
+    }
+};
+#endif
+
 #if !defined(SUPPORT_TREE_SEED_DISABLED)
 bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
-                  bool minimum,std::size_t& vertex,Interval& point) {
+                  bool minimum,std::size_t& vertex,Interval& point
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+                  ,NodeBoundDirect& bound_cache
+#endif
+                  ) {
     std::size_t index=0;
     while (geom.nodes[index].left!=NO_CHILD) {
         const auto& node=geom.nodes[index];
@@ -387,6 +418,10 @@ bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
                                    Interval{b.low[1],b.high[1]},
                                    Interval{b.low[2],b.high[2]}},local);
         if (!finite(first)||!finite(second)) return false;
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+        bound_cache.insert(node.left, first);
+        bound_cache.insert(node.right, second);
+#endif
         const bool choose_first=minimum?first.lo<=second.lo:first.hi>=second.hi;
         index=choose_first?node.left:node.right;
     }
@@ -427,10 +462,21 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
     if (!vertex_interval(geom,0,local,first)) return false;
     double minimum=first.lo,maximum=first.hi;
     std::size_t min_index=0,max_index=0;
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+    NodeBoundDirect bound_cache;
+#endif
 #if !defined(SUPPORT_TREE_SEED_DISABLED)
     std::size_t low_vertex=0,high_vertex=0;Interval low_point,high_point;
-    if (seed_extreme(geom,local,true,low_vertex,low_point) &&
-        seed_extreme(geom,local,false,high_vertex,high_point)) {
+    if (seed_extreme(geom,local,true,low_vertex,low_point
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+        ,bound_cache
+#endif
+        ) &&
+        seed_extreme(geom,local,false,high_vertex,high_point
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+        ,bound_cache
+#endif
+        )) {
         const auto consider=[&](std::size_t v,Interval point) {
             if (point.lo<minimum || (point.lo==minimum && v<min_index)) {
                 minimum=point.lo;min_index=v;
@@ -475,9 +521,17 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
     while (!pending.empty()) {
         const auto index=pending.back();pending.pop_back();
         const auto& node=geom.nodes[index];
+#if defined(SUPPORT_SEED_BOUND_DIRECT)
+        const Interval* cached_bound=bound_cache.find(index);
+        const Interval bound = cached_bound ? *cached_bound
+            : dot({Interval{node.low[0],node.high[0]},
+                   Interval{node.low[1],node.high[1]},
+                   Interval{node.low[2],node.high[2]}},local);
+#else
         const Interval bound=dot({Interval{node.low[0],node.high[0]},
                                   Interval{node.low[1],node.high[1]},
                                   Interval{node.low[2],node.high[2]}},local);
+#endif
         // An overly wide nonfinite bound does not imply nonfinite vertices.
         // Restart the original scan in its original order, without tree state.
         if (!finite(bound)) {

@@ -24,7 +24,8 @@ def sha(path):
 
 
 def build_test_library(*, quad_vertices=False, tree_leaf8=False,
-                       leaf_packed=False, packed_empty=False, packed_inline=False):
+                       leaf_packed=False, packed_empty=False, packed_inline=False,
+                       seed_bound_direct=False, seed_bound_tiny=False):
     spec = importlib.util.spec_from_file_location("support_tree_test_loader", HERE / "support_native.py")
     loader = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(loader)
@@ -41,6 +42,10 @@ def build_test_library(*, quad_vertices=False, tree_leaf8=False,
         flags.append('-DSUPPORT_LEAF_PACKED_EMPTY_TEST')
     if packed_inline:
         flags.append('-DSUPPORT_PACKED_INLINE')
+    if seed_bound_direct:
+        flags.append('-DSUPPORT_SEED_BOUND_DIRECT')
+    if seed_bound_tiny:
+        flags.append('-DSUPPORT_SEED_BOUND_DIRECT_TINY_TEST')
     build_dir = HERE / "output" / "support-tree-tests" / source_hash
     if quad_vertices:
         build_dir = build_dir/'quad'
@@ -50,6 +55,10 @@ def build_test_library(*, quad_vertices=False, tree_leaf8=False,
         build_dir = build_dir/'packed'
     if packed_inline:
         build_dir = build_dir/'inline'
+    if seed_bound_direct:
+        build_dir = build_dir/'seed-bound'
+    if seed_bound_tiny:
+        build_dir = build_dir/'tiny'
     if packed_empty:
         build_dir = build_dir/'empty'
     build_dir.mkdir(parents=True, exist_ok=True)
