@@ -33,6 +33,7 @@ _PROBE_TIMEOUT_S, _COMPILE_TIMEOUT_S, _LOCK_TIMEOUT_S = 5, 30, 10
 _LIB = None
 _METADATA = None
 _LOAD_LOCK = RLock()
+_QUAD_VERTICES = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -42,6 +43,21 @@ _REASONS = np.asarray(["none", "separation_certified", "no_separation_certificat
                        "invalid_arithmetic_environment", "invalid_pair_index"])
 _MODES.setflags(write=False)
 _REASONS.setflags(write=False)
+
+
+def configure_quad_vertices(enabled=False):
+    """Select the optional implementation before this process loads its library."""
+    global _QUAD_VERTICES
+    if not isinstance(enabled, bool):
+        raise ValueError('Four-vertex evaluation must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _QUAD_VERTICES:
+            raise RuntimeError('Run the other native variant in a fresh evaluation process')
+        _QUAD_VERTICES = enabled
+
+
+def _build_flags():
+    return _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
 
 
 def _sha(path):
@@ -94,14 +110,14 @@ def _expected_build(identity):
     except OSError as error:
         raise RuntimeError("Audited native support kernel is unavailable") from error
     compiler_sha = _json_sha(identity)
-    flags_sha = _json_sha(list(_FLAGS))
+    flags_sha = _json_sha(list(_build_flags()))
     key = _json_sha({"schema_version": 1, "kernel_sha256": kernel_sha,
                      "compiler_identity_sha256": compiler_sha, "flags_sha256": flags_sha})
     return {"schema_version": 1, "kernel_path": str(_KERNEL_PATH), "kernel_sha256": kernel_sha,
             "compiler_path": identity["path"], "compiler_sha256": identity["binary_sha256"],
             "compiler_version": identity["version"], "compiler_target": identity["target"],
             "compiler_identity_sha256": compiler_sha,
-            "flags": list(_FLAGS), "flags_sha256": flags_sha, "cache_key": key}
+            "flags": list(_build_flags()), "flags_sha256": flags_sha, "cache_key": key}
 
 
 def _validated_manifest(directory, expected):
@@ -149,7 +165,7 @@ def _ensure_build(identity):
             with tempfile.TemporaryDirectory(prefix=".build-", dir=directory) as temporary:
                 temporary = Path(temporary)
                 output = temporary / "libsupport_kernel.so"
-                command = [identity["path"], *_FLAGS, str(_KERNEL_PATH), "-o", str(output)]
+                command = [identity["path"], *_build_flags(), str(_KERNEL_PATH), "-o", str(output)]
                 try:
                     process = _compile_process(command)
                 except (OSError, subprocess.SubprocessError) as error:
@@ -233,7 +249,7 @@ def library_metadata() -> dict:
                          and str(_KERNEL_PATH) == _METADATA['kernel_path']
                          and _sha(_METADATA['library_path']) == _METADATA['library_sha256']
                          and _sha(_METADATA['compiler_path']) == _METADATA['compiler_sha256']
-                         and _json_sha(list(_FLAGS)) == _METADATA['flags_sha256']
+                         and _json_sha(list(_build_flags())) == _METADATA['flags_sha256']
                          and json.loads(Path(_METADATA['manifest_path']).read_text()) == _METADATA)
         except (OSError, ValueError, TypeError, KeyError) as error:
             raise RuntimeError('Pinned native library provenance is unavailable') from error

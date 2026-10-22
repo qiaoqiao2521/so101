@@ -36,6 +36,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(reuse_separation_distances=1)
         with self.assertRaises(ValueError):
             RoutePolicy(batch_separation_axes=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(quad_vertices=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -75,6 +77,13 @@ class RoutePolicyTests(unittest.TestCase):
                 self.assertEqual(policy.separation_steps, steps)
                 self.assertEqual(loaded['loaded_path'], str(path.resolve()))
                 self.assertEqual(loaded['entrypoint_path'], str(path.resolve()))
+
+    def test_quad_candidate_is_explicit_and_baseline_stays_scalar(self):
+        self.assertFalse(load_route_policy()[0].quad_vertices)
+        path = Path(__file__).parent/'route_strategies/quad_vertices.py'
+        policy, loaded = load_route_policy(path)
+        self.assertTrue(policy.quad_vertices)
+        self.assertEqual(loaded['preferences']['quad_vertices'], True)
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:

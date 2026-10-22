@@ -147,4 +147,7 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 4. 原CodeBuddy/DeepSeek Pro生成像素包围盒拼装候选，5800个FK查询＋292边界逐位同值，三对局部改善18.24–20.34ms、原screen为eligible。但原遮挡预警在6.54sim秒结束，按前缀粗算仅约0.06s潜在整轮收益；暂不做完整候选A/B，不切默认（complete）。
 5. 单次原baseline完整计时，原物理pass、74.78sim，3739拍全部轨迹字段与八组binary64字段同旧baseline，原场景XML相同。循环49.132s中controller39.465s；transport控制18.376s、close6.805s。P95 27.444ms、259周期超过20ms，50Hz仍未通过（complete）。
 6. 只复算100条已记录运输认证输入：5800次checker、5500全夹爪扫掠状态全部通过。原CLI快照复制首版NameError已反馈原native会话修正，100绑定/30边界/持有副本检查同值；原三对仅省3.697/4.275/4.458ms，中位低于5ms，reject，不改阈值、不重测。比较器递归名称缺口已单独纠正，保留原成本（complete）。
-7. 现有FishBot物理占用期间，只通过原CLI和私有编译做单一native实现实验；保留所有采样、严格浮点和原裁判。局部不胜出不追加完整抓放，默认继续baseline（in_progress）。
+7. FishBot物理占用期间，原CLI生成单一-fno-math-errno实验，私有编译/5500帧×285pair的12 numeric+6flag逐字节、非有限及异常浮点拒绝等值通过。三对成本均增加，中位+7.423ms，reject；不重测、不进原物理，默认继续baseline（complete）。
+8. 5500条q6按字节全唯一，避免再做整姿态缓存。CLI15内联DFS栈保留vector溢出，数值等值但三对成本不一致、中位增加12.612ms，淘汰；原vector不改（complete）。
+9. CLI17四顶点AVX2在原5500帧上逐位等值，三对局部收益13.3–14.5%、中位13.914%；runtime不支持时保留scalar。CLI18首轴加法消除比CLI17三对更慢，淘汰，不组合。四顶点已接入默认关闭的RoutePolicy与原评测入口，90相关测试及集成5500帧同值。原nominal完整A/B两轮pass，但全进程60.874→64.892s、控制器+2.432s，reject、不扩第二工位，不切默认；原90sim/120wall及裁判不改（complete）。
+10. 已将真实A/B负结果与原CPP/绑定源码送同CodeBuddy/DeepSeek Pro native会话，要求一个有实际证据的小假设或最小区分测量，禁止以频率/争用猜想解释失败（in_progress）。

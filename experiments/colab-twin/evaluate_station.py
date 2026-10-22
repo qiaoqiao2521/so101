@@ -56,7 +56,7 @@ def summarize(status, *, run_id, scenario_path, output, candidate, scorer):
     }
 
 
-def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None):
+def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None, timing=False):
     station_path, output_root = Path(station_path).resolve(), Path(output_root).resolve()
     run_id = str(uuid.uuid4())
     output = output_root/run_id
@@ -75,7 +75,14 @@ def evaluate(station_path, output_root, cancel_file=None, *, candidate_path=None
                     'message': str(error), 'error_type': type(error).__name__})
         code = 1
     else:
-        code = run(station_path, output, cancel_file, route_policy=policy)
+        timer = None
+        if timing:
+            from episode_timing import EpisodeTiming
+            timer = EpisodeTiming()
+        code = run(station_path, output, cancel_file, route_policy=policy,
+                   **({'timing': timer} if timer is not None else {}))
+        if timer is not None:
+            atomic_json(output/'timing.json', timer.report())
     status = json.loads((output/'status.json').read_text())
     for reference, module_name in ((candidate['controller'], 'visual_grasp_controller'), (scorer, 'learning_env')):
         module = sys.modules.get(module_name)
@@ -104,8 +111,10 @@ def main():
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--cancel-file', type=Path)
     parser.add_argument('--candidate', type=Path, help='Local source exporting route_preferences()')
+    parser.add_argument('--timing', action='store_true', help='Record exclusive original-loop timings')
     args = parser.parse_args()
-    return evaluate(args.station, args.output_dir, args.cancel_file, candidate_path=args.candidate)
+    return evaluate(args.station, args.output_dir, args.cancel_file,
+                    candidate_path=args.candidate, timing=args.timing)
 
 
 if __name__ == '__main__':

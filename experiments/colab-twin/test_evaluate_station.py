@@ -3,8 +3,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from evaluate_station import evaluate, summarize
+from station_executor import atomic_json
 
 
 class EvaluationTests(unittest.TestCase):
@@ -32,6 +34,24 @@ class EvaluationTests(unittest.TestCase):
         result = self.summary({'status': 'succeeded', 'report': {'passed': True}})
         self.assertTrue(result['passed'])
         self.assertEqual(result['mode'], 'physical_simulation')
+
+    def test_timing_is_optional_and_does_not_replace_physical_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def execute(station, output, cancel, *, route_policy, timing):
+                output.mkdir(parents=True)
+                timing.start()
+                timing.mark('test_section')
+                atomic_json(output/'status.json', {'status': 'failed', 'report': {
+                    'passed': False, 'failure_reason': 'original_failure'}})
+                return 1
+            with patch('evaluate_station.run', execute):
+                self.assertEqual(evaluate(root/'scene.json', root/'runs', timing=True), 1)
+            result = json.loads((root/'runs/evaluation.json').read_text())
+            self.assertEqual(result['verdict'], 'fail')
+            self.assertEqual(result['failure_reason'], 'original_failure')
+            recorded = json.loads((Path(result['artifacts']['status']).parent/'timing.json').read_text())
+            self.assertEqual(recorded['lifecycle'][0]['section'], 'test_section')
 
     def test_invalid_scene_and_repeated_calls_keep_separate_results(self):
         with tempfile.TemporaryDirectory() as directory:

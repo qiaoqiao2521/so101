@@ -21,6 +21,28 @@ def fresh_module():
 
 
 class NativeLoaderTests(unittest.TestCase):
+    def test_quad_selection_is_default_off_and_does_not_load_on_selection(self):
+        module = fresh_module()
+        self.assertEqual(module._build_flags(), module._FLAGS)
+        module.configure_quad_vertices(True)
+        self.assertIsNone(module._LIB)
+        self.assertEqual(module._build_flags(), (*module._FLAGS, '-DSUPPORT_VERTEX_QUAD_ENABLED'))
+        module.configure_quad_vertices(False)
+        self.assertEqual(module._build_flags(), module._FLAGS)
+        with self.assertRaises(ValueError):
+            module.configure_quad_vertices(1)
+
+    def test_active_variant_is_never_silently_replaced(self):
+        module = fresh_module()
+        module.configure_quad_vertices(True)
+        pinned = object()
+        module._LIB = pinned
+        module.configure_quad_vertices(True)
+        with self.assertRaisesRegex(RuntimeError, 'fresh evaluation process'):
+            module.configure_quad_vertices(False)
+        self.assertIs(module._LIB, pinned)
+        self.assertIn('-DSUPPORT_VERTEX_QUAD_ENABLED', module._build_flags())
+
     def test_import_has_no_compile_or_library_load(self):
         with mock.patch("subprocess.run", side_effect=AssertionError("Import must not run compiler")), \
              mock.patch("ctypes.CDLL", side_effect=AssertionError("Import must not load library")):

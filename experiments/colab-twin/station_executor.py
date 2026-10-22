@@ -249,7 +249,7 @@ class StationVideo:
             renderer.close()
 
 
-def run(station_path, output, cancel_file, *, route_policy=None):
+def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
     output.mkdir(parents=True, exist_ok=True)
     current = {'status': 'running', 'phase': 'validating', 'simulation_s': 0.,
                'message': '解析工作站草稿', 'simulation_only': True,
@@ -275,6 +275,8 @@ def run(station_path, output, cancel_file, *, route_policy=None):
                 station_name=station.get('name', 'SO101'), layout=layout,
                 capability=describe())
         os.environ.setdefault('MUJOCO_GL', 'egl')
+        from support_native import configure_quad_vertices
+        configure_quad_vertices(bool(route_policy and route_policy.quad_vertices))
         import mujoco
         from grasp_episode import build_contact_scene, numbers
         from run_visual_grasp import SOURCE, run_physical_episode
@@ -338,6 +340,7 @@ def run(station_path, output, cancel_file, *, route_policy=None):
         report = run_physical_episode(SOURCE, output/'episode',
                     {'max_episode_wall_s': 120, 'max_sim_s': 90}, case, None,
                     video=True, scene_builder=build_scene, progress_callback=progress,
+                    **({'timing': timing} if timing is not None else {}),
                     scene_callback=scene,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options={'release_rotation_mode': 'floor_yaw',

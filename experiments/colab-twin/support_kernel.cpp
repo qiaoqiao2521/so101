@@ -15,6 +15,9 @@
 #if defined(__SSE__)
 #include <xmmintrin.h>
 #endif
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED) && (defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86))
+#include <immintrin.h>
+#endif
 
 // Extra speculative vertex arithmetic is permitted only with masked traps.
 // The original environment gate and original scalar arithmetic stay intact.
@@ -192,6 +195,125 @@ bool full_scan(const Geometry& geom,const std::array<Interval,3>& local,Interval
 // Seed from real vertices in two greedily selected leaves. The child bounds
 // only choose work order; they never supply the returned support extrema.
 // Failed exploratory arithmetic discards both seeds before the original DFS.
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__)) && !defined(SUPPORT_VERTEX_QUAD_DISABLED)
+// Four finite lanes. Each 64-bit integer lane performs the original neighbor
+// bit step; ordered per-lane comparisons preserve the scalar second-on-tie.
+__attribute__((target("avx2")))
+inline __m256d neighbor4(__m256d x, bool upward) {
+    const auto raw = _mm256_castpd_si256(x);
+    const auto one = _mm256_set1_epi64x(1);
+    const auto twice_sign = _mm256_slli_epi64(_mm256_srli_epi64(raw, 63), 1);
+    const auto delta = upward ? _mm256_sub_epi64(one, twice_sign)
+                              : _mm256_sub_epi64(twice_sign, one);
+    const auto stepped = _mm256_add_epi64(raw, delta);
+    const auto magnitude = _mm256_and_si256(raw, _mm256_set1_epi64x(INT64_MAX));
+    const auto zero_words = _mm256_cmpeq_epi32(magnitude, _mm256_setzero_si256());
+    const auto zero = _mm256_and_si256(zero_words,
+        _mm256_shuffle_epi32(zero_words, _MM_SHUFFLE(2, 3, 0, 1)));
+    const auto tiny = upward ? one : _mm256_set1_epi64x(INT64_MIN + 1);
+    return _mm256_castsi256_pd(_mm256_or_si256(_mm256_and_si256(zero, tiny),
+                                               _mm256_andnot_si256(zero, stepped)));
+}
+
+__attribute__((target("avx2")))
+inline bool finite4(__m256d x) {
+    const auto exponent = _mm256_set1_epi64x(static_cast<std::int64_t>(EXP));
+    const auto same = _mm256_cmpeq_epi32(
+        _mm256_and_si256(_mm256_castpd_si256(x), exponent), exponent);
+    return (_mm256_movemask_epi8(same) & UINT32_C(0xf0f0f0f0)) == 0;
+}
+
+__attribute__((target("avx2")))
+inline __m256d select4(__m256d mask, __m256d first, __m256d second) {
+    return _mm256_or_pd(_mm256_and_pd(mask, first), _mm256_andnot_pd(mask, second));
+}
+
+__attribute__((target("avx2")))
+bool vertex_interval_quad(const Geometry& geom, std::size_t v0, std::size_t v1,
+                          std::size_t v2, std::size_t v3,
+                          const std::array<Interval, 3>& local,
+                          Interval& out0, Interval& out1, Interval& out2, Interval& out3) {
+    __m256d low = _mm256_setzero_pd(), high = _mm256_setzero_pd();
+    for (int j = 0; j < 3; ++j) {
+        const auto points = _mm256_set_pd(geom.points[3 * v3 + j], geom.points[3 * v2 + j],
+                                          geom.points[3 * v1 + j], geom.points[3 * v0 + j]);
+        const auto first = _mm256_mul_pd(points, _mm256_set1_pd(local[j].lo));
+        const auto second = _mm256_mul_pd(points, _mm256_set1_pd(local[j].hi));
+        if (!finite4(first) || !finite4(second)) return false;
+        const auto term_low = neighbor4(select4(_mm256_cmp_pd(first, second, _CMP_LT_OQ), first, second), false);
+        const auto term_high = neighbor4(select4(_mm256_cmp_pd(first, second, _CMP_GT_OQ), first, second), true);
+        if (!finite4(term_low) || !finite4(term_high)) return false;
+        const auto sum_low = _mm256_add_pd(low, term_low);
+        const auto sum_high = _mm256_add_pd(high, term_high);
+        if (!finite4(sum_low) || !finite4(sum_high)) return false;
+        low = neighbor4(sum_low, false);
+        high = neighbor4(sum_high, true);
+        if (!finite4(low) || !finite4(high)) return false;
+    }
+    alignas(32) double lows[4], highs[4];
+    _mm256_store_pd(lows, low);
+    _mm256_store_pd(highs, high);
+    out0 = {lows[0], highs[0]};
+    out1 = {lows[1], highs[1]};
+    out2 = {lows[2], highs[2]};
+    out3 = {lows[3], highs[3]};
+    return true;
+}
+#endif
+
+// Buffers only the next three already-computed independent vertices within a
+// single leaf; no cross-leaf, frame or model state.
+struct LeafQuadCache {
+    bool packed = false;
+    unsigned count = 0;
+    Interval second{};
+    Interval third{};
+    Interval fourth{};
+    LeafQuadCache() {
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__)) && !defined(SUPPORT_VERTEX_QUAD_DISABLED)
+        // Four-lane speculation only on AVX2-capable hardware with traps masked.
+        packed = __builtin_cpu_supports("avx2") && witness_traps_masked();
+#else
+        packed = false;
+#endif
+    }
+};
+
+bool leaf_vertex_interval_quad(const Geometry& geom, const Node& leaf, std::size_t k,
+                               const std::array<Interval, 3>& local, LeafQuadCache& cache,
+                               Interval& out) {
+    static_cast<void>(leaf); // Scalar-only builds do not use the leaf bound.
+    if (cache.count > 0) {
+        out = cache.second;
+        cache.second = cache.third;
+        cache.third = cache.fourth;
+        --cache.count;
+        return true;
+    }
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__)) && !defined(SUPPORT_VERTEX_QUAD_DISABLED)
+    if (cache.packed && k + 3 < leaf.end) {
+        Interval first, second, third, fourth;
+        if (vertex_interval_quad(geom, geom.order[k], geom.order[k + 1],
+                                 geom.order[k + 2], geom.order[k + 3], local,
+                                 first, second, third, fourth)) {
+            out = first;
+            cache.second = second;
+            cache.third = third;
+            cache.fourth = fourth;
+            cache.count = 3;
+            return true;
+        }
+        // Replay from this original vertex, then keep the whole leaf scalar.
+        cache.packed = false;
+        cache.count = 0;
+    }
+#endif
+    return vertex_interval(geom, geom.order[k], local, out);
+}
+
+#endif
+
 #if !defined(SUPPORT_TREE_SEED_DISABLED)
 bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
                   bool minimum,std::size_t& vertex,Interval& point) {
@@ -210,11 +332,22 @@ bool seed_extreme(const Geometry& geom,const std::array<Interval,3>& local,
         index=choose_first?node.left:node.right;
     }
     const auto& leaf=geom.nodes[index];
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+    LeafQuadCache cache;
+#endif
     vertex=geom.order[leaf.begin];
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+    if (!leaf_vertex_interval_quad(geom,leaf,leaf.begin,local,cache,point)) return false;
+#else
     if (!vertex_interval(geom,vertex,local,point)) return false;
+#endif
     for (std::size_t k=leaf.begin+1;k<leaf.end;++k) {
         const auto v=geom.order[k];Interval candidate;
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+        if (!leaf_vertex_interval_quad(geom,leaf,k,local,cache,candidate)) return false;
+#else
         if (!vertex_interval(geom,v,local,candidate)) return false;
+#endif
         const double a=minimum?candidate.lo:candidate.hi;
         const double b=minimum?point.lo:point.hi;
         if ((minimum?a<b:a>b)||(a==b && v<vertex)) { vertex=v;point=candidate; }
@@ -291,9 +424,16 @@ bool full_tree(const Geometry& geom,const std::array<Interval,3>& local,Interval
         // Strict comparisons retain all ties, including the first signed zero.
         if (bound.lo>minimum && bound.hi<maximum) continue;
         if (node.left==NO_CHILD) {
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+            LeafQuadCache cache;
+#endif
             for (std::size_t k=node.begin;k<node.end;++k) {
                 const auto v=geom.order[k];Interval point;
+#if defined(SUPPORT_VERTEX_QUAD_ENABLED)
+                if (!leaf_vertex_interval_quad(geom,node,k,local,cache,point)) return false;
+#else
                 if (!vertex_interval(geom,v,local,point)) return false;
+#endif
                 if (point.lo<minimum || (point.lo==minimum && v<min_index)) {
                     minimum=point.lo;min_index=v;
                 }

@@ -486,3 +486,44 @@ CLI13只尝试减少snapshot数组逐标量递归，保留原全部字段、独�
 当前27相关测试通过（含原验证失败不因缺report崩溃、异常后原入口恢复）；原生OpenGL导入出现第三方/proc/cpuinfo ResourceWarning，测试仍正常通过，未因此改依赖。FishBot实际sim/bridge已占用，后续仅CLI/native局部检查，不并发新SO101物理、没有默认变更或20＋20/实体。
 
 完整复跑：原Python执行probe_episode_timing.py --station scenarios/factory-loading/capability-segments-0mm.json --output-dir output/<新目录> --full-episode。仍为原90sim/120wall；analysis.json和independent-readback.json位于同series/full-baseline。
+
+### F2l native编译候选淘汰与DFS接续
+
+计时代码及三文件5eb6ab04a2f08853a627467acfb4ea4d8d5d1273已推qiaoqiao2521原分支；ls-remote与GitHub API均读回一致。原默认保持，27测试及原完整物理证据见上。
+
+CLI14（CodeBuddy/DeepSeek Pro 74.922s）只增加-fno-math-errno，原源码/其他严格flags不变。单独私有库编译成功、text字节有差异。5500原扫掠帧×285pair，每对12 numeric＋6flag的binary64/int64字节全部相同，非有限输入等值；FE_DOWNWARD及FTZ/DAZ均被两库拒绝且原始字段相等。几何计时用两份非test库；既有test-only库仅用于当前线程CSR控制。三对原summary路径baseline0.957237/0.962461/0.958746s，candidate0.969289/0.967353/0.966169s，均更慢，中位+7.423ms，原screen=reject/no_median_local_effect。没有完整候选物理、默认切换或阈值调整。
+
+辅助实验错误完整保留：首次objcopy dump没有指定独立输出，触碰了已加载原cache库并导致诊断helper退出139；原库字节仍匹配原构建清单，独立新进程原加载和原checker烟测通过。后续仅操作私有副本且显式给独立输出。第二次误把test宏下MXCSR钩子当生产导出而AttributeError，未进入计时；改用项目已有test-only库控制CSR，实际比较库仍为生产构建。两错误不归咎候选，不隐去失败，也未将编译成功当算法验收。
+
+产物位于同series/native-errno/{frames.npz,raw-readback.json,local-screen.json,exact-duplicate-readback.json}。私有round14-native-errno保留原CLI/格式恢复、compile-receipt、两次辅助失败、原library完整性读回与probe_native.py复跑。116.864s同native会话负反馈已success；owner不采纳对已淘汰候选追加sqrt计时，三对有符号差不能冒充对称噪声带，原异常浮点行为也不能凭模型文字保证。
+
+实际语料复算：5500条q6各不相同；29个几何中16个transform固定、13个各5500种，44个pair两端固定。这里只量重复，不删285对检查或缓存旧证书。源码full_tree每次创建std::vector DFS pending栈，作为CLI15新假设：小内联数组＋原vector spill，全部节点/左右push顺序/浮点/失败fallback保持。当前仅生成候选、未应用生产；FishBot141/9111实际占用，无owned SO101物理。
+
+## F2m CLI15–18与四顶点接入（2026-10-22）
+
+CLI15内联DFS栈数值通过但三对+16.960/+12.612/−33.613ms，中位+12.612ms，reject；原动态栈保留。CLI16统计18500621次顶点计算、重复5.9%、direct64潜在1.9%，未做新缓存。CLI17原生CodeBuddy/DeepSeek Pro产出AVX2四顶点leaf实现，实际编译错误已在同native会话反馈修复：两AVX比较intrinsic改标准_mm256_cmp_pd。原v0/修正版/CLI回执保存在私有round17-quad-leaf。CLI18首轴zero-add补丁实际比父版三对更慢，中位+17.640ms，淘汰，原四顶点不混入此改动。
+
+原5500帧×285pair/12numeric+6flag及hint ID逐字节同值，向量disabled控制、非有限、FE_DOWNWARD与FTZ/DAZ原拒绝行为同值。415边界＋224尾槽/tie实际向量调用2256次通过。原三对summary为0.950885→0.818575、0.949761→0.812116、0.948166→0.821877s，中位改善13.914%；这仅局部，不是抓放/50Hz成绩。历史100case成本集variable9.821%未达旧10%原样保留，accepted_local_cost=false；当前factory原筛选已经eligible，owner纠正此前将历史专属门槛机械充当前序约束的范围错误。
+
+已按默认关闭quad_vertices接入RoutePolicy、support_native编译选择及station_executor，活动库不热替换，不支持CPU保留scalar。原evaluate_station新增可选--timing，仅记录原loop、不会主动截断。集成预处理scalar与原生产、quad与已测CLI原型分别一致；实际新库5500帧仍0差异。49入口/loader/策略/计时＋41树/quad/witness/碰撞回归通过，diff check通过。
+
+当前正在原nominal执行baseline→quad完整物理A/B。prepared：experiments/colab-twin/output/quad-vertices-factory-20261022/45c622be-b068-46fb-9b44-92ad1d4aab9a/prepared.json。两库均已在同一集成检查预编译，原90sim/120wall、原裁判、全部完整扫掠/碰撞/释放标准保持。现场无其他机器人重实例后启动，已向FishBot告知串行占用。尚无新物理结果，不切默认；有实际净收益再另一已有工位。
+
+Knowledge：already_covered，沿用Wiki《ROS2 与 FishBot》第20节独立评分与双时钟。
+
+### F2m 原完整物理A/B已完成：2/2pass、候选reject
+
+| 配置 | run_id | sim秒 | 全进程wall秒 | 全进程CPU秒 | controller wall秒 | controller线程CPU秒 |
+|---|---|---:|---:|---:|---:|---:|
+| baseline | 87870522-48af-4b8d-9f9d-b4213ae257de | 74.76 | 60.873834 | 67.457896 | 43.042943 | 42.565434 |
+| quad | 69c9822e-de93-4723-9d6f-394b03bfe019 | 74.82 | 64.892332 | 73.181694 | 45.474544 | 44.958760 |
+
+两轮原grasp/place/controller_done、释放脱离/回位均pass，无安全停机/障碍接触，free_object=true、weld=mocap=0，录像各468/468；静稳各7.52s。resolved-station、四XML及初始qpos逐binary64相同，实际评分器引用相同，baseline无quad宏、candidate实际加载quad宏，非只记录意向。除hold143→146拍外，approach829/descend147/close331/lift148/transport1294/lower130/settle107/release331/separate147/retreat131均相同。
+
+候选全进程wall+4.018499s（+6.60%）、CPU+5.723798s；controller wall+2.431601s、线程CPU+2.393327s。相同拍数的transport与close控制分别增加1.080139/1.191603s，lift/lower/release少量改善不足以抵消。不能把0.06sim等待差或局部13.9%当成算法净收益。周期P95 29.742751→33.012865ms，超20ms 477→671，50Hz仍未通过。无连续频率/热状态/争用测量，不归因AVX降频或宿主异常。
+
+结论：本组reject，不晋级、不切默认、不追加第二工位完整抓放。保留quad_vertices为显式default-off复跑候选；原入口默认仍原scalar。prepared、原两UUID、pair-process-results及pair-readback完整保留在上述45c622be目录。原loop时钟与外层全进程时钟分别记录；无放宽物理、评分或90sim/120wall。现场无owned仿真残留，已回告FishBot归还资源。
+
+接续：同native会话CLI19正在消费真实负结果、分段wall/CPU及实际Context/绑定源码，只允许下一有证据的小改动或最小区分测量，不复跑本组挑绿。根Codex继续局部验证，资源空档且局部有益后再原物理；不把CLI退出/静态测试算业务完成。Knowledge：already_covered，同前第20节；本轮无全局memory修改。
+
+CLI19首次从repo目录resume返回exit0但stderr为No conversation found、stdout空，不能计成功。原session实际属于私有round17-quad-leaf目录；保留cwd-error四回执后，从原目录以相同native session恢复，未新建独立会话或丢弃上下文。

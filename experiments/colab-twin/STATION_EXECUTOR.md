@@ -155,3 +155,11 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 ```
 
 无计时透明性对照另加`--no-timing`；完整诊断改用`--full-episode`，仍由原判据结束。报告逐周期区分wall和当前线程CPU，并将初始化、控制后录像、清理另列；规划线程和编码子进程不能重复加到当前线程分项。`evaluation_interval`仅为原evaluate调用区间，不是全进程；`full_process`未外层测量时留null。每次timing-probe保存在该UUID目录，并在输出根保留最新读回。计时默认关闭，不改变原网页或evaluate_station普通调用。
+
+### 显式四顶点实验与完整周期计时
+
+原评测可加 `--timing`，在本次UUID目录保存 `timing.json`，记录循环各段独占wall与当前线程CPU。初始化、收尾和录像另列；这个文件不是完整进程时钟。全进程wall/CPU由外层调用者测量，评分、取消与120wall/90sim上限保持。
+
+`--candidate experiments/colab-twin/route_strategies/quad_vertices.py` 显式选择CLI17四顶点实验，默认baseline仍scalar。同一进程加载原生库后，不支持热切另一实现；每个评测用原CLI新进程。支持AVX2且算术环境允许时并行算四个独立顶点，尾数和失败回退走原scalar；不减少顶点、碰撞pair或配置扫掠。
+
+2026-10-22该实验原nominal A/B两轮均完成抓放/释放/回位，但60.874→64.892全进程秒、controller+2.432秒，因此不晋级、不切默认。局部13.9%收益没有转化为整轮收益，候选仅保留供原样复跑。完整50Hz仍未通过，结果见原厂区计划F2m。

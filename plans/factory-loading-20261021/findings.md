@@ -93,3 +93,19 @@ F2k后续原物理结果：两轮pass，但SAT全进程wall70.320→104.705s、C
 100条真实运输输入的局部guard-core复算含5500个完整夹爪扫掠状态、5800次checker，全valid；这里部分控制上下文重建，不是完整update回放。剖析显示原native认证计算占主要成本，不能以删夹爪采样、重用过期认证或改变闭爪物理来冒充实现提速。
 
 CLI12像素拼装保留6092输出逐位等值、原三对局部改善，但只作用于前6.54sim秒，暂缓完整A/B。CLI13数组快照修正缺失导入后，100绑定与30边界/副本所有权等值；原三对中位仅省4.275ms<5ms，淘汰。局部比较器抽取函数的递归名错误已单独修正，原计时未更换。两候选均未切默认，完整闭环和测试通过不能据此宣称算法提速。
+
+CLI14单一-fno-math-errno编译实验在5500帧×285pair的原始字段与异常环境拒绝上等值，但三对summary成本全部增加，中位+7.423ms，因此不进完整抓放。原缓存的机器码检查必须先复制再用objcopy并指定独立输出；曾在已加载库上省略输出导致helper崩溃，原缓存字节/新进程加载/checker复验均已通过，失败保留。生产库不导出test宏钩子，CSR控制复用既有test-only库，不能将它用作性能基线。
+
+同一语料5500条q6全唯一，不支持整姿态缓存假设。29几何有16个固定transform，44pair双固定，仅是后续工作量证据；不代表允许跳过检查。下一小候选只考虑full_tree动态DFS栈分配，原树遍历、算术及溢出fallback均须保持。
+
+## F2m 原四顶点实现与物理对照（2026-10-22）
+
+CLI15内联DFS栈原三对+16.960/+12.612/−33.613ms，中位变慢，淘汰；capacity=1强制spill及5500帧数值通过不改该结论。CLI16只统计：18500621次vertex_interval中重复1090635（5.9%），direct64潜在命中1.9%，未新增缓存。CLI18每轴首项无subnormal/zero term，排除本语料denormal瓶颈；绕过首轴+0比CLI17父版三对更慢，中位+17.640ms，淘汰。
+
+CLI17复用历史SSE2双顶点的逐lane算术思路扩四lane；原种子与DFS叶都已有覆盖，没有发明新采样或删点。原scalar函数、full_scan、witness、节点次序与失败回退不变。AVX2仅函数target，原严格编译flags不变，不全局-mavx2；CPU不支持或trap未mask走scalar，四lane失败从原当前顶点scalar重试。修复CLI首版两个不存在的AVX比较intrinsic后，415单顶点边界/224树尾与tie、实际2256次向量调用通过；5500×285pair的12 numeric/6flag/提示ID逐字节同值，FE_DOWNWARD和FTZ/DAZ拒绝同值。三对原summary省132.310/137.645/126.288ms，median relative13.914%，当前factory_minimum_suite=eligible_for_physical_ab。
+
+另存旧成本集诊断：held52/planned244/measured244中位改善11.55/11.73/13.88%，variable9.821%低于历史该候选的10%条件，保留accepted_local_cost=false，不四舍五入、不重测。不能把旧实验专属门槛机械新增为用户当前factory的前序锁；当前原三对/等值/5ms筛选已经通过，因此可以做诊断性原完整A/B，仍不能切默认或宣称旧门通过。
+
+默认关闭接入后，预处理代码确认scalar分支与5eb6ab0原代码完全一致、enabled分支与已测CLI17原型完全一致；实际新两库5500帧逐位同值。49入口/loader/策略/计时与41树/quad/witness/碰撞回归通过。原evaluate_station --timing记录独占循环；run_pair只外层量全进程wall/CPU，不改原判定。
+
+F2m原完整A/B结果推翻端到端收益预期：baseline→quad为60.874→64.892全进程wall、67.458→73.182CPU，controller43.043→45.475wall。除hold多3拍，其余各阶段拍数完全相同，运输和close同拍数计算也变慢。两轮物理均原pass、四XML/初态/裁判同值且实际库选项正确。因此quad不晋级，不能外推局部13.9%或把少等拍当算法提速；不新加10%前序锁，也不重复完整A/B找绿。真实负结果已送同CLI会话。
