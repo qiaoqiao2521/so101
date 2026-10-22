@@ -50,6 +50,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(seed_bound_direct=1)
         with self.assertRaises(ValueError):
             RoutePolicy(summary_fast=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(refresh_leg_age=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 

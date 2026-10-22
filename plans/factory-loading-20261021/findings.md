@@ -157,3 +157,14 @@ CLI30排序/二分种子节点界表局部成本不一致，未应用生产。CL
 原三对完整ABI+汇总调用（含两边同样结果归一化开销）均更快，两工位反序原物理4/4pass；wall53.075→49.698s、56.878→55.756s，CPU/controller同降，200/200的3857拍轨迹JSON完全相同、等待相同。两组剔除全部hold后controller仍少2.272/1.430s。原默认现选择summary_fast.py，seed_bound_direct父版保留原汇总；最初baseline与旧候选不叠加。
 
 这是实际观察到的两工位实现收益，不把全差单独归因约7us组件，不将多批次收益相加，也不由局部统计宣称50Hz。第二工位运输worker更慢，其他分项和原全部失败留证。原碰撞、释放、自由物体和90sim/120wall保持，原完整评价入口没有修改。
+
+
+## F2aa 控制周期长尾与同名换段（2026-10-23）
+
+- 原CLI33两工位224/261个超20ms拍，close/release占169/183，controller占超时拍总墙钟约88%。保存q6/reference的40弦回放完整7868检查，原生ABI占1.137/1.637s（含cProfile扰动，不是当时逐拍native时钟）。
+- 固定轴norm是保守区间值X/Y/Z分别1+4/3/2ULP，不能改成数学1。CLI34同帧复用原值虽等值，但原三对中位只省1.298ms，原5ms门拒绝，无生产/物理改动。
+- 同名transport换腿更新stage_started，但update沿用换腿前age，造成新腿终点→起点的一拍脉冲。既有fake-FK fixture和两工位原实际轨迹均证明；CLI35显式修复最大单轴步进.780/.829rad→.00484/.00483rad，四轮原抓放/释放/脱离/回位通过。
+- 该行为收益不等于稳定性能收益：nominal全process64.652→51.498s；第二工位反序52.130→55.402s更慢，P95第二24.355→26.894ms退化。默认仍summary_fast；新源default-off复跑，不调用逐位等值screen伪造策略改动等值。完整50Hz未过。
+- 原2816实输入下full_tree待处理vector新建25438次、容量增长97559次，最大待处理12。计数版raw/hints与父版一致；这些是增长事件，不是实测malloc次数或提速。下一候选只改同投影栈存储，溢出必须原vector回退。
+
+来源和复跑：私有ros2-factory/codebuddy-so101-20261021/round34-tail-audit、round35-axis-norm、round36-leg-age、round37-pending-stack；原物理准确argv及独立回读在output/leg-age-factory-20261023两个既有pair目录。采用的长期原则见Wiki/ROS2 与 FishBot第20节；本轮不新增共享知识机制。

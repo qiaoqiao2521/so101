@@ -428,6 +428,65 @@ class VisualControllerTests(unittest.TestCase):
         np.testing.assert_array_equal(result['servo_offset'],previous[:5]-q[:5])
         self.assertGreater(np.linalg.norm(result['geometric_reference']-q),0)
 
+    def transport_leg_controller(self, *, refresh=False, next_start_offset=0.):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(refresh_leg_age=refresh))
+        c.target_frozen = True
+        q = c.initial_q.copy()
+        q[5] = .015
+        start, end = q[:5].copy(), q[:5]+.1
+        previous = np.array([start-.02, start])
+        c.transport = [previous, np.array([start+next_start_offset, end]),
+                       np.array([end, end+.1])]
+        c.transport_index = 0
+        c.stage = 'transport'
+        c._set_motion(previous, .015, 0.)
+        c._payload_valid = lambda pose: True
+        return c, q, end
+
+    def test_same_stage_transport_starts_the_new_leg_at_its_beginning(self):
+        c, q, _ = self.transport_leg_controller(refresh=True)
+        elapsed = c.duration+.6
+        first = c.update(q, np.zeros(6), elapsed)
+        self.assertEqual(first['status'], 'running')
+        self.assertEqual(first['stage'], 'transport')
+        self.assertEqual(c.transport_index, 1)
+        self.assertEqual(c.stage_started, elapsed)
+        np.testing.assert_array_equal(first['geometric_reference'], q)
+        following = c.update(q, np.zeros(6), elapsed+.02)
+        movement = following['geometric_reference'][:5]-q[:5]
+        self.assertTrue(np.all(movement > 0))
+        self.assertLess(float(np.max(movement)), .00001)
+
+    def test_legacy_same_stage_transport_remains_explicitly_reproducible(self):
+        c, q, end = self.transport_leg_controller(refresh=False)
+        first = c.update(q, np.zeros(6), c.duration+.6)
+        np.testing.assert_array_equal(first['geometric_reference'][:5], end)
+
+    def test_clock_candidate_preserves_samples_without_a_leg_change(self):
+        legacy, q, _ = self.transport_leg_controller(refresh=False)
+        child, _, _ = self.transport_leg_controller(refresh=True)
+        for elapsed in (.02, .8, 1.6):
+            left = legacy.update(q, np.zeros(6), elapsed)
+            right = child.update(q, np.zeros(6), elapsed)
+            self.assertEqual(left['status'], right['status'])
+            np.testing.assert_array_equal(left['geometric_reference'], right['geometric_reference'])
+            np.testing.assert_array_equal(left['command'], right['command'])
+            self.assertEqual(legacy.transport_index, child.transport_index)
+
+    def test_new_leg_begin_still_runs_the_original_configuration_sweep(self):
+        c, q, _ = self.transport_leg_controller(refresh=True, next_start_offset=.01)
+        checked = []
+        def validity(pose, **kwargs):
+            checked.append(np.asarray(pose).copy())
+            return {'valid': pose[0] <= q[0]+.005}
+        c.checker.evaluate.side_effect = validity
+        result = c.update(q, np.zeros(6), c.duration+.6)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['failure_reason'], 'current_pose_command_chord_invalid')
+        self.assertGreater(len(checked), 1)
+        self.assertTrue(any(pose[0] > q[0]+.005 for pose in checked))
+
     def test_phase_bias_is_recaptured_once_and_retained_through_settle(self):
         c=self.controller();c.target_frozen=True
         q=c.initial_q.copy();q[:5]+=.01

@@ -835,3 +835,44 @@ parent dad3c076-6bd9-42d9-94bd-8717a44bbfc0原pass，77.14sim、56.877645全proc
 两组均剔除双方全部hold周期后，非等待各阶段拍数完全相同；controller wall分别33.837094→31.565481s、37.092743→35.662541s，少2.271613/1.430202s；完整非hold loop少2.719501/1.646277s。只作原成对观测，不减去不利部分、不将全部差额单归因汇总函数，也不与此前独立批次累加。
 
 三对局部一致、两工位反序全process/CPU/controller下降、原四轮物理全pass且相同等待下轨迹完全复现，保留CLI33并将DEFAULT_SOURCE选择summary_fast.py。原方法体、seed_bound_direct父版、packed父版和最初baseline都保留；低层summary_fast缺省false，其他旧候选不叠加。默认指针更新39项相关入口与原失败透传通过，不机械再跑第五轮；C++源/ABI/flags不变、无新评分或流程门锁。Knowledge：already_covered，已有Wiki第20节覆盖局部/全任务边界；新具体证据仅写回原计划，没有独立vault或Codex memory更改。
+
+
+## F2aa 50Hz超时拍定位（2026-10-23，进行中）
+
+用户明确主攻完整控制周期长尾，先读实际超时拍，再由原CodeBuddy/DeepSeek CLI提出一个单变量。冻结当前3fb8e3b默认summary_fast，不改原采样/碰撞/释放/裁判与90sim120wall；不启动实体、训练或20+20。
+
+回读CLI33两候选原timing：nominal3741拍/超20ms224拍/P95 23.572648ms/最大136.427867ms；200/200为3857拍/261拍/P95 26.276908ms/最大189.635510ms。沿原probe的nearest-rank P95，不用插值改变成绩。close+release分别169/183拍，占超时75.45%/70.11%；超时拍controller占墙钟约88.3%/87.5%，callbacks、录像、物理与记账另外计。运输仍有独立百毫秒尖峰，不能由闭爪均值解释。
+
+原244点扫掠保留。旧ABI记录为按阶段稀疏采样，不能逐拍对齐到新timing或伪称复现当时输出；先用保存的close/release实际q6与reference回放原扫掠做组件计数，明确不是新完整任务。私有入口~/.cache/ros2-factory/codebuddy-so101-20261021/round34-tail-audit/{audit_tail.py,profile_guards.py}，tail-audit.json保留每个原超时拍的独立分段时钟。
+
+Current：守卫组件计数在途，尚无新候选/收益，不切默认。Next：由实测组件成本定最小候选，原局部三对合格才进入两工位反序原物理。P95<=20ms只作阶段目标，不能代替零超时/最大拍耗时与全流程50Hz检查。Knowledge：already_covered，采用既有Wiki/ROS2 与 FishBot第20节的真实hint、阶段覆盖及组件/任务边界，本轮无新知识维护机制。
+
+F2aa组件回放：选定40条实际close/release弦，完整执行7868次原checker；cProfile总1.637064s，其中原生ABI1.136942s、mj_kinematics .016681s。离线只复用保存q6/reference，提示历史重新运行；不称当时逐拍ABI复现。原2816输入的raw flags推得1309172次证书，初始三固定轴至少1205393次，三个轴原norm分别1+4/3/2ULP，不能替换成1。
+
+原CLI34按同native会话生成同帧lazy norm复用，14项原witness/1mm/陷阱/失败前缀通过；2816条numeric/flags/raw+commit hints逐位同值，88份即时C FP状态一致，边界拒绝保持。原三对全ABI+summary成本412.979→409.313、411.037→410.119、420.353→419.055ms，中位仅省1.298ms，原5ms门未过，reject/median_local_effect_below_threshold。保留私有round35-axis-norm原源码、回执、计数和成本，不接生产、不进物理、不重复计时挑绿。
+
+运输百毫秒尖峰定位出独立行为缺陷：原报告nominal raw1877/2230的新段reference一拍分别跳.722037/.780291rad，再于下一拍回到该段起点附近；原扫掠192/212点，controller 127.324/130.306ms与线程CPU接近。源码update在_transition之前取age，仅阶段名变化时重置；transport内部换腿仍叫transport，但_set_motion已更新stage_started。既有fake-FK fixture调用真实update/_transition复现：同名换腿首指令误跳.1rad、下一拍回差9.85e-7rad，连续性判据false。原证据leg-age-original-reproduction.json，不声称物理修复。
+
+已把CLI34淘汰成本和此反例反馈原native会话CLI35，仅请求显式default-off refresh_leg_age：每次_transition后按实际stage_started重取age，false保留原行为。不动路径、扫掠、安全和时间。该策略修复故意改变错误边界指令，不套用逐位相同实现的局部screen来伪造output_equivalent；须先原状态机反例/非切换回归，再原完整物理A/B与第二工位反序复验。close/release主P95问题另保留，不以单一运输修复宣称50Hz。生产仍3fb8e3b。
+
+
+### F2aa 换段计时CLI35原物理结果
+
+原CLI35 21.773s/success；只在既有transition后加入default-off refresh_leg_age，false保持旧stage-name判据。RoutePolicy新bool、显式refresh_leg_age.py和4项状态机回归接入，92相关检查通过，原失败透传/扫掠/限时保持。该候选为意图明确的行为修复，不假称原指令逐位相同。
+
+nominal父b0df61cc-3073-453b-9d19-a05c9d52c8f5与子e8d11b32-276d-4a20-9b5f-67e2889fd543均原pass，全进程64.651956→51.498485s、CPU72.136438→58.341191s；74.84→74.82sim仅hold少1拍，非hold各阶段拍数相同。P95 32.718115→23.108735ms、最大292.998219→95.027712ms、超20ms834→223。原三个运输边界的来回脉冲6次，最大单轴reference步长.780291rad→.004836rad；候选无>.05rad步进。候选释放漂移.297989mm、脱离后峰力.015194N，虽仍低于原2mm/.02N门槛，但不能称零力；父对应.265838mm/0N。独立原四XML、初态、裁判与释放阈值完全相同。原视频、自由物体/无weld/mocap、无障碍、抓放/脱离/回位均pass。不得把全部wall差额只归因此7行分支。
+
+已有200/200反序子1c860357-5176-4aef-b7bd-682f855e69ee→父306a6058-68ca-4e85-9d06-3acb41eea61e均pass。按父→子展示：全process52.130144→55.401861s（候选慢3.271717s），CPU59.997383→62.543868s；sim77.12→77.16仅hold多2拍。非hold各阶段拍数相同，但非hold wall42.795307→45.786285s也更慢。P95 24.354602→26.893915ms、超20ms249→312退化；最大159.912047→107.658545ms改善。父运输最大reference步进.828836rad且6次来回脉冲，子.004829rad且零脉冲；两轮释放原pass、峰力0N，子漂移.256956mm。独立读回四XML/初态/裁判/原阈值同值。
+
+决定：连续性缺陷与修复均由两工位真实轨迹证明，但原完整延迟收益不一致，P95未过20ms；仅保留default-off显式候选，不切原summary_fast默认，不称稳定提速或50Hz完成。首对与反序原件分别在output/leg-age-factory-20261023/{a20488c8-536a-46dd-b3f3-24a3e86ab3a9,5aa4279f-7cae-4ad9-9595-db7e3ca4624e}/，各有prepared/pair-process-results/independent-pair-readback。私有round36-leg-age/{ask.py,read_pair.py}记录原CLI来源与复跑；原run_pair不改。所有所属实例结束、抑制休眠句柄释放，已告知研究根归还资源。
+
+Next：真实原生full_tree DFS待处理栈存在每投影新建vector，先在2816原hint输入上计数动态增长，只有明确计数才交原CLI一个小实现。不再重复同候选跑成本或物理。Knowledge：already_covered，沿用原Wiki第20节的组件/整任务与跨工位边界，具体行为反例留项目。
+
+
+### F2aa CLI36 DFS栈候选淘汰
+
+原CLI36 47.950s/success，只在同次full_tree用inline32保存待处理节点，溢出std::vector保持原LIFO；默认宏关闭。正常32与强制tiny2原witness各14/14（含原1mm、失败前缀、x87/SSE陷阱）通过，2816真实输入raw/hints全同位，88即时C FP状态同值；tiny计数实际4869992次溢出push，含raw/FP/合成探针，不能当生产32的溢出或节省次数。
+
+原三对完整ABI+summary：412.167→418.932、486.080→439.361、426.523→430.616ms；两对变慢，中位effect +4.093ms，原screen reject/no_median_local_effect。保留全部原数，不重计或扫描容量挑绿，不接生产、不新增物理。私有round37-pending-stack保存count_pending/ask/compile_and_check/probe_actual及原CLI、边界、raw和成本。减少vector增长事件没有产生可靠局部收益，不推断分配器或宿主根因。
+
+本轮已完成3个原CLI候选与4轮原物理：CLI34和CLI36实现优化淘汰；CLI35行为修复保留显式default-off，默认summary_fast不动。完整50Hz仍未过，close/release的原逐姿态C ABI成本仍为实测主项。当前无本owner CLI/物理实例或待执行prepared；下一步先核算批量执行原FK+原逐姿态认证是否值得最小薄接入，不减244点或改原物理门槛。Knowledge：already_covered。

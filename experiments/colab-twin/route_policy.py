@@ -21,6 +21,7 @@ class RoutePolicy:
     packed_inline: bool = False
     seed_bound_direct: bool = False
     summary_fast: bool = False
+    refresh_leg_age: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -57,6 +58,8 @@ class RoutePolicy:
             raise ValueError('Seed-bound reuse must be a boolean')
         if not isinstance(self.summary_fast, bool):
             raise ValueError('All-valid summary selection must be a boolean')
+        if not isinstance(self.refresh_leg_age, bool):
+            raise ValueError('Motion leg clock refresh must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

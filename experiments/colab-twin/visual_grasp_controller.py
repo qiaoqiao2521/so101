@@ -1187,7 +1187,12 @@ class VisualGraspController:
             if self.stage != 'hold' and age >= self.duration+.6 and arm_arrived:
                 previous_stage = self.stage
                 self._transition(q6, elapsed)
-                if self.stage != previous_stage:
+                if bool(getattr(getattr(self, 'route_policy', None), 'refresh_leg_age', False)):
+                    # Same-stage legs (e.g. transport) also restart their clock,
+                    # so the first sample starts at the new leg begin instead of
+                    # clamping with the previous leg's age.
+                    age = elapsed - self.stage_started
+                elif self.stage != previous_stage:
                     age = 0.
             self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
             command = self.reference.copy()
