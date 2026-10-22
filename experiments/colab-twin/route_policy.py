@@ -15,6 +15,7 @@ class RoutePolicy:
     reuse_separation_distances: bool = False
     batch_separation_axes: bool = False
     quad_vertices: bool = False
+    small_direction_cache: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -39,6 +40,8 @@ class RoutePolicy:
             raise ValueError('Batched separation axes must be a boolean')
         if not isinstance(self.quad_vertices, bool):
             raise ValueError('Four-vertex evaluation must be a boolean')
+        if not isinstance(self.small_direction_cache, bool):
+            raise ValueError('Small direction cache must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

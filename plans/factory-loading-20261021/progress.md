@@ -527,3 +527,51 @@ Knowledge：already_covered，沿用Wiki《ROS2 与 FishBot》第20节独立评�
 接续：同native会话CLI19正在消费真实负结果、分段wall/CPU及实际Context/绑定源码，只允许下一有证据的小改动或最小区分测量，不复跑本组挑绿。根Codex继续局部验证，资源空档且局部有益后再原物理；不把CLI退出/静态测试算业务完成。Knowledge：already_covered，同前第20节；本轮无全局memory修改。
 
 CLI19首次从repo目录resume返回exit0但stderr为No conversation found、stdout空，不能计成功。原session实际属于私有round17-quad-leaf目录；保留cwd-error四回执后，从原目录以相同native session恢复，未新建独立会话或丢弃上下文。
+
+## F2n 当前接续：实际native份额与方向表统计
+
+002266dd90384cf825f30d18ed10b328e0a2f76f已推原qiaoqiao2521分支，Git ls-remote与GitHub REST均独立读回一致。90相关测试、5500帧接入同值及两轮原物理结果见上。默认仍scalar，实验quad未晋级。
+
+CLI19原目录native会话151.201s/success，没有候选。owner仅采纳加法ABI计时，拒绝无证据的宿主归因、“19.5s运输规划”误读和额外10%物理门。私有trace_core.py从同一原baseline全close/transport各等距100输入复算：close8990扫掠状态/9090ABI calls，局部core2.270124wall、native1.708421（75.26%）；transport5500状态/5800calls，core1.495139、native1.041217（69.64%），200条全valid。无cProfile/mj_step，部分上下文重建，不能称完整update/物理成绩；原callable已恢复。证据同series/native-share/readback.json。
+
+进一步私有整数计数不改任何数学：5500帧×285pair、159500个Frame，nonaxis查找319000次、0命中、插入319000次；缓存大小0有137500次、13和16各11000次。raw12numeric/6flag/hints全部0差异，instrumented成本不算提速。原方向投影缓存已有，下一项不再造缓存或取消其语义，只尝试短表存储减少节点分配。原生CodeBuddy/DeepSeek Pro CLI20同一会话正在据实际源码/计数生成按需小表＋原unordered_map任意溢出候选。原scalar、全部285pair/采样、数学/阈值/90sim/120wall保持；没有新候选物理或默认切换，尚须原三对筛选。
+
+Knowledge：already_covered，同前独立评分/双时钟；CLI工作目录错误与原回执已保留，不写新memory。根Codex接续，当前无owned物理进程。
+
+## F2o 小方向表原完整A/B（2026-10-23，执行中）
+
+CLI20同native会话210.796s/success返回纯make_candidate。按需unique_ptr的16项表，仅首次非轴投影插入时分配；第17项迁移全部原条目到原unordered_map，之后复用map。原Key/full/zero、project的查找与插入位置、全部数学/285pair/采样不改，未组合quad。私有源码与CLI原函数保留。
+
+原5500帧×285pair/12numeric+6flag/hints逐位0差异，capacity=1强制原map溢出也0差异；非有限及FE_DOWNWARD/FTZ_DAZ拒绝同值。原三对summary 1.291777→1.219946、1.244200→1.154812、1.205031→1.138987s，各省71.831/89.388/66.044ms，中位relative5.561%，原screen=eligible_for_physical_ab，没有10%附加门或新采样配方。
+
+已接入默认关闭small_direction_cache与原路由入口，原quad保持false。集成preprocess确认default与002266d原代码相同、enabled与已测CLI20原型相同；新两库5500帧仍0差异。52相关回归通过，含两容量1/16各160次插入和67个distinct key对原map查找/首次值/溢出/空表延迟分配对照。原native flags保持严格FP；无评分/物理/阈值/回退变化。
+
+当前原nominal prepared：experiments/colab-twin/output/frame-direction-cache-factory-20261023/7cc17a87-a607-4e69-bdb3-0eb823f1e841/prepared.json，baseline→candidate顺序原evaluate_station --timing，原90sim/120wall、视频和实际释放检查保持。两库同窗已预编译，外层run_pair记录完整process wall/CPU；尚无物理成绩，不切默认。启动前实际进程空闲，FishBot快照正在整理其失败/提交，已告知占用。
+
+Knowledge：already_covered，同前第20节；根Codex接续。
+
+### F2o nominal原A/B已完成：观察到正收益，第二工位执行中
+
+nominal baseline 5ad3e1b5-00bd-482f-a916-57356c8efeb4：原pass，74.76sim、65.634911全进程wall、73.322960CPU，controller46.516841wall/46.107822线程CPU；candidate 0aeb5603-6b9a-4fd3-b7ad-0b41ea9fe255：原pass，74.78sim、63.464497wall、71.066181CPU，controller45.295691/44.898041。全进程wall少2.170414s（3.31%）、CPU少2.256779s（3.08%），controller wall少1.221150s。
+
+除hold143→144拍外其余阶段拍数相同，transport/close计算分别少0.483509/0.364320s；不是等待少拍。原场景/四XML/初态binary64/裁判引用一致，实际candidate加载SMALL_DIRECTION_CACHE宏且quad关闭。两轮grasp/place/controller_done、释放/脱离/回位均pass，safety=false、障碍0、free_object=true、weld=mocap=0，原释放阈值和完整录像保持。周期P95 32.360051→31.359032ms、超20ms 708→575，仍非50Hz通过。physics等未改部分也有耗时差，不把整轮3.31%宣称为隔离的确定算法收益。
+
+按原用户要求，已有200/200工位继续独立复测，不重新调参；反转为candidate→baseline，原90sim/120wall。prepared：experiments/colab-twin/output/frame-direction-cache-factory-20261023/0d8d83f4-839a-4cce-8250-5505d3daface/prepared.json。两轮运行中，原默认未改；完成后与nominal一起判断保留或淘汰。现场无其他机器人重实例，已向FishBot说明继续占用。
+
+### F2o 第二工位完成：收益不稳定，整体不晋级
+
+200/200反转顺序：candidate 50694131-0226-4f51-b335-2611da440c71原pass，77.06sim、63.930543全进程wall、72.119606CPU，controller45.585871wall/45.053339线程CPU；baseline e0945351-f3ee-4b8b-b672-261adababd8f原pass，77.04sim、62.706387wall、70.490140CPU，controller44.721304/44.252835。候选wall多1.224156s（1.95%）、CPU多1.629466s，controller多0.864567wall/0.800504线程CPU。
+
+同工位resolved-station、四XML、初态qpos binary64及裁判引用相同，实际native选择正确；除hold155→156拍，其余阶段计数完全相同。两轮仍完整抓放/静稳/释放/脱离/回位pass，safety=false、障碍0、free_object=true、weld=mocap=0。P95候选31.758245ms、原版29.406746ms，仍非50Hz通过。
+
+四轮原物理均pass不等于性能通过。nominal+3.31%观察收益没有跨工位复现，整体不晋级、不切默认，保留default-off原样复跑与全部正负结果；不复测找绿，不调16容量。现场无owned仿真残留，已向FishBot回告归还。
+
+下一项先核已有_sweep_binding内部snapshot和SweepBinding.__post_init__/_immutable_context对同一树的两次遍历。原cProfile200次binding0.194s，其中immutable0.097s，另snapshot0.089s；此处不将cProfile成本当未剖析成绩。先做已保存200输入加法分段与输出matches检查，若有实测重复成本再送同CLI单一小改动；暂不新跑完整抓放。
+
+## F2p 绑定双遍历的实际局部成本（2026-10-23）
+
+私有binding_cost.py从同原baseline全阶段等距close100/transport100输入，隔离原snapshot构造与普通SweepBinding校验，不开cProfile、不推进物理。close snapshot11.251425ms/validation11.266458ms；transport snapshot12.136002ms/validation11.815101ms，200/200与完整原方法.matches，原构造入口已恢复。总二次校验约23.082ms/200，远小于旧cProfile0.097s，不按剖析膨胀值外推。原snapshot含拥有副本，普通SweepBinding仍做原owner/model/checker/stage/jaw/guard_scope和finite/signedzero规范化。产物同series/binding-cost/readback.json。
+
+实际小成本支持一次非常小的单遍历候选，不支持大改或宣称数秒收益。CLI21同native会话已收到两工位正负结果、200输入加法计时、原_sweep_binding与配置绑定源码；仅允许所有字段/归属/上下文变更失效/浮点位值及public原行为保持的小实现。先局部三对，收益不足即淘汰；不得复用上一绑定、去掉consume检查、增加hash/版本门或改变评分/物理。当前CLI前台运行，无owned物理进程。
+
+Knowledge：already_covered，维持双时钟与原裁判；根Codex接续。

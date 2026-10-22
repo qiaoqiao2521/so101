@@ -163,3 +163,5 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
 `--candidate experiments/colab-twin/route_strategies/quad_vertices.py` 显式选择CLI17四顶点实验，默认baseline仍scalar。同一进程加载原生库后，不支持热切另一实现；每个评测用原CLI新进程。支持AVX2且算术环境允许时并行算四个独立顶点，尾数和失败回退走原scalar；不减少顶点、碰撞pair或配置扫掠。
 
 2026-10-22该实验原nominal A/B两轮均完成抓放/释放/回位，但60.874→64.892全进程秒、controller+2.432秒，因此不晋级、不切默认。局部13.9%收益没有转化为整轮收益，候选仅保留供原样复跑。完整50Hz仍未通过，结果见原厂区计划F2m。
+
+`route_strategies/small_direction_cache.py` 是CLI20独立候选，默认关闭且不组合quad。只将每帧非轴投影缓存改为按需16项小表；第17个不同键迁移至原unordered_map，空表不分配。全部方向投影、碰撞pair、扫掠与原数学仍保留。当前局部5500帧/强制溢出同值、三对中位省5.561%，原两工位四轮抓放均通过，但nominal省2.170s、200/200反而多1.224s，收益不稳定，不晋级或切默认。局部筛选不是任务成功或默认采用。

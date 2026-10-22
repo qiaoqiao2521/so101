@@ -38,6 +38,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(batch_separation_axes=1)
         with self.assertRaises(ValueError):
             RoutePolicy(quad_vertices=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(small_direction_cache=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -84,6 +86,14 @@ class RoutePolicyTests(unittest.TestCase):
         policy, loaded = load_route_policy(path)
         self.assertTrue(policy.quad_vertices)
         self.assertEqual(loaded['preferences']['quad_vertices'], True)
+
+    def test_small_cache_candidate_does_not_combine_quad(self):
+        self.assertFalse(load_route_policy()[0].small_direction_cache)
+        path = Path(__file__).parent/'route_strategies/small_direction_cache.py'
+        policy, loaded = load_route_policy(path)
+        self.assertTrue(policy.small_direction_cache)
+        self.assertFalse(policy.quad_vertices)
+        self.assertEqual(loaded['preferences']['small_direction_cache'], True)
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:

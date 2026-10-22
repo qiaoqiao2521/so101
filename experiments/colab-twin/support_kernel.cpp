@@ -10,6 +10,10 @@
 #include <limits>
 #include <new>
 #include <numeric>
+#if defined(SUPPORT_SMALL_DIRECTION_CACHE)
+#include <memory>
+#include <utility>
+#endif
 #include <unordered_map>
 #include <vector>
 #if defined(__SSE__)
@@ -470,13 +474,65 @@ struct Frame {
     const std::int64_t* hint_in=nullptr;
     std::int64_t* hint_out=nullptr;
     Vec p{}; std::array<double,9> R{};
+#if defined(SUPPORT_SMALL_DIRECTION_CACHE)
+    static constexpr std::size_t small_dir_cap = 16;
+    std::unique_ptr<std::array<std::pair<Key,Interval>,small_dir_cap>> small_dir;
+    std::size_t small_dir_count = 0;
+    std::unique_ptr<std::unordered_map<Key,Interval,KeyHash>> overflow_cache;
+#else
     std::unordered_map<Key,Interval,KeyHash> cache;
+#endif
     std::array<std::array<Interval,3>,2> world{};
     std::array<std::array<bool,3>,2> world_ready{};
     std::array<std::array<Interval,3>,3> local_world{};
     std::array<Interval,3> center_world{};
     std::array<bool,3> terms_ready{};
 };
+
+#if defined(SUPPORT_SMALL_DIRECTION_CACHE)
+// Exact per-frame non-axis direction cache: lazily owned 16-slot inline
+// block, spilling to the original unordered_map only for 17+ unique keys.
+inline const Interval* frame_cache_find(const Frame& shape, const Key& key) {
+    if (shape.small_dir) {
+        for (std::size_t i = 0; i < shape.small_dir_count; ++i) {
+            const auto& entry = (*shape.small_dir)[i];
+            if (entry.first == key) return &entry.second;
+        }
+    }
+    if (shape.overflow_cache) {
+        const auto it = shape.overflow_cache->find(key);
+        if (it != shape.overflow_cache->end()) return &it->second;
+    }
+    return nullptr;
+}
+
+inline void frame_cache_insert(Frame& shape, const Key& key, const Interval& answer) {
+    if (!shape.overflow_cache) {
+        if (!shape.small_dir) {
+            shape.small_dir =
+                std::make_unique<std::array<std::pair<Key,Interval>,Frame::small_dir_cap>>();
+            shape.small_dir_count = 0;
+        }
+        if (shape.small_dir_count < Frame::small_dir_cap) {
+            // No-op on an existing key, matching unordered_map::emplace.
+            for (std::size_t i = 0; i < shape.small_dir_count; ++i)
+                if ((*shape.small_dir)[i].first == key) return;
+            (*shape.small_dir)[shape.small_dir_count++] = std::make_pair(key, answer);
+            return;
+        }
+        // Capacity reached: spill all inline entries into the original map once.
+        shape.overflow_cache = std::make_unique<std::unordered_map<Key,Interval,KeyHash>>();
+        for (std::size_t i = 0; i < shape.small_dir_count; ++i) {
+            const auto& entry = (*shape.small_dir)[i];
+            shape.overflow_cache->emplace(entry.first, entry.second);
+        }
+        shape.small_dir.reset();
+        shape.small_dir_count = 0;
+    }
+    shape.overflow_cache->emplace(key, answer);
+}
+
+#endif
 
 bool project(Frame& shape, const Vec& n, bool full, Interval& answer) {
     int axis=-1;
@@ -490,8 +546,13 @@ bool project(Frame& shape, const Vec& n, bool full, Interval& answer) {
     // Python float cache keys identify +0 and -0. Keep that exact equality.
     for (auto& raw:key.n) if ((raw&~SIGN)==0) raw=0;
     if (axis<0) {
+#if defined(SUPPORT_SMALL_DIRECTION_CACHE)
+        const auto* cached=frame_cache_find(shape,key);
+        if (cached) { answer=*cached; return true; }
+#else
         const auto cached=shape.cache.find(key);
         if (cached!=shape.cache.end()) { answer=cached->second; return true; }
+#endif
     }
     std::array<Interval,3> ni{exact(n[0]),exact(n[1]),exact(n[2])},local;
     Interval center;
@@ -521,7 +582,11 @@ bool project(Frame& shape, const Vec& n, bool full, Interval& answer) {
     answer=add(center,extrema);
     if (!finite(answer)) return false;
     if (axis>=0) { shape.world[bucket][axis]=answer;shape.world_ready[bucket][axis]=true; }
+#if defined(SUPPORT_SMALL_DIRECTION_CACHE)
+    else frame_cache_insert(shape,key,answer);
+#else
     else shape.cache.emplace(key,answer);
+#endif
     return true;
 }
 

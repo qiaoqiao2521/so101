@@ -43,6 +43,19 @@ class NativeLoaderTests(unittest.TestCase):
         self.assertIs(module._LIB, pinned)
         self.assertIn('-DSUPPORT_VERTEX_QUAD_ENABLED', module._build_flags())
 
+    def test_small_cache_is_explicit_and_cannot_replace_active_storage(self):
+        module = fresh_module()
+        self.assertEqual(module._build_flags(), module._FLAGS)
+        module.configure_small_direction_cache(True)
+        self.assertEqual(module._build_flags(), (*module._FLAGS, '-DSUPPORT_SMALL_DIRECTION_CACHE'))
+        self.assertIsNone(module._LIB)
+        module._LIB = object()
+        module.configure_small_direction_cache(True)
+        with self.assertRaisesRegex(RuntimeError, 'fresh evaluation process'):
+            module.configure_small_direction_cache(False)
+        with self.assertRaises(ValueError):
+            module.configure_small_direction_cache(1)
+
     def test_import_has_no_compile_or_library_load(self):
         with mock.patch("subprocess.run", side_effect=AssertionError("Import must not run compiler")), \
              mock.patch("ctypes.CDLL", side_effect=AssertionError("Import must not load library")):

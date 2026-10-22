@@ -109,3 +109,15 @@ CLI17复用历史SSE2双顶点的逐lane算术思路扩四lane；原种子与DFS
 默认关闭接入后，预处理代码确认scalar分支与5eb6ab0原代码完全一致、enabled分支与已测CLI17原型完全一致；实际新两库5500帧逐位同值。49入口/loader/策略/计时与41树/quad/witness/碰撞回归通过。原evaluate_station --timing记录独占循环；run_pair只外层量全进程wall/CPU，不改原判定。
 
 F2m原完整A/B结果推翻端到端收益预期：baseline→quad为60.874→64.892全进程wall、67.458→73.182CPU，controller43.043→45.475wall。除hold多3拍，其余各阶段拍数完全相同，运输和close同拍数计算也变慢。两轮物理均原pass、四XML/初态/裁判同值且实际库选项正确。因此quad不晋级，不能外推局部13.9%或把少等拍当算法提速；不新加10%前序锁，也不重复完整A/B找绿。真实负结果已送同CLI会话。
+
+## F2n 加法原生计时与非轴方向表工作量
+
+CLI19从原目录native会话接续151.201s，success但未产算法候选。owner采纳窄计时建议；不采纳“diffuse regression证明宿主频率/调度”、把transport控制19.5s当planning或新增≥10%物理门槛。当前没有归因证据，原factory筛选与评分保持。
+
+从同一原baseline已保存轨迹，对close/transport全阶段各固定等距100输入，当前原scalar ABI加法计时，无cProfile、mj_step或新物理成绩。close8990扫掠状态、9090 native calls，局部core2.270124wall/native1.708421（75.26%），transport5500扫掠状态、5800native calls，core1.495139/native1.041217（69.64%）；200条均valid。控制上下文部分重建，只说明局部guard-core热点，不能称完整update/闭环占比；计时开销已包含。
+
+帧内方向投影确实已有缓存，不能据重复pair再造缓存。另用私有整数计数测真实5500扫掠帧：nonaxis lookup319000/hit0/insert319000；Frame析构159500次，大小0有137500次，13/16各11000次。原12numeric/6flag/hint ID逐字节0差异，计数版耗时不作收益。下一单一假设为减少这些短表节点分配：按需局部小表、任意更大输入仍走原unordered_map溢出，原Key/full/zero语义、所有投影/数值/采样不改；仅CLI生成中，尚未局部或物理通过。
+
+F2o小方向表跨工位未保住收益：nominal原A/B wall65.635→63.464s（候选少2.170s），200/200反转顺序baseline62.706/candidate63.931s（候选多1.224s）。四轮原物理均通过、同工位输入/裁判/库选项已核，但收益不稳定，整体不晋级，不将两组相加取平均冒充广泛提升。默认保持scalar/map，保留显式default-off候选。下一有证据方向为上下文snapshot与immutable的重复遍历，不继续扫缓存容量。
+
+绑定二次遍历真实局部计时：close100 snapshot11.251ms＋ordinary validation11.266ms，transport100 12.136ms＋11.815ms，200原bindings完全.matches。二次校验共23.082ms，不是旧cProfile97ms；下一小候选只可用这一真实规模评估，不大改，不以本数冒充完整update或任务提速。

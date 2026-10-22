@@ -34,6 +34,7 @@ _LIB = None
 _METADATA = None
 _LOAD_LOCK = RLock()
 _QUAD_VERTICES = False
+_SMALL_DIRECTION_CACHE = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -56,8 +57,20 @@ def configure_quad_vertices(enabled=False):
         _QUAD_VERTICES = enabled
 
 
+def configure_small_direction_cache(enabled=False):
+    """Select per-frame storage before loading; never replace an active library."""
+    global _SMALL_DIRECTION_CACHE
+    if not isinstance(enabled, bool):
+        raise ValueError('Small direction cache must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _SMALL_DIRECTION_CACHE:
+            raise RuntimeError('Run the other native variant in a fresh evaluation process')
+        _SMALL_DIRECTION_CACHE = enabled
+
+
 def _build_flags():
-    return _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
+    flags = _FLAGS + (('-DSUPPORT_VERTEX_QUAD_ENABLED',) if _QUAD_VERTICES else ())
+    return flags + (('-DSUPPORT_SMALL_DIRECTION_CACHE',) if _SMALL_DIRECTION_CACHE else ())
 
 
 def _sha(path):

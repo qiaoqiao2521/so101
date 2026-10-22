@@ -150,4 +150,6 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 7. FishBot物理占用期间，原CLI生成单一-fno-math-errno实验，私有编译/5500帧×285pair的12 numeric+6flag逐字节、非有限及异常浮点拒绝等值通过。三对成本均增加，中位+7.423ms，reject；不重测、不进原物理，默认继续baseline（complete）。
 8. 5500条q6按字节全唯一，避免再做整姿态缓存。CLI15内联DFS栈保留vector溢出，数值等值但三对成本不一致、中位增加12.612ms，淘汰；原vector不改（complete）。
 9. CLI17四顶点AVX2在原5500帧上逐位等值，三对局部收益13.3–14.5%、中位13.914%；runtime不支持时保留scalar。CLI18首轴加法消除比CLI17三对更慢，淘汰，不组合。四顶点已接入默认关闭的RoutePolicy与原评测入口，90相关测试及集成5500帧同值。原nominal完整A/B两轮pass，但全进程60.874→64.892s、控制器+2.432s，reject、不扩第二工位，不切默认；原90sim/120wall及裁判不改（complete）。
-10. 已将真实A/B负结果与原CPP/绑定源码送同CodeBuddy/DeepSeek Pro native会话，要求一个有实际证据的小假设或最小区分测量，禁止以频率/争用猜想解释失败（in_progress）。
+10. CLI19已success，未产候选；owner只采纳ns_evaluate_hinted加法计时，拒绝宿主归因、将transport控制误写为planning及新增10%硬门。200保存输入实际局部测量已完成（complete）。
+11. 非轴向cache原5500帧计数319000次插入/0命中，159500个Frame中137500空、11000为13项、11000为16项，原raw字段/hints同值。CLI20仅尝试按需小方向表＋原unordered_map溢出；不取消缓存、不复用跨帧证书，原5500帧逐位与强制溢出同值，三对中位省5.561%、原screen通过；默认关闭集成与52相关测试完成，原nominal完整A/B两轮pass、实测全进程少2.170s/CPU少2.257s，等待反而多1拍；200/200反转顺序候选反而多1.224s/CPU多1.629s，四物理pass但收益不稳定，整体不晋级、不切默认（complete）。
+12. 先对已保存200条guard输入量snapshot与immutable重复遍历，再将实测与原源码送同CLI，只考虑保持全部绑定/float位值/失效检查的一次遍历实现（in_progress）。
