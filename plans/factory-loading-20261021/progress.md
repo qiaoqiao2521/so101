@@ -420,3 +420,12 @@ Done：同一已有原释放快照各3对交替。nominal和200/200严格逐位�
 Next：原nominal完整baseline→candidate命令与输入已保存`output/separation-cross-axes-20261022/dba35cbb-0660-4d66-b7b4-7054ae69a5c2/prepared.json`，尚未运行；同原evaluate_station和90sim/120wall。private run_pair.py仅顺序调用原CLI并记录完整process wall/CPU，不新增调度器。当前FishBot141/9111实际sim/bridge占用，因此无新SO101物理。接实际释放后运行；有净收益再接另一已有工位，不能以局部eligible或测试代替原抓放裁判。
 
 Knowledge：already_covered，沿用上述独立评分、双时钟与默认不晋级原则。
+
+
+F2j/F2k 软件交付775d658已推至`qiaoqiao2521/so101`的`codex/colab-twin-20261001`；Git ls-remote和GitHub REST均独立读回相同完整提交。默认候选仍baseline。最后现场核查FishBot141/9111的sim/bridge仍active，owner正在执行第二单，没有启动新的SO101评测、也未停其他owner实例。资源占用是当前物理阻塞；无owned SO101运行或后台自续承诺。下一owner根Codex，空档先核实际重实例，再运行下列已准备的原CLI二轮；完整结果前不写F2k已验收。
+
+```bash
+python3 /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round10-batched-cross-axes/run_pair.py /home/muqiao/dev/ros2/_delivery/so101-colab-20261001/experiments/colab-twin/output/separation-cross-axes-20261022/dba35cbb-0660-4d66-b7b4-7054ae69a5c2/prepared.json
+```
+
+该helper只串行调用prepared内两条原evaluate_station argv，逐轮保存进程wall/CPU；未知/失败保留，原任务时限不改。不能为等待资源机械重跑已完成局部批次或只取有利结果。
