@@ -648,4 +648,28 @@ main_update共151589次native调用，wall26.483208s，占插桩controller42.276
 
 CLI25复用同native会话、关闭工具、前台等待，输入真实原结果和上述原函数，仅允许同一online守卫内、完全相同float64姿态的默认关闭候选，保留所有原采样/阈值/绑定和额外物体检查。不得跨update/stage/model/checker复用，不缓存未完成查询，不从输入真值救策略。当前尚未生成或应用候选，无新物理回合。
 
+CLI25首版139.237s/success，但缓存覆盖整个update，跨阶段切换/规划/后续命令守卫，owner拒绝、未应用。反馈后修正版272.521s/success改为局部显式dict，仅arm-valid阶段传给本次sweep和jointpath。原200份保存守卫输入计数close9190次仅100次重复、transport5700次仅101次重复；全部原查询实际执行、重复报告0差异，只有外围端点存在少量重复。该重放包含部分重建payload上下文，不是完整update或新物理成绩。
+
+修正版私有200输入原报告与最终checker qpos/qvel/geom_xpos/geom_xmat均0差异；三对3.338299→3.273805、3.308163→3.287762、3.313720→3.294827s，均略快。但独立反例“q1完成→q1命中→q2写入后抛错”发现finally把q2失败现场错误恢复成q1，违反异常副作用保持。原局部结果verdict=reject，不进物理，不因正计时忽略反例。原CLI已收到完整计数、三对和失败例，要求命中时原位恢复原kinematics或明确no_candidate，当前前台运行。复跑/来源在私有round25-online-reuse/{ask.py,correct.py,count_guard.py,screen.py,fix_exception.py}，生产控制器与默认策略一行未改。
+
+7b8457b442ecd44466acc85049f3fec824dc7566已提交推送叶8淘汰证据与真实ABI观察工具，GitHub REST和Git ls-remote均独立读回一致。首次push超时且REST读回旧HEAD，随后同一目标push成功；不把首次超时写成成功。
+
+F2t闭合：CLI25第三版190.333s/success，命中时同步恢复原qpos/qvel/kinematics，实际异常反例已修复，200保存守卫报告及最终数据仍0差异。但原三对3.288897→3.274446、3.288109→3.307180、3.284064→3.270216s，effect −14.451/+19.071/−13.849ms，不一致。另在原FE_DOWNWARD现有拒绝模式下，缓存q1仍返回true，原checker返回false；不能用“这些函数不会改环境”替代实际当前环境检查。最终reject，两份原失败、三次CLI来源和全部原成本保留；不应用生产、不进物理。已反馈同native CLI并明确停止此方向，不追加补丁追回收益。
+
+## F2u 汇总归约预检与分类型原缓存工作量（2026-10-23）
+
+私有round26只量原_summarize：11阶段各32份、352份原ABI重算输出，32次循环×3批，单次中位6.855us；按151589调用估整个组件约1.039s，尚未扣不可消除的字典/取值成本。该值是组件估计，不是整回合省时；暂不为此增加C ABI或结构改造，无候选或新物理。
+
+round27复用原整数计数，2816份真实ABI输入逐条恢复原hint_in，原12numeric/6flag/hints同计数版0差异。旧5500运输输入0命中不能泛化：真实descend有1017/21706、close有1289/22606命中，全部属于mesh coarse。按几何类型/full进一步计数，11阶段BOX coarse+full共46416次查找、0命中，mesh缓存确有实际价值。所有计数非性能测量。
+
+CLI27已收到F2t最终失败、真实分类型计数及原Frame/project/hinted入口。仅请求默认关闭的BOX非轴分支省去map查找/插入：只在原已有traps-masked enabled且方向三分量非零时重算原完整标量投影；mesh/轴缓存、任何含零方向、未知/未屏蔽陷阱、原unhinted入口及全部原数学/有限检查/回退保持。保留原map作为其他分支回退，不引用物体真值，不组合旧候选。当前CLI前台运行，无新生产改动或物理回合；先等值和原三对，只有收益明确才跑原裁判。
+
+F2u闭合：CLI27同native会话80.385s/success，私有SUPPORT_BOX_DIRECT宏控制Frame.direct，仅从原hinted入口的已有masked enabled设置。204原project边界/重复方向/含±0/轴/mesh/极端输入，numeric/status0差异、回退cache_size0差异，65案例实际绕开原map；原FE_DOWNWARD全部拒绝。2816份确切ABI输入逐条原hint_in恢复，12numeric/6flag/hint_out及提交提示、macro-disabled control与原summary均同值；11阶段实际直算计数均非零，完整原数学仍执行。
+
+原三对全慢：0.511606→0.513931、0.510622→0.515220、0.510723→0.516103s，effect +2.325/+4.597/+5.379ms，中位+4.597ms，原factory screen=reject/no_median_local_effect。未应用生产，不进物理，不重跑本源码挑绿。CLI来源、204边界、原所有计数/三对及复跑在私有round27-nonaxis-projection/{ask.py,compile.py,check_boundaries.py,probe_actual.py}。这轮不以“所有BOX没有命中”推断分支重算必然更快，也不把编译/等值检查当交付。
+
+## F2v 原叶读取布局核算（2026-10-23）
+
+下一项只量原seed/DFS叶中同一批顶点的64-byte存储足迹。私有round28-leaf-layout/count_layout.py沿真实2816 ABI输入/原提示，原逐点计算不变，仅整数计数；同时给出原存储涉及行数与同顺序连续数组的保守行数上界。该值不是硬件cache miss或CPU收益，不在未计数前宣称缓存瓶颈。当前无新候选、树/点集合/数学/评分/默认均未改；有依据才交原CLI提出小布局适配。
+
 Knowledge：pending。候选经验是稀疏微基准必须保存每条真实hint_in，组件收益不替代全任务；后者已由Wiki《ROS2 与 FishBot》第20节覆盖。原Wiki及问题入口已有未提交工作，先保留，不并发改写。根Codex在本轮收尾协调后判断是否补充输入历史的适用条件；最短证据是本节native-abi.json与leaf8-replay-diagnostic.json。
