@@ -789,3 +789,49 @@ P95 27.596599→24.830588ms，超过20ms周期340→235，50Hz仍不通过。两
 基于原三对一致成本、两已有工位反序全任务/CPU/非等待阶段收益及四轮原物理pass，保留CLI31并将DEFAULT_SOURCE改为seed_bound_direct.py；低层RoutePolicy()/baseline.py不变，leaf_packed_inline.py保留直接父版，旧候选不叠加。仅默认source选择更新，38项入口与原失败透传检查通过；没有为指针改动机械追加第五轮抓放。82相关源码回归和私有原oracle/2816/FP证据均保留，不改原评分、碰撞点集、超时或物体输入。
 
 Knowledge：already_covered。已有Wiki《ROS2 与 FishBot》第20节覆盖真实输入/提示/阶段与组件-整任务区分；这次增加的hold排除只是本项目的具体归因证据，写入原计划，无需再改独立vault或Codex memory。根Codex继续串行提交推送后，从原实际工作量选择下一小候选；不重复成本挑绿、不发20+20或实体动作。
+
+发布完成：548717c6f5f05843b2fe7b6055ec5be5cb2f30f2已推送原qiaoqiao2521/so101分支，GitHub REST与git ls-remote独立读回一致；发布时工作树干净，无owned物理实例。
+
+## F2y 种子叶与DFS的同顶点重复计算（2026-10-23）
+
+私有round32-seed-leaf/count_points.py计数原548父版，原2816输入逐条恢复hint。25438投影，seed600593个point interval、DFS9535033个；899502次DFS叶访问中44392次是原seed叶，514020个DFS顶点与seed重复。重复区间值0位差，原counter的numeric/flags/raw hint_out/提交hint同位；seed叶50876次、观测超16点0、样本full_scan回退0。都是原计算整数计数，不是速度、硬件cache命中或泛化容量保证。
+
+首个owner计数脚本因一处多余右括号解析失败，尚未编译C++或形成计数；保留原无效文件和harness-initial-syntax-failure.json，仅修该括号后取得上述真实结果。与CLI31自身无效交付分开记录，不把工具修复称算法改进。
+
+已交同native CodeBuddy/DeepSeek Pro CLI32，只请求原两seed叶完整成功后的有限point interval局部复用。只在同次full_tree/local/geometry内，DFS每叶识别一次；不对9.5M点做字典查找，不改变点/节点访问顺序、tie/index/hints或原失败/回退，原vertex0/witness/full_scan保持。父基线548已采用实现，先原oracle/真实输入/FP及三对成本；当前只前台生成，无新候选或物理成绩，默认不变。
+
+CLI32原181.373s/success，私有完整seed叶ready后复用，其余原路重算。正常/empty-packed/tiny2容量三份原full-scan oracle各9/9；2816真实原hint逐条恢复，raw numeric/flags/hint_out/提交hint和summary与parent/original/disabled/counter/empty/tiny控制全同位，原FE_DOWNWARD/FTZ_DAZ拒绝保持，实际复用514020点，符合原工作量计数。没有据“少算5.4%顶点”直接宣称速度。
+
+原三对0.426692→0.425170、0.429782→0.416635、0.448357→0.449456s，effect −1.521/−13.147/+1.099ms，原screen=reject/median_local_effect_below_threshold，中位收益1.521ms且一对更慢。不重新计时或扩大预算追回绿灯，未应用生产/新增开关/物理，默认仍548。完整源、CLI回执、计数、原oracle和原成本在私有round32-seed-leaf/{ask.py,count_points.py,compile.py,check_tree.py,probe_actual.py}；反馈同native CLI停止这一个叶缓存方向，只可指出有证据的下一项计数问题或明确当前证据不足，不继续扫描变体。
+
+原CLI反馈26.403s/success，返回no_candidate_under_current_evidence，没有新增源码。owner只采纳“本候选未过原成本门”和“当前不提出下一补丁”；不采纳其泛化：少算5.4%而收益不足不能证明剩余点计算不是瓶颈，缓存查询/复制/编译布局也可能抵销；已采用direct实际复用637288节点界，966084属于淘汰的排序版；原_summarize 6.855us是整个Python组件测量，不等于原生ABI改造必需。原tie使用顶点ID v，不是visit序号，不能用这一点断言任何搜索顺序都不可改。无宿主、cache-bound或“所有优化已耗尽”的归因证据。
+
+本次连续接续已闭合CLI29/30/31/32：保留两项有原物理收益的实现，淘汰两项局部收益不足的实现，失败与原版均可恢复。当前无运行中的CLI/MuJoCo或待消耗的物理prepared；后续从实际报告重新核算IK/路径认证或剩余调用成本，有可证伪假设才派原CLI，不为消耗算力发明候选。Knowledge：already_covered，既有Wiki第20节的实测/代表性/组件与任务边界适用，本轮没有独立vault或Codex memory更新。
+
+## F2z 原Python汇总的全通过分支（2026-10-23）
+
+沿原deferred_summarize组件继续窄核算，没有采用“必须新C ABI”的无依据建议。私有round33-summary-valid/count_summary.py重算548父版的2816原ABI输入，每次恢复原hint，11阶段全部2816/2816为原all-valid。对其中352份拥有的numeric/flags，32轮×3批只计原_summarize整个组件，7.277/7.123/7.027us每次；不是可删除成本或整回合收益。
+
+已送同native CLI33，仅请求方法开头用np.count_nonzero识别原cert非零全通过，直接构造原同值汇总；任意失败/混合仍用原fallback，空输入仍原argmin错误。只改这个Python方法，不加C ABI、持久缓存、依赖、物理或原评分变化。先实际输出/边界等值，再在原2816全部ABI+Python调用上做三对；组件省时不能替代原screen或整任务。当前前台生成中，生产默认548保持。
+
+CLI33 41.366s/success，仅返回原方法前置全通过分支。私有首轮owner harness误写类名BoundPairs，实际为_BoundPairs，AST提取StopIteration，尚无等值/计时；保留harness-initial-class-name.json和原脚本，仅纠正类名后验证。54个empty/mixed/allfailed/nonbinary/tie/signedzero/NaN/Inf/strided/原reason错误与2816真实输出，值/类型/浮点位/异常全部同值。原三对全部ABI+汇总调用含双方相同的结果位/类型归一化开销：0.471951→0.458258、0.483198→0.472986、0.498611→0.489211s，省13.693/10.211/9.399ms，原screen=eligible_for_physical_ab；不扣共同开销或冒充无探针实际任务时钟。
+
+现默认关闭接入summary_fast选择。原_summarize方法逐结构保持；创建_BoundPairs时选择一次_fast方法，失败委托原方法，不为baseline每次调用增加开关判定。64相关回归和fast+原548native配置下原5项workspace重入/生命周期检查通过；生产54边界/2816真实输出及实际绑定选择再核同值。C++源、C ABI与编译flags均不变，只在返回metadata中附python_summary=all_valid_fastpath，未修改pinned native manifest；默认仍548。没有再计相同候选成本挑绿。
+
+下一组原nominal child→parent，prepared：experiments/colab-twin/output/summary-fast-factory-20261023/50776f7c-509a-4fb9-b57b-761007b50623/prepared.json。父版seed_bound_direct.py，child summary_fast.py只加Python汇总；原90sim/120wall/录像/全部评分保持。两根已通知协调，owned重仿真为空；运行期间冻结源码/文档/HEAD/dirty路径。仍只有原全任务收益成立才进已有第二工位。
+
+F2z首组完成：child 6cd3d86a-602f-42fa-b448-72295d130f5d原pass，74.82sim、49.697824全process wall、57.709726CPU；parent 2658e8ce-0ad7-4b10-8cd2-8651405f07b5原pass，74.80sim、53.075100wall、60.293771CPU。观测wall少3.377275s（6.3632%）、CPU少2.584045s，controller wall少2.521098s、线程CPU少2.440588s；候选多1拍hold。transport worker1.268112→1.127461s、separation0.623654→0.573256s，P95 26.403343→23.572648ms、超20ms周期288→224，50Hz仍未过。
+
+原输入/四XML/初态/裁判/释放阈值同值；两轮抓放/释放脱离/回位与自由物体/零障碍原pass，释放漂移parent0.265816/child0.265827mm、脱离后力0N，视频各468/468。实际C库路径/binary/flags完全相同，parent返回original、child明确python_summary=all_valid_fastpath，偏好summary_fast false/true已核，独立读回在原pair的python-selection-readback.json和independent-pair-readback.json。
+
+因全回合观测差大于单个Python组件估计，不把全差单独归因这一函数，不推断宿主、缓存或频率。继续原已有200/200工位反序parent→child，prepared：experiments/colab-twin/output/summary-fast-factory-20261023/05f35571-bddd-4672-9d31-2cd98f72d57a/prepared.json。未改源/默认/评分/原90sim120wall；两根已通知串行窗口，整个pair再次冻结全部源与文档。第二工位未有成绩。
+
+### F2z 第二工位及采用结果
+
+parent dad3c076-6bd9-42d9-94bd-8717a44bbfc0原pass，77.14sim、56.877645全process wall、64.669731CPU；child 87c7fd7b-5940-498d-98c5-d68c9c4bf824原pass，77.14sim、55.756232wall、63.044921CPU。观测wall少1.121413s（1.9716%）、CPU少1.624810s，controller wall少1.286742s/线程CPU少1.344772s；sim/hold完全相同，3857拍trajectory JSON字节完全相同。运输worker1.412891→1.670576s变慢，分离0.951372→0.776192s变快，分别保留。P95 26.607397→26.276908ms、超20ms周期304→261，仍未通过完整50Hz。
+
+原输入/四XML/初态/裁判/释放阈值同值，两轮释放漂移均0.267547mm、脱离后力0N，录像各483/483。四轮抓放/静稳/释放脱离/回位及全部原碰撞/自由物体判据通过，safety=false、障碍0、weld=mocap=0。该pair的independent-pair-readback.json及nonhold-timing-readback.json保存原结果、Python选择、相同C库及轨迹读回。owned进程已终态，已向两根归还共享窗口。
+
+两组均剔除双方全部hold周期后，非等待各阶段拍数完全相同；controller wall分别33.837094→31.565481s、37.092743→35.662541s，少2.271613/1.430202s；完整非hold loop少2.719501/1.646277s。只作原成对观测，不减去不利部分、不将全部差额单归因汇总函数，也不与此前独立批次累加。
+
+三对局部一致、两工位反序全process/CPU/controller下降、原四轮物理全pass且相同等待下轨迹完全复现，保留CLI33并将DEFAULT_SOURCE选择summary_fast.py。原方法体、seed_bound_direct父版、packed父版和最初baseline都保留；低层summary_fast缺省false，其他旧候选不叠加。默认指针更新39项相关入口与原失败透传通过，不机械再跑第五轮；C++源/ABI/flags不变、无新评分或流程门锁。Knowledge：already_covered，已有Wiki第20节覆盖局部/全任务边界；新具体证据仅写回原计划，没有独立vault或Codex memory更改。

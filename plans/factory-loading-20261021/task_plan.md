@@ -164,3 +164,5 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 19. 工厂默认source选leaf_packed.py，显式baseline.py及RoutePolicy()保留原版，其他旧候选不叠加；36入口相关回归通过。不带--candidate的原完整抓放pass，实际加载路径/flags及自由物体条件已回读，与显式候选3741拍轨迹逐位相同。e18f580已提交推送并经GitHub REST/Git ls-remote独立读回，诊断工具保留原版缺省（complete）。
 20. CLI29仅内联packed helper。原独立oracle/真实2816输入和三对局部均通过；两个已有工位反序原物理4/4pass，相对e18父版全process分别少0.476/1.267s，CPU/controller均降。保留首工位P95/worker回退，工厂默认升级为leaf_packed_inline.py，原版和packed父版保留，完整50Hz未过（complete）。
 21. CLI30排序/二分版成本不一致，淘汰；CLI31固定128直接索引修正原语法失败后，三对省25.482/28.606/47.049ms，82回归/2816集成raw/88份FP状态检查通过。两个已有工位反序原物理4/4pass，相对678父版全process少4.181/4.403s；剔除全部hold后controller仍少3.333/3.440s，非等待阶段拍数同值。默认采用seed_bound_direct.py，38入口检查通过，原版/父版/全部安全与90sim120wall保持（complete）。
+22. CLI32同投影完整seed叶值复用：正常/empty/tiny原oracle各9/9，2816真实输入raw全同位、实际复用514020点。但原三对effect−1.521/−13.147/+1.099ms，原screen拒绝；未接入生产或新增物理，原失败/成本留证并反馈同CLI，不重跑同源码挑绿（complete）。
+23. CLI33 Python全通过汇总：54边界/2816实际输出同值、三对完整summary调用都更快；64相关回归与原5项workspace检查通过。两工位反序原物理4/4pass，wall少3.377/1.121s，CPU/controller同降，第二3857拍轨迹完全相同。默认选择summary_fast.py，39入口检查通过；原C库/flags/汇总及父版保留，原评分/安全/90sim120wall不变，不单独归因全差或宣称50Hz（complete）。

@@ -59,7 +59,7 @@
   --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
 ```
 
-省略candidate实际加载已通过两工位对照的 `route_strategies/seed_bound_direct.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`leaf_packed_inline.py`可复跑直接父版，`leaf_packed.py`可复跑此前packed版；RoutePolicy()及其他显式旧候选不叠加packed、inline或节点界复用。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+省略candidate实际加载已通过两工位对照的 `route_strategies/summary_fast.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`seed_bound_direct.py`可复跑直接父版，`leaf_packed_inline.py`和`leaf_packed.py`保留此前实现；RoutePolicy()及其他显式旧候选不自动叠加任何后续开关。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
@@ -213,3 +213,17 @@ CLI29沿用CLI28的点集合、顺序和数学，仅在支持的GCC兼容编译�
 两边均剔除全部hold周期后，非等待阶段拍数完全相同，controller仍分别少3.333/3.440s，非等待循环少3.776/3.916s。全进程差分别4.181/4.403s，不将任何少等拍当作算法提速。nominal两worker反而更慢；200/200两worker改善，分项保留。两工位P95分别27.597→24.831ms、26.591→25.166ms，完整50Hz仍未通过。
 
 原四轮抓放、释放脱离、回位、碰撞与自由物体条件全部通过，原90sim/120wall/阈值保持。82项相关回归、2816真实输入及强制碰撞/空副本控制同值；默认选择变更另有38项入口/失败透传检查。原全量结果、失败、候选来源及准确复跑见[原计划F2x](../../plans/factory-loading-20261021/progress.md#f2x-同次树投影的节点界重复计算2026-10-23)。
+
+
+### 已采用：Python全通过汇总
+
+CLI33只减少汇总结果中的重复数组转换。创建查询绑定时选择快速方法；cert非零全部通过时直接返回原argmin结果，混合/失败/空输入委托保留的原方法。原C++、C ABI、原生库文件与flags完全不变，返回元数据用python_summary单独标记Python选择，pinned native manifest保持。显式seed_bound_direct.py仍使用原汇总。
+
+| 已有工位 | 节点界父版全进程墙钟 | 加快速汇总后墙钟 | CPU父版→子版 | 原物理结果 |
+| --- | ---: | ---: | ---: | --- |
+| nominal，child→parent | 53.075s | 49.698s | 60.294→57.710s | 两轮通过 |
+| 200/200，parent→child | 56.878s | 55.756s | 64.670→63.045s | 两轮通过 |
+
+第二工位3857拍trajectory JSON字节完全相同、sim与hold相同；两工位剔除全部hold后，非等待阶段拍数仍相同，controller分别少2.272/1.430s。完整原抓放、释放脱离、回位与全部安全/自由物体判据四轮通过。该表是相邻成对观察；全差不能单独归因一个约7us的组件，也不与前轮收益相加。
+
+54边界/2816真实输出及64相关回归同值，原workspace重入/生命周期5项在开启配置下通过，默认指针变更39项入口检查通过。P95 nominal23.573ms、200/20026.277ms，完整50Hz仍未过。CLI32叶值复用虽等值但局部成本不足，未应用生产。完整来源/失败/分段时钟及复跑在原计划F2y/F2z。

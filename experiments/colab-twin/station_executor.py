@@ -280,13 +280,15 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
         os.environ.setdefault('MUJOCO_GL', 'egl')
         from support_native import (configure_quad_vertices, configure_small_direction_cache,
                                     configure_tree_leaf8, configure_leaf_packed,
-                                    configure_packed_inline, configure_seed_bound_direct)
+                                    configure_packed_inline, configure_seed_bound_direct,
+                                    configure_summary_fast)
         configure_quad_vertices(bool(route_policy and route_policy.quad_vertices))
         configure_small_direction_cache(bool(route_policy and route_policy.small_direction_cache))
         configure_tree_leaf8(bool(route_policy and route_policy.tree_leaf8))
         configure_leaf_packed(bool(route_policy and route_policy.leaf_packed))
         configure_packed_inline(bool(route_policy and route_policy.packed_inline))
         configure_seed_bound_direct(bool(route_policy and route_policy.seed_bound_direct))
+        configure_summary_fast(bool(route_policy and route_policy.summary_fast))
         import mujoco
         from grasp_episode import build_contact_scene, numbers
         from run_visual_grasp import SOURCE, run_physical_episode

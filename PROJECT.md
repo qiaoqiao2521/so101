@@ -20,6 +20,7 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-23 CLI33原Python全通过汇总已采用，默认source选择summary_fast.py，C++/C ABI/原生库与flags不改。两工位反序原物理4/4通过，观测wall53.075→49.698s、56.878→55.756s，CPU/controller同降；第二工位3857拍轨迹JSON完全相同。原汇总/直接父版/最初baseline均保留，未改变碰撞、释放与90sim120wall。全差不单独归因约7us组件，也不与前轮相加；完整50Hz仍未过。CLI32叶值复用局部无可靠收益，未接入生产；[本轮原证据](plans/factory-loading-20261021/progress.md#f2z-原python汇总的全通过分支2026-10-23)。
 2026-10-23 CLI31同投影有限seed节点界复用已采用。两个已有工位反序原物理4/4通过，相对packed+inline父版全进程墙钟55.582→51.401s、57.113→52.710s；两边剔除全部hold周期，非等待阶段拍数相同，controller仍少3.333/3.440s。工厂默认source选seed_bound_direct.py，原版、packed及packed+inline均显式保留。原点/采样/碰撞/释放/90sim120wall保持，完整50Hz仍未过。CLI30成本不一致淘汰，CLI31原无效交付及修复留证；[原计划F2x](plans/factory-loading-20261021/progress.md#f2x-同次树投影的节点界重复计算2026-10-23)记录实测、来源与复跑。
 2026-10-23 CLI29在已采用packed父版上仅内联叶顶点helper。三个局部成对测试均更快，两个已有工位反序原物理4/4通过，全进程墙钟53.339→52.863s、56.511→55.244s，CPU/controller均下降。工厂默认source现选leaf_packed_inline.py，packed父版与最初baseline均显式保留。nominal P95略退化，200/200改善，完整50Hz仍未过；原点/采样/碰撞、释放条件及90sim/120wall保持。详见[采用依据](plans/factory-loading-20261021/progress.md#f2w-已采用packed的实际编译后调用2026-10-23)。
 2026-10-23 采用CLI28叶顶点连续存储作为工厂默认入口。两既有工位反序原物理4/4通过，全process墙钟分别53.338→51.413s、55.171→53.917s，CPU/controller同降；候选sim都反多0.04s，未缩减等待或采样。默认入口另一次完整抓放通过，与显式候选3741拍轨迹逐位一致。显式baseline.py与RoutePolicy()保留原版，其他旧候选不叠加；1mm碰撞阈值、释放审计、90sim/120wall保持，完整50Hz仍未过。详见[执行入口](experiments/colab-twin/STATION_EXECUTOR.md#已采用叶顶点连续存储)及[原证据与接续](plans/factory-loading-20261021/progress.md)。

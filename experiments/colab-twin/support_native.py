@@ -39,6 +39,7 @@ _TREE_LEAF8 = False
 _LEAF_PACKED = False
 _PACKED_INLINE = False
 _SEED_BOUND_DIRECT = False
+_SUMMARY_FAST = False
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
 _INT32 = C.POINTER(C.c_int32)
@@ -114,6 +115,17 @@ def configure_seed_bound_direct(enabled=False):
         if _LIB is not None and enabled != _SEED_BOUND_DIRECT:
             raise RuntimeError('Run the other native variant in a fresh evaluation process')
         _SEED_BOUND_DIRECT = enabled
+
+
+def configure_summary_fast(enabled=False):
+    """Choose Python summary behavior before creating the query objects."""
+    global _SUMMARY_FAST
+    if not isinstance(enabled, bool):
+        raise ValueError('All-valid summary selection must be a boolean')
+    with _LOAD_LOCK:
+        if _LIB is not None and enabled != _SUMMARY_FAST:
+            raise RuntimeError('Run the other summary variant in a fresh evaluation process')
+        _SUMMARY_FAST = enabled
 
 
 def _build_flags():
@@ -320,7 +332,10 @@ def library_metadata() -> dict:
             raise RuntimeError('Pinned native library provenance is unavailable') from error
         if not unchanged:
             raise RuntimeError('Pinned native library provenance changed on disk')
-        return copy.deepcopy(_METADATA)
+        metadata = copy.deepcopy(_METADATA)
+        if _SUMMARY_FAST:
+            metadata['python_summary'] = 'all_valid_fastpath'
+        return metadata
 
 
 def _arithmetic_environment(lib) -> dict:
@@ -468,6 +483,8 @@ class _BoundPairs:
         self._summary_flags_pointer = self._summary_flags.ctypes.data_as(_INT64)
         self._summary_hint_in_pointer = self._summary_hint_in.ctypes.data_as(_INT64)
         self._summary_hint_out_pointer = self._summary_hint_out.ctypes.data_as(_INT64)
+        if _SUMMARY_FAST:
+            self._summarize = self._summarize_all_valid
 
     def evaluate(self, positions, rotations, margin):
         with self._owner._lock:
@@ -537,3 +554,14 @@ class _BoundPairs:
                 "lower_bound_m": float(numeric[nearest, 11]),
                 "certificate_reason": str(_REASONS[flags[nearest, 4]]),
                 "certified_pairs": int(certified.sum()), "checked_pairs": len(self._pairs)}
+
+    def _summarize_all_valid(self, numeric, flags):
+        """Keep the original failure path and choose the fast path once per binding."""
+        if flags.shape[0] and np.count_nonzero(flags[:, 0]) == flags.shape[0]:
+            nearest = int(np.argmin(numeric[:, 11]))
+            return {"valid": True, "nearest_index": nearest,
+                    "lower_bound_m": float(numeric[nearest, 11]),
+                    "certificate_reason": str(_REASONS[flags[nearest, 4]]),
+                    "certified_pairs": int(flags.shape[0]),
+                    "checked_pairs": len(self._pairs)}
+        return _BoundPairs._summarize(self, numeric, flags)

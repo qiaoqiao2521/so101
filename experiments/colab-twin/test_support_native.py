@@ -113,6 +113,19 @@ class NativeLoaderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.configure_seed_bound_direct(1)
 
+    def test_summary_selection_does_not_change_native_build_flags(self):
+        module = fresh_module()
+        flags = module._build_flags()
+        module.configure_summary_fast(True)
+        self.assertEqual(module._build_flags(), flags)
+        self.assertIsNone(module._LIB)
+        module._LIB = object()
+        module.configure_summary_fast(True)
+        with self.assertRaisesRegex(RuntimeError, 'fresh evaluation process'):
+            module.configure_summary_fast(False)
+        with self.assertRaises(ValueError):
+            module.configure_summary_fast(1)
+
     def test_import_has_no_compile_or_library_load(self):
         with mock.patch("subprocess.run", side_effect=AssertionError("Import must not run compiler")), \
              mock.patch("ctypes.CDLL", side_effect=AssertionError("Import must not load library")):

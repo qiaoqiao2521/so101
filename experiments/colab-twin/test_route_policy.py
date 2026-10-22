@@ -48,6 +48,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(packed_inline=1)
         with self.assertRaises(ValueError):
             RoutePolicy(seed_bound_direct=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(summary_fast=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -126,6 +128,7 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(recommended.leaf_packed)
         self.assertTrue(recommended.packed_inline)
         self.assertTrue(recommended.seed_bound_direct)
+        self.assertTrue(recommended.summary_fast)
         self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
         original, source = load_route_policy(BASELINE_SOURCE)
         self.assertFalse(original.leaf_packed)
@@ -162,11 +165,12 @@ class RoutePolicyTests(unittest.TestCase):
             self.assertTrue(observed[0].leaf_packed)
             self.assertTrue(observed[0].packed_inline)
             self.assertTrue(observed[0].seed_bound_direct)
+            self.assertTrue(observed[0].summary_fast)
             result = json.loads((root/'output/evaluation.json').read_text())
             self.assertEqual(result['candidate']['loaded_path'], str(DEFAULT_SOURCE.resolve()))
             self.assertEqual(result['verdict'], 'fail')
 
-    def test_seed_bound_default_keeps_the_adopted_parent_available(self):
+    def test_seed_bound_parent_and_earlier_implementations_remain_available(self):
         child, source = load_route_policy(
             Path(__file__).parent/'route_strategies/seed_bound_direct.py')
         self.assertTrue(child.leaf_packed)
@@ -174,11 +178,23 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(child.seed_bound_direct)
         self.assertFalse(child.quad_vertices)
         self.assertEqual(source['preferences']['seed_bound_direct'], True)
-        self.assertEqual(load_route_policy()[0], child)
+        self.assertFalse(child.summary_fast)
         parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/leaf_packed_inline.py')
         self.assertFalse(parent.seed_bound_direct)
         self.assertTrue(parent.packed_inline)
         self.assertEqual(load_route_policy(BASELINE_SOURCE)[0], RoutePolicy())
+
+    def test_summary_default_keeps_the_native_parent_available(self):
+        child, source = load_route_policy(Path(__file__).parent/'route_strategies/summary_fast.py')
+        self.assertTrue(child.summary_fast)
+        self.assertTrue(child.seed_bound_direct)
+        self.assertTrue(child.packed_inline)
+        self.assertTrue(child.leaf_packed)
+        self.assertEqual(source['preferences']['summary_fast'], True)
+        self.assertEqual(load_route_policy()[0], child)
+        parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/seed_bound_direct.py')
+        self.assertFalse(parent.summary_fast)
+        self.assertTrue(parent.seed_bound_direct)
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:
