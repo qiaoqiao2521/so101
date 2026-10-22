@@ -12,6 +12,8 @@ class RoutePolicy:
     ik_seed: str = 'continuation'
     transport_candidates: int = 1
     reuse_adjacent_validity: bool = False
+    reuse_separation_distances: bool = False
+    batch_separation_axes: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -30,6 +32,10 @@ class RoutePolicy:
             raise ValueError('Transport compares 1..3 fully certified routes')
         if not isinstance(self.reuse_adjacent_validity, bool):
             raise ValueError('Adjacent validity reuse must be a boolean')
+        if not isinstance(self.reuse_separation_distances, bool):
+            raise ValueError('Separation distance reuse must be a boolean')
+        if not isinstance(self.batch_separation_axes, bool):
+            raise ValueError('Batched separation axes must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

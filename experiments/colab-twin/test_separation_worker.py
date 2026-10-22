@@ -11,9 +11,11 @@ import numpy as np
 
 from grasp_episode import PAD_NAMES
 from joint_planner import validate_joint_path
+from route_policy import RoutePolicy
 from separation_worker import (AsyncSeparationPlanningJob, SeparationPlan,
                                SeparationSample, SeparationSnapshot,
-                               run_separation_plan, separation_sample_coordinates,
+                               reuse_last_distance, run_separation_plan,
+                               separation_sample_coordinates,
                                validate_separation_samples)
 from transport_worker import AsyncTransportPlanningJob, TransportPlan
 
@@ -277,6 +279,87 @@ class SeparationWorkerTests(unittest.TestCase):
         self.assertEqual(len(plan.samples), 39)
         self.assertEqual(json.loads(plan.report_json)['worker_steps']['separation_callbacks'], 39)
         context.checker.native.close.assert_called_once_with()
+
+    def test_distance_cache_reuses_only_the_previous_exact_completed_pose(self):
+        values = {'poses': []}
+        data = SimpleNamespace(qpos=np.zeros(6))
+
+        def distances(q6):
+            data.qpos[:] = q6
+            values['poses'].append(np.asarray(q6).copy())
+            return {name: .002 + float(q6[0]) for name in (*PAD_NAMES, 'robot_mesh')}
+
+        query = reuse_last_distance(distances)
+        q, plus_zero, minus_zero = [0.]*6, [0.]*6, [-0.]*6
+        first = query(q)
+        first['pad_gripper'] = -99.
+        second = query(q)
+        self.assertEqual(second['pad_gripper'], .002)
+        self.assertEqual(data.qpos.tobytes(), np.asarray(q).tobytes())
+        self.assertEqual(query.counters,
+                         dict(requests=2, hits=1, computations=1, real_queries=1))
+
+        signed = reuse_last_distance(distances)
+        signed(plus_zero)
+        signed(minus_zero)
+        self.assertEqual(len(values['poses']), 3)
+        self.assertEqual(signed.counters,
+                         dict(requests=2, hits=0, computations=2, real_queries=2))
+        self.assertEqual(data.qpos.tobytes(), np.asarray(minus_zero).tobytes())
+        failing = Mock(side_effect=RuntimeError('original distance failure'))
+        failed = reuse_last_distance(failing)
+        with self.assertRaisesRegex(RuntimeError, 'original distance failure'):
+            failed(q)
+        self.assertEqual(failed.counters,
+                         dict(requests=1, hits=0, computations=0, real_queries=0))
+
+    def test_distance_cache_keeps_shape_errors_and_refreshes_after_partial_failure(self):
+        data = SimpleNamespace(qpos=np.zeros(6))
+        calls = []
+
+        def distances(q6):
+            pose = np.asarray(q6)
+            calls.append(pose.copy())
+            if pose.shape != (6,):
+                raise ValueError('Finite six-joint query required')
+            data.qpos[:] = q6
+            if pose[0] == 1.:
+                raise RuntimeError('query failed after updating pose')
+            return {'distance': .002}
+
+        query = reuse_last_distance(distances)
+        query(np.zeros(6))
+        with self.assertRaisesRegex(ValueError, 'six-joint'):
+            query(np.zeros((2, 3)))
+        with self.assertRaisesRegex(RuntimeError, 'updating pose'):
+            query(np.ones(6))
+        query(np.zeros(6))
+        self.assertEqual(len(calls), 4)
+        np.testing.assert_array_equal(data.qpos, np.zeros(6))
+
+    def test_worker_distance_reuse_preserves_plan_and_saves_exact_repeats(self):
+        from dataclasses import replace
+        from visual_grasp_controller import VisualGraspController
+        baseline_context, baseline_counts = self.fake_context()
+        candidate_context, candidate_counts = self.fake_context()
+        candidate_snapshot = replace(self.snapshot(),
+                                     route_policy=RoutePolicy(reuse_separation_distances=True))
+        plans = []
+        for context, snapshot in ((baseline_context, self.snapshot()),
+                                  (candidate_context, candidate_snapshot)):
+            with patch('separation_worker._planning_context', return_value=context), \
+                    patch.object(VisualGraspController, '_legacy_plan_separation',
+                                 side_effect=self.fake_compute, create=True):
+                plans.append(run_separation_plan(object(), object(), snapshot))
+        self.assertEqual(plans[0].paths, plans[1].paths)
+        self.assertEqual(plans[0].samples, plans[1].samples)
+        self.assertEqual(baseline_counts, dict(fk=39, distances=39, pads=39))
+        self.assertEqual(candidate_counts, dict(fk=39, distances=27, pads=39))
+        evidence = json.loads(plans[1].report_json)['worker_steps']
+        self.assertEqual(evidence['distance_requests'], 39)
+        self.assertEqual(evidence['distance_calls'], 27)
+        self.assertEqual(evidence['distance_cache'],
+                         dict(requests=39, hits=12, computations=27, real_queries=27))
 
     def test_worker_cancellation_failure_and_capture_mismatch_close_without_plan(self):
         from visual_grasp_controller import VisualGraspController

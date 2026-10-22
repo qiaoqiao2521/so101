@@ -120,3 +120,16 @@ F2e实际对照：baseline认证1条、shortest-two认证2条后都选60mm；第
 3. Mint 跟随器是同一 SO101 产品下的低配现场终端后端，保留产品动作、发布状态、执行记录与动作包。现有 `export_action_to_ros2.py` 是旧单位到 URDF 弧度及 JointTrajectory 模板导出，不是当前 MuJoCo 任意轨迹运行接口，也不证明导出轨迹可执行。
 4. 轻量终端与 Lichtblick/ROS 工作台并行。当前工作台只接原 MuJoCo 工位任务；Mint 不是其前端替代品。首个融合点限定为版本化动作资产和结果语义，不直接导入串口配置、标定、登录记录、现场录制或业务日志，不将 ROS 强加给 Mint。
 5. canonical `/home/muqiao/dev/ros2/projects/so101` 的 22 项受控变动与未跟踪源码/计划继续由原 owner 分项核对；共享交付仅记录归口，不提交、不清理、不恢复两份 DOCX 删除。
+
+
+## F2j 分离规划重复查询与 SAT 轴构造（2026-10-22）
+
+1. CodeBuddy/DeepSeek Flash 生成单条精确位姿距离缓存，owner补二进制键、结果副本和异常/形状边界；`reuse_separation_distances` 默认false。原同工位A/B已2/2通过，但旧13对缺逐位证据且有计时回退，新增三对逐位交替计时inconclusive，保留实验、不切默认、不追加跨工位抓放。
+2. 保留所有探索批次和原筛选器判定；不只取最后有利批次，不改逐对一致性条件。复跑工具`probe_separation_distances.py`记录全部路径/样本/守卫/报告逐位等值和wall/CPU。
+3. 下一候选只合并SAT九次cross构造。Flash返回429且exit0，未生成候选；沿用CodeBuddy的DeepSeek Pro实际返回源码，局部等值与原成本筛选正在执行。通过后才接原物理及第二已有工位；资源仍先与FishBot/无人机协调。
+4. 动作能力仍仅完整pick→transfer→place；任意任务组合及Mint资产合同未交付，继续保护canonical在途成果。
+
+
+## F2k 当前接续
+
+批量SAT轴候选已通过实际nominal/200-200局部成本与三个工位逐位等值；220-170成本不一致。128相关测试通过。下一项只接nominal原完整A/B（prepared见progress），当前FishBot实际占用；不因未回消息创建新的人工审批，不与活实例并发。default-off候选不会因本地绿灯或单次墙钟差自动切默认。

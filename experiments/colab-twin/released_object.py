@@ -52,6 +52,23 @@ def box_separation(center, rotation, extent, other_center, other_extent):
     return float(max(gaps))
 
 
+def box_separation_batched(center, rotation, extent, other_center, other_extent):
+    """Original SAT arithmetic with one broadcast cross-axis construction."""
+    eye = np.eye(3)
+    rot_T = rotation.T
+    axes = [*eye, *rot_T]
+    axes += [*np.cross(eye[:, None, :], rot_T[None, :, :]).reshape(-1, 3)]
+    gaps = []
+    for axis in axes:
+        norm = np.linalg.norm(axis)
+        if norm < 1e-10:
+            continue
+        axis = axis/norm
+        radius = np.abs(rot_T @ axis) @ extent + np.abs(axis) @ other_extent
+        gaps.append(abs((center-other_center) @ axis)-radius)
+    return float(max(gaps))
+
+
 class ReleasedObjectQuery:
     def __init__(self, planning_scene, *, uncertainty_m=.002):
         if not np.isfinite(uncertainty_m) or not .002 <= uncertainty_m <= .005:
@@ -91,7 +108,7 @@ class ReleasedObjectQuery:
             # A compiled identity-rotation shortcut must not discard the new pose.
             self.model.geom_sameframe[self.object_id] = mujoco.mjtSameFrame.mjSAMEFRAME_NONE
 
-    def distances(self, q6):
+    def distances(self, q6, *, batch_cross_axes=False):
         if self.center is None:
             raise ValueError('Release estimate is not frozen')
         q6 = np.asarray(q6, dtype=float)
@@ -101,6 +118,7 @@ class ReleasedObjectQuery:
         self.data.qvel[:] = 0
         mujoco.mj_forward(self.model, self.data)
         result = {}
+        separation = box_separation_batched if batch_cross_axes else box_separation
         for i in self.robot_ids:
             name = self.model.geom(i).name
             if name in PAD_NAMES:
@@ -109,8 +127,8 @@ class ReleasedObjectQuery:
                     center = self.rotation.T @ (center-self.center)
                     rotation = self.rotation.T @ rotation
                     other = np.zeros(3)
-                distance = box_separation(center, rotation, self.model.geom_size[i], other,
-                                          self.model.geom_size[self.object_id])
+                distance = separation(center, rotation, self.model.geom_size[i], other,
+                                      self.model.geom_size[self.object_id])
             else:
                 distance = float(mujoco.mj_geomDistance(self.model, self.data, i, self.object_id, .1, None))
             result[name] = distance

@@ -32,6 +32,10 @@ class RoutePolicyTests(unittest.TestCase):
                         {'reuse_adjacent_validity': 1}):
             with self.subTest(options=options), self.assertRaises(ValueError):
                 RoutePolicy(**options)
+        with self.assertRaises(ValueError):
+            RoutePolicy(reuse_separation_distances=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(batch_separation_axes=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 

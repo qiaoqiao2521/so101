@@ -6,10 +6,48 @@ import tempfile
 import mujoco
 import numpy as np
 from released_object import ReleaseAudit, ReleasedObjectQuery, box_separation, floor_yaw_rotation, rotation_matrix
+from released_object import box_separation_batched
 from grasp_episode import PAD_NAMES
 
 
 class ReleasedObjectTests(unittest.TestCase):
+    def test_batched_sat_is_bit_identical_near_original_margins_and_rotations(self):
+        extent = np.array([.004, .006, .008])
+        other = np.array([.011, .011, .010])
+        rotations = [np.eye(3), np.diag([-1., -1., 1.])]
+        rng = np.random.default_rng(281)
+        for _ in range(64):
+            rotation, _ = np.linalg.qr(rng.normal(size=(3, 3)))
+            if np.linalg.det(rotation) < 0:
+                rotation[:, 0] *= -1
+            rotations.append(rotation)
+        for rotation in rotations:
+            for gap in (-.003, -.00005, -.0, .0, np.nextafter(.001, -np.inf),
+                        .001, np.nextafter(.001, np.inf)):
+                center = np.array([extent[0]+other[0]+gap, -.0, 0.])
+                a = box_separation(center, rotation, extent, np.zeros(3), other)
+                b = box_separation_batched(center, rotation, extent, np.zeros(3), other)
+                self.assertEqual(np.float64(a).tobytes(), np.float64(b).tobytes())
+                self.assertEqual(a >= .001, b >= .001)
+
+    def test_batched_query_keeps_distances_and_pad_pose_identical(self):
+        angle = .53
+        rotation = np.array([[np.cos(angle), -np.sin(angle), 0.],
+                             [np.sin(angle), np.cos(angle), 0.], [0., 0., 1.]])
+        with tempfile.TemporaryDirectory() as directory:
+            query = self.query(directory)
+            query.freeze([0., 0., 0.], rotation)
+            q = np.array([.001, -.001, 0., .002, -.002, .001])
+            baseline = query.distances(q)
+            pads = query.pad_vertices()
+            candidate = query.distances(q, batch_cross_axes=True)
+            self.assertEqual(list(baseline), list(candidate))
+            for name, distance in baseline.items():
+                self.assertEqual(np.float64(distance).tobytes(),
+                                 np.float64(candidate[name]).tobytes())
+            for name, vertices in pads.items():
+                self.assertEqual(vertices.tobytes(), query.pad_vertices()[name].tobytes())
+
     def query(self, directory):
         scene=Path(directory)/'scene.xml'
         joints=''.join(f'<joint type="{kind}" axis="{axis}"/>' for kind in ('slide','hinge')

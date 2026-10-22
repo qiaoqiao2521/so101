@@ -8,6 +8,7 @@ binary64 sample coordinates. The controller owns that binding and admission.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import partial
 import json
 import math
 from numbers import Integral
@@ -17,6 +18,38 @@ import numpy as np
 from joint_planner import validate_joint_path
 from transport_worker import AsyncTransportPlanningJob
 from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
+
+
+def reuse_last_distance(callback):
+    """Reuse the last completed exact-pose distance query in one worker.
+
+    The caller must provide one frozen released-object model. The cache is
+    private to this worker and is only consulted for the immediately previous
+    successful float64 pose. A hit does not need to update MuJoCo because the
+    underlying successful query already left that exact pose in its data.
+    """
+    counters = dict(requests=0, hits=0, computations=0, real_queries=0)
+    last_key = None
+    last_result = None
+
+    def cached(q6):
+        nonlocal last_key, last_result
+        counters['requests'] += 1
+        pose = np.asarray(q6, dtype=np.float64)
+        key = (pose.shape, pose.tobytes())
+        if last_key is not None and key == last_key:
+            counters['hits'] += 1
+            return dict(last_result)
+        # A failed query may have changed its MuJoCo pose before raising.
+        last_key = None
+        result = callback(q6)
+        counters['computations'] += 1
+        counters['real_queries'] += 1
+        last_key, last_result = key, dict(result)
+        return dict(last_result)
+
+    cached.counters = counters
+    return cached
 
 
 def _vector(value, size, name):
@@ -276,6 +309,8 @@ def _planning_context(rig, released_model, snapshot):
                        (int(released_model.geom_contype[i]) & 2 or
                         int(released_model.geom_conaffinity[i]) & 2)]
     context.released_query = query
+    if snapshot.route_policy.batch_separation_axes:
+        query.distances = partial(query.distances, batch_cross_axes=True)
     context.checker = ConservativeCollisionChecker(rig, gripper=.5, margin_m=.001)
     return context
 
@@ -296,7 +331,10 @@ def run_separation_plan(rig, released_model, snapshot, cancel_event=None):
     context = _planning_context(rig, released_model, snapshot)
     try:
         samples, cache = [], {}
-        steps = dict(fk_calls=0, distance_calls=0, pad_vertex_calls=0, separation_callbacks=0)
+        steps = dict(fk_calls=0, distance_requests=0, distance_calls=0,
+                     pad_vertex_calls=0, separation_callbacks=0,
+                     distance_kernel=('batched_cross_axes' if snapshot.route_policy.batch_separation_axes
+                                      else 'original_cross_axes'))
         original_fk, original_distances = context._fk, context.released_query.distances
         original_pads = context.released_query.pad_vertices
         original_valid, original_released_valid = context._separation_valid, context._released_valid
@@ -312,6 +350,16 @@ def run_separation_plan(rig, released_model, snapshot, cancel_event=None):
             steps['distance_calls'] += 1
             cache['distance_q6'], cache['distances'] = _bytes(q6), dict(result)
             return result
+
+        distance_query = recorded_distances
+        distance_cache = None
+        if snapshot.route_policy.reuse_separation_distances:
+            distance_cache = reuse_last_distance(distance_query)
+            distance_query = distance_cache
+
+        def requested_distances(q6):
+            steps['distance_requests'] += 1
+            return distance_query(q6)
 
         def recorded_pads():
             result = original_pads()
@@ -339,7 +387,7 @@ def run_separation_plan(rig, released_model, snapshot, cancel_event=None):
             return valid
 
         context._fk = recorded_fk
-        context.released_query.distances = recorded_distances
+        context.released_query.distances = requested_distances
         context.released_query.pad_vertices = recorded_pads
         context._separation_valid, context._released_valid = recorded_valid, cooperative_released_valid
         check_cancel()
@@ -347,6 +395,8 @@ def run_separation_plan(rig, released_model, snapshot, cancel_event=None):
         check_cancel()
         release = context.release_record
         paths = (release['separation_path'], release['planned_return_path'])
+        if distance_cache is not None:
+            steps['distance_cache'] = dict(distance_cache.counters)
         report = dict(plan_reports=context.plan_reports, release_record=release,
                       worker_steps=steps,
                       separation_context=dict(pinch=context.separation_pinch.tolist(),

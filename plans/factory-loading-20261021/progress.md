@@ -389,3 +389,34 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 产品归口：Mint跟随器继续作为 SO101 同产品的低配现场终端，与 Lichtblick/ROS 研究工作台并行。共享层起点仅为版本化产品动作和结果语义；现有关节轨迹导出不是 MuJoCo 运行接口。canonical 22项受控变动、未跟踪源码/计划及DOCX删除保护原位，不纳入本交付。
 
 Knowledge：already_covered。沿用现有ROS2/GUI物理裁判分离和动作资产单位边界，无新增共享知识写入。
+
+
+## F2j 精确距离复用原物理2/2通过，成本仍不晋级（2026-10-22）
+
+Current：默认baseline；精确距离复用仅保留默认关闭实验。下一方向为SAT轴构造，同一CodeBuddy/DeepSeek Pro候选先局部等值/成本。FishBot在途时不并发物理。
+
+| 配置 | run_id | 原裁判 | sim / report wall秒 | 分离worker秒 | 请求/真实距离查询 |
+|---|---|---|---:|---:|---:|
+| baseline | c885b8a7-e55c-4bc6-80f0-f62d70c79184 | pass | 74.78 / 59.606815 | 0.729375 | 233 / 233 |
+| distance-cache | 4f075f92-ca2e-43d6-88d5-28ace521544d | pass | 74.76 / 59.017086 | 0.587250 | 233 / 206 |
+
+Done：双指抓取/搬运/静稳/释放/回位均通过，safety_stop=false、障碍接触0、free_object=true、weld=mocap=0，录像各468/468。释放XY漂移0.265805/0.265794mm、脱离后峰值力0N；hold144→143拍，其余阶段样本数相同。单次完整wall差不能全部归因分离缓存。该组未记录进程总wall/CPU，明确null，不从report.wall推算。
+
+局部证据：三批13对全部保留；旧比较仅Python数值相等，严格原筛选器因缺逐位证据reject，且其中一对wall回退。新增严格float64字节检查三对通过等值，但计时inconclusive。因此暂停该候选的新物理，而不是反复测到有利结果。此前实际A/B已运行，保留其原pass，不把事后计时纠正称先验准入。完整产物与独立回读：`experiments/colab-twin/output/separation-distance-cache-ab-20261022/20261021T185831Z/pair-readback.json`；全部探索/严格筛选在`local-screens/`。第一批仅从本turn工具输出恢复，来源注明，未伪造原stdout。
+
+代码与验证：CLI9原文位于private `~/.cache/ros2-factory/codebuddy-so101-20261021/round9-separation-distance-cache/`；owner修复浮点signed-zero键和字典所有权。原113项相关测试通过；随后补shape与部分异常姿态失效并通过28项相关测试。两个物理回合早于该异常边界补强，正常finite-q6命中逻辑未变；严格局部复算使用补强后的当前源码。
+
+Next：CLI10 Flash的429/exit0/空stdout原样保留，未称候选成功；同harness切DeepSeek Pro实际生成单次broadcast cross函数，pending局部结果。不新增调度服务、训练或实体操作。
+
+Knowledge：already_covered；沿用Wiki《ROS2 与 FishBot》第20节的独立物理评分/候选晋级边界与双时钟解释。当前计时、失败和来源留本计划，无个人memory写入。
+
+
+## F2k 当前：批量SAT轴局部通过，等待原物理空档
+
+Done：原生CodeBuddy/DeepSeek Pro生成源码，owner仅做现有接口接入；`batch_separation_axes`默认false，候选入口`route_strategies/batch_separation_axes.py`。数学body与私有CLI源码AST比较相同。128项相关回归通过，其中新增462组阈值邻域/旋转的SAT逐位对照及真实query/pad位姿对照。主控制器、评分、碰撞阈值和回退不变。
+
+Done：同一已有原释放快照各3对交替。nominal和200/200严格逐位等值且成本筛选eligible_for_physical_ab；220/170严格等值但成本inconclusive，不挑掉其慢样本。产物`experiments/colab-twin/output/separation-cross-axes-20261022/local-summary.json`保留全部原计时与来源。
+
+Next：原nominal完整baseline→candidate命令与输入已保存`output/separation-cross-axes-20261022/dba35cbb-0660-4d66-b7b4-7054ae69a5c2/prepared.json`，尚未运行；同原evaluate_station和90sim/120wall。private run_pair.py仅顺序调用原CLI并记录完整process wall/CPU，不新增调度器。当前FishBot141/9111实际sim/bridge占用，因此无新SO101物理。接实际释放后运行；有净收益再接另一已有工位，不能以局部eligible或测试代替原抓放裁判。
+
+Knowledge：already_covered，沿用上述独立评分、双时钟与默认不晋级原则。

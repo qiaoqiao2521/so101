@@ -49,7 +49,7 @@
 
 可选`transport_candidates`默认为1，保留首条完整认证可行路线。设为2或3时，沿原高度顺序寻找前N条完整可行路线，按原`motion_duration`加各段0.6s到达守卫取最短；等值保留原顺序。拒绝的高度不计入N，原高度回退列表保留；可行数量不足N时使用已认证者，无可行路线或未知错误仍明确失败。原90s/14s预算、异步快照和物理检查不变。
 
-手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项在2026-10-21独立XY的baseline/shortest-two两个完整物理回合均通过，但都选择60mm路线；多搜一条使该次hold增加0.70sim秒，默认仍为1，不将其当作提速成果。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。另有手写静态提案`route_strategies/prefer_054.py`，只把54mm移到高度顺序首位，针对200/200/0mm工位已测失败的60/57mm端点IK尝试；原回退、完整认证及其他默认值不变。此提案尚未物理运行，不承诺提速。
+手写接口示例`route_strategies/shortest_two_routes.py`只设`transport_candidates=2`，其余均默认。该选项在2026-10-21独立XY的baseline/shortest-two两个完整物理回合均通过，但都选择60mm路线；多搜一条使该次hold增加0.70sim秒，默认仍为1，不将其当作提速成果。每个尝试记录认证墙钟、原路线时长及selected，`route_search`记录总搜索墙钟与实际认证数量并透传evaluation。原worker等待/墙钟照常包含额外规划成本；搜索时间与worker耗时重叠，不应重复相加，也不从任务总耗时中扣除。report.hold_duration_s是物理持物累计时间，hold阶段等待从trajectory分段读取。候选费用在冻结worker起态比较；原入场桥接仍会重新校验和计时，因此attempt费用不必等于最终motion_and_arrival_s。另有手写静态提案`route_strategies/prefer_054.py`，只把54mm移到高度顺序首位，针对200/200/0mm工位已测失败的60/57mm端点IK尝试；原回退、完整认证及其他默认值不变。此提案已在200/200与220/170工位完成原物理对照；仅200/200减少失败IK，整回合收益未稳定，默认仍为baseline。
 
 ```bash
 ~/.cache/so101-graspgenx/upstream/.venv/bin/python \
@@ -132,3 +132,15 @@ python3 experiments/colab-twin/factory_minimum_suite.py \
 首测A在64.40sim脱离IK拒绝、首测B在32.14sim搬运IK拒绝均保留失败。两个固定高度属于旧路线偏好；改目标后只采用满足原全路径检查的替代路线，不改阈值、不回旧目标。未来位置若仍无法规划，任务继续明确失败。
 
 证据：本项目忽略的`output/station-task-goals-20261020/`及工作台`workbench-review-tests/output/station-task-goals/`、`station-task-goals-before-hover-repair/`、`station-task-drafts/`和原任务目录。新增接口默认兼容；旧学习state30与其他历史采集入口的固定路径未扩展。
+
+
+精确距离复用实验：`route_strategies/reuse_separation_distances.py`只开启默认false的`reuse_separation_distances`。它仅在冻结分离worker内复用最后同一shape/float64位姿的已完成距离查询，保留全部原采样与取消检查；完整原物理首对2/2通过，但局部计时仍不一致，未晋级。保存快照可用以下原地探针复核；其pass只表示局部等值，不代表物理抓放成功。
+
+```bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python \
+  experiments/colab-twin/probe_separation_distances.py \
+  --episode <已完成回合的episode目录> --output <新报告.json> --repeats 3
+```
+
+
+`route_strategies/batch_separation_axes.py`是独立的默认关闭候选，只将冻结分离worker的SAT叉积构造批量执行；原标量实现、全部查询和采样仍保留。可用同一保存快照探针加`--candidate experiments/colab-twin/route_strategies/batch_separation_axes.py`检查实际接入路径。开发与物理成绩以原计划最新段落为准，局部通过不等于完整抓放或整回合提速。
