@@ -1220,3 +1220,13 @@ F2as私有局部完成：Root GPT在round58-scalar-direction/probe.py对已采�
 三对wall98.589518→77.463608、99.206624→87.047463、109.621940→71.839667ms；线程CPU98.569324→77.055331、98.810557→86.515653、102.878971→71.240935ms。原screen eligible/consistent_local_effect，median=-21.125910ms，所有输入数相同。每个子pass500次调用、134487次提示尝试、163606次含回退证书工作，原计数留在local-results.json。资源等待.031640s独立记、结束共享重任务为空；这不是500个控制周期或抓放通过，不能乘8682次外推任务收益。
 
 Next：最小生产接入已有方向C函数，拟限_BoundPairs.summary的可选方向路径及ConservativeCollisionChecker.evaluate的可选参数，只由_arm_valid布尔接口开启；RoutePolicy新字段默认false，原default仍single-pass。保留原scalar summary/ABI、输入转换顺序、owner锁/重入fresh路径、观察者及缺符号回退，不修改需要数值下界的shortcut、diagnostics或评分。补碰撞/异常/闭owner/观察者/重入边界、正式组件对照，再原物理及跨站反序；当前500个样本全名义，未将未覆盖失败路径记成功。Knowledge=already_covered，来源/性能范围规则沿用原Wiki，不联系「登录 X」。
+
+F2as生产可选接入完成，尚未有原物理结果。_BoundPairs.summary仅在显式direction_hints和原两个C符号未被观察/替换时调用已有方向入口；每个bound独立数组在owner锁内保存搜索索引，每个姿态重新证明，失败清空，不缓存碰撞结论。重入沿用fresh原路径，输入/float(margin)顺序、只在全成功时发布拥有的顶点提示均保持。ConservativeCollisionChecker只加可选参数；仅原类型/未替换evaluate的_arm_valid启用。shortcut数值下界、diagnostics/评分及全部244点保持，新scalar_direction_hints.py仅比采用父版多一个布尔，默认仍single-pass。
+
+240相关回归通过，包含244点/中途首碰撞、可选符号缺失/原ABI与方向observer、实例/类checker原签名、FK异常与KeyboardInterrupt、闭owner/状态错误、浮点环境拒绝、输入/旋转/margin回调重入与副本隔离、独立bound拥有状态。首次tests.log只有新增浮点环境测试直接比较NaN字典的断言错误；改为逐位比NaN、其余字典等值后tests-pass.log全绿，原失败日志保留。不是物理失败或50Hz证明。
+
+正式组件入口round58-scalar-direction/production_probe.py复用原500实际q6和原资源观察器，将私有observer替换为正式_arm_valid开关，仍按原三对交替筛选；准备原evaluate_station.py对照的prepare_physical.py，未启动物理。当前三个背景Blender占用，按原规则等待释放，不并发抢资源。源码/默认不在等待后继续修改，组件终态后由根独立读回，再固化源码与原物理A/B。Knowledge=already_covered，沿用原Wiki性能与版本绑定范围，不联系其他对话。
+
+F2as正式组件已完成：原500真实q6三对wall112.986981→84.100272、109.519576→83.315281、113.386925→80.245287ms；线程CPU112.963220→84.103564、109.515034→83.318282、113.390943→80.219711ms。全部500布尔输出/最终qpos、qvel、body和geom Data相同，invalid_count=0；原screen eligible/consistent_local_effect、中位省28.886709ms。这里不是完整500控制周期，数值下界/方向提示不声称逐位同；未乘调用量外推抓放收益。
+
+原资源观察器等2794.825524s后资源空闲才实际测量，结束共享重任务为空；等待独立于组件时钟，原日志保留。Root独立回读production-local-screen.json、240测试通过日志、单变量源码与原默认入口；没有重跑旧实验。下一步固化当前源码，再原名义父→子物理对照，完整终态前不改源或提交；当前默认single-pass，尚无本轮物理结论。Knowledge=already_covered，原性能/版本范围规则保持。

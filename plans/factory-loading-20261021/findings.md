@@ -317,3 +317,7 @@ F2as下一项仅检查原标量_arm_valid的重复方向搜索。F2aq该主线�
 F2as私有实测完成：从已采用候选的approach/close/transport/release/retreat各选100个真实q6，只传机器人关节和夹爪角；500个原_arm_valid布尔输出及最终FK Data相同，全为正常valid样本。原C源码/二进制相同，候选独立ctypes对象上的私有Pythonobserver调用已有ns_evaluate_direction_hinted，包含该额外Python开销。三对wall98.590→77.464、99.207→87.047、109.622→71.840ms，CPU98.569→77.055、98.811→86.516、102.879→71.241ms，原screen eligible，中位省21.126ms。数值下界/方向/hint输出未宣称等值；无物理成绩或生产开关。
 
 该探针尚不覆盖碰撞拒绝、异常环境、owner重入和观察者修改。下一步只将已有C方向入口接到可选的标量布尔调用，保留默认原summary、原异常/观察者/缺符号回退；不能把私有observer当生产接法，也不能把500个名义状态当全域验证。private round58-scalar-direction保存完整源、Root GPT来源及local-results.json。
+
+F2as正式边界：只有布尔_arm_valid选择方向复用，ConservativeCollisionChecker默认3位置summary调用保持，所有需要数值下界的路径不选新入口。索引不是证书，原C仍逐帧全重新证明且失败/不支持时走原C搜索；observer或缺符号走原Python/ABI，不能跳过用户安装的观察。240回归通过，但正式组件和原物理尚未运行；NaN字典测试断言错误的原日志保留，不能将它描述成算法失效或通过。
+
+F2as正式组件移除了私有Python observer，以真实生产_arm_valid开关重测500实际q6；三对wall省28.887/26.204/33.142ms，CPU同向，原screen eligible。只有布尔与最终FK Data等值，未宣称原数值下界/方向/提示同位；尚需原物理证明任务与总成本收益。等待2794.826s单独记，不能作为算法提速。

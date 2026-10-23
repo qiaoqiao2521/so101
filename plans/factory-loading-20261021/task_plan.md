@@ -313,8 +313,12 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 ## F2as 标量布尔臂检查的方向搜索局部核算
 
 - [x] 私有500实际q6原_arm_valid布尔/最终FK相同，三对wall98.590→77.464、99.207→87.047、109.622→71.840ms，原screen eligible；只复用方向索引，每次重新求证。
-- [ ] 最小生产接入前补失败/异常/重入/观察者/缺符号回退；只选_arm_valid布尔接口，原评分/shortcut下界/diagnostics保持。新开关默认false，再做正式组件与原物理，不把局部当抓放通过。
+- [x] 默认关闭的最小生产接入，240相关回归通过：失败/异常/重入/观察者/缺符号回退保持，只选_arm_valid布尔接口。
+- [x] 正式500姿态三对wall112.987→84.100、109.520→83.315、113.387→80.245ms，布尔/最终FK相同，原screen eligible。
+- [ ] 固化新源码后原名义工位父→子；有可靠物理收益才已有200/200工位反序，不切默认。
 
-Current：默认direction_hint_single_pass.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as只按已测热点做私有布尔guard局部核算，未接生产。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+Current：默认direction_hint_single_pass.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as可选生产接入与正式组件通过，原物理待执行，尚未切默认。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。
+
+F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归已完成，240相关检查通过。正式500姿态三对组件待原资源等待结束；未启动原物理、未切默认。最短入口：private round58-scalar-direction/production_probe.py，再prepare_physical.py与既有round10 run_pair.py。

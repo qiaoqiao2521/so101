@@ -29,6 +29,7 @@ from released_object import ReleasedObjectQuery, floor_yaw_rotation
 from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
 
+_ORIGINAL_CHECKER_EVALUATE = CollisionChecker.evaluate
 BOX_CORNERS = np.array([[x, y, z] for x in (-1., 1.)
                         for y in (-1., 1.) for z in (-1., 1.)])
 
@@ -256,7 +257,14 @@ class VisualGraspController:
         return origin, rotation, origin+rotation @ PINCH_POINT
 
     def _arm_valid(self, q5, jaw):
-        return self.checker.evaluate(np.r_[q5, jaw], require_fixed_gripper=False)['valid']
+        evaluate = self.checker.evaluate
+        if (getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY).scalar_direction_hints
+                and type(self.checker) is CollisionChecker
+                and 'evaluate' not in vars(self.checker)
+                and getattr(evaluate, '__func__', None) is _ORIGINAL_CHECKER_EVALUATE):
+            return evaluate(np.r_[q5, jaw], require_fixed_gripper=False,
+                            direction_hints=True)['valid']
+        return evaluate(np.r_[q5, jaw], require_fixed_gripper=False)['valid']
 
     def _approach_shortcut_valid(self, q5):
         """Filter new chords by the existing conservative certificate, not CCD."""

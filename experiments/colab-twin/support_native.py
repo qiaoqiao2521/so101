@@ -289,6 +289,10 @@ def _configure_library(lib):
     lib.ns_evaluate_hinted.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64,
                                      C.c_int64, C.c_double, _DOUBLE, _INT64, _INT64, _INT64]
     lib.ns_evaluate_hinted.restype = C.c_int
+    direction = getattr(lib, 'ns_evaluate_direction_hinted', None)
+    if type(direction) is getattr(lib, '_FuncPtr', None):
+        direction.argtypes = [*lib.ns_evaluate_hinted.argtypes, _INT64, _INT64]
+        direction.restype = C.c_int
     for name in ("ns_down", "ns_up"):
         getattr(lib, name).argtypes = [C.c_double]
         getattr(lib, name).restype = C.c_double
@@ -468,6 +472,7 @@ class _BoundPairs:
         self._owner = owner
         self._pairs = pairs
         self._summary_busy = False
+        self._scalar_directions = None
         self._summary_positions = np.empty((owner.geometry_count, 3), dtype=np.float64)
         self._summary_rotations = np.empty((owner.geometry_count, 3, 3), dtype=np.float64)
         self._summary_numeric = np.empty((len(pairs), 12), dtype=np.float64)
@@ -490,7 +495,7 @@ class _BoundPairs:
         with self._owner._lock:
             return self._owner._decode(*self._owner._frame_locked(positions, rotations, self._pairs, margin, bound=True))
 
-    def summary(self, positions, rotations, margin):
+    def summary(self, positions, rotations, margin, *, direction_hints=False):
         with self._owner._lock:
             if not self._owner._handle:
                 raise RuntimeError("NativeSupport is closed")
@@ -502,8 +507,13 @@ class _BoundPairs:
                 return self._summarize(numeric, flags)
             self._summary_busy = True
             try:
-                numeric, flags = self._summary_frame_locked(positions, rotations, margin)
+                numeric, flags = self._summary_frame_locked(
+                    positions, rotations, margin, direction_hints=direction_hints)
                 return self._summarize(numeric, flags)
+            except BaseException:
+                if direction_hints and self._scalar_directions is not None:
+                    self._scalar_directions[0].fill(-1)
+                raise
             finally:
                 self._summary_busy = False
 
@@ -521,7 +531,7 @@ class _BoundPairs:
             return destination
         return converted
 
-    def _summary_frame_locked(self, positions, rotations, margin):
+    def _summary_frame_locked(self, positions, rotations, margin, *, direction_hints=False):
         owner = self._owner
         p = self._copy_summary_input(positions, self._summary_positions)
         R = self._copy_summary_input(rotations, self._summary_rotations)
@@ -531,19 +541,50 @@ class _BoundPairs:
         if q.ndim != 2 or q.shape[1] != 2:
             raise ValueError("Pairs must have shape Mx2")
         np.copyto(self._summary_hint_in, owner._witness_hints, casting="no")
+        original = owner._lib.ns_evaluate_hinted
+        directions = None
+        if direction_hints:
+            proposed = getattr(owner._lib, 'ns_evaluate_direction_hinted', None)
+            symbol_type = getattr(owner._lib, '_FuncPtr', None)
+            # An installed observer retains every original ABI call. Direction
+            # indices are private search preferences, never cached certificates.
+            if (type(original) is symbol_type
+                    and original.__name__ == 'ns_evaluate_hinted'
+                    and type(proposed) is symbol_type
+                    and proposed.__name__ == 'ns_evaluate_direction_hinted'):
+                if self._scalar_directions is None:
+                    incoming = np.full(2 * len(q), -1, dtype=np.int64)
+                    outgoing = np.empty(2 * len(q) + 2, dtype=np.int64)
+                    self._scalar_directions = (incoming, outgoing,
+                        incoming.ctypes.data_as(_INT64), outgoing.ctypes.data_as(_INT64))
+                directions = self._scalar_directions
+            elif self._scalar_directions is not None:
+                self._scalar_directions[0].fill(-1)
         # Keep margin conversion in the original left-to-right ABI argument
         # position, after owned p/R and the owner's current hint snapshot.
-        status = owner._lib.ns_evaluate_hinted(
-            owner._handle, self._summary_positions_pointer, self._summary_rotations_pointer,
-            self._summary_pairs_pointer, len(q), float(margin),
-            self._summary_numeric_pointer, self._summary_flags_pointer,
-            self._summary_hint_in_pointer, self._summary_hint_out_pointer)
+        if directions is None:
+            status = original(
+                owner._handle, self._summary_positions_pointer, self._summary_rotations_pointer,
+                self._summary_pairs_pointer, len(q), float(margin),
+                self._summary_numeric_pointer, self._summary_flags_pointer,
+                self._summary_hint_in_pointer, self._summary_hint_out_pointer)
+        else:
+            status = proposed(
+                owner._handle, self._summary_positions_pointer, self._summary_rotations_pointer,
+                self._summary_pairs_pointer, len(q), float(margin),
+                self._summary_numeric_pointer, self._summary_flags_pointer,
+                self._summary_hint_in_pointer, self._summary_hint_out_pointer,
+                directions[2], directions[3])
         if status:
             raise RuntimeError("Native frame evaluation failed closed")
         if len(q) and self._summary_flags[:, 0].all():
             hints = np.array(self._summary_hint_out, dtype=np.int64, order="C", copy=True)
             hints.setflags(write=False)
             owner._witness_hints = hints
+            if directions is not None:
+                np.copyto(directions[0], directions[1][:-2])
+        elif directions is not None:
+            directions[0].fill(-1)
         return self._summary_numeric, self._summary_flags
 
     def _summarize(self, numeric, flags):

@@ -46,7 +46,8 @@ class ConservativeCollisionChecker(CollisionChecker):
         self._native_query = self.native.bind_pairs(self.pair_indices)
         self.distance_kind = 'certified_lower_bound'
 
-    def evaluate(self, q5orq6, *, require_fixed_gripper=True, certificate_margin_m=None):
+    def evaluate(self, q5orq6, *, require_fixed_gripper=True, certificate_margin_m=None,
+                 direction_hints=False):
         margin = self.margin_m if certificate_margin_m is None else float(certificate_margin_m)
         if not math.isfinite(margin) or margin < self.margin_m:
             raise ValueError('Certificate margin must retain or increase the original guard margin')
@@ -68,9 +69,10 @@ class ConservativeCollisionChecker(CollisionChecker):
         self.data.qvel[:] = 0
         try:
             mujoco.mj_kinematics(self.model, self.data)
-            result = self._native_query.summary(self.data.geom_xpos[self.geometry_ids],
-                                                self.data.geom_xmat[self.geometry_ids].reshape(-1, 3, 3),
-                                                margin)
+            inputs = (self.data.geom_xpos[self.geometry_ids],
+                      self.data.geom_xmat[self.geometry_ids].reshape(-1, 3, 3), margin)
+            result = (self._native_query.summary(*inputs, direction_hints=True)
+                      if direction_hints is True else self._native_query.summary(*inputs))
         except (RuntimeError, ValueError) as error:
             return dict(invalid, reason='geometry_certificate_unavailable', detail=str(error))
         nearest = result['nearest_index']
