@@ -1012,3 +1012,38 @@ Next：实际残余40–70ms仍主要在controller线程CPU，且部分目标不
 原件：experiments/colab-twin/output/gc-tail-diagnostic-20261023/98e68487-3f4c-415a-8910-e0bef6095e1a/{diagnostic.json,gc-observation.json,gc-cycle-readback.json,original/}；私有round46-gc-observation/{probe.py,argv.json,pending-native-request.txt}。复跑为原argv指向的probe.py，output使用新目录；仅序列化与既有机器人仿真共用窗口。
 
 Knowledge：pending，owner=研究根Codex串行维护共享Wiki。新增候选经验为“静止目标的controller长尾须核对实际自动gen2回收；GC总时长很小也可能集中毁坏20ms周期；移动清理不能隐去总process和内存成本”。本轮只提供原GC事件与原周期对齐证据，不宣称已优化或已写Wiki。F2af本身no_reusable_delta，来源/适用范围已在原计划记录；F2ab/F2ac共享Wikipending保持。
+
+
+### F2ah GPT 接续 GC 调度（2026-10-23，四轮通过、保持可选）
+
+用户明确允许GPT直接生成候选，CodeBuddy不再作为必需前序。沿用原工厂评测入口；本轮候选来源为当前根GPT，不声称新的CodeBuddy生成或计费模型回执。用户同时撤销向「登录 X」对话发消息的授权；之后不再向该对话发送协调、完成或回写消息，实际仿真资源由本对话核对进程并串行使用。
+
+新候选defer_cyclic_gc.py只比现默认增加defer_cyclic_gc=True，map/preallocation均false。控制窗口暂停自动循环GC，原引用计数及全部物理路径不变；原worker清理之后强制收集并恢复原GC状态。外层finally覆盖原初始化/取消/清理异常，不放宽原90sim120wall；新增process_peak_rss_kib对两版同量测，不将清理或内存成本隐藏。尚未采用，也没有本轮物理结论。
+
+GitHub当前没有HTTP代理环境或git代理配置，两条新账号user请求都401，gh auth status明确报告qiaoqiao2521现有凭据无效，SSH publickey也失败。不改系统代理；已启动新账号隔离配置下官方设备授权，设备码只发用户，不写计划或提交。等待授权期间继续实验；验证有效身份后才push。
+
+沿用知识页Wiki/自动化开发范式与智能体协作「性能对照与运行版本分别绑定」：实际输入/源码/原生库及全程范围分别核对，局部不外推任务收益。
+
+F2ah相关回归67项通过，真实循环GC清理、调用者禁用状态、RuntimeError/KeyboardInterrupt退出与原90sim120wall均保留。初版binding-only局部没有持续留存日志，三对gen2全0且成本screen reject；该结果留证，不用于晋级。初轮与自有单测短暂重叠，稍后还观察到EGO/Blender并行，占用时没有启动物理。重写的是探针覆盖，不是候选或评分器：按原真实回合逐条重建并留存3768条trajectory、4条sweep、7340条release记录，数值不进入规划/策略，只恢复GC可达对象图。
+
+新局部三对在原阈值下每轮baseline均发生1次gen2，候选控制窗0次；18类/7762次原binding及全部遥测同值。最大分配批延迟30.278/32.216/32.131→.782/.782/.706ms，原minimum_suite按该目标度量eligible；同组控制总耗时screen inconclusive（其中一对反慢5.241ms），含清理总wall1.424→1.406、1.415→1.459、1.421→1.431s，未宣称算法吞吐收益。局部批不是20ms真实控制周期。
+
+确认实际机器人仿真空闲、仅低占用BlenderGUI/GPU24MiB后，启动nominal原父→子物理A/B。完整旧while循环未改，原裁判/碰撞/244点/90sim120wall保持；GC清理在原worker joins后和原截止检查前、计入lifecycle/process，新增两版共同RSS记录。尚无本轮真实时延收益结论，默认保持旧父版。GitHub官方重新授权完成，命令级本地3067代理已读回qiaoqiao2521及仓库身份；旧5提交正在正常补推，不改系统网络配置。
+
+F2ah nominal父38ff706e-c46c-4289-898a-1c00e603379c→子d57cc1dc-ed59-4c8a-9d6c-0f5f991c6efb均原pass，75.40sim/3770拍完整trajectory、release-2ms、jaw-sweeps、visual-observations全部逐位相同。4XML/初态/原评分/释放门/native核库flags/原规划路径均同值，实际只defer_cyclic_gc false→true。全process44.321906→44.198512s，CPU52.406275→51.938670s；P95 15.666654→15.660202ms、max95.760020→93.937288ms、超时69→71，不称完整50Hz或总体长尾成功。
+
+逐拍同物理输入可对齐：8.42sim 36.395→3.625ms，34.96sim 50.671→12.142ms，62.76sim 48.209→5.401ms，73.38sim 67.694→8.970ms。去掉15个旧超时，同时新增17个超时，不能只统计改善点；其它worker/负载抖动仍需分析。子GC清理173.910ms在原join之后和截止检查之前计入process/lifecycle，回收99802对象、原启用状态恢复true/无错误。主进程峰RSS1294488→1415852KiB，多118.52MiB。去除全部hold/release后同拍数wall31.541575→31.609256s反慢，controller23.076658→23.027742s小降。
+
+针对已重现的四处大延迟减少，继续同源码200/200子→父反序，仍不切默认；总慢拍未改善的反证原样保留。新账户官方授权及命令级3067代理恢复完成，原5个有效提交已正常推到ba9bc82，REST和ls-remote独立同值；本轮未提交实验仍只在本地。没有向「登录 X」发消息。
+
+F2ah第二工位首次检查遇到FishBot cooperation_sim/bridge，未启动；随后实际进程已退出，确认窗口空闲后使用原prepared同源码启动反序。未停止任何其它任务、未向被禁止对话发消息。
+
+F2ah第二工位fc9546b7-fd55-42a4-8de6-84694153823e按子77c9cffd-bec6-457e-a635-5f8dcff54440→父2d839969-e96a-4ac3-a54f-bab525daee21反序完成，均原pass。按父→子，全process53.463019→52.353008s、CPU61.945749→61.134698s；sim78.06→78.10反多1hold/1release拍；去除两等待阶段同拍数wall37.961435→36.883389s、CPU37.863164→36.783857s、controller27.431801→26.845515s下降。原规划路径/4XML/初态/评分/释放阈值/native核库flags同值，实际只GC字段变化，视觉观测逐位相同，动态轨迹/接触并非逐位相同，不能外推首工位等值结论。
+
+P95 18.757553→17.800833ms、慢拍153→135，但max96.965390→116.429359ms退化。GC清理191.333ms，回收105512对象、原状态恢复true、无错误；峰RSS1295628→1412860KiB，多114.48MiB。两子释放/脱离/回位原判通过、无安全/障碍接触，视频完整。运行前后负载随原runner记录，第二对中曾有其它Python进程约100%CPU，未停止它，也不能将所有差异归因GC。
+
+F2ah结论：可用的GC长停顿调度开关，四轮原物理通过，两个工位process/CPU均小幅下降；但整体慢拍与最大时延未稳定改善，内存增加约114–119MiB。因此保留显式defer_cyclic_gc.py，原默认仍smooth_jaw_leg_clock.py；没有完整50Hz或20+20晋级。原件output/deferred-gc-factory-20261023/{47df0702-76f9-4e76-94f3-6168a663bf32,fc9546b7-fd55-42a4-8de6-84694153823e}/含准确argv/source与原评分、全周期、GC/内存独立读回。
+
+Next：在该显式GC实验父版上，只加已有preallocate_worker_models=True；当前仍主导的最大拍正是原模型复制启动。复用原准备/模型位姿/原worker核验，不写第二执行器，也不把实验父版说成生产已采用。先同GC条件下生产helper三对，再原物理，有收益后第二工位。
+
+Knowledge：pending，owner=当前根Codex，原因是新GC/内存取舍尚在复验；共享Wiki已有并行变更，暂保留原计划来源与候选经验，不向「登录 X」请求整合或发送通知。已采用的知识仍为Wiki/自动化开发范式与智能体协作「性能对照与运行版本分别绑定」。

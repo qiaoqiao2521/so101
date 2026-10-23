@@ -185,6 +185,22 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                          scene_builder=None, progress_callback=None, cancel_check=None,
                          video_factory=None, video_stride=2, controller_options=None,
                          scene_callback=None, timing=None):
+    from episode_gc import DeferredGCWindow
+    gc_window = DeferredGCWindow()
+    try:
+        return _run_physical_episode(source, out, protocol, case, deadline,
+            video=video, scene_builder=scene_builder, progress_callback=progress_callback,
+            cancel_check=cancel_check, video_factory=video_factory, video_stride=video_stride,
+            controller_options=controller_options, scene_callback=scene_callback,
+            timing=timing, gc_window=gc_window)
+    finally:
+        gc_window.restore()
+
+
+def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
+                          scene_builder=None, progress_callback=None, cancel_check=None,
+                          video_factory=None, video_stride=2, controller_options=None,
+                          scene_callback=None, timing=None, gc_window):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
     from deferred_video import DeferredVideo
@@ -248,6 +264,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             writer=factory(model,out/'grasp-place.mp4',max_frames=2250,deadline=deadline)
         time0=float(data.time); tick=0; next_image=.5
         last={'target_frozen':False,'stage':'approach'}
+        if getattr(getattr(controller, 'route_policy', None), 'defer_cyclic_gc', False):
+            gc_window.begin()
         if timing is not None: timing.mark('initialization')
         while float(data.time)-time0 < protocol['max_sim_s']-1e-9:
             if timing is not None: timing.begin_cycle(float(data.time)-time0)
@@ -421,6 +439,11 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                 'samples': [{name: getattr(row, name) for name in
                              ('q5', 'pinch3', 'distances', 'pad_vertices')} for row in proposal.samples]}
         if timing is not None: timing.mark('controller_cleanup')
+        if gc_window.enabled_before is not None:
+            # Existing worker joins precede collection; never collect over a failed join.
+            gc_window.finish(collect='planner_cleanup_error' not in status)
+            status['gc_scheduling'] = gc_window.details
+            if timing is not None: timing.mark('gc_finalize')
         finalize_episode_video(writer,status,frame_count)
         if timing is not None: timing.mark('video_finalize')
         if renderer is not None: renderer.close()
@@ -454,6 +477,8 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         write_json(out/'release-2ms.json',release_samples)
         write_json(out/'visual-observations.json',observations)
         if timing is not None: timing.mark('artifact_write')
+        from episode_gc import peak_rss_kib
+        status['process_peak_rss_kib'] = peak_rss_kib()
         status['wall_s'] = time.monotonic()-start_wall
         if time.monotonic()>=deadline:
             status.update(passed=False,failure_reason='wall_time_limit')

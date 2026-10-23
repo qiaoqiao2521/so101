@@ -282,3 +282,12 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 ~~~
 
 运行目录为仓库根。保持原默认作对照时，将candidate改为 `smooth_jaw_leg_clock.py`；每个独立结果使用自己的output目录。上述一轮只回答对应工位，不能替代两工位比较。
+
+
+### 可选：把循环GC留到回合清理
+
+显式选用 `route_strategies/defer_cyclic_gc.py`，只增加 `defer_cyclic_gc=True`。一个独立评测进程内，在原控制窗口暂停自动循环GC，常规引用计数和阈值不变；原worker完成清理后收集，并在所有退出路径恢复调用前状态。清理在原120秒截止检查前，报告包含 `gc_scheduling` 和两版共用的 `process_peak_rss_kib`。
+
+两工位反序4轮原物理通过，原安全/244点/评分不变。两工位process分别44.322→44.199s、53.463→52.353s；但最大单拍一处96.965→116.429ms回退、RSS增加约114–119MiB，故默认仍为 `smooth_jaw_leg_clock.py`，完整50Hz未通过。它是可复跑的调度实验，不是默认常驻禁用GC。
+
+复跑沿用上面的原evaluate_station命令，将candidate改为 `experiments/colab-twin/route_strategies/defer_cyclic_gc.py`，为每次运行选择新output目录。来源和全部正反证见[工厂计划F2ah](../../plans/factory-loading-20261021/progress.md#f2ah-gpt-接续-gc-调度2026-10-23四轮通过保持可选)。
