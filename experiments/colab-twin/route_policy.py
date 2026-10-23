@@ -1,8 +1,11 @@
 """Small route preferences; geometry, guards and physical scoring stay external."""
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 import math
 from pathlib import Path
 import runpy
+
+
+_SCALAR_PREFERENCE_TYPES = (type(None), bool, int, float, str, bytes)
 
 
 @dataclass(frozen=True)
@@ -33,6 +36,7 @@ class RoutePolicy:
     scalar_direction_hints: bool = False
     compact_status_json: bool = False
     float_first_context: bool = False
+    flat_policy_preferences: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -93,6 +97,8 @@ class RoutePolicy:
             raise ValueError('Compact status JSON selection must be a boolean')
         if not isinstance(self.float_first_context, bool):
             raise ValueError('Float-first context selection must be a boolean')
+        if not isinstance(self.flat_policy_preferences, bool):
+            raise ValueError('Flat policy preferences selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
@@ -104,6 +110,10 @@ class RoutePolicy:
         return heights
 
     def preferences(self):
+        if self.flat_policy_preferences:
+            values = {field.name: getattr(self, field.name) for field in fields(self)}
+            if all(type(value) in _SCALAR_PREFERENCE_TYPES for value in values.values()):
+                return values
         return asdict(self)
 
 

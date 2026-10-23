@@ -347,3 +347,11 @@ F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归
 - [x] 同量正式三对与两站反序4/4原物理支持采用float_first_context.py；116项默认相关回归通过，低层flag仍false、旧父版可复跑。完整50Hz未过。
 
 Current：默认float_first_context.py；上一版compact_status_json.py和更早父版/原版保留。F2av两站各自同工作量CPU改善，完整秒数不全部归单一分支、不累加历史秒数。下一项依据当前未改preferences路径的7897次/asdict递归，先私有筛选仅不可变标量的直接字典，复杂类型退原asdict；未测不记成功。
+
+## F2aw 不可变策略字典转换
+
+- [x] Root GPT私有round62-flat-policy-preferences：19项等值/复制/原错误检查，7897旧次数三对wall .163390→.039891、.163546→.036686、.176172→.042718s，原screen eligible。
+- [x] 最小生产flat_policy_preferences默认false，复杂值保留原asdict，88相关回归通过；两次新诊断/测试参照错误原件保留。
+- [x] 初版旧样本已展开策略、目标调用0次，原reject数据保留但不当方法效果；仅恢复当前策略对象，计时外两侧各18目标调用且同值。
+- [x] 修正后三对完整构造wall1.247925→1.395055、1.199280→1.142444、1.243226→1.033598s；原screen inconclusive，一退两改善，拒绝本轮晋级，不追加物理。
+- 当前默认仍已验float_first_context.py；候选显式default-off并标未过完整成本/未做物理，保留三次基准/测试错误和有效负例，不按组件成绩晋级。

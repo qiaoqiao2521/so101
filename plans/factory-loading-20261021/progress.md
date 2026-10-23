@@ -1302,3 +1302,15 @@ F2av跨站完成并采用：9c03874已推且REST/ls-remote一致，35dfc6d2-731d
 采用float_first_context.py为默认，低层RoutePolicy仍false，compact_status_json.py/更早父版/原版可显式复跑；新默认116项相关检查通过，日志round61/default-tests.log。根据正式三对同量组件与两工位反序4/4物理和同工作量CPU共同采用；不合并历史绝对秒数作累计加速，不启动20+20。Knowledge=already_covered，原性能/版本规则覆盖。
 
 Next F2aw：原F2au主线程preferences7897次/.923744插桩累计秒，实际运行时asdict对每个标量递归并deepcopy。该方法在F2av未改；先在私有round62对同一当前不可变标量策略构造新字典，任意非原生不可变标量退原asdict，核验独立字典/复杂类型复制与三对成本。有局部收益才最小接入，不复试旧scalar/GC/编译，不改裁判或244点。
+
+F2aw接续：F2av采用提交d08fae9已推送且REST/ls-remote同值。private round62-flat-policy-preferences原型19检查同值，7897旧次数三对原screen eligible/CPU同向；首私有报告bool_序列化失败、首新测试字段顺序参照失败均保留原件，未把丢失计时计成功。仅报告转换/测试参照已修，不改变算法或原物理门。最小生产flat_policy_preferences默认false、复杂类型退原asdict，88相关回归通过；当前默认float_first_context保持。
+
+Next：round62/production_probe.py完整当前fused/float-first构造器18旧形状/7762旧权重三对；相同selected策略值，baseline临时用原return asdict(self)方法，候选用真实生产方法，异步快照保持。只隔离复制实现，不冒称现有flag元数据不同也逐位相同。资源等待仍原runner观察函数；有收益再固化源码并接prepare_physical.py和原run_pair.py，不新增平台或改244/90sim/120wall。Knowledge=already_covered，原性能/版本范围规则覆盖。
+
+F2aw完整构造终态并停止晋级：首版原screen reject保持，但18旧样本route_policy均预展开tuple、RoutePolicy对象0，未经过候选，判为基准覆盖缺口而非方法负结论。原件production-local-screen-attempt-1.json、production-probe-attempt-1.{py,log}及audit保留；修正只恢复相同当前selected冻结策略对象，计时外确认baseline/candidate各18次目标调用，输出/拥有关系等值。采用systematic-debugging核对实际输入/当前调用方，再改这一最早偏离点，未改生产候选或物理门。
+
+有效三对完整构造wall1.247925→1.395055、1.199280→1.142444、1.243226→1.033598s，线程CPU1.245282→1.356301、1.197083→1.127939、1.241354→1.031795s；中位省.056836s但第一对wall/CPU均退，原screen inconclusive，拒绝默认晋级，不重复三对择绿、不追加物理。初旧fixture的150.094895s共享等待与有效对照.080516s分别保留，不计组件成本。原默认float_first_context保持；flat_policy_preferences显式default-off，88相关回归通过但未过成本/未验物理，绝不以静态和组件代替交付。
+
+本轮三个诊断/测试问题均有原始记录：np.bool_报告序列化、策略字段顺序与dict排序参照混用、旧fixture预展开目标对象。修正不删除旧失败，也不将丢失计时算有效。生产原裁判/244/90sim120wall与回退保持，Git来源固化前无owned评测。Knowledge=already_covered，原Wiki性能/版本范围及必须触达真实路径的证据边界覆盖。
+
+Next F2ax：据原数百万次上下文递归与当前固定(name,value)顶层结构，只读数顶层键/中间tuple访问占比；值得才做私有精确同值的已命名字段编码候选，保留任意非标准输入原路径，不缓存动态上下文或改所有权。先量实际结构与候选目标调用，避免再用已展开fixture漏掉目标。
