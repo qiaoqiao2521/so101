@@ -1164,3 +1164,15 @@ F2an完成：源363e03b提交推送且REST/ls-remote一致，原观察器在outp
 局部沿用round47/probe_retained.py的原18形状/7762绑定fixture，只把保留遥测换为本轮F2an实际记录；遥测只作分配重放，绝不进入控制器/规划器决策。三对绑定/完整遥测输出同值，CPU1.686051→1.327692、1.680939→1.465155、1.707448→1.501845s；全含清理wall1.722507→1.327943、1.710544→1.876833、1.727232→1.509974s。原screen=inconclusive/reason=pair_has_no_consistent_wall_reduction；保留不改为pass。第二子max190.781ms，即使自动回收次数[0,0,0]仍可能大幅慢拍，原因未由本探针分离，不能声称GC开关可保证50Hz；第一/三子max.700/1.219ms仅为该局部分配重放。
 
 准入定位为“基于四个原物理GC事件的显式尾延迟对照”，不是通过局部wall收益门的默认晋级候选。已有窗口代码未变、57回归通过且三对CPU减少，直接用原物理检验此前已证实的GC停顿是否移动；不将inconclusive静默删除，不新建强前序锁或改评分。Next：原nominal成对，记录总wall/CPU、GC清理/内存/所有周期及原物理；有实际尾延迟收益才第二已有工位反序。private round54-current-gc-window保留原probe、Root GPT来源、retained-three-pair-screen与190ms反证；不联系「登录 X」。
+
+F2ao实际终态：源108e654两对全程未改源或提交。nominal 799706b3-f327-44a5-af24-e90c3ec82e86，父40e9590d-11f0-450c-906f-cf2590aeec9a→子033a8c64-ccbe-4ca2-81c7-14490b1164d7均原pass。process53.096374→30.073686s、CPU60.766700→37.589533s，sim75.86→76.04s反多10hold/少1release拍；剔除两段同3264拍，wall32.658029→19.431048s、线程CPU32.575597→19.421097s。P95 19.243815→9.379838ms、max93.432587→33.054401ms、慢拍169→12。运输/分离worker2.577222/1.093892→1.159720/.637318s，嵌套于总进程，不再相加。
+
+第二已有200/200反序cfb50e60-7990-4df9-890a-5d3ed02f4b20，子37fbb7f6-34e7-4e4c-b275-87254a28d6c8→父b30de37d-28ed-4d98-8534-3d93ae47e96f均原pass。按父→子process32.666225→37.104755s、CPU40.355982→44.397161s，sim78.88→78.84s少2hold/1lower、多1release拍。原outside计数因lower相差1而不同，进一步剔除lower后同3236拍，wall19.475640→22.536210s、CPU19.460770→22.519233s仍回退。P95 9.998783→12.010866ms、max76.518681→81.937322ms、慢拍12→30。worker1.453425/.808255→1.710190/.887243s也回退。两处matched-stage-readback.json保存原完整周期、排除阶段和逐慢拍分段，不修改原裁判。
+
+四轮抓放/静稳/释放/脱离/回位均过、安全停机0、障碍接触0、free_object=true、weld/mocap0、视频全帧；候选释放漂移.250169/.258684mm，脱离后峰力0N。两处独立pair pass/same.scorer=true，四XML/初态/阈值/native/规划路径保持，仅defer_cyclic_gc变化；动态轨迹/接触不冒称逐位同。两个worker均joined/owned_ack=true，cleanup_unconfirmed=false。候选GC清理137.842/193.114ms计入原进程，collected103193/108735、restored=true、cleanup_error=null；峰RSS1403648→1430472KiB、1346060→1392480KiB，增加26.195/45.332MiB。
+
+nominal父/子资源等待269.215/245.923s、跨站子/父1475.381/.030s，均在process之外。nominal父版中途新增Blender，跨站候选开始已有ffmpeg约210%CPU、结束仍193%，父版结束该任务已不在top；启动检查不能保证全程同负载。不能把首工位23s全归GC，也不能无证据把跨站回退全部归宿主。原局部inconclusive和190ms反证保持，不重复同工位择绿。
+
+F2ao决定：尾延迟/总成本未在第二工位复现，拒绝默认晋级；保留显式候选，默认direction_hint_preallocated.py不变。完整50Hz未过，不启动20+20。四项独立读回及matched-stage原件均齐全；源码未变，沿用原57回归，不为文档重跑物理。Knowledge=already_covered，继续采用Wiki/自动化开发范式与智能体协作「性能对照与运行版本分别绑定」；GC共享经验写回pending归本根，未向「登录 X」或其他对话发消息。
+
+Next F2ap：Root GPT在private round55-host-native只对原support_kernel.cpp追加本机指令编译选项，保留全部严格FP flags/数学顺序。先真实ABI输出等值、实际生产244点/在线弦报告与Data等值，再交替三对CPU/wall；无组件收益立即淘汰，不追加整轮物理。当前未运行此项，生产flags与默认保持。

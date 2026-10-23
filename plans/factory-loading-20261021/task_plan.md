@@ -289,8 +289,14 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 
 - [x] Root GPT仅新增direction_hint_preallocated_gc.py，复用原窗口/线程退出/恢复，57相关回归通过，默认不改。
 - [x] 新真实遥测+旧18形状分配重放三对输出同值/CPU减少，但原wall screen=inconclusive；第二子无GC仍有190ms，反证保留。
-- [ ] 按已确认的物理GC因果进行原nominal显式延迟实验，保留上述不确定结论，不冒充已过局部wall收益门；有真实尾延迟收益才跨站反序。
+- [x] 原nominal两轮物理通过，P95/max/慢拍改善；据此执行已有200/200反序，两轮物理仍通过但耗时与尾延迟回退。
+- [x] 四项独立读回、原来源/评分一致性通过；GC清理计入总成本且状态恢复。两工位收益矛盾，拒绝默认晋级，保留显式候选与局部190ms反证。
 
-Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2al/F2am各4次物理、F2an只读观察均终态后才提交；F2ao只是显式GC实验，未采用。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+## F2ap 原几何内核的本机编译局部筛选
+
+- [ ] 据实际在线controller约4–5ms及实测闭爪244点成本，只在私有进程比较原严格flags与追加-march=native，原源码、浮点严格flags及原数学顺序保持。
+- [ ] 先核对真实保存输入的全部公开结果、最终Data和raw ABI，再交替三对计时；没有可重复的组件收益就淘汰，不追加整轮物理。
+
+Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ao两工位4/4物理成功但跨站性能回退，拒绝采用；两对全部终态后才更新。F2ap仅私有局部筛选，未改生产flags。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。
