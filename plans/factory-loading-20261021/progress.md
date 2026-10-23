@@ -1509,3 +1509,11 @@ Next：固化源码后跑正式选项原名义A/B，再据实际收益第二站�
 完整慢拍127→83、153→101；候选P95 15.916/16.163ms，但最大51.163/134.155ms，完整50Hz仍未通过。全程原native认证110382→66860、117510→70864，初始244与所有间距不变。原件output/loaded-jaw-formal-factory-20261024，Kaggle私有formal-ab不可变v1/v2；round84保存真实入口和两个路径。Root GPT来源。
 
 决定选择loaded_jaw_preload.py为工厂默认，RoutePolicy()和显式父版仍保留。166算法相关测试此前通过；本次默认选择改动另跑44相关测试通过，不累计成210个独立测试。Next：固化新源码后用原evaluate_station.py直接跑名义单回合，--timing但无额外私有观察器、不传--candidate；验证实际默认选择/物理/全周期，不拿它与不同VM旧秒数作A/B。尚未产生此结果，不先记通过。Knowledge=already_covered，原第20节的验真范围与反证规则覆盖；不恢复定时器，不向其他对话发消息，不触碰Mint或他人物理工作。
+
+## F2br 默认原CLI已通过，继续F2bs回位CPU尖峰
+
+默认选择与点数文档修正14d53ce6已推送，经REST/ls-remote独立读回。Kaggle stock-default v1终态，3f16af29原pass；真实argv直接原evaluate_station.py --timing，无--candidate、无私有控制器/update/force观察器。独立runtime检查全部通过，额外default-selection核对实际loaded_jaw_preload.py/True、原CLI和一次encoder latch均True。
+
+76.60sim/47.539583process-wall/56.329792CPU，3830完整周期，P95 14.453ms/max42.783ms、62慢拍，完整50Hz仍未过。原planned/measured各244、全部安全/自由物体/抓放/释放/脱离/回位、479/479视频和两个worker清理保持；漂移.211512mm、脱离后0N。原件output/loaded-jaw-stock-default-20261024/v1，runtime及default-selection两个独立读回；私有round85和Kaggle不可变v1可恢复入口。它只验证默认可用，不与旧VM拼累计提速。
+
+Next F2bs：正式cross原输出cycle3734，separate→retreat时134.155ms中controller127.240wall/127.232thread-CPU，是同步_return_path的完整直接路径认证（非OMPL）。Root GPT先准备同原200/200回位快照的全函数小对照，只复用现有CodeBuddy F2k的box_separation_batched到_return_path作用域；现有.005、每点原_arm_valid/距离检查及阈值不改。原F2k worker-only负结果不删，不当新方向已成功；同值/同点三对原screen准入才考虑物理。当前未运行，默认保持已采用loaded_jaw_preload。Knowledge=already_covered；原第20节覆盖组件/完整/真实实现与保留反证，实验明细留项目。不恢复定时器，不向其他对话发消息，不动Mint/其他机器人资源。

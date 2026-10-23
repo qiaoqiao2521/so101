@@ -126,3 +126,7 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [正式持物策略](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-formal-ab-20261024) v1/v2，source46031fff，两站反序4/4原pass。实际选Git策略文件、没有私有控制器覆盖，唯一选项差异loaded_jaw_preload。wall57.145→51.040、54.868→50.696s，CPU同向；候选sim反多.82/1.02s，原244/所有物理安全和回退保持。完整慢拍127→83、153→101，最大仍51.163/134.155ms，完整50Hz未过。
 
 正式结果在output/loaded-jaw-formal-factory-20261024/independent-physical-inventory.json，round84保留CLI及来源。工厂现选择loaded_jaw_preload.py为默认，显式父版与RoutePolicy()保留；44默认切换相关测试通过。下一项原CLI不传--candidate、不加私有update/force观察器的单回合，尚未有结果，不先记通过或与旧VM串累计提速。
+
+[原默认CLI验收](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-stock-default-20261024) v1，source14d53ce6，3f16af29原pass。原evaluate_station.py --timing、不传--candidate、无额外私有观察器；实际加载新默认、原244/全部物理/释放回位/479完整视频/worker清理独立通过。76.60sim、47.540process-wall/56.330CPU；P95 14.453/max42.783ms、62慢拍，50Hz仍未过。此单例不作与别的VM旧数的A/B。
+
+默认原件output/loaded-jaw-stock-default-20261024，round85与云版本保留入口。下一项F2bs只核算已定位的同步直接回位CPU尖峰，复用旧CodeBuddy现成批量SAT轴，先_same输入/_return_path完整点集合与原screen，不复跑已淘汰worker-only方案追绿。

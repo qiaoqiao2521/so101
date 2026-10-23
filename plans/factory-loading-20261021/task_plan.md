@@ -538,3 +538,7 @@ F2br私有完整对照已结束：名义796670f1原版→候选、200/200反序0
 F2br正式源码46031fff两站原物理4/4通过，全部独立读回完成。名义63c9aafd（c17a4ddc→4248e219）、200/200反序44f6782a（0c829902→0d4d12d6），实际只差loaded_jaw_preload，未覆盖控制器方法。process wall57.144542→51.039758、54.868112→50.695892s，CPU66.594016→60.786096、64.620440→60.672692s；原244/模型/原生库/评分/安全/释放回位保持。完整慢拍127→83、153→101，50Hz未过。
 
 已按两站可靠收益选择loaded_jaw_preload.py作为工厂默认；RoutePolicy()和显式父版保持原行为。切默认相关44测试通过，算法166测试此前通过。Next：新源码原CLI单回合，不带私有update/force观察器、不传--candidate，验证真正默认入口；其独立结果尚未产生，不先记通过。原scorer/90sim120wall保持，不开启20+20。
+
+原默认CLI已验收：source14d53ce6，3f16af29原pass；76.60sim、47.539583process-wall/56.329792CPU，原244/安全/释放/脱离/回位、479完整帧、两个worker清理独立全过。真实加载默认loaded_jaw_preload.py、无candidate参数、无私有控制器/update/force观察器，只有原计时。P95 14.453/max42.783ms，62慢拍，完整50Hz未过。此单回合不与异VM旧秒数作相对提速。
+
+Next F2bs：正式200/200最慢拍位于separate→retreat，134.155ms中controller127.240wall/127.232thread-CPU；_return_path正在同步完整认证直接回位。先用原已验收200/200的回位输入，复用已有CodeBuddy F2k的box_separation_batched，只比较_return_path范围的原scalar与现成batch轴；逐位/全部点/原screen三对先行。原F2k worker-only整程负结果保留，不混称新方案；尚未运行，不变默认或安全阈值。

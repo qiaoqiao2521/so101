@@ -4,7 +4,7 @@
 
 工厂默认选择`route_strategies/loaded_jaw_preload.py`，仅在抬起后用编码器/旧命令锁定一次半残差目标，沿原1.5s hold连续接入，并同步原运输准入端点。原始两类244点闭合预检、全部在线碰撞、模型、90sim/120wall及释放/脱离/回位判据保持。底层`RoutePolicy()`仍为原版，`float_first_context.py`可显式复跑。
 
-正式源码46031fff在两站反序4/4原pass：process wall57.145→51.040、54.868→50.696s，CPU同降。候选sim反多.82/1.02s，原安全与完整回位不改；相关166测试通过，完整50Hz仍未过。默认选择已切换，下一项是不带额外观察器的原CLI单回合验收。显式复跑：
+正式源码46031fff在两站反序4/4原pass：process wall57.145→51.040、54.868→50.696s，CPU同降。候选sim反多.82/1.02s，原安全与完整回位不改；相关166测试通过。默认切换后原CLI单回合3f16af29通过：无私有观察器、不传candidate，76.60sim/47.540process-wall，479/479视频完整。完整P95 14.453ms但62拍超过20ms，完整50Hz仍未过。显式复跑：
 
 ```bash
 python experiments/colab-twin/evaluate_station.py \

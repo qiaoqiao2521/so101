@@ -608,3 +608,7 @@ F2br私有原物理source6ef85f70：名义796670f1（6791f1d4→519e72b2）、20
 第二站lower多1拍。候选多等待、原完整扫掠仍逐点认证，原始闭合仍244；全程native状态110382→66860、117510→70864。原运输worker wall2.088899→2.241538、2.486840→2.805327s，未提速；分离1.219243→1.196707、1.578827→1.624508s。最大51.163/134.155ms，完整50Hz未过。原件与独立库存output/loaded-jaw-formal-factory-20261024；私有round84保存正式入口、两路径与云版本，不与前轮不同负载秒数相加。
 
 决定：正式两站wall/CPU与匹配阶段工作量支持采用。工厂DEFAULT_SOURCE选择loaded_jaw_preload.py，低层RoutePolicy()及显式父版不变，44切换相关测试通过。随后用不加私有观察器/不传candidate的原CLI验默认；尚未有此验收结果。余下极慢拍仍需进一步定位，不能用这次收益宣称完整50Hz。
+
+原默认CLI验收source14d53ce6，3f16af29原pass：原参数直接evaluate_station.py --timing，不带candidate或私有观察器。实际默认加载loaded_jaw_preload.py，一次encoder latch记录；全部原物理/244/来源/完整周期/479视频和清理通过。76.60sim/47.539583process-wall/56.329792CPU；3830完整拍，P95 14.453ms/max42.783ms、62拍超20ms。单回合只验默认可用，不能把它与其他VM/观察范围的数值相减算新收益。原件output/loaded-jaw-stock-default-20261024，独立runtime及default-selection读回齐全。
+
+下一条已定位证据：正式200/200回位切换cycle3734（t=74.68s）总134.155ms，controller127.240wall/127.232thread-CPU，前帧separate、当帧retreat。_return_path原直接路径验证.005rad，method=validated_direct；不能归因等待或OMPL重搜。ReleasedObjectQuery.distances对pad调用scalar SAT，现成box_separation_batched尚只用于可选冻结worker。F2k worker-only完整70.320→104.705s的负结果与220/170局部inconclusive保留；新假设仅是此同步return范围复用现成批量轴的CPU收益，先同值/同点/三对组件，不先发新物理或假定能过20ms。数学实现原作者CodeBuddy/DeepSeek Pro，当前薄接入由Root GPT，不冒称新CLI生成。
