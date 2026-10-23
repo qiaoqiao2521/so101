@@ -383,3 +383,17 @@ F2ax原名义物理终态：source c244b25两侧干净，仅named_context_freeze
 运输worker6.815939s且joined/owned_ack；分离worker在原墙钟退出时abort_requested=true、state=rejected，joined/owned_ack且cleanup_unconfirmed=false。初始化14.346100s和清理/产物落盘保留在总成本；恢复后资源等待.175506s单列。原启动观察active=[]，运行中出现Blender29863；load1 11.95→42.48，ffmpeg/Chrome亦活跃。保留这些混杂，不能把131s全归因代码、插桩或宿主中的任何单项，也不放宽120s重测。
 
 本轮只提供部分主线程归因：3379完整拍和1未完整拍，_sweep_binding6772次、_immutable_float_first_context3310824次、validate_joint_path3463次、scalar summary22188次；工作线程未插桩。原完整拍P95 73.405771ms/max255.357161ms/2344慢拍属于有插桩且未完成回合，不作无插桩速度对照或50Hz成绩。证据output/post-float-first-profile-20261023/4d681d22-bb8e-4de1-bb14-70580ef579ba/independent-profile-readback.json。下一项先看当前原始数组字段和Python逐浮点编码，不直接重复旧CLI13前置snapshot或已淘汰的named/flat/GC候选。
+
+## F2az 原生数组字节编码筛选（2026-10-24）
+
+Root GPT私有round65-array-bit-context，仅将原生float64一/二维数组复制为独立大端数组，再检查有限值并构造相同逐元素字节token。原类型/形状回退保持，无跨请求缓存；本项与旧CLI13前置snapshot不同。当前构造器原AST静态地图循环在b27bb920记录的六关节规划场景上生成12几何/36数组：24个shape3、12个shape3×3。计时外父36次tolist，子36次astype/36次tobytes，actual_path_verified=true；没有复用已展开tuple漏测新分支。
+
+35项值/错误/负零/非连续/只读/副本拥有检查同值，但同地图字段和当前策略的SweepBinding组件三对wall .651431→1.452214、.662612→1.466075、.668792→1.452461s；线程CPU .651376→1.445277、.662446→1.440201、.668405→1.429502s，全部增加。原screen reject/no_median_local_effect，中位多.800783s，等待719.079694s单列。只按6772次部分回合绑定计数重复同一真实静态地图，不冒称全部35字段、6772唯一在线输入或完整物理收益。
+
+淘汰且不追加全上下文/原物理/第二工位，无生产接入或默认变化。independent-readback.json保留原screen、路径计数、输入来源与三对反证；复跑private round65-array-bit-context/probe.py。已将小数组额外分配的反证反馈给Root GPT：下一私有变体round66-array-row-context只保留原tolist、逐浮点math.isfinite/struct.pack并减少已知浮点行中的递归分派，不改精度/阈值/缓存。尚无该变体成本结果。
+
+F2ba准备时发现旧cache/so101-graspgenx目录已缺失，并非只有解释器软链接失效；原因/操作方未知，未推断为算法故障。原语法命令127记录于round66/runtime-missing-before-probe.json。优先检查了项目已知环境位置和用户数据目录，未发现迁移副本；复用已安装CPython3.11.15，在.local/share/ros2-factory/venv311新建独立环境，不重新拉取GraspGenX仓库或改变项目执行架构。
+
+原requirements.txt的SciPy1.18.1只支持Python>=3.12，不能充当已删除3.11环境的完整锁定清单；首安装解析失败保留runtime-install-attempt-1.log/json。保留已记录的CPython3.11.15与MuJoCo3.15.0，兼容解析后NumPy2.4.6、SciPy1.17.1、Mink1.1.0、OMPL2.0.1、imageio2.37.0、imageio-ffmpeg0.6.0，18包精确清单存runtime-freeze.txt。旧NumPy/SciPy版本不可考证，因此明示为新环境，不声称完全还原或跨环境拼接原秒数。
+
+runtime-recovery-readback.json确认原station_executor等9项模块导入，原六关节规划场景nq=nv=6/ngeom=65，CPU reset/step10次至.020s、qpos有限；不渲染、不接实机。该检查不是完整抓放或50Hz验收。后续原版/候选须同用新的明确Python路径；若进入物理A/B，以其中原版的原评分作为新环境基线，保留旧物理证据的旧环境范围。

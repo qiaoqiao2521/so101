@@ -1336,3 +1336,15 @@ F2ay当前归因终态：原round64-current-profile/prepared-path.txt指向4d681
 独立回读independent-profile-readback.json：抓起40.998841mm、hold32.30s、place=false/settled=0、release未detached、回位未完成；安全0/障碍0/free=true/weld-mocap0，planned/measured均244。运输workerjoined/owned_ack；分离worker随超时中止并rejected，joined/owned_ack、cleanup_unconfirmed=false。视频423捕获/0编码且不完整，不宣称全流程通过。恢复后等待.175506s另计，中途新增Blender29863，load1 11.95→42.48及ffmpeg/Chrome负载保留；原时限不放宽、不重复择绿。
 
 当前部分主线程共37260346调用，_sweep_binding6772次、float-first编码3310824次；3379完整拍+1未完整拍。完整拍P95 73.405771ms/max255.357161ms/2344超20ms仅属于这次插桩失败，不代替正常性能基线或50Hz验收。Next：先核对当前数组原始类型与编码路径是否触达，再考虑仅私有的同float64字节编码探针；旧CLI13只跳过前置snapshot，不能将它与本轮已合并后的编码混为同一实验。先读真实路径、再三对局部，无可靠收益不接生产或原物理。Knowledge=already_covered，原证据范围/性能负例规则覆盖。
+
+F2az私有终态：round65-array-bit-context独立读回原local-screen/输入/目标计数/35等值检查。原构造器静态地图12几何，24个shape3+12个shape3×3；父tolist36，子astype/tobytes各36，实际路径确认。按原部分回合6772次计数重复同地图，三对wall .651431→1.452214、.662612→1.466075、.668792→1.452461s，线程CPU三对分别多.793901/.777756/.761098s。原screen reject/no_median_local_effect、中位wall多.800783s；719.079694s共享等待另计，不是算法成本。
+
+淘汰，不追加完整上下文/原物理/跨站，不接生产，不改变float_first_context默认；保留candidate-origin.json、input-audit.json、target-calls.json、equivalence.json、local-screen.json和independent-readback.json。该组件只覆盖当前原静态地图字段与策略，不冒称全部35字段或唯一在线数据；原物理裁判/244/90sim120wall均未触碰。Knowledge=already_covered，原真实路径、组件/物理范围和负例规则覆盖。
+
+Next F2ba：Root GPT按F2az反证生成round66-array-row-context候选，去掉小数组额外复制/字节转换，保留原tolist拥有快照及每个浮点的finite/struct.pack，仅把已知原生float64行的叶子编码内联。仍是私有组件，先在计时外检查36次tolist和60次行函数，再沿用原资源观察与三对局部入口probe.py；未测不记收益，未过完整上下文前不接生产/原物理。
+
+F2ba运行前环境缺失：固定旧Python命令127，核实整个.cache/so101-graspgenx已不在，非软链接问题；当前boot未再变化，删除原因/操作方未知。保留runtime-missing-before-probe.json，未把未运行记为算法失败。已有同版CPython3.11.15可用，已在/home/muqiao/.local/share/ros2-factory/venv311建立独立运行环境；没有改原裁判、模型、244点、安全余量或回退。
+
+首按文档直接依赖安装时SciPy1.18.1要求Python>=3.12，解析失败原件保留。新环境保留CPython3.11.15/MuJoCo3.15.0，兼容解析NumPy2.4.6/SciPy1.17.1，其余直接依赖Mink1.1.0/OMPL2.0.1/imageio2.37.0/imageio-ffmpeg0.6.0；精确18包清单、安装日志及独立readback均在round66。旧NumPy/SciPy不可考证，不称完全还原或将新旧耗时相加。
+
+已确认9模块/原评测入口可导入，原六关节模型65geom、10步.020s、qpos有限；私有candidate/probe语法通过，仅是运行预检，完整原物理基线仍待后续原A/B，新环境内两侧必须一致。Next入口：/home/muqiao/.local/share/ros2-factory/venv311/bin/python /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round66-array-row-context/probe.py。先按既有资源观察等待；生产默认保持float_first_context，完整50Hz未过。Knowledge=already_covered，环境/性能证据边界由原规则覆盖。

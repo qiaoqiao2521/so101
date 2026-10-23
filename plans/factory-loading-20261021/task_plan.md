@@ -373,3 +373,12 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 - [x] source3459889干净的原cProfile回合b27bb920触发wall_time_limit，67.58sim/130.915process-wall；抓起但未完成释放脱离/回位，原fail保留，不冒充完整成功或50Hz证据。
 - [x] 独立回读3379完整拍、原planned/measured各244点、worker清理和当前调用量；保留中途新增Blender、负载上升及不完整视频，不为择绿复跑。
 - 当前仍有3310824次float-first编码、6772次_sweep_binding。下一项仅私有核对实际数组字段与逐元素编码成本；与旧CLI13前置快照区分，实际目标未触达或组件无收益即停止，不改默认或原裁判。
+
+## F2az 数组字节编码的私有筛选
+
+- [x] 执行当前构造器原静态地图循环；12工位几何产生24个shape3和12个shape3×3原生float64数组，目标36次实际选中。
+- [x] 35项值/错误/拥有关系检查同值；按部分回合6772次绑定计数作同地图重复三对，wall .651431→1.452214、.662612→1.466075、.668792→1.452461s全部回退，原screen reject。
+- [x] 淘汰字节化候选，不接生产、不做完整上下文或物理；保留原件、719.079694s资源等待单列，默认不变。
+- Next F2ba：依据小数组额外分配反证，只私有比较保留原tolist/finite/struct.pack的逐行编码，路径round66-array-row-context/probe.py；先核对实际行调用再三对，不扫阈值、不减少原检查。
+
+运行环境接续：旧/home/muqiao/.cache/so101-graspgenx整个目录已缺失，F2ba尚未运行时语法命令退出127，原件保留。现用/home/muqiao/.local/share/ros2-factory/venv311/bin/python，CPython3.11.15/MuJoCo3.15.0，NumPy2.4.6/SciPy1.17.1及全部依赖版本已存round66/runtime-freeze.txt。已过入口导入和原六关节模型10步reset/step；完整原物理尚未在新环境验收，不跨环境累计提速。
