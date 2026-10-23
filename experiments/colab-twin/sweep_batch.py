@@ -20,7 +20,8 @@ _LIB = None
 _PREPARED = False
 _LOAD_LOCK = RLock()
 _META = {'available': False, 'calls': 0, 'checked_states': 0, 'native_calls': 0,
-         'successful_frames': 0, 'fallbacks': 0}
+         'successful_frames': 0, 'fallbacks': 0, 'direction_sweeps': 0,
+         'direction_hint_attempts': 0, 'direction_certificate_work': 0}
 _KINEMATICS = C.CFUNCTYPE(C.c_int, C.c_void_p)
 _DOUBLE = C.POINTER(C.c_double)
 _INT64 = C.POINTER(C.c_int64)
@@ -68,6 +69,10 @@ def _get_bridge():
                 _INT64, C.c_int64, C.c_double, _DOUBLE, _DOUBLE, _DOUBLE,
                 _INT64, _INT64, _INT64, _INT64, _INT64]
             lib.sb_run.restype = C.c_int
+            direction_run = getattr(lib, 'sb_run_direction', None)
+            if direction_run is not None:
+                direction_run.argtypes = [*lib.sb_run.argtypes, _INT64]
+                direction_run.restype = C.c_int
             _LIB = lib
             _META.update(available=True, library_path=str(output),
                          mujoco_version=mujoco.__version__,
@@ -79,7 +84,7 @@ def _get_bridge():
         return _LIB
 
 
-def make_validator(checker):
+def make_validator(checker, *, direction_hints=False):
     """Return None before any query when the original scalar path is required."""
     from conservative_collision import ConservativeCollisionChecker
     if (type(checker) is not ConservativeCollisionChecker
@@ -104,6 +109,25 @@ def make_validator(checker):
     if len(ids) != owner.geometry_count or not len(bound._pairs):
         return None
     ids.setflags(write=False)
+    # Preserve an installed ABI observer. Only an untouched library symbol may
+    # select the new strategy; re-check its identity at every invocation too.
+    original_fn = owner._lib.ns_evaluate_hinted
+    direction_fn = direction_run = None
+    if direction_hints:
+        proposed = getattr(owner._lib, 'ns_evaluate_direction_hinted', None)
+        run = getattr(lib, 'sb_run_direction', None)
+        symbol_type = getattr(owner._lib, '_FuncPtr', None)
+        if (type(original_fn) is symbol_type
+                and original_fn.__name__ == 'ns_evaluate_hinted'
+                and type(proposed) is symbol_type
+                and proposed.__name__ == 'ns_evaluate_direction_hinted'
+                and run is not None):
+            proposed.argtypes = [*original_fn.argtypes, _INT64, _INT64]
+            proposed.restype = C.c_int
+            direction_fn, direction_run = proposed, run
+        else:
+            warnings.warn('Optional sweep direction hints unavailable or observed; '
+                          'using original batch checks', RuntimeWarning)
 
     def validate(states):
         # Observers and custom predicates retain their original Python calls.
@@ -140,16 +164,23 @@ def make_validator(checker):
                 return None
             committed = np.array(owner._witness_hints, dtype=np.int64, order='C', copy=True)
             info = np.full(5, -1, dtype=np.int64)
+            work = np.zeros(2, dtype=np.int64)
+            use_direction = (direction_fn is not None and fn is original_fn
+                             and owner._lib.ns_evaluate_direction_hinted is direction_fn
+                             and lib.sb_run_direction is direction_run)
+            run = direction_run if use_direction else lib.sb_run
+            query = direction_fn if use_direction else fn
             bound._summary_busy = True
             try:
-                status = lib.sb_run(model._address, data._address,
+                status = run(model._address, data._address,
                     q.ctypes.data_as(_DOUBLE), len(q), ids.ctypes.data_as(_INT64), len(ids),
-                    handle, C.cast(fn, C.c_void_p), C.cast(protected_fk, C.c_void_p), None,
+                    handle, C.cast(query, C.c_void_p), C.cast(protected_fk, C.c_void_p), None,
                     bound._summary_pairs_pointer, len(bound._pairs), checker.margin_m,
                     bound._summary_positions_pointer, bound._summary_rotations_pointer,
                     bound._summary_numeric_pointer, bound._summary_flags_pointer,
                     bound._summary_hint_in_pointer, bound._summary_hint_out_pointer,
-                    committed.ctypes.data_as(_INT64), info.ctypes.data_as(_INT64))
+                    committed.ctypes.data_as(_INT64), info.ctypes.data_as(_INT64),
+                    *([work.ctypes.data_as(_INT64)] if use_direction else []))
                 if status:
                     _META['fallbacks'] += 1
                     return None  # C preconditions reject before any state mutation.
@@ -162,6 +193,10 @@ def make_validator(checker):
         _META['checked_states'] += int(info[0])
         _META['native_calls'] += int(info[2])
         _META['successful_frames'] += int(info[3])
+        if use_direction:
+            _META['direction_sweeps'] += 1
+            _META['direction_hint_attempts'] += int(work[0])
+            _META['direction_certificate_work'] += int(work[1])
         if errors and not isinstance(errors[0], (RuntimeError, ValueError)):
             raise errors[0]
         return int(info[0]), int(info[1])

@@ -267,3 +267,13 @@ F2aj第二已有工位反序原物理2/2pass，但父→子process58.056→84.72
 ## F2ak 244点重复量与实际输入差异
 
 同原采样/29几何/285pair只读数11条实际弦，计划闭爪244点中259/285对位姿恒定，但实测闭爪及多数在线弦仅44/285对恒定；约.000526rad的跟踪差足以改变其余精确键。90.877%不能当实际244控制尖峰的普遍收益；15.439%仍只是位姿复用数量上界，hint/FPU与每对计算成本未证明。未实现新缓存或跳过检查；下一项只量这44对原成本，值得才生成实现。原计数入口private round50-static-work-count/count.py。
+
+私有原C入口复制加逐对clock归因：549状态/156465pair全部numeric/flags/hints与原入口逐位同，生产未改。可复用对占计划闭爪约57.45%计时，但实测闭爪仅3.643%（约1.776/48.738ms），在线代表仅3.36–3.82%；clock开销未扣，fresh提示重建也不冒称历史实际hin。否决为44对构建大缓存，先按同一局部数据排耗时pair和19方向搜索重复度，避免再花77s物理试错。旧固定轴norm复用已实测只省1.298ms，不重复该候选。
+
+## F2al 成功方向可复用，几何证据必须重算
+
+原pair284腕/活动指和pair2台面/肩在所有样本都用mode2/axis2、22次证书搜索；相邻所选mode/axis为242/243一致，在线运输52/54。新策略只存每对mode/index，每次从当前姿态重新构造原方向、双次原归一化及原certificate，全部pair/244点保留。任一hint失败、冷输入、trap或有界域外都整次原查询，不保留半成品证书。原树/投影/证书与原sb_run函数不改；无目标物体真值或pair/坐标硬编码。
+
+这是搜索策略，成功时方向/下界/求证次数及顶点hint可不同；不能宣称raw14字段实施等值。私有2816实际ABI、802560有效性与17异常前缀通过，失败全查询numeric/flags/hints逐位同；独立200位Decimal核对三类实际pair的全部编译顶点包络及原margin。生产三对11弦/773点CPU .866855→.336694、.797435→.298601、.847955→.420132s，报告/最终Data逐位同。仅组件准入，不是整回合或50Hz成绩。
+
+公开候选route_strategies/direction_hint_sweep.py仅相对原默认加一bool。原ABI观察者在factory前后安装都保留逐点调用；新符号缺失保留原batch；protected Python FK/首错前缀/原异常对象/owner锁不变。101回归通过。复跑与来源private round51-direction-hints/{candidate-origin.json,production_probe.py,production-results.json,regression.py,regression-results.json}；候选来源Root GPT，未冒称调用CodeBuddy。

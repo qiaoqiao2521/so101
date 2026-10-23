@@ -28,6 +28,7 @@ class RoutePolicy:
     preallocate_worker_models: bool = False
     defer_cyclic_gc: bool = False
     pose_only_fk: bool = False
+    direction_hint_sweep: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -78,6 +79,8 @@ class RoutePolicy:
             raise ValueError('Deferred cyclic GC selection must be a boolean')
         if not isinstance(self.pose_only_fk, bool):
             raise ValueError('Pose-only FK selection must be a boolean')
+        if not isinstance(self.direction_hint_sweep, bool):
+            raise ValueError('Sweep direction hint selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

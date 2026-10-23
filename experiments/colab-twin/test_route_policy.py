@@ -62,6 +62,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(preallocate_worker_models=1)
         with self.assertRaises(ValueError):
             RoutePolicy(defer_cyclic_gc=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(direction_hint_sweep=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -148,6 +150,13 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertFalse(original.leaf_packed)
         self.assertEqual(original, RoutePolicy())
         self.assertEqual(source['entrypoint_path'], str(BASELINE_SOURCE.resolve()))
+
+    def test_direction_hint_candidate_changes_only_search_preference(self):
+        parent, _ = load_route_policy()
+        child, _ = load_route_policy(
+            Path(__file__).parent/'route_strategies/direction_hint_sweep.py')
+        self.assertFalse(parent.direction_hint_sweep)
+        self.assertEqual(child.preferences(), dict(parent.preferences(), direction_hint_sweep=True))
 
     def test_inline_parent_and_original_remain_available(self):
         child, source = load_route_policy(

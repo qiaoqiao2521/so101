@@ -1,6 +1,6 @@
 // Optional sequential sweep bridge: per-sample FK (via Python closure callback) + the
-// original native query, in one C call. No heap, globals, caching, or model
-// mutation; never direct mj_kinematics here. Simulation-only.
+// original native query, in one C call. No globals or model mutation; never
+// direct mj_kinematics here. Optional direction hints are invocation-local.
 //
 // Error semantics: FK runs inside the caller's original mujoco.mj_kinematics
 // call so Python error scope stays in force; the callback catches BaseException
@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
+#include <memory>
+#include <vector>
 
 extern "C" {
 
@@ -139,6 +141,52 @@ int sb_run(const mjModel* model, mjData* data,
     info[1] = -1;
     info[4] = 0;  // all valid
     return 0;
+}
+
+typedef int (*NativeDirectionEval)(void*, const double*, const double*, const int64_t*,
+    int64_t, double, double*, int64_t*, const int64_t*, int64_t*, const int64_t*, int64_t*);
+struct DirectionBridge {
+    void* native_handle;
+    NativeDirectionEval evaluate;
+    std::vector<int64_t> in, out;
+    int64_t attempts=0, certificates=0;
+    DirectionBridge(void* handle,NativeDirectionEval fn,int64_t count)
+      :native_handle(handle),evaluate(fn),in(static_cast<std::size_t>(count)*2,-1),out(in.size()+2,-1) {}
+};
+static int evaluate_direction_bridge(void* raw,const double* positions,const double* rotations,
+    const int64_t* pairs,int64_t count,double margin,double* numeric,int64_t* flags,
+    const int64_t* hint_in,int64_t* hint_out) {
+    auto* work=static_cast<DirectionBridge*>(raw);
+    const int status=work->evaluate(work->native_handle,positions,rotations,pairs,count,margin,
+        numeric,flags,hint_in,hint_out,work->in.data(),work->out.data());
+    if (status==0) {
+        work->attempts+=work->out[static_cast<std::size_t>(count)*2];
+        work->certificates+=work->out[static_cast<std::size_t>(count)*2+1];
+        bool all_valid=true;
+        for (int64_t i=0;i<count;++i) all_valid &= flags[6*i]!=0;
+        if (all_valid) std::copy(work->out.begin(),work->out.begin()+work->in.size(),work->in.begin());
+    }
+    return status;
+}
+int sb_run_direction(const mjModel* model,mjData* data,const double* states,int64_t state_count,
+    const int64_t* ids,int64_t geometry_count,void* native_handle,NativeDirectionEval evaluate,
+    Kinematics kinematics,void* context,const int64_t* pairs,int64_t pair_count,double margin,
+    double* positions,double* rotations,double* numeric,int64_t* flags,int64_t* hint_in,
+    int64_t* hint_out,int64_t* committed,int64_t* info,int64_t* strategy_work) {
+    if (!native_handle || !evaluate || pair_count<=0 || !strategy_work) return 1;
+    std::unique_ptr<DirectionBridge> work;
+    try { work=std::make_unique<DirectionBridge>(native_handle,evaluate,pair_count); }
+    catch (...) { return 1; } // Before original sb_run changes any state.
+    // Delegate every FK, bounds check, first-failure prefix and error callback
+    // to the original engine. No second sweep loop or execution scheduler.
+    const int status=sb_run(model,data,states,state_count,ids,geometry_count,work.get(),
+        evaluate_direction_bridge,kinematics,context,pairs,pair_count,margin,positions,
+        rotations,numeric,flags,hint_in,hint_out,committed,info);
+    if (status==0) {
+        strategy_work[0]=work->attempts;
+        strategy_work[1]=work->certificates;
+    }
+    return status;
 }
 
 } // extern "C"

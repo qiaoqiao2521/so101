@@ -930,6 +930,126 @@ int ns_evaluate_hinted(void* raw,const double* positions,const double* rotations
         return 0;
     }
 }
+// Optional per-sweep search hints. Arrays are disjoint; direction_in has
+// 2*count mode/index entries, direction_out has 2*count+2 entries. Its final
+// entries report attempted hints and all certificate work including fallback.
+int ns_evaluate_direction_hinted(void* raw,const double* positions,const double* rotations,
+                       const std::int64_t* pairs,std::int64_t count,double margin,
+                       double* output,std::int64_t* flags,
+                       const std::int64_t* hint_in,std::int64_t* hint_out,
+                       const std::int64_t* direction_in,std::int64_t* direction_out) {
+    if (!direction_in || !direction_out || direction_in==direction_out) return 1;
+    if (!raw||!positions||!rotations||!pairs||!output||!flags||!hint_in||!hint_out||
+            hint_in==hint_out||count<0) return 1;
+
+    std::int64_t attempted=0;
+    auto original_query = [&]() {
+        const int status=ns_evaluate_hinted(raw,positions,rotations,pairs,count,margin,
+                                            output,flags,hint_in,hint_out);
+        if (status==0) {
+            std::fill(direction_out,direction_out+2*count+2,std::int64_t{-1});
+            std::int64_t original_work=0;
+            for (std::int64_t i=0;i<count;++i) original_work+=flags[i*NINT+3];
+            for (std::int64_t i=0;i<count;++i) if (flags[i*NINT]) {
+                direction_out[2*i]=flags[i*NINT+1];
+                direction_out[2*i+1]=flags[i*NINT+2];
+            }
+            direction_out[2*count]=attempted;
+            direction_out[2*count+1]=attempted+original_work;
+        }
+        return status;
+    };
+    auto* context=static_cast<Context*>(raw);
+    Result failed;
+    if (!environment()) failed.reason=5;
+    else if (!std::isfinite(margin)||margin<=0.) failed.reason=4;
+    bool frame_valid=failed.reason==0;
+    for (std::size_t g=0;g<context->geoms.size()&&frame_valid;++g) {
+        for (int j=0;j<3;++j) frame_valid &= std::isfinite(positions[g*3+j]);
+        for (int j=0;j<9;++j) frame_valid &= std::isfinite(rotations[g*9+j]);
+    }
+    std::fill(hint_out,hint_out+6*context->geoms.size(),std::int64_t{-1});
+    std::fill(direction_out,direction_out+2*count+2,std::int64_t{-1});
+    direction_out[2*count]=direction_out[2*count+1]=0;
+    if (!frame_valid) {
+        if (!failed.reason) failed.reason=3;
+        for (std::int64_t i=0;i<count;++i) write_result(failed,output+i*NFLOAT,flags+i*NINT);
+        return 0;
+    }
+    try {
+
+        const bool enabled=witness_traps_masked();
+        // Only use the reordered path in a bounded, trap-masked domain where
+        // every original direction calculation remains finite. Unsupported
+        // inputs execute the unchanged original query, not a weaker rejection.
+        bool hint_safe=enabled && margin<=1.;
+        for (std::size_t g=0;g<context->geoms.size() && hint_safe;++g) {
+            for (int j=0;j<3;++j) {
+                hint_safe &= std::abs(positions[3*g+j])<=1e6;
+                hint_safe &= std::isfinite(context->geoms[g].low[j]) &&
+                             std::abs(context->geoms[g].low[j])<=1e6;
+                hint_safe &= std::isfinite(context->geoms[g].high[j]) &&
+                             std::abs(context->geoms[g].high[j])<=1e6;
+            }
+            for (int j=0;j<9;++j) hint_safe &= std::abs(rotations[9*g+j])<=4.;
+        }
+        if (!hint_safe) return original_query();
+        for (std::int64_t i=0;i<count;++i)
+            if ((direction_in[2*i]!=1 && direction_in[2*i]!=2) ||
+                    direction_in[2*i+1]<0 || direction_in[2*i+1]>=19)
+                return original_query();
+        std::vector<Frame> frames(context->geoms.size());
+        for (std::size_t g=0;g<frames.size();++g) {
+            frames[g].geom=&context->geoms[g];
+            std::copy(positions+3*g,positions+3*g+3,frames[g].p.begin());
+            std::copy(rotations+9*g,rotations+9*g+9,frames[g].R.begin());
+            if (context->geoms[g].kind==1) {
+                for (int k=0;k<6;++k) {
+                    const auto id=hint_in[6*g+k];
+                    if (id>=0 && static_cast<std::uint64_t>(id)<context->geoms[g].points.size()/3)
+                        hint_out[6*g+k]=id;
+                }
+                if (enabled) {
+                    frames[g].hint_in=hint_in+6*g;
+                    frames[g].hint_out=hint_out+6*g;
+                }
+            }
+        }
+        for (std::int64_t i=0;i<count;++i) {
+            const auto a=pairs[2*i],b=pairs[2*i+1];
+            if (a<0||b<0||static_cast<std::size_t>(a)>=frames.size()||
+                    static_cast<std::size_t>(b)>=frames.size()) return original_query();
+            const auto axis=direction_in[2*i+1];
+            Vec n{};
+            if (axis<3) n[axis]=1.;
+            else if (axis==3) n={frames[b].p[0]-frames[a].p[0],
+                                frames[b].p[1]-frames[a].p[1],
+                                frames[b].p[2]-frames[a].p[2]};
+            else if (axis<7) n=column(frames[a],static_cast<int>(axis-4));
+            else if (axis<10) n=column(frames[b],static_cast<int>(axis-7));
+            else n=cross(column(frames[a],static_cast<int>((axis-10)/3)),
+                         column(frames[b],static_cast<int>((axis-10)%3)));
+            // The original list normalizes once before certificate(), which
+            // normalizes again. Keep that exact direction construction.
+            Result result;
+            if (!normalize(n)) return original_query();
+            ++attempted;
+            if (!certificate(frames[a],frames[b],n,margin,
+                    direction_in[2*i]==2,result) || !result.certified)
+                return original_query();
+            result.index=axis; result.evaluations=1; result.reason=1;
+            write_result(result,output+i*NFLOAT,flags+i*NINT);
+            direction_out[2*i]=result.mode;
+            direction_out[2*i+1]=axis;
+        }
+        direction_out[2*count]=attempted;
+        direction_out[2*count+1]=attempted;
+        return 0;
+    } catch (...) {
+        return original_query();
+    }
+}
+
 #if defined(SUPPORT_TREE_TESTS)
 // Isolated test builds only: force the full-support branch independently of
 // the preceding coarse-AABB gate, and inspect complete leaf coverage.

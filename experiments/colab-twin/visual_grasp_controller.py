@@ -164,7 +164,8 @@ class VisualGraspController:
         self.batch_sweep_validator = None
         if self.route_policy.batch_configuration_sweep:
             from sweep_batch import make_validator
-            self.batch_sweep_validator = make_validator(self.checker)
+            self.batch_sweep_validator = make_validator(
+                self.checker, direction_hints=self.route_policy.direction_hint_sweep)
         self.initial_q = finite_vector(initial_q6, 6, 'initial_q6')
         self.last_command = self.initial_q.copy()
         self.reference = self.initial_q.copy()
