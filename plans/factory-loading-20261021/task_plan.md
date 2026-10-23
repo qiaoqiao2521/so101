@@ -508,3 +508,13 @@ Next F2bo：旧默认及此次原版hold/release区间仍有wall大于thread-CPU
 - [x] 原版→候选process wall58.905745→56.723904、70.954440→72.053734s；CPU68.831895→66.385433、82.778527→83.941889s。慢拍126→115、221→276，第二站P95 20.709→21.659ms。同量非hold/release CPU第二站46.727576→47.090300s，候选sim反少.06s不能当提速。淘汰，不改默认、不扫更多间隔或追第三站。
 
 Next F2bp：F2bo首站hold慢拍68→69、release22→22，96查询组件中位主CPU仍约12ms/查询，约9ms等待没有被1ms间隔消除。复用同原数据/原planner做一次主线程CPU与调用量归因；仅查原guard内部重复工作，不把cProfile插桩时长当基准。私有round81已准备，尚未运行。Knowledge=already_covered，继续沿用原Wiki性能层次与反证规则。
+
+
+## F2bp guard归因已完成，修正分析器的线程范围
+
+- [x] cProfile v1原guard/worker功能通过，但出现53个后台求解器函数、28个负时间函数及不可能计时。独立读回measurements_valid=false，原profile_completed不覆盖计时结论；保留原件，不用此图选算法。
+- [x] 核对CPython3.13.15源码的全局monitoring事件和profile.Profile.runcall的sys.setprofile入口，改用标准库当前线程入口；本地线程标记16次检查通过。
+- [x] Kaggle v2实测回调仅主线程、无后台求解器帧、时间非负、guard CPU记账合理、钩子/间隔恢复；同96个guard报告和原运输路径与未插桩原版相同。仅调用归因，不作性能基准或物理通过。
+- [x] 真实计数：96次_configuration_sweep、192次_sweep_binding、91776次float-first递归、213792次isinstance、43872次pack。排除profile伪帧的准备/收尾时间，不把插桩成本按比例外推原回合。
+
+Next F2bq：只为exact builtin的float/tuple/list/标量添加类型快捷分支，所有数组/子类/dict/RoutePolicy及特殊输入仍走原fallback；不缓存、不改变编码或碰撞。私有round82-exact-type-freeze的38项本地值/错误/所有权检查通过，原96-query组件已准备，尚未运行。先真实binding等值和三对原screen，再决定物理，不复跑旧pose-only FK或打包器追绿。Knowledge=already_covered，诊断工具也需独立验真，版本现象保留本项目。

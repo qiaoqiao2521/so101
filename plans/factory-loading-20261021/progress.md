@@ -1462,3 +1462,12 @@ v1组件找不到指定旧回合，测量前IndexError，原件保留。v2 mount
 证据output/switch-interval-factory-20261024包含v1准备失败、v2组件/挂载收据与独立读回、physical-v1/v2原件和independent-physical-inventory.json。复跑/候选来源在私有round80-switch-interval；云端component v1/v2、physical v1/v2可取源码。
 
 Next F2bp：已准备私有round81-guard-cpu-profile，仅重放同96个guard并用原planner并行，cProfile主线程thread_time计数；原数据/算法不变，方法/线程退出与数值另验，不把插桩秒数当性能。首站hold慢拍68→69、release22→22证明目标瓶颈未被此次设置消除；尚未定位到具体函数，不先修改算法。尚未运行，根Codex接续；Knowledge=already_covered，原Wiki性能范围与反证边界已覆盖，无跨项目知识写入。
+
+
+## F2bp 已独立核验，接F2bq（2026-10-24）
+
+6ce44bc已推送，REST/ls-remote独立一致。F2bp两个Kaggle版本全部终态。v1原guard功能通过但cProfile在3.13.15收进后台事件，thread_time产生28负条目和不可能累计，独立计时判无效；原件保留，不用该热点图。v2改为标准库profile.Profile.runcall，记录回调线程、CPU记账和钩子恢复，原96-query数值/路径/worker不变。实际只主线程、无后台求解帧、时间非负；真实guard loop3.313124s≤带插桩CPU6.082037s，独立读回有效。
+
+有效调用结构：96次全配置检查、192次上下文绑定、91776次float-first递归、213792次isinstance、43872次pack。profile伪帧的准备/收尾不计热点，不把插桩时间比例当真实成本。原件和independent-profile-readback.json在output/guard-cpu-profile-20261024/v1/v2；私有round81保存修复及CPython3.13.15官方来源。没有新物理成绩，也没有宣称50Hz。
+
+Next F2bq：Root GPT私有round82-exact-type-freeze只做exact builtin类型快捷分派，完整编码、finite/signed-zero检查、原特殊值fallback及所有碰撞保持；38局部语义检查通过。已准备同96原guard+原planner组件与实际binding等值/函数来源/退出恢复核验，三对无profile计时后由原screen决定是否发原物理。尚未运行，不改默认、解释器间隔或相机；不重复旧FK/pack方案。当前无owned本地物理，定时器保持删除、不向其他对话发消息。Knowledge=already_covered，采用原工具/组件/整程独立验真的既有边界；当前版本现象只写本项目。

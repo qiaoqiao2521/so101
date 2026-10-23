@@ -103,3 +103,10 @@ kaggle kernels pull muqiaoqiao/so101-async-camera-physical-ab-20261024/2 -p REST
 CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回读只保存任务slug，本次实际挂载最新cross而非请求的旧名义输出。不要把两种接口混为固定版本输入。采用[官方metadata格式](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels_metadata.md)，并独立记录真实run/原裁决/来源；缺失旧回合保留失败，允许明确采用另一个已验收原版，并保持成对输入一致。
 
 原件与独立库存：output/switch-interval-factory-20261024。复跑私有round80-switch-interval包含candidate.py、probe.py、physical_probe.py、read_switch.py和准确路径；下一项只读同guard的函数CPU/调用归因，不以profile时长作为性能A/B。
+
+
+## guard归因（F2bp）
+
+[固定guard调用归因](https://www.kaggle.com/code/muqiaoqiao/so101-hold-guard-cpu-profile-20261024) v1的原功能通过，但cProfile/thread_time的混线程计时无效，失败保留。v2使用标准库profile.Profile.runcall，只接主线程事件；同96个原guard及并行原planner数值/路径相同，时间/CPU记账/线程/恢复独立检查通过。仅归因，不把profile伪帧或插桩时间当基准。
+
+原件output/guard-cpu-profile-20261024，来源私有round81。有效调用计数提示上下文递归/type判断很多；新私有round82先比较exact builtin快捷分派，保留原fallback和编码。38局部语义检查通过，尚未有组件收益或物理结论。

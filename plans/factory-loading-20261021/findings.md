@@ -561,3 +561,16 @@ Root GPT仅用sys.setswitchinterval(.001)建立私有作用域，finally恢复�
 4/4原pass，源/原XML/初态/native核/flags/裁判/阈值、接近与运输路径、14个同步定位输出均同。planned/measured各244，全部物理安全、自由物体、抓放/释放/脱离/回位保持；worker全部owned/joined无abort/cleanup_unconfirmed，视频474→475和493→492完整。子释放漂移.249861/.258422mm、脱离后0N。sim75.82→75.86、78.74→78.68s仅等待拍变化，不当算法提速。候选最大53.142/178.009ms，完整50Hz未过。
 
 第二站所有完整成本与毛刺回退，淘汰1ms，不改变默认，不再扫间隔或追绿。原件output/switch-interval-factory-20261024/independent-physical-inventory.json；私有round80保存候选、组件v1失败/v2来源收据、原物理和read_switch.py。两Kaggle任务的不可变版本可恢复源码，但输入挂载必须另读实际来源，且不跨云实例串累计加速。下一项只读cProfile归因同96个guard，函数self/cumulative计数分列；插桩时长不作基准。
+
+
+## F2bp 分析器自验与有效调用归因
+
+私有so101-hold-guard-cpu-profile-20261024 v1，source6ce44bc：cProfile(timer=time.thread_time)的原数值/worker/退出检查通过，但独立检查发现后台SciPy规划帧、28个负时间条目，短窗口内还有上千秒self时间。原profile_completed=true仅覆盖当时原始检查，不代表计时有效；independent-profile-readback.json明确measurements_valid=false，原统计保留，不用其时间或调用图提出优化。
+
+已读[CPython3.13.15的_lsprof实现](https://raw.githubusercontent.com/python/cpython/v3.13.15/Modules/_lsprof.c)：本版enable通过sys.monitoring全局事件注册回调，不能假定只收主线程；混合事件不能用各线程独立累计的thread_time当同一时间轴。[同版本profile.Profile.runcall](https://raw.githubusercontent.com/python/cpython/v3.13.15/Lib/profile.py)使用sys.setprofile入口。改用后保留原96检查/并行原planner，不改变算法、模型、间隔或物理。这里不泛化其他Python版本的行为。
+
+v2实测profile回调只有主线程；无scipy/optimize及_run_transport_plan帧，全部时间非负，只有一个真实guard loop，累计3.313124s不超过实际带插桩主线程CPU6.082037s。profile伪文件条目还计入准备/收尾，明确排除它的4.576733s self字段，不把它当算法热点。原96次guard输出与F2bo未插桩原版完全相同，规划路径相同，worker/钩子/5ms设置均恢复，独立有效性检查通过。
+
+可靠调用计数为：_configuration_sweep96、_sweep_binding192、_immutable_float_first_context91776、_immutable_context17472、isinstance213792、pack43872、mj_kinematics5472。纯Python分析器明显增加高调用量路径开销，因此只用调用结构定位候选；self/cumulative时间不当未插桩成本或整程加速。原件output/guard-cpu-profile-20261024/v1/v2分别保留失败与修正版；私有round81包含来源和准确代码。
+
+候选F2bq先沿用float-first编码，仅对type(value)恰为内置float/tuple/list/bytes/str/int/bool的值缩短分支，其余交回原函数。38项本地对照覆盖finite/signed zero/shape/子类/数组/错误/owned副本，全部同值。没有重复采用旧prebound pack，也不改缓存或安全规则；尚未测收益。新组件继续用同96个原guard与原planner，检查实际binding token和函数路径后再三对无分析器计时。
