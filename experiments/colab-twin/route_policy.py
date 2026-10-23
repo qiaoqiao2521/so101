@@ -29,6 +29,7 @@ class RoutePolicy:
     defer_cyclic_gc: bool = False
     pose_only_fk: bool = False
     direction_hint_sweep: bool = False
+    fused_context_freeze: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -81,6 +82,8 @@ class RoutePolicy:
             raise ValueError('Pose-only FK selection must be a boolean')
         if not isinstance(self.direction_hint_sweep, bool):
             raise ValueError('Sweep direction hint selection must be a boolean')
+        if not isinstance(self.fused_context_freeze, bool):
+            raise ValueError('Single-pass context selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

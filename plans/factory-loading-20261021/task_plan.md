@@ -299,9 +299,16 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 
 ## F2aq 新默认完整控制器计数复核
 
-- [ ] 复用标准cProfile与原evaluate_station.py，对新默认做一次原物理计数；旧profile来自方向提示/模型预准备采用前，不冒称当前热点比例。
-- [ ] 原90sim/120wall、全部244点及物理门保持；插桩时钟只归因，不作无插桩50Hz或性能A/B。依据实际热点再生成下一单变量候选。
+- [x] 标准cProfile原入口回合d4933ea9原pass，source7ad3982干净；抓放/释放/脱离/回位通过，原planned/measured均244点。
+- [x] 当前_sweep_binding7618次、不可变访问4099595次、snapshot3096746次；只作主线程计数/归因，47.468s插桩进程不作性能A/B。
 
-Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ao跨站性能回退、F2ap局部收益不足，均拒绝采用；两对全部终态后才更新。F2aq接原入口的只读计数，未新增策略或改变生产flags。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+## F2ar 上下文单遍快照与编码
+
+- [x] Root GPT私有单遍原型，18旧捕获形状/7762真实阶段次数及34边界/复制/正负零检查同值，三对局部wall一致减少。
+- [x] 正式默认false的fused_context_freeze只改变当前_sweep_binding预处理与该次构造；异步绑定、owner/阶段/有限值/位身份检查保留。185相关回归通过。
+- [x] 正式完整构造器三对wall1.757154→.717590、1.782356→.781854、1.728119→.702169s，原screen eligible；不是当前唯一在线样本或物理成绩。
+- [ ] 固化新源码后原nominal物理A/B，原90sim/120wall、244点及全部回退保持；有可靠收益才已有200/200反序。
+
+Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk/单遍上下文默认关闭，完整50Hz未过。F2ao跨站回退、F2ap局部收益不足均拒绝；F2aq计数已完成，F2ar软件和局部通过、原物理待执行。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。

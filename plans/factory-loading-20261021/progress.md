@@ -1182,3 +1182,19 @@ F2ap完成并淘汰：source85c448d，private round55-host-native/probe.py复用
 原screen=reject/reason=median_local_effect_below_threshold，median=-.381311ms，未过原5ms门；不放大循环次数制造绝对收益，也不把同值局部当抓放交付。资源等待51.792s单独记，前后共享仿真/背景Blender为空，load1约6.06→5.23。没有新增物理、生产flag或默认修改。原primary-results.json与编译manifest、probe.log保留；未测的cross没有记成功。Knowledge=no_reusable_delta，此结论属于当前硬件与原编译器的局部事实。
 
 Next F2aq：旧标准cProfile来自采用方向提示/模型预准备前，已不能代替当前热点排名。复用原evaluate_station.py与标准python -m cProfile，当前默认仅跑一次原物理计数；保持原90sim/120wall、全部点/裁判/回退，记录插桩开销，不拿该秒数作无插桩性能或50Hz成绩。根据当前调用热点再选下一小改动，不盲目重复旧候选。沿用原paired runner的资源观察与进程时钟，不新建平台。
+
+F2aq完成：source7ad3982干净，output/current-default-profile-20261023/a167f582-3b03-4fc4-a678-d7904a8bcdf9，原run d4933ea9-6a8b-4aa2-baab-a2aedff618b2/pass。76.00sim/45.286178episode-wall/47.468110process-wall/54.739993CPU；资源等待948.268s单独记，结束共享重任务为空。运输/分离worker1.665270/.923165s、joined/owned_ack=true、cleanup_unconfirmed=false，计时嵌套不再相加。真实抓起/搬运/放盘/释放/脱离/回位全过，hold32.26s、settle7.52s、释放漂移.250130mm/脱离后0N、安全0/障碍0、free/weld-mocap0，视频475/475。planned/measured实际各244点。independent-profile-readback.json逐项保留原裁判与数据。
+
+标准cProfile当前主线程89941742总/59319723 primitive calls；_sweep_binding7618次/8.443054累计秒，_immutable_context7888外层/4099595总调用、snapshot3096746调用。3800次update/25.277106累计秒，原configuration_sweep3806次/16.578205s。它们是插桩主线程归因，worker未纳入pstats，不按这些秒数外推未插桩收益。插桩完整周期P95 18.831112ms、max83.175805ms、124慢拍，仅存证、不作50Hz或无插桩A/B。Knowledge=already_covered，原Wiki「性能对照与运行版本分别绑定」已覆盖范围。
+
+### F2ar 当前上下文的单遍快照与编码（软件/局部通过，原物理待执行）
+
+Root GPT在private round57-single-pass-context生成own_context原型，以原_sweep_binding嵌套snapshot的实际AST和原_immutable_context为对照，不改旧二者。原18捕获形状按7762实际旧阶段频次重放，34边界加4个复制/正负零检查全部同值。原型三对wall1.731712→.697419、1.694410→.691199、1.854305→1.126521s，CPU1.731585→.697256、1.694445→.691177、1.854144→1.049130s，原screen eligible，第三有额外调度耗时仍保留。
+
+正式最小接入：RoutePolicy.fused_context_freeze默认false；仅_sweep_binding选原snapshot或当前原始值，SweepBinding.snapshot_context选新单遍拥有/编码。每次仍完整读取并校验所有字段，不跨调用复用；字典键沿用原_immutable_context，RoutePolicy原preferences和浮点位编码保持。原两种freeze及异步请求路径、源元数据、owner/model/checker、阶段/jaw/有限值/guard_scope与consume变动拒绝均保留。新显式direction_hint_single_pass.py只增一个bool，原默认未变。
+
+185相关回归通过：含真实controller的planned/measured/online三种输入、数组/释放旋转原地改动后重新绑定拒绝、未知/非有限值同错、owner/stage/jaw拒绝、符号零、replace编码不变及原异步/244点/原物理失败透传。首次48项检查仅新增测试误将load_route_policy返回tuple当policy，修正测试解包后48/48及全185通过；原失败不伪称物理失败。当前源码没有临时绕过或跳过测试。
+
+生产完整构造器再三对wall1.757154→.717590、1.782356→.781854、1.728119→.702169s，CPU1.757162→.717573、1.781899→.781808、1.728065→.702170s；原screen eligible，双向.matches全部同，异步阶段使用原路径。该fixture是18旧拥有上下文形状，包含原snapshot预处理成本的重放，不是当前7762唯一在线值或完整controller/物理成绩；production-local-screen.json保存范围及三对原件。
+
+Next：先固化源码与本节，再用原evaluate_station.py做名义父→候选；有原总成本和周期收益才已有200/200反序，不提前改默认。原90sim/120wall、全部244点/碰撞/释放/脱离/回位及回退保持；在途终态前不改源或commit。Knowledge=already_covered，保留原共享GC经验pending owner，不向「登录 X」或其他对话发送消息。

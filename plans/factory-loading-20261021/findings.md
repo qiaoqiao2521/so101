@@ -301,3 +301,9 @@ F2ao两工位4/4原物理pass，来源与原评分均同。首工位process53.09
 F2ap局部完成，Root GPT私有round55-host-native/probe.py只追加-march=native，原bridge单独保持相同。2816原ABI/802560判定的numeric/flags/hout/dout逐位同；新名义工位11条实际弦、773点公开报告/最终Data同值。三对wall47.298→46.917、47.010→46.950、46.678→45.964ms；线程CPU47.279→46.916、47.009→46.931、46.677→45.962ms。原screen=reject/median_local_effect_below_threshold，中位仅省.381ms，未过原5ms门。淘汰，不追加跨站/整程，不修改生产编译选项或默认。
 
 当前原件仍有同步退回规划与接近段感知等非GC慢拍，不能凭旧119百万调用的profile给新内核排热点。下一步复用标准cProfile+原evaluate_station.py做当前默认一次真实计数，明确它会扰动时钟；只用于调用量/热点定位，保持全部原物理门，不当作性能A/B。
+
+F2aq当前默认标准cProfile已原物理pass：run d4933ea9，source7ad3982干净，76.00sim、47.468process-wall/54.740process-CPU。主线程总89941742次调用；_sweep_binding7618次、snapshot3096746次、_immutable_context4099595次，构造累计8.443s属于插桩时钟，不冒称未插桩成本或worker成本。原244点、抓放/释放/脱离/回位和完整475帧视频均过；independent-profile-readback.json与main.pstats保留。
+
+F2ar据此合并_sweep_binding的snapshot递归与SweepBinding的不可变编码，所有字段仍每次重新读取，有限值/float64位身份/排序键/副本隔离检查保持。原snapshot和_immutable_context保留为默认，异步绑定不变；新fused_context_freeze默认false。Root GPT没有引入跨请求结果复用或新内容锁。
+
+私有原型对18旧捕获上下文形状、原7762阶段次数和34边界及复制/正负零检查同值，三对wall1.731712→.697419、1.694410→.691199、1.854305→1.126521s。正式完整构造器同数据三对1.757154→.717590、1.782356→.781854、1.728119→.702169s，原screen eligible。此数据已是旧snapshot后的拥有值，范围明确为代表结构重放，不伪称当前7762个唯一在线观测；正式185相关回归进一步核对真实controller输入中的数组/字典/RoutePolicy、变动拒绝和原物理失败透传。下一步仍须原物理A/B，尚未采用。

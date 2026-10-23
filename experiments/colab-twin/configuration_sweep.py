@@ -10,6 +10,10 @@ import struct
 from dataclasses import dataclass, field
 from numbers import Integral
 
+import numpy as np
+
+from route_policy import RoutePolicy
+
 
 def _configuration(values, name):
     try:
@@ -150,6 +154,28 @@ def _immutable_context_map(value):
     raise TypeError('Sweep context requires owned scalar values and tuples')
 
 
+def _immutable_snapshot_context(value):
+    """Own the controller's raw values and encode them in one fresh traversal."""
+    if isinstance(value, (tuple, list)):
+        return tuple(map(_immutable_snapshot_context, value))
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError('Sweep context floats must be finite')
+        return ('float64', struct.pack('!d', value))
+    if value is None or isinstance(value, (bytes, str, int, bool)):
+        return value
+    if isinstance(value, np.ndarray):
+        return _immutable_snapshot_context(value.tolist())
+    if isinstance(value, dict):
+        # The original snapshot transforms values only. Preserve its narrower
+        # key contract rather than treating an arbitrary key as a raw value.
+        return tuple((_immutable_context(key), _immutable_snapshot_context(item))
+                     for key, item in sorted(value.items()))
+    if isinstance(value, RoutePolicy):
+        return _immutable_context(tuple(value.preferences().items()))
+    return _immutable_context(value)
+
+
 @dataclass(frozen=True, eq=False)
 class SweepBinding:
     """Process-local arm guard ownership; not a continuous-motion certificate.
@@ -165,6 +191,7 @@ class SweepBinding:
     context: tuple = ()
     guard_scope: str = 'arm_q6_chord'
     map_context: bool = field(default=False, repr=False, compare=False)
+    snapshot_context: bool = field(default=False, repr=False, compare=False)
     _jaw_bits: bytes = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -181,7 +208,8 @@ class SweepBinding:
             raise TypeError('Sweep context must be a tuple')
         object.__setattr__(self, 'jaw_intent_rad', jaw)
         object.__setattr__(self, '_jaw_bits', struct.pack('!d', jaw))
-        freeze = _immutable_context_map if self.map_context is True else _immutable_context
+        freeze = (_immutable_snapshot_context if self.snapshot_context is True else
+                  _immutable_context_map if self.map_context is True else _immutable_context)
         object.__setattr__(self, 'context', freeze(self.context))
 
     def matches(self, other):

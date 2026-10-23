@@ -359,7 +359,9 @@ class VisualGraspController:
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z',
                  'release_rotation_mode', 'release_pinch_height_m')
-        context = tuple((name, snapshot(vars(self).get(name))) for name in names)
+        fused = bool(getattr(getattr(self, 'route_policy', None), 'fused_context_freeze', False))
+        snapshot_value = (lambda value: value) if fused else snapshot
+        context = tuple((name, snapshot_value(vars(self).get(name))) for name in names)
         intent = 'close' if purpose != 'online_chord' else self._jaw_intent()
         context += (('purpose', purpose), ('jaw_intent', intent),
                     ('requested_start', tuple(start)), ('requested_end', tuple(end)))
@@ -368,12 +370,13 @@ class VisualGraspController:
         context += (('released_owner', id(released) if released is not None else None),
                     ('released_model', id(released_values.get('model'))
                      if released_values.get('model') is not None else None),
-                    ('released_center', snapshot(released_values.get('center'))),
-                    ('released_rotation', snapshot(released_values.get('rotation'))),
+                    ('released_center', snapshot_value(released_values.get('center'))),
+                    ('released_rotation', snapshot_value(released_values.get('rotation'))),
                     ('released_uncertainty_m', released_values.get('uncertainty_m')))
         return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context,
                             map_context=bool(getattr(getattr(self, 'route_policy', None),
-                                                     'map_context_freeze', False)))
+                                                     'map_context_freeze', False)),
+                            snapshot_context=fused)
 
     def _jaw_intent(self):
         """Describe stage intent without inferring contact from encoders."""
