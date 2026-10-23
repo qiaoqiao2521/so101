@@ -382,3 +382,10 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 - Next F2ba：依据小数组额外分配反证，只私有比较保留原tolist/finite/struct.pack的逐行编码，路径round66-array-row-context/probe.py；先核对实际行调用再三对，不扫阈值、不减少原检查。
 
 运行环境接续：旧/home/muqiao/.cache/so101-graspgenx整个目录已缺失，F2ba尚未运行时语法命令退出127，原件保留。现用/home/muqiao/.local/share/ros2-factory/venv311/bin/python，CPython3.11.15/MuJoCo3.15.0，NumPy2.4.6/SciPy1.17.1及全部依赖版本已存round66/runtime-freeze.txt。已过入口导入和原六关节模型10步reset/step；完整原物理尚未在新环境验收，不跨环境累计提速。
+
+## F2ba 已知浮点行的私有编码
+
+- [x] 静态地图三对局部wall各省20.370/11.503/15.470ms，35检查同值，36次tolist/60次行函数实际选中；只准入完整绑定测量。
+- [x] 补齐延迟导入遗漏的cv2，保留原失败；新环境增加opencv-python-headless5.0.0.93，NumPy固定2.4.6，原18包记录与当前19包清单分开保存。
+- [x] 原控制器真实初始化/0秒update生成完整35字段，40数组/64行函数触达且同值；完整三对两退一微改善，中位wall多57.253ms，原screen reject，淘汰且不接生产/原物理。
+- Next F2bb：停止上下文编码微调，复用原evaluate_station.py/round10 runner在新环境跑一次无cProfile原名义回合，核对完整抓放/释放/脱离/回位和时钟。该回合用于新环境复跑验收，不是候选提速对照；原244/90sim120wall保持。

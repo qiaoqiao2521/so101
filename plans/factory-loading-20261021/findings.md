@@ -397,3 +397,15 @@ F2ba准备时发现旧cache/so101-graspgenx目录已缺失，并非只有解释�
 原requirements.txt的SciPy1.18.1只支持Python>=3.12，不能充当已删除3.11环境的完整锁定清单；首安装解析失败保留runtime-install-attempt-1.log/json。保留已记录的CPython3.11.15与MuJoCo3.15.0，兼容解析后NumPy2.4.6、SciPy1.17.1、Mink1.1.0、OMPL2.0.1、imageio2.37.0、imageio-ffmpeg0.6.0，18包精确清单存runtime-freeze.txt。旧NumPy/SciPy版本不可考证，因此明示为新环境，不声称完全还原或跨环境拼接原秒数。
 
 runtime-recovery-readback.json确认原station_executor等9项模块导入，原六关节规划场景nq=nv=6/ngeom=65，CPU reset/step10次至.020s、qpos有限；不渲染、不接实机。该检查不是完整抓放或50Hz验收。后续原版/候选须同用新的明确Python路径；若进入物理A/B，以其中原版的原评分作为新环境基线，保留旧物理证据的旧环境范围。
+
+## F2ba 逐行浮点编码的完整组件反证（2026-10-24）
+
+Root GPT按F2az反证，仅对原生float64一/二维数组保留原tolist拥有快照，逐行执行原math.isfinite/struct.pack，省去每个叶子的通用递归调用；其余类型/形状原回退。私有round66静态地图组件35检查同值，计时外父331次encoder/36次tolist，子79次encoder+60次行函数/36次tolist，实际触达。6772次重复三对wall .649227→.628857、.639544→.628041、.639656→.624185s，CPU同向，原screen eligible；仅中位15.470ms组件收益，不是任务提速。
+
+首次完整探针在导入VisualGraspController时发现cv2缺失，未进入setup或计时；原CLI入口的延迟导入此前没有触发该模块。full-probe-attempt-1.py/log/json保留，补装opencv-python-headless5.0.0.93并固定NumPy2.4.6，当前19包清单存runtime-freeze-with-vision.txt，原18包与初组件runtime记录不覆盖。runtime-vision-readback.json确认实际视觉控制器导入，仍不宣称完整物理通过。
+
+完整探针复用当前全部native配置、原控制器构造器、原RGB定位估计/复位编码器及0秒原update，完整35字段中40个原生数组；父encoder477/tolist40，子encoder206+行64/tolist40，双向matches同值。setup2.836590wall/2.022693thread-CPU秒，update=running、stage=approach；记录为实际起步快照的完整_sweep_binding，不冒称所有阶段或唯一在线输入。等待3.080383s单列，清理走原close/native.close。
+
+完整三对wall .878410→.935663、.900879→.898933、.962584→1.188648s；线程CPU .877217→.929914、.898603→.897447、.959851→1.181438s。原screen reject/no_median_local_effect，中位wall多.057253s，两退一微改善，不重复择绿。淘汰，不接生产、不追加原物理/跨站，默认float_first_context不变；independent-local-readback.json与independent-full-readback.json分别保留局部准入和完整拒绝，不能只挑局部正结果。
+
+下一回合F2bb是新环境原版复跑验收：旧解释器/依赖目录缺失，虽然已完成CPU reset/step及真实控制器初始化，重建后尚无完整原物理裁决。沿用原名义场景、原默认、原计时和90sim/120wall，通过完整抓放/释放/脱离/回位确认可复跑，再用该环境的实测瓶颈选下一候选；不重复上下文微调、不把这轮无候选基线算作提速。

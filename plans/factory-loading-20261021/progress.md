@@ -1348,3 +1348,11 @@ F2ba运行前环境缺失：固定旧Python命令127，核实整个.cache/so101-
 首按文档直接依赖安装时SciPy1.18.1要求Python>=3.12，解析失败原件保留。新环境保留CPython3.11.15/MuJoCo3.15.0，兼容解析NumPy2.4.6/SciPy1.17.1，其余直接依赖Mink1.1.0/OMPL2.0.1/imageio2.37.0/imageio-ffmpeg0.6.0；精确18包清单、安装日志及独立readback均在round66。旧NumPy/SciPy不可考证，不称完全还原或将新旧耗时相加。
 
 已确认9模块/原评测入口可导入，原六关节模型65geom、10步.020s、qpos有限；私有candidate/probe语法通过，仅是运行预检，完整原物理基线仍待后续原A/B，新环境内两侧必须一致。Next入口：/home/muqiao/.local/share/ros2-factory/venv311/bin/python /home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round66-array-row-context/probe.py。先按既有资源观察等待；生产默认保持float_first_context，完整50Hz未过。Knowledge=already_covered，环境/性能证据边界由原规则覆盖。
+
+F2ba终态：round66原静态地图组件三对wall .649227→.628857、.639544→.628041、.639656→.624185s，35检查同值、路径36tolist/60行函数确认；原screen eligible仅作完整绑定准入。首完整探针因延迟导入cv2缺失而退出1，尚无setup/计时，已保留attempt-1源码/log/json。只补opencv-python-headless5.0.0.93，NumPy2.4.6保持，当前runtime-vision-readback和19包freeze与先前18包记录分开保存。
+
+full_probe.py随后实际调用原控制器初始化和0秒update，读取已记录RGB定位/复位编码器，不用目标物体真值、不推进自由物体物理。完整35字段、40数组/64行函数确实选中；父encoder477→子206+64行，绑定双向matches等值。setup2.836590wall/2.022693CPU秒和3.080383s等待分列，原close/native.close清理。实际只覆盖一个真实起步快照，不能说所有阶段已验。
+
+完整三对wall .878410→.935663、.900879→.898933、.962584→1.188648s，线程CPU三对差+.052697/-.001156/+.221588s，原screen reject/no_median_local_effect，中位wall多57.253ms；淘汰，不重复择绿，不接生产/原物理，不切默认。局部与完整正反证均由independent-local-readback.json/independent-full-readback.json独立留存；没有新抓放成功或50Hz成绩。Knowledge=already_covered，原组件/整体、运行版本和反证规则覆盖。
+
+Next F2bb：用.local/share/ros2-factory/venv311/bin/python和既有round10-batched-cross-axes/run_pair.py，新建round67-runtime-baseline/prepared-path.txt指向原名义无cProfile单回合。原环境已缺失，新环境完整物理尚未验收，因此此轮用于原版可复跑与完整时钟核准，绝不称候选加速。新源码固化、共享资源释放后运行，原244/90sim120wall/全部回退保持；终态再改源或提交，保留失败。依据新环境真实结果再选IK/路径/执行方向，停止本轮上下文微调。
