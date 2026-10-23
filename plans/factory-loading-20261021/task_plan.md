@@ -343,5 +343,7 @@ F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归
 - [x] 最小生产float_first_context默认false，原helper/默认与async路径保留；88项相关回归通过。
 - [x] 正式完整构造器三对输出同值，wall .930442→.802920、.977845→.884843、.881772→.809585s，CPU同向，原screen eligible。
 - [x] source667bd6c名义父→子原2/2pass，完整物理/244点保持；同3264拍CPU30.123→27.007s，原50Hz仍未过。
-- [ ] 第二已有200/200反序原物理，区分真实收益与本机漂移；整对终态再决定默认。
-- [ ] 跨站无可靠收益则淘汰默认晋级；当前default保持compact_status_json，旧父版/原版保留。
+- [x] 第二已有200/200反序原2/2pass，同3366拍CPU28.157→24.707s、process42.849→38.174s；原安全/244点保持。
+- [x] 同量正式三对与两站反序4/4原物理支持采用float_first_context.py；116项默认相关回归通过，低层flag仍false、旧父版可复跑。完整50Hz未过。
+
+Current：默认float_first_context.py；上一版compact_status_json.py和更早父版/原版保留。F2av两站各自同工作量CPU改善，完整秒数不全部归单一分支、不累加历史秒数。下一项依据当前未改preferences路径的7897次/asdict递归，先私有筛选仅不可变标量的直接字典，复杂类型退原asdict；未测不记成功。

@@ -318,4 +318,6 @@ F2am采用的默认父版 `route_strategies/direction_hint_preallocated.py` 在�
 
 同源码两工位反序4/4原物理通过，process32.330→30.717s、37.052→33.466s；剔除hold/release后，两站各自相同阶段/拍数CPU21.108→20.245s、24.171→21.858s。P95 11.447→10.490ms、14.047→11.947ms，慢拍14→12、39→30，完整50Hz仍未过。实际负载、所有规划/释放与反证见[原计划F2ar](../../plans/factory-loading-20261021/progress.md)，不将不同轮次的绝对秒数相加作累计提速。GC延后与本机编译候选未采用。
 
-当前工厂默认采用[完整紧凑状态发布](route_strategies/compact_status_json.py)：只为实时 `status.json` 使用原标准库紧凑编码，保留全部字段、发布触发、取消检查和原子替换。归档文件继续原缩进。原[单遍上下文父版](route_strategies/direction_hint_single_pass.py)和[初始原版](route_strategies/baseline.py)仍可通过 `--candidate` 复跑。2026-10-23两已有工位反序共4/4原物理通过；第二工位38.628→37.426进程秒，同3236拍CPU24.450→23.279秒。首工位秒数受明显宿主负载变化影响，不计42秒算法收益；完整50Hz未通过，详见[原计划](../../plans/factory-loading-20261021/progress.md)。
+当前工厂默认采用[浮点优先上下文](route_strategies/float_first_context.py)：在[完整紧凑状态发布父版](route_strategies/compact_status_json.py)上只增加 `float_first_context=True`。单遍快照先判断浮点叶，再判断容器；全部字段、float64位编码、有限值拒绝、复制隔离和原错误保持。异步绑定仍走原路径。底层 `RoutePolicy()` 对应选项仍默认false，父版和[初始原版](route_strategies/baseline.py)可通过 `--candidate` 复跑。
+
+2026-10-23两已有工位反序共4/4原物理通过，原planned/measured各244点及所有抓放、释放、脱离、回位与安全门保持。两站进程47.375→42.096s、42.849→38.174s；各自同3264/3366拍CPU30.123→27.007s、28.157→24.707s。原同量组件三对也更快，但不将完整秒数差全部归于分支顺序，不合并不同负载轮次作累计提速。第二工位仍有54拍超20ms，完整50Hz未通过，详见[原计划F2av](../../plans/factory-loading-20261021/progress.md)。实时status继续紧凑编码，归档文件继续原缩进。

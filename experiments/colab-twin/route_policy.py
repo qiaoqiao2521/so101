@@ -109,7 +109,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/compact_status_json.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/float_first_context.py'
 
 
 def load_route_policy(path=None):

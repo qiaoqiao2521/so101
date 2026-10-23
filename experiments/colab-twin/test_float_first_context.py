@@ -108,13 +108,13 @@ class FloatFirstContextTests(unittest.TestCase):
                                          float_first_context=True)
             self.assertTrue(parent.matches(candidate))
 
-    def test_candidate_is_one_flag_and_current_default_remains_off(self):
+    def test_candidate_is_one_flag_and_low_level_default_remains_off(self):
         folder = Path(__file__).parent/'route_strategies'
         parent, _ = load_route_policy(folder/'compact_status_json.py')
         candidate, _ = load_route_policy(folder/'float_first_context.py')
         default, _ = load_route_policy()
         self.assertFalse(RoutePolicy().float_first_context)
-        self.assertFalse(default.float_first_context)
+        self.assertTrue(default.float_first_context)
         self.assertEqual([key for key, value in parent.preferences().items()
                           if value != candidate.preferences()[key]], ['float_first_context'])
         for bad in (1, 0, None, 'true'):

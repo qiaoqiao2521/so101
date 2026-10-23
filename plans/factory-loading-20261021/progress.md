@@ -1292,3 +1292,13 @@ P95 15.806564→14.811197ms，max64.719597→52.436018ms，慢拍118→98，完�
 运输worker2.050457→1.630159s、分离1.106442→1.058488s，均joined/owned_ack且cleanup_unconfirmed=false；初始化5.254278→4.731000s与后处理计入process，嵌套worker时钟不相加。峰RSS1403836→1412000KiB；父资源等待1791.261646s与子.046556s另计，开始结束共享任务空。宿主load1 11.03→11.18→12.29与GUI后台活动保留，未证明完全同负载/同频率。
 
 Next：默认保持，记录本对后用原round61/prepare_physical.py --cross在已有200/200工位子→父反序，再经原round10/run_pair.py；等待不计性能，不新建平台，不并发。Knowledge=already_covered，沿用原Wiki的性能/版本范围与负例规则。
+
+F2av跨站完成并采用：9c03874已推且REST/ls-remote一致，35dfc6d2-731d-40fc-a368-be292b940cba按子ae4bb144→父836e82ed反序，整对终态前未改源/提交。原2/2pass；父→子process42.849242→38.173933s、CPU51.418274→46.695404s，sim78.88→78.82s少1hold/2release拍。同3366个非hold/release拍CPU28.157109→24.707023s、wall28.242948→24.739509s、controller18.387134→16.173074s，matched-stage-readback.json保留全部剔除范围；原完整计时与评分不删拍。
+
+原P95 15.001964→13.067320ms、max116.915574→89.358165ms，慢拍93→54；approach7→5、hold55→25、release25→19，其余close/transport/separate/retreat仍有慢拍，完整50Hz未过。两轮planned/measured各244、抓起/绕障搬运/放稳/释放/脱离/回位全过，安全0/障碍0/free=true/weld-mocap0；子抬升40.889632mm、hold34.68s、settle7.50s、detach71.50s、释放漂移.258684mm、脱离后0N，双方493/493视频。四独立读回完成、原pass/same.scorer=true，仅float_first_context变化；components-readback.json保留原source/jobs/sweeps。
+
+运输worker2.148143→1.861814s、分离1.161606→1.041509s，均joined/owned_ack、cleanup_unconfirmed=false；初始化4.597583→4.141441s计入process，worker嵌套不加总。峰RSS1383244→1358952KiB，子资源等待33.697489s/父.032956s另计，原shared-work前后为空；子load1 8.79→8.84、父8.84→10.46，GUI仍活跃，不冒称恒定宿主或将全部4.675s归于分支。
+
+采用float_first_context.py为默认，低层RoutePolicy仍false，compact_status_json.py/更早父版/原版可显式复跑；新默认116项相关检查通过，日志round61/default-tests.log。根据正式三对同量组件与两工位反序4/4物理和同工作量CPU共同采用；不合并历史绝对秒数作累计加速，不启动20+20。Knowledge=already_covered，原性能/版本规则覆盖。
+
+Next F2aw：原F2au主线程preferences7897次/.923744插桩累计秒，实际运行时asdict对每个标量递归并deepcopy。该方法在F2av未改；先在私有round62对同一当前不可变标量策略构造新字典，任意非原生不可变标量退原asdict，核验独立字典/复杂类型复制与三对成本。有局部收益才最小接入，不复试旧scalar/GC/编译，不改裁判或244点。
