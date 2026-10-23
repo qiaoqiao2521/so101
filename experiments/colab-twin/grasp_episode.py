@@ -95,6 +95,22 @@ def build_contact_scene(source: Path, output: Path, *, jaw_force_cap_nm=.15, nos
     return model, mujoco.MjModel.from_xml_path(str(rig_path)), path
 
 
+def forward_pose_query(model, data, *, pose_only=False):
+    """Update body/geom poses; unsupported rigs retain full forward semantics.
+
+    Cameras, lights, contacts, sensors and dynamics are not pose-only outputs.
+    Recheck callbacks on every call; never cache their absence.
+    """
+    callbacks = ('control', 'passive', 'sensor', 'act_dyn', 'act_gain',
+                 'act_bias', 'contactfilter', 'time')
+    if (pose_only and all(getattr(model, name, None) == 0
+                          for name in ('nsensor', 'nplugin', 'nmocap'))
+            and all(getattr(mujoco, 'get_mjcb_'+name)() is None for name in callbacks)):
+        mujoco.mj_kinematics(model, data)
+    else:
+        mujoco.mj_forward(model, data)
+
+
 def solve_pinch_ik(model, xyz, initial=None):
     """Five-axis position/vertical-axis IK with a fixed wrist-roll preference.
 

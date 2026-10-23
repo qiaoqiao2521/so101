@@ -18,7 +18,7 @@ import warnings
 
 from conservative_collision import ConservativeCollisionChecker as CollisionChecker
 from configuration_sweep import ConfigurationSweepInvocation, SweepBinding, _configuration
-from grasp_episode import PAD_NAMES, PINCH_POINT, solve_pinch_ik
+from grasp_episode import PAD_NAMES, PINCH_POINT, forward_pose_query, solve_pinch_ik
 from grasp_workcell import PLACE_CENTER, TARGET_SIZE
 from joint_planner import plan_joint_path, validate_joint_path
 from visual_localization import TopDownCalibration
@@ -246,7 +246,10 @@ class VisualGraspController:
     def _fk(self, q6):
         self.query.qpos[:] = q6
         self.query.qvel[:] = 0
-        mujoco.mj_forward(self.rig, self.query)
+        if getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY).pose_only_fk:
+            forward_pose_query(self.rig, self.query, pose_only=True)
+        else:
+            mujoco.mj_forward(self.rig, self.query)
         rotation = self.query.xmat[self.gripper_id].reshape(3, 3).copy()
         origin = self.query.xpos[self.gripper_id].copy()
         return origin, rotation, origin+rotation @ PINCH_POINT

@@ -1072,3 +1072,23 @@ F2ai结论：两个工位都重复削减两处启动峰值，但全process与剔
 Next：已有cProfile记录主线程_fk 4644次/.689925累计秒，内部mj_forward只供返回原点/旋转/pinch和遮挡geom_xpos；checker独立Data不在此路径。先离线对全部保存q6与command比较纯mj_kinematics的返回和调用方读取数组；三对完整helper成本有收益才最小flag接入及原物理，不去改已优化的collision/sweep FK。没有先验承诺50Hz。
 
 Knowledge：no_reusable_delta；本轮仍是组件时延与整程成本分离及实际争用边界，已采用的Wiki节覆盖。F2ah GC长期取舍的共享Wiki写回pending由当前根Codex保留，不向「登录 X」协调。
+
+### F2aj 复用归档位姿查询，仅隔离FK（2026-10-23，在验证）
+
+当前profile的_fk 4644次/.689925s与调用方逐项核对：只消费返回origin/rotation/pinch及独立query.geom_xpos。实际控制器、运输worker和分离worker都有不可变RoutePolicy；碰撞checker另有Data，原solve_pinch_ik不在此切片修改范围。
+
+优先复用而非新写：2026-10-07归档rejected-pose-source/grasp_episode.py:97已有forward_pose_query。其旧版同时改FK+IK，150回归和三对规划同值，完整周期P95仅改善2.720935%未过当时5%采用门，已恢复原源码；旧失败不重分类。当前是MuJoCo3.15、batch+smooth+leg-clock新基线下只隔离FK，不用旧成绩替代新物理。
+
+直接kinematics原型在7538个真实q6/command上的三项返回及qpos/qvel/body/geom位姿逐位同，三对7538完整调用.300395→.065818、.273487→.071543、.288696→.063264s。但它缺少旧回退，不获物理准入；v0原件保留。复用归档helper的版本重查7538输入逐位同，包含回调/模型能力检查的三对.279756→.104157、.275759→.127309、.241730→.086818s，原screen eligible。两者都只是局部，不是实际任务/50Hz成功。
+
+生产仅新增默认false的pose_only_fk并在独立_fk选择原helper；helper与归档AST完全一致（仅测试比对，不加内容锁）。sensor/plugin/mocap或任何当前回调存在时，每次退回原full-forward，不缓存“无回调”。原IK、collision/sweep、物理积分、裁判、244点及90sim120wall保持；不组合失败的GC/preallocation。104项相关回归通过，含新真实小模型FK、动态注册真实passive回调、每种回退、原RuntimeError/KeyboardInterrupt和候选单变量。
+
+Next：用实际生产_fk而非原型重做原7538输入等值/三对，资源空闲后原nominal成对；可靠收益才已有200/200反序。当前没有本候选物理结果，默认未变。来源/原型反证/实际输入和复跑位于private round49-kinematics-fk。
+
+生产7538输入逐位同，三对完整_fk .352652→.138482、.351655→.139964、.352818→.127403s，原screen eligible。原nominal物理15afdef5-d6e1-4cc0-b8ac-4fc6d8268f60父7142e66b-f22c-4a86-bbc6-0a4e89772b78→子f300f60d-e59b-48b7-b042-3ca33eef282d均原pass。全process64.570586→49.150132s、CPU73.537098→57.490904s，sim75.38→75.30少1hold/3release拍；剔除两阶段同拍数wall46.532978→35.007816s、CPU46.229680→34.968842s、controller34.049914→25.495961s。P95 26.589648→17.855508ms，max126.957608→98.770074ms、慢拍865→99，完整50Hz仍未过。
+
+这些大差额不能全归于FK：原host load1开始16.08→7.30，父中途新增EGO编译/Blender，子结束也有EGO编译。两个case启动前已等待162.513/67.095s资源清理，等待不计process；不能保证中途无新增任务。已有局部FK只省约.21s/7538调用，并非整程15.42s。保持实际原件和负载不确定性，继续同源码200/200子→父反序，不重跑nominal择绿。
+
+四XML/初态/评分/阈值/原native核库flags/原路径均同，实际仅pose_only_fk改变；视觉逐位同，动态轨迹/接触非逐位同。原244点/实际弦/完整抓放/释放/脱离/回位均通过，子释放漂移.248943mm、脱离后0N；峰RSS1271528→1323012KiB。默认仍smooth_jaw_leg_clock.py，未组合GC/preallocation。
+
+Knowledge：already_covered，复用已有失败经验及组件/整程边界；本节保留旧版未过门，不重复创建知识页。F2ah共享Wiki pending归属不变。

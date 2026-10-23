@@ -293,3 +293,9 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 复跑沿用上面的原evaluate_station命令，将candidate改为 `experiments/colab-twin/route_strategies/defer_cyclic_gc.py`，为每次运行选择新output目录。来源和全部正反证见[工厂计划F2ah](../../plans/factory-loading-20261021/progress.md#f2ah-gpt-接续-gc-调度2026-10-23四轮通过保持可选)。
 
 组合实验 `route_strategies/gc_preallocated.py` 在显式GC父版上只增加模型预准备。两工位反序4轮原物理通过，启动峰值下降，但process分别58.034→61.409s、57.173→58.997s，非等待成本也更差，因此未采用。准备、清理、内存和资源等待均单独记录；复跑用同一原入口显式指定此candidate。详见[原计划F2ai](../../plans/factory-loading-20261021/progress.md#f2ai-gc实验父版上的模型预准备2026-10-23四轮通过未晋级)。
+
+### 实验：独立FK只算位姿
+
+显式 `route_strategies/pose_only_fk.py` 仅启用 `pose_only_fk`。复用2026-10-07归档的 `forward_pose_query`，只供控制器独立query的body/geom位姿使用；传感器、插件、mocap或当前回调存在时每次回退full-forward。原IK、碰撞checker、244点扫掠、物理积分、评分及90sim/120wall保持，GC/preallocation不叠加，生产默认仍为 `smooth_jaw_leg_clock.py`。
+
+生产7538真实姿态逐位等值，三对完整FK调用均更快，104相关回归通过。首工位原抓放/释放/脱离/回位2/2pass，但两回合宿主负载不同，整程64.571→49.150s不能全算FK收益。第二已有工位反序仍在接续，尚未采用或证明完整50Hz。旧FK+IK候选未过完整周期门的反证完整保留。复跑沿原evaluate_station显式指定该candidate，新建output目录；见[原计划F2aj](../../plans/factory-loading-20261021/progress.md)。
