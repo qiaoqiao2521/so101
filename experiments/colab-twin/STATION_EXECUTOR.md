@@ -291,3 +291,5 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 两工位反序4轮原物理通过，原安全/244点/评分不变。两工位process分别44.322→44.199s、53.463→52.353s；但最大单拍一处96.965→116.429ms回退、RSS增加约114–119MiB，故默认仍为 `smooth_jaw_leg_clock.py`，完整50Hz未通过。它是可复跑的调度实验，不是默认常驻禁用GC。
 
 复跑沿用上面的原evaluate_station命令，将candidate改为 `experiments/colab-twin/route_strategies/defer_cyclic_gc.py`，为每次运行选择新output目录。来源和全部正反证见[工厂计划F2ah](../../plans/factory-loading-20261021/progress.md#f2ah-gpt-接续-gc-调度2026-10-23四轮通过保持可选)。
+
+组合实验 `route_strategies/gc_preallocated.py` 在显式GC父版上只增加模型预准备。两工位反序4轮原物理通过，启动峰值下降，但process分别58.034→61.409s、57.173→58.997s，非等待成本也更差，因此未采用。准备、清理、内存和资源等待均单独记录；复跑用同一原入口显式指定此candidate。详见[原计划F2ai](../../plans/factory-loading-20261021/progress.md#f2ai-gc实验父版上的模型预准备2026-10-23四轮通过未晋级)。
