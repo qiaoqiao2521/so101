@@ -95,7 +95,8 @@ class GCWindowTests(unittest.TestCase):
                 self.assertEqual(gc.isenabled(), enabled)
 
     def test_policy_differs_only_in_gc_with_other_experiments_disabled(self):
-        parent = load_route_policy()[0].preferences()
+        parent = load_route_policy(
+            Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py')[0].preferences()
         candidate = load_route_policy(Path(__file__).parent/'route_strategies/defer_cyclic_gc.py')[0].preferences()
         self.assertEqual([key for key in parent if parent[key] != candidate[key]], ['defer_cyclic_gc'])
         self.assertFalse(parent['defer_cyclic_gc'])

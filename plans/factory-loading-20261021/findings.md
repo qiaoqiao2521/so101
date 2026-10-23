@@ -277,3 +277,9 @@ F2aj第二已有工位反序原物理2/2pass，但父→子process58.056→84.72
 这是搜索策略，成功时方向/下界/求证次数及顶点hint可不同；不能宣称raw14字段实施等值。私有2816实际ABI、802560有效性与17异常前缀通过，失败全查询numeric/flags/hints逐位同；独立200位Decimal核对三类实际pair的全部编译顶点包络及原margin。生产三对11弦/773点CPU .866855→.336694、.797435→.298601、.847955→.420132s，报告/最终Data逐位同。仅组件准入，不是整回合或50Hz成绩。
 
 公开候选route_strategies/direction_hint_sweep.py仅相对原默认加一bool。原ABI观察者在factory前后安装都保留逐点调用；新符号缺失保留原batch；protected Python FK/首错前缀/原异常对象/owner锁不变。101回归通过。复跑与来源private round51-direction-hints/{candidate-origin.json,production_probe.py,production-results.json,regression.py,regression-results.json}；候选来源Root GPT，未冒称调用CodeBuddy。
+
+正式代码再次回放同2816输入/802560判断及17前缀通过；另工位11弦773点公开报告/最终Data同值，三对CPU 1.124660→.446490、.990270→.342418、1.063456→.472374s。两工位原物理4/4pass、独立来源门均过；实际process84.384→56.037s、79.304→48.649s，CPU91.038→62.512s、85.337→55.976s。候选仿真分别多.66/.74s，不是少等拍。
+
+nominal剔除hold/release后同3264拍，CPU59.235→37.856s；第二工位另剔除相差一拍的lower，同3236拍CPU52.896→29.578s。所有原点/阈值/路径保持，候选实际检查点还更多。P95 30.064→18.786ms、28.520→20.759ms，但第二最大151.738→184.787ms反退，仍104/235慢拍，完整50Hz未过。主机中途Chrome多核、第二父版新增Blender均保留，不把整个30秒差额全归因策略；采用依据是两处相反顺序、六对局部及同拍数CPU证据。
+
+F2am只在已采用方向提示父版开启既有模型预准备；F2af/F2ai未节省总成本的旧反证不改。实际新父版运输/分离请求62.005/143.672ms，复用原helper三对最大空档102.376/116.824/104.967→.481/.684/.632ms；总成本156.145→172.269、184.258→175.153、156.856→205.992ms，不能称算法少算。新策略来源Root GPT，原模型独立性/旋转/回退代码不改；原probe复制更新真实场景及策略字段，复跑private round52-direction-preallocation。

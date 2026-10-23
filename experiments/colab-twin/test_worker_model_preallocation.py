@@ -132,8 +132,9 @@ class WorkerModelPreallocationTests(unittest.TestCase):
         self.assertIsNot(rig, controller.rig)
         self.assertIsNot(released, controller.released_query.model)
 
-    def test_selection_stays_opt_in_with_current_parent_and_map_disabled(self):
-        parent = load_route_policy()[0].preferences()
+    def test_selection_stays_opt_in_with_original_parent_and_map_disabled(self):
+        parent = load_route_policy(
+            Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py')[0].preferences()
         candidate = load_route_policy(Path(__file__).parent/'route_strategies/preallocate_worker_models.py')[0].preferences()
         self.assertFalse(parent['preallocate_worker_models'])
         self.assertFalse(candidate['map_context_freeze'])

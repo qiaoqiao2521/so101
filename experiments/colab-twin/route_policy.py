@@ -97,7 +97,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/direction_hint_sweep.py'
 
 
 def load_route_policy(path=None):

@@ -1126,3 +1126,19 @@ F2ak后续线程CPU归因（nice19、不做积分/render）定位两对反复22�
 生产最小接入direction_hint_sweep默认false；新候选只开该flag。原C查询与sb_run原函数文本保持；Python原observer、每次符号身份、缺符号回退、锁/summary_busy和protected FK保留。101项相关回归通过，包括中途碰撞、完整244点及原C观察者逐点执行。真实生产11弦773点、三对CPU .866855→.336694、.797435→.298601、.847955→.420132s；wall .877607→.342033、.816144→.298593、.856412→.427608s，全部报告/最终Data相同。217170提示试算与222394总证书工作含回退，不隐藏试错。
 
 Next：串行固化源码，再按原90sim/120wall发起nominal原物理；有收益才第二已有200/200反序。未作任何物理成功/默认晋级/完整50Hz声明。评测期间不改源、不commit，避免F2aj来源污染。原private round51保存精确代码、输入、编译与复跑；来源Root GPT，不再把外部CLI作为依赖。Knowledge=already_covered，继续采用Wiki原「性能对照与运行版本分别绑定」；F2ah共享GC经验pending仍由本根处理，不向「登录 X」发送消息。
+
+F2al实际完成：源071987e已提交推送且REST/ls-remote读回一致，评测期间未改源/提交。nominal 33eeefb6-011c-4824-b3e5-0e2f2994c772，父c1c644fb-af6c-4b6b-8b5c-feea14ff732f→子b522ee0c-3e56-4d3f-b79b-fb5fdf45f4d1均原pass。process84.384081→56.036988s、CPU91.038308→62.512233s，sim75.40→76.06s多29hold/4release拍。剔除两段同3264拍，wall60.503044→38.303559s、线程CPU59.234687→37.855517s。P95 30.063516→18.786011ms、max147.742673→143.672419ms、慢拍1940→104。运输/分离worker wall2.487455/1.402854→1.239784/1.328899s，为嵌套时钟不可再加；候选在更短墙钟中反多poll，不能把少等待作为收益。
+
+已有200/200反序43aa3fed-fb10-4988-b32e-7d83a2e9293f，子8d215c40-1c25-4fa7-be7e-ea8ba3192c12→父d1fa38d6-6f58-41f6-af14-cd2c214e7eb1均原pass。按父→子process79.303914→48.648702s、CPU85.337118→55.976017s，sim77.96→78.70s多38hold/1lower、少2release拍。outside原统计因lower多1拍而不同，不能说完全同拍数；进一步同时剔除lower后同3236拍，wall54.253199→30.487515s、CPU52.896329→29.577571s。P95 28.520084→20.758996ms、慢拍1706→235；最大151.737527→184.786597ms回退。运输/分离worker3.007683/1.836241→1.440472/1.736836s，保持嵌套口径。
+
+四轮真实抓起、放盘、静稳、释放、脱离、回位通过，无安全停机/障碍接触，free_object=true、weld/mocap=0，视频全帧。候选两处释放XY漂移.250130/.258838mm，脱离后峰力0N。四XML/初态/评分/释放阈值/native库/原规划路径均同，只有direction_hint_sweep差异；两处same.scorer/pass=true。动态轨迹/接触不冒称逐位同。候选实际checked_states110885/118144，提示试算及包含回退总证书均留原报告，不因快而删点。
+
+资源等待595.554/.069s及.029/.045s单独记录，不计process。nominal父开始load1=14.96、子17.96；跨站子开始4.31，运行中新增Chrome高CPU，父结束新增Blender、load1=21.40。现有case前进程避让不能保证中途独占；保留实际负载，不把所有整程差额归因策略或背景。采用理由是正式组件两工位六对CPU减半以上、两工位相反顺序同拍数CPU改善及完整物理门，而非仅大幅wall差额。四项原独立读回及matched-stage-readback齐全。
+
+F2al决定：采用direction_hint_sweep.py为工厂默认，旧smooth_jaw_leg_clock.py及更早baseline.py保留显式。完整50Hz仍未过，20+20不启动。默认切换首先暴露旧预准备测试错误地绑定“最新默认”；修正其父版为原smooth源，同样固定旧GC/FK测试历史父版；165相关回归通过，不把旧候选升级为新组合。正式代码再2816/802560及17前缀通过，第二局部773点同值/三对CPU记录在private round51的production-cross-results与production-regression-results。
+
+### F2am 方向提示父版上的已有模型预准备（2026-10-23，物理待执行）
+
+新父版nominal运输/分离启动周期62.005/143.672ms，仍是主要controller长尾。根GPT只新增direction_hint_preallocated.py，既有helper/快照/释放几何同步/所有权及失败回退不改，不叠加GC/FK。原F2af/F2ai总成本无益记录保持。复用原round45生产helper/AsyncJob/close三对，在新真实场景最大main gap102.376/116.824/104.967→.481/.684/.632ms，全部独立且同值；但总成本156.145→172.269、184.258→175.153、156.856→205.992ms，有两对反多，严格只按启动延迟收益准入。
+
+Next：固化源码和实际来源后原nominal物理A/B，若启动时延收益真实再第二已有工位反序；记录初始化成本、原规划/整程/释放及所有慢拍，无默认预准备或50Hz承诺。private round52保存Root GPT来源、原生产probe及旧反证。Knowledge=already_covered；新GC经验共享写回pending仍由本根承担，不联系「登录 X」。

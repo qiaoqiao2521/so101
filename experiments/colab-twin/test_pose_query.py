@@ -99,7 +99,8 @@ class PoseQueryTests(unittest.TestCase):
                     self.assertIs(raised.exception, failure)
 
     def test_policy_is_single_delta_and_original_remains_default(self):
-        parent, _ = load_route_policy()
+        parent, _ = load_route_policy(
+            Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py')
         child, _ = load_route_policy(Path(__file__).parent/'route_strategies/pose_only_fk.py')
         self.assertEqual([k for k, value in parent.preferences().items()
                           if child.preferences()[k] != value], ['pose_only_fk'])

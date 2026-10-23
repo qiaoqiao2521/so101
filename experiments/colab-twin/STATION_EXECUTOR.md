@@ -299,3 +299,11 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 显式 `route_strategies/pose_only_fk.py` 仅启用 `pose_only_fk`。复用2026-10-07归档的 `forward_pose_query`，只供控制器独立query的body/geom位姿使用；传感器、插件、mocap或当前回调存在时每次回退full-forward。原IK、碰撞checker、244点扫掠、物理积分、评分及90sim/120wall保持，GC/preallocation不叠加，生产默认仍为 `smooth_jaw_leg_clock.py`。
 
 生产7538真实姿态逐位等值，三对完整FK调用均更快，104相关回归通过。两工位反序4次原抓放/释放/脱离/回位通过，但整程64.571→49.150s、58.056→84.727s互相矛盾，且两回合宿主负载不同，不作整体提速结论。第二成对来源检查因中途Git提交而未通过，额外比对只确认评分源码相同，原失败保留。候选未采用，完整50Hz未过；旧FK+IK候选未过门反证也保留。复跑沿原evaluate_station显式指定该candidate，新建output目录；见[原计划F2aj](../../plans/factory-loading-20261021/progress.md)。
+
+### 当前默认：逐点重新求证的方向提示
+
+工厂默认 `route_strategies/direction_hint_sweep.py` 在原smooth+leg-clock父版上只加 `direction_hint_sweep=True`。仅在同次扫掠内记住上个成功的方向索引；每点仍用当前几何、原certificate及全部pair重新求证。冷启动、提示失败或不支持的输入完整回到原搜索；244点与原FK/碰撞阈值/错误作用域/90sim120wall不变。原观察者及缺符号回退保留。成功证书方向/下界/诊断可改变，不宣称raw14字段逐位同。
+
+两工位反序原物理4/4通过，process84.384→56.037s、79.304→48.649s，CPU及相同阶段/拍数成本均下降，候选反多等待。两处来源门通过，所有释放/脱离/回位与原安全条件保持。P95 18.786/20.759ms，仍104/235拍超过20ms且第二最大拍回退；完整50Hz未通过。实际负载和最大拍反证见[原计划F2al](../../plans/factory-loading-20261021/progress.md)。旧 `smooth_jaw_leg_clock.py` 保留显式对照。
+
+`route_strategies/direction_hint_preallocated.py` 只在该新默认上开已有模型预准备，用于接续原物理复验；当前未采用。初始化和清理成本仍计入完整进程，旧预准备/GC/FK候选不自动叠加。

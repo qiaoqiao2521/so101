@@ -145,6 +145,7 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(recommended.summary_fast)
         self.assertTrue(recommended.batch_configuration_sweep)
         self.assertTrue(recommended.refresh_leg_age)
+        self.assertTrue(recommended.direction_hint_sweep)
         self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
         original, source = load_route_policy(BASELINE_SOURCE)
         self.assertFalse(original.leaf_packed)
@@ -152,11 +153,19 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertEqual(source['entrypoint_path'], str(BASELINE_SOURCE.resolve()))
 
     def test_direction_hint_candidate_changes_only_search_preference(self):
-        parent, _ = load_route_policy()
+        parent, _ = load_route_policy(
+            Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py')
         child, _ = load_route_policy(
             Path(__file__).parent/'route_strategies/direction_hint_sweep.py')
         self.assertFalse(parent.direction_hint_sweep)
         self.assertEqual(child.preferences(), dict(parent.preferences(), direction_hint_sweep=True))
+
+    def test_direction_hint_preallocation_only_moves_existing_preparation(self):
+        parent, _ = load_route_policy()
+        child, _ = load_route_policy(
+            Path(__file__).parent/'route_strategies/direction_hint_preallocated.py')
+        self.assertFalse(parent.preallocate_worker_models)
+        self.assertEqual(child.preferences(), dict(parent.preferences(), preallocate_worker_models=True))
 
     def test_inline_parent_and_original_remain_available(self):
         child, source = load_route_policy(
