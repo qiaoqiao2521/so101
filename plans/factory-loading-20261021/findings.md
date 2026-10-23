@@ -313,3 +313,7 @@ F2ar原物理两工位反序4/4pass，source fbaea07全程干净且两对均原�
 P95 11.447→10.490ms、14.047→11.947ms，max95.515→49.828、109.640→78.637ms，慢拍14→12、39→30。第二站hold慢拍6→10回退仍保留，完整50Hz未过。首父运行中新增Blender、第二候选开始load1较父高，不能保证完全同负载或把全部3.585s强归于一次树遍历；采用依据是两站反序、局部三对和同拍数CPU改善。GC/本机编译旧失败不改。
 
 F2as下一项仅检查原标量_arm_valid的重复方向搜索。F2aq该主线程布尔接口8682次，源码当前仍走原ns_evaluate_hinted，已有方向提示只在batch扫掠启用。先用真实机器人q6私有复用原C方向入口，比较布尔谓词与最终Data及三对成本；数值下界/方向提示可以改变，不能把它们记作raw等值。当前不动生产或评分，不扩展到需要数值下界的shortcut/diagnostics。
+
+F2as私有实测完成：从已采用候选的approach/close/transport/release/retreat各选100个真实q6，只传机器人关节和夹爪角；500个原_arm_valid布尔输出及最终FK Data相同，全为正常valid样本。原C源码/二进制相同，候选独立ctypes对象上的私有Pythonobserver调用已有ns_evaluate_direction_hinted，包含该额外Python开销。三对wall98.590→77.464、99.207→87.047、109.622→71.840ms，CPU98.569→77.055、98.811→86.516、102.879→71.241ms，原screen eligible，中位省21.126ms。数值下界/方向/hint输出未宣称等值；无物理成绩或生产开关。
+
+该探针尚不覆盖碰撞拒绝、异常环境、owner重入和观察者修改。下一步只将已有C方向入口接到可选的标量布尔调用，保留默认原summary、原异常/观察者/缺符号回退；不能把私有observer当生产接法，也不能把500个名义状态当全域验证。private round58-scalar-direction保存完整源、Root GPT来源及local-results.json。

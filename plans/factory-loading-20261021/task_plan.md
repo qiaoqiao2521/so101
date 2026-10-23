@@ -312,8 +312,8 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 
 ## F2as 标量布尔臂检查的方向搜索局部核算
 
-- [ ] 按F2aq主线程8682次_arm_valid及源码的原标量查询，私有测量实际q6的原搜索和已有方向提示；每次重新求证，不复用几何结论。
-- [ ] 只比较_arm_valid布尔输出及最终FK数据；方向/下界/hint诊断允许不同，不能冒充raw ABI等值。原评分/diagnostics不在修改范围，局部有收益再讨论最小生产接入。
+- [x] 私有500实际q6原_arm_valid布尔/最终FK相同，三对wall98.590→77.464、99.207→87.047、109.622→71.840ms，原screen eligible；只复用方向索引，每次重新求证。
+- [ ] 最小生产接入前补失败/异常/重入/观察者/缺符号回退；只选_arm_valid布尔接口，原评分/shortcut下界/diagnostics保持。新开关默认false，再做正式组件与原物理，不把局部当抓放通过。
 
 Current：默认direction_hint_single_pass.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as只按已测热点做私有布尔guard局部核算，未接生产。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 

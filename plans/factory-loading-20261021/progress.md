@@ -1212,3 +1212,11 @@ F2ar决定：采用direction_hint_single_pass.py为新工厂默认，保留direc
 默认切换的185项复查先暴露F2ao旧GC测试仍隐式引用最新default，导致单变量断言多出fused_context_freeze差异。将该历史测试父版钉回原direction_hint_preallocated.py，不把已拒绝GC实验升级到新组合；原失败日志default-tests.log保留。默认加载实读为single_pass=True、GC/FK=false；随后185项全部通过，完整输出保存在default-regression-tests.log。
 
 Next F2as：当前profile的_arm_valid主线程8682次，原标量summary仍固定搜索，已采用方向提示只在batch扫掠内复用成功方向。先私有重放真实q6，复用现有C方向入口，每次重新求证，只比较布尔guard/最终FK数据和三对成本。数值下界/方向/提示输出可变，不能冒称raw ABI同值；不改原评分、shortcut数值判断或diagnostics。局部无收益即止损，未接生产或宣称物理通过。
+
+F2ar采用提交d726ac3已推送，REST及ls-remote独立读回一致；默认入口实读single_pass=true、GC/FK=false，185默认回归通过，工作区干净。没有在原成对评测期间改源或提交。
+
+F2as私有局部完成：Root GPT在round58-scalar-direction/probe.py对已采用名义候选e99bfb84的五个阶段各选100个真实q6，调用原VisualGraspController._arm_valid；无物体真值、阶段作为策略输入或新物理裁判。候选仅在独立ctypes库对象安装私有Pythonobserver，调用原已有ns_evaluate_direction_hinted；原C/flags及兄弟父owner保持，Pythonobserver开销也计入。500个布尔输出、最终qpos/qvel/body/geom Data同值，invalid_count=0；下界/方向/hints诊断允许改变，不冒称raw ABI同位。
+
+三对wall98.589518→77.463608、99.206624→87.047463、109.621940→71.839667ms；线程CPU98.569324→77.055331、98.810557→86.515653、102.878971→71.240935ms。原screen eligible/consistent_local_effect，median=-21.125910ms，所有输入数相同。每个子pass500次调用、134487次提示尝试、163606次含回退证书工作，原计数留在local-results.json。资源等待.031640s独立记、结束共享重任务为空；这不是500个控制周期或抓放通过，不能乘8682次外推任务收益。
+
+Next：最小生产接入已有方向C函数，拟限_BoundPairs.summary的可选方向路径及ConservativeCollisionChecker.evaluate的可选参数，只由_arm_valid布尔接口开启；RoutePolicy新字段默认false，原default仍single-pass。保留原scalar summary/ABI、输入转换顺序、owner锁/重入fresh路径、观察者及缺符号回退，不修改需要数值下界的shortcut、diagnostics或评分。补碰撞/异常/闭owner/观察者/重入边界、正式组件对照，再原物理及跨站反序；当前500个样本全名义，未将未覆盖失败路径记成功。Knowledge=already_covered，来源/性能范围规则沿用原Wiki，不联系「登录 X」。
