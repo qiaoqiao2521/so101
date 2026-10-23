@@ -1356,3 +1356,9 @@ full_probe.py随后实际调用原控制器初始化和0秒update，读取已记
 完整三对wall .878410→.935663、.900879→.898933、.962584→1.188648s，线程CPU三对差+.052697/-.001156/+.221588s，原screen reject/no_median_local_effect，中位wall多57.253ms；淘汰，不重复择绿，不接生产/原物理，不切默认。局部与完整正反证均由independent-local-readback.json/independent-full-readback.json独立留存；没有新抓放成功或50Hz成绩。Knowledge=already_covered，原组件/整体、运行版本和反证规则覆盖。
 
 Next F2bb：用.local/share/ros2-factory/venv311/bin/python和既有round10-batched-cross-axes/run_pair.py，新建round67-runtime-baseline/prepared-path.txt指向原名义无cProfile单回合。原环境已缺失，新环境完整物理尚未验收，因此此轮用于原版可复跑与完整时钟核准，绝不称候选加速。新源码固化、共享资源释放后运行，原244/90sim120wall/全部回退保持；终态再改源或提交，保留失败。依据新环境真实结果再选IK/路径/执行方向，停止本轮上下文微调。
+
+F2bb终态：原runner/evaluator均已退出，source cb1cbb11干净的9d93c587原pass。独立运行round67-runtime-baseline/readback.py，从原evaluation/report/timing/jaw/trajectory/planning与实际进程记录核准，failed_checks=[]；75.84sim/28.492444process-wall/36.274256process-CPU。抓起40.999072mm、持物32.16s、静稳7.52s、释放脱离回位通过；原planned/measured各244、安全0/障碍0/free=true/weld-mocap0，474/474视频和两个worker清理均过。证据output/runtime-baseline-20261024/9a4b28f8-b4bb-480a-8d80-a7e09c20471a/independent-runtime-readback.json。
+
+全部3792拍均完整，P95 8.462118ms、max47.300546ms、5拍超20ms，未宣称完整50Hz。资源等待81.839267s单列，load1 5.42→3.97；新旧依赖环境不同且本轮无候选，不把28.49s与旧时钟当算法加速。新环境已过完整原名义物理，原默认与原裁判不变。Knowledge=already_covered，既有性能对照/运行版本分别绑定规则覆盖。
+
+Next F2bc：private round68-runtime-tail-observation/probe.py复用round53 GC callback，并只对原_poll_separation局部计数；probe-origin.json明确Root GPT来源、5拍证据与不变边界。语法预检完成仅为准备，不是本轮新交付；固化计划后用原round10串行runner等待资源并跑原名义观察，保留全部物理结果。不同于已失败的F2ay全主线程profile，也不重跑已拒绝GC窗口/编码候选。终态独立回读GC是否重合、205样本准入真实子调用，再决定是否有值得局部验证的改动。

@@ -389,3 +389,10 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 - [x] 补齐延迟导入遗漏的cv2，保留原失败；新环境增加opencv-python-headless5.0.0.93，NumPy固定2.4.6，原18包记录与当前19包清单分开保存。
 - [x] 原控制器真实初始化/0秒update生成完整35字段，40数组/64行函数触达且同值；完整三对两退一微改善，中位wall多57.253ms，原screen reject，淘汰且不接生产/原物理。
 - Next F2bb：停止上下文编码微调，复用原evaluate_station.py/round10 runner在新环境跑一次无cProfile原名义回合，核对完整抓放/释放/脱离/回位和时钟。该回合用于新环境复跑验收，不是候选提速对照；原244/90sim120wall保持。
+
+## F2bb 新环境原版完整复跑验收（2026-10-24）
+
+- [x] source cb1cbb1干净，原名义回合9d93c587原pass；75.84sim/28.492444process-wall/36.274256process-CPU，等待81.839267s另计。
+- [x] 独立回读全部3792完整拍、原抓放/释放/脱离/回位、planned/measured各244点和474/474视频；安全0/障碍0、free=true/weld-mocap0，两个worker清理确认。
+- [x] 当前完整P95 8.462118ms、max47.300546ms、5拍超20ms，完整50Hz未过。仅是新环境原版可复跑，不跨环境声称算法提速。
+- Next F2bc：复用round53 GC只读观察器，额外仅对原_poll_separation局部计数；依据5拍真实长尾分离回收/准入成本，不重复整回合cProfile或已淘汰的GC/编码候选。入口private round68-runtime-tail-observation/probe.py与原round10 runner；未运行不记成果。

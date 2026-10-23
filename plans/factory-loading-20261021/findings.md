@@ -409,3 +409,13 @@ Root GPT按F2az反证，仅对原生float64一/二维数组保留原tolist拥有
 完整三对wall .878410→.935663、.900879→.898933、.962584→1.188648s；线程CPU .877217→.929914、.898603→.897447、.959851→1.181438s。原screen reject/no_median_local_effect，中位wall多.057253s，两退一微改善，不重复择绿。淘汰，不接生产、不追加原物理/跨站，默认float_first_context不变；independent-local-readback.json与independent-full-readback.json分别保留局部准入和完整拒绝，不能只挑局部正结果。
 
 下一回合F2bb是新环境原版复跑验收：旧解释器/依赖目录缺失，虽然已完成CPU reset/step及真实控制器初始化，重建后尚无完整原物理裁决。沿用原名义场景、原默认、原计时和90sim/120wall，通过完整抓放/释放/脱离/回位确认可复跑，再用该环境的实测瓶颈选下一候选；不重复上下文微调、不把这轮无候选基线算作提速。
+
+## F2bb 新环境完整原物理已通过（2026-10-24）
+
+原round67-runtime-baseline/prepared-path.txt指向output/runtime-baseline-20261024/9a4b28f8-b4bb-480a-8d80-a7e09c20471a。source cb1cbb11两处来源及评分器均干净，当前19包独立环境，run9d93c587-1077-41de-af32-7bcf7f749b63原verdict=pass。原75.84sim、27.365738报告wall、28.492444实际process-wall/36.274256process-CPU；等待Blender释放81.839267s单列，前后active=[]，load1 5.42→3.97。这是新环境可复跑核准，不是新候选A/B，也不能与旧环境绝对秒数拼成加速。
+
+真实抬起40.999072mm、持物32.16s、静稳7.52s；原抓放、释放、脱离和回位完成。release_audit通过，68.50s脱离、XY漂移.249938mm、脱离后峰力0N；free=true/weld=0/mocap=0，安全停机0/障碍接触0。planned/measured闭爪各244点，trajectory全部有限/arm_valid，3792完整拍、无不完整拍；视频474/474。运输worker.939300s、分离.501839s，均joined/owned_ack、cleanup_unconfirmed=false；初始化3.419332s与清理/视频/落盘均保留在实际进程成本中，不将嵌套worker成本相加。
+
+完整周期P50 6.150171ms/P95 8.462118ms/max47.300546ms，仍5拍超20ms：approach11.20s 23.600519ms、close19.52s 21.025798ms、transport41.80s 38.038357ms、release66.42s 47.300546ms、separate68.14s 27.505590ms。前三处/释放主峰的controller wall接近线程CPU，不能一律归因宿主等待；分离准入controller22.823ms/CPU19.019ms且实际核对205保存样本。尚未给GC与准入细项打点，不凭位置猜根因。independent-runtime-readback.json保存逐项核准、所有完整周期、生命周期与主机范围；完整50Hz仍未过。
+
+F2bc只读定向归因由Root GPT复用round53 GC观察器，并只给原_poll_separation启用cProfile；原GC enable/thresholds和原方法结果保持。不同于F2ay全主线程插桩，本轮仅核准新环境5拍长尾的GC重合和准入子调用，计时只作归因，不作新性能A/B或默认晋级。private round68-runtime-tail-observation保存probe-origin.json/probe.py；原共享资源观察/90sim120wall/244/全部回退保持，终态前不改源提交。
