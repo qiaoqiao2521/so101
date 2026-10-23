@@ -331,3 +331,5 @@ F2at正式writer同482次三对wall.819→.225、.871→.232、.901→.258s，�
 F2at首工位原物理2/2pass，94.375→51.817process-s与同3264拍CPU44.874→29.710s均受明显宿主负载变化混杂；未将42.558s归于格式选项。实际scene发布653→347仍按原墙钟触发，不作同量写入证明；正式三对482次才支持组件收益。保留原数据，接第二已有200/200工位反序，不改默认、不重复首工位择绿。
 
 F2at第二已有工位反序2/2原pass，process38.628→37.426s、CPU46.844→45.512s；剔除hold/release/lower后同3236拍CPU24.450→23.279s，callbackCPU1.181→.594s但发布307→293，不冒称相同写入次数。采用紧凑实时status，首站42s差仍按宿主混杂，release慢拍15→24及分离worker反慢保留，完整50Hz未过。默认入口compact_status_json.py，底层flag仍false，91相关默认回归通过；历史single-pass/原版可复跑。下一项先更新旧于两项采用的主线程profile，方向列表已是std::array19，不重复重写。
+
+F2au新默认原物理profile/pass：主线程_immutable_snapshot_context3787928次/5.404累计插桩秒，validate_joint_path3889次主要来自update3803与shorten_path78。下一F2av仅把原float判断移到容器判断前，保持所有位编码/错误，用旧18代表结构/34边界及原7762权重先三对。原C方向已是19数组，原积分守卫不改；未测局部不记成功。

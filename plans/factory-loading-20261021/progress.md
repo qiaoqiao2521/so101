@@ -1272,3 +1272,9 @@ F2at跨站终态：source165b593（仅增加首站记录，源码同a846fe7）�
 F2at采用：默认入口选择compact_status_json.py，原direction_hint_single_pass.py及baseline保持可复跑。底层RoutePolicy.compact_status_json仍false，不叠已拒绝scalar/GC/FK。只紧凑编码实时status，全部字段/发布触发/原子替换/非有限值拒绝保持，归档报告继续原缩进。切换后91相关回归通过，完整日志round59/default-tests.log；先前64、同量正式三对及两工位4/4物理共同构成采用依据。Knowledge=already_covered，已有Wiki性能/版本范围规则覆盖；未向其他对话发消息。
 
 Next F2au：实际源码核对显示pair_result已经用std::array<Vec,19>存方向，不另造固定列表；full_tree的栈存储也已有实验记录，不能凭猜想重复。当前主线程pstats来自采用single-pass和compact-status前，下一项先用原标准cProfile在新默认实际跑一次计数，提取validate_joint_path等真实调用方和完整周期慢拍。它是诊断插桩、不是未插桩A/B或50Hz成绩；保持原90sim/120wall、原裁判/244点/回退，接既有runner资源等待。尚未运行该新默认profile。
+
+F2au完成：sourcebe4aaad干净，新默认compact-status标准cProfile原回合b71c7910-98dd-468c-bb30-980b6cf53628/pass，output/post-compact-profile-20261023/b04dc95a-0c79-4d7b-81ea-6549fdd40a1a。76.06sim、45.765607process-wall/53.616000CPU，原资源等待.034534s另计，结束共享重任务空。原planned/measured各244点，抓放/释放/脱离/回位全过，安全0/障碍0/free=true/weld-mocap0，视频476/476完整。运输/分离worker1.651389/1.166860s均joined/owned_ack确认、cleanup_unconfirmed=false；独立原件independent-profile-readback.json保留所有来源与物理值。
+
+新主线程45392061总/37176288 primitive calls；_sweep_binding7624次，_immutable_snapshot_context3787928次/约5.404s累计，validate_joint_path3889次/7.692s，其中update3803次占5.585s、shorten_path78次占1.981s。它们是插桩主线程归因，worker不在pstats。原碰撞积分处的set交集生成器也是热点，但不碰原物理守卫或裁判。插桩完整周期P95 15.970445ms、max69.018531ms、105慢拍，只存证，不当作未插桩50Hz成绩或与旧profile构成性能A/B。
+
+Next F2av：Root GPT在round61-float-first-context从现有helper AST提取，只将float判断移至tuple/list前，数学和float64位编码、排序键、有限值/未知类型拒绝与副本保持；原函数不动。以原18拥有结构和34边界、原7762旧权重做私有三对，只检验这个热分支假设；不伪称当前7624个唯一在线输入或物理通过。当前尚未运行该新局部，不改default、不盲扫参数、不复试旧scalar/GC/编译。Knowledge=already_covered，原性能/版本范围规则覆盖。

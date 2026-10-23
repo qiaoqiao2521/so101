@@ -334,5 +334,10 @@ F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归
 
 ## F2au 新默认的当前调用归因
 
-- [ ] 现有F2aq profile早于单遍上下文和状态JSON两项采用，先复用标准cProfile与原evaluate_station做一次当前默认计数，保留原物理/244点/90sim/120wall。插桩秒数不作性能或50Hz成绩。
-- [ ] 从当前热点与调用方选择下一项局部探针；原C方向列表已经是固定19项数组，不重写已存在能力，不复跑已淘汰的标量方向/GC/编译候选。
+- [x] 新默认标准cProfile原回合b71c7910原pass，sourcebe4aaad干净；原物理/244点/90sim/120wall保持。45.766s插桩进程只作归因，不作性能/50Hz成绩。
+- [x] 当前_immutable_snapshot_context3787928次、_sweep_binding7624次，选F2av仅浮点分支前移的私有对照；原C19方向数组保持，不重复旧失败。
+
+## F2av 热路径浮点分支前移
+
+- [ ] private round61-float-first-context仅交换原单遍helper的float与tuple/list分支；原编码/有限值/副本/错误保持，先34边界与18代表结构、原7762次数三对局部。
+- [ ] 无收益即淘汰；有收益再最小生产接入、原物理与跨站反序。当前生产/default不变。
