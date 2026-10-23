@@ -196,6 +196,16 @@ def _immutable_float_first_context(value):
     return _immutable_context(value)
 
 
+def _immutable_named_context(value):
+    """Own each value; native field keys need no generic recursive encoding."""
+    if type(value) is not tuple:
+        return _immutable_float_first_context(value)
+    for item in value:
+        if type(item) is not tuple or len(item) != 2 or type(item[0]) is not str:
+            return _immutable_float_first_context(value)
+    return tuple((name, _immutable_float_first_context(item)) for name, item in value)
+
+
 @dataclass(frozen=True, eq=False)
 class SweepBinding:
     """Process-local arm guard ownership; not a continuous-motion certificate.
@@ -213,6 +223,7 @@ class SweepBinding:
     map_context: bool = field(default=False, repr=False, compare=False)
     snapshot_context: bool = field(default=False, repr=False, compare=False)
     float_first_context: bool = field(default=False, repr=False, compare=False)
+    named_context_freeze: bool = field(default=False, repr=False, compare=False)
     _jaw_bits: bytes = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -229,7 +240,8 @@ class SweepBinding:
             raise TypeError('Sweep context must be a tuple')
         object.__setattr__(self, 'jaw_intent_rad', jaw)
         object.__setattr__(self, '_jaw_bits', struct.pack('!d', jaw))
-        snapshot = (_immutable_float_first_context if self.float_first_context is True
+        snapshot = (_immutable_named_context if self.named_context_freeze is True else
+                    _immutable_float_first_context if self.float_first_context is True
                     else _immutable_snapshot_context)
         freeze = (snapshot if self.snapshot_context is True else
                   _immutable_context_map if self.map_context is True else _immutable_context)

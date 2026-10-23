@@ -1314,3 +1314,11 @@ F2aw完整构造终态并停止晋级：首版原screen reject保持，但18旧�
 本轮三个诊断/测试问题均有原始记录：np.bool_报告序列化、策略字段顺序与dict排序参照混用、旧fixture预展开目标对象。修正不删除旧失败，也不将丢失计时算有效。生产原裁判/244/90sim120wall与回退保持，Git来源固化前无owned评测。Knowledge=already_covered，原Wiki性能/版本范围及必须触达真实路径的证据边界覆盖。
 
 Next F2ax：据原数百万次上下文递归与当前固定(name,value)顶层结构，只读数顶层键/中间tuple访问占比；值得才做私有精确同值的已命名字段编码候选，保留任意非标准输入原路径，不缓存动态上下文或改所有权。先量实际结构与候选目标调用，避免再用已展开fixture漏掉目标。
+
+F2ax接续：5454e77已推且REST/ls-remote一致、起始工作区干净，无owned在途评测。已独立回读round63/local-screen.json：64项同值、18样本计时外原helper7944→6744且候选18实际调用；三对原screen eligible，wall中位省.117124s，原共享等待488.983190s另计。不冒称35当前字段与旧21/24/35形状是同一批当前在线记录。
+
+最小生产named_context_freeze默认false；全部动态值仍新拥有/编码，非标准形状完整原回退，async不选新helper，未叠flat/GC/scalar/FK。102相关回归通过，原裁判/244/90sim120wall保持，原默认float_first_context不变。Next：round63/production_probe.py完整构造器三对，恢复相同当前策略对象，并在计时外确认baseline0/候选非async实际调用数；有收益才固化源码并接round63/prepare_physical.py及原round10/run_pair.py。Knowledge=already_covered，原性能/版本与真实路径证据规则覆盖。
+
+F2ax完整构造终态：round63/production-local-screen.json原screen eligible，18旧结构/7762旧权重恢复相同当前RoutePolicy；计时外baseline0/候选15次实际选中，async3结构保留原实现，原所有权/上下文输出同值。三对wall1.013599→.931669、1.070700→.933880、1.034931→.966241s，CPU1.013199→.931051、1.070290→.933465、1.034522→.966033s，等待15.449619s另计。不以减少递归数或约82ms中位组件收益代替原任务成绩。
+
+无owned在途局部/物理；102相关回归通过，原source改动仅默认false选择项/encoder/当前_sweep_binding，old/async回退保持。固化后用round63/prepare_physical.py名义父float_first_context→子named_context，再原round10/run_pair.py等待共享资源。默认/评分/244/90sim120wall不改，整对终态才后续修改或提交。Knowledge=already_covered。
