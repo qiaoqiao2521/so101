@@ -89,11 +89,12 @@ class CompactStatusJsonTests(unittest.TestCase):
                 self.assertEqual(statuses[0], statuses[1])
                 self.assertEqual(statuses[1]['status'], 'cancelled' if cancelled else 'failed')
 
-    def test_explicit_candidate_only_selects_serialization_default_stays_original(self):
+    def test_explicit_candidate_only_selects_serialization_and_default_is_verified(self):
         root = Path(__file__).parent/'route_strategies'
         parent = load_route_policy(root/'direction_hint_single_pass.py')[0]
         child = load_route_policy(root/'compact_status_json.py')[0]
-        self.assertFalse(load_route_policy()[0].compact_status_json)
+        self.assertFalse(RoutePolicy().compact_status_json)
+        self.assertTrue(load_route_policy()[0].compact_status_json)
         self.assertFalse(child.scalar_direction_hints)
         self.assertEqual([key for key, value in child.preferences().items()
                           if parent.preferences()[key] != value], ['compact_status_json'])

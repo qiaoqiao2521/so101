@@ -317,7 +317,7 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 - [x] 正式500姿态三对wall112.987→84.100、109.520→83.315、113.387→80.245ms，布尔/最终FK相同，原screen eligible。
 - [x] source9e3bf73原名义父→子2/2物理pass；同3264拍CPU23.119→23.672s回退，收益不足以晋级，淘汰且不追加跨站，默认保持。
 
-Current：默认direction_hint_single_pass.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as原物理安全通过但等工作量成本回退，已淘汰；F2at先筛选状态JSON序列化热点。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+Current：默认compact_status_json.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as原物理安全通过但等工作量成本回退，已淘汰；F2at先筛选状态JSON序列化热点。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。
 
@@ -329,4 +329,10 @@ F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归
 - [x] 最小生产compact_status_json默认false，仅status发布选紧凑编码；全部字段/频次/原子替换/非有限值拒绝保持，64相关回归通过。
 - [x] 正式组件同482次三对wall.819→.225、.871→.232、.901→.258s，解析值/原失败保持，原screen eligible。
 - [x] sourcea846fe7原名义父→子2/2pass，244点/评分保持；原始94.375→51.817s受宿主重负载变化干扰，未认定42.558s算法收益。
-- [ ] 按原第二已有200/200工位反序复测，检查同工作量CPU与全部物理门后决定采用；默认仍single-pass。
+- [x] 第二已有200/200反序2/2原pass；38.628→37.426process-s，剔除hold/release/lower后同3236拍CPU24.450→23.279s，保留release慢拍15→24反证。
+- [x] 两站4/4物理安全及三对正式组件通过，采用compact_status_json.py；原single-pass父/原版均保留，91默认相关回归通过，完整50Hz仍未过。
+
+## F2au 新默认的当前调用归因
+
+- [ ] 现有F2aq profile早于单遍上下文和状态JSON两项采用，先复用标准cProfile与原evaluate_station做一次当前默认计数，保留原物理/244点/90sim/120wall。插桩秒数不作性能或50Hz成绩。
+- [ ] 从当前热点与调用方选择下一项局部探针；原C方向列表已经是固定19项数组，不重写已存在能力，不复跑已淘汰的标量方向/GC/编译候选。

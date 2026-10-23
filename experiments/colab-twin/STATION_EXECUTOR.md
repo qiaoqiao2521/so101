@@ -317,3 +317,5 @@ F2am采用的默认父版 `route_strategies/direction_hint_preallocated.py` 在�
 最新工厂默认 `route_strategies/direction_hint_single_pass.py` 只在上述父版增加 `fused_context_freeze=True`。合并当前_sweep_binding的快照与不可变编码遍历，每次仍读取全部字段并保留owner、阶段、有限值、浮点位身份、复制隔离及consume变动拒绝；异步绑定使用原路径。原碰撞、244点、90sim/120wall与全部回退不变，低层字段仍默认false，旧父版保留显式复跑。
 
 同源码两工位反序4/4原物理通过，process32.330→30.717s、37.052→33.466s；剔除hold/release后，两站各自相同阶段/拍数CPU21.108→20.245s、24.171→21.858s。P95 11.447→10.490ms、14.047→11.947ms，慢拍14→12、39→30，完整50Hz仍未过。实际负载、所有规划/释放与反证见[原计划F2ar](../../plans/factory-loading-20261021/progress.md)，不将不同轮次的绝对秒数相加作累计提速。GC延后与本机编译候选未采用。
+
+当前工厂默认采用[完整紧凑状态发布](route_strategies/compact_status_json.py)：只为实时 `status.json` 使用原标准库紧凑编码，保留全部字段、发布触发、取消检查和原子替换。归档文件继续原缩进。原[单遍上下文父版](route_strategies/direction_hint_single_pass.py)和[初始原版](route_strategies/baseline.py)仍可通过 `--candidate` 复跑。2026-10-23两已有工位反序共4/4原物理通过；第二工位38.628→37.426进程秒，同3236拍CPU24.450→23.279秒。首工位秒数受明显宿主负载变化影响，不计42秒算法收益；完整50Hz未通过，详见[原计划](../../plans/factory-loading-20261021/progress.md)。

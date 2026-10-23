@@ -1260,3 +1260,15 @@ F2at名义物理终态：sourcea846fe7已推送且REST/ls-remote一致；523641a
 实际scene_seq653→347，发布触发仍原.1/.4s按墙钟，次数受整轮耗时影响，不当成同量写入的算法证据；原正式组件才是同482写入。两版最终status顶层/scene字段集相同，status-publication-readback.json保留完整周期各段CPU和实际发布次数；格式空白不同，数据未删除。峰RSS1416996→1402216KiB，原资源等待单独计量。
 
 本轮决定仍不改默认。正式组件三对提供同量序列化收益且原物理安全通过，但名义对照的宿主混杂很大；按既有协议只接第二已有200/200工位反序，保留本对，不追加同工位重跑追绿。第二对须看同阶段CPU/发布次数与原完整周期，再决定采用或淘汰。Knowledge=already_covered，性能与版本/范围规则沿用原Wiki；不联系其他对话。
+
+F2at跨站终态：source165b593（仅增加首站记录，源码同a846fe7）干净，801ce733-8453-47a0-ad72-61c39015c8c1按子74c47630-e795-4dd8-b74f-733935f0e7e9→父1ca59548-912c-42d0-b8ff-e392b6bc67c4反序。两轮原pass，按父→子process38.627547→37.426128s、CPU46.843578→45.511767s；sim78.90→78.80s少3hold/1lower/1release拍。原outside_hold_release还差1lower，进一步剔除lower后同3236拍/阶段，wall24.511659→23.317081s、线程CPU24.450332→23.279440s、controller15.601960→15.175601s。原完整周期保留，没有从评分删lower。
+
+本对P95 13.753597→13.632835ms、max101.369566→92.030117ms，慢拍53→53；approach10→1同时release15→24回退仍保留，完整50Hz未过。整轮callback线程CPU1.180606→.593844s，实际scene发布307→293，仍原墙钟触发，不能把它们当相同发布次数或将全部1.201419s强归序列化。证据以原同482次组件三对和本对同阶段CPU为支撑，首站巨大42s差继续标宿主混杂，不合并不同负载轮次累计加速。
+
+运输worker1.860906→1.803542s，分离1.009743→1.059909s反慢；均joined/owned_ack=true、cleanup_unconfirmed=false，嵌套计时不相加。初始化4.048836→4.057716s纳入process；峰RSS1414932→1369108KiB，跨站子/父资源等待.045329/.033976s另计，前后共享重任务空。子开始load1=12.27，父10.42→10.84，仍非受控宿主，但没有首站ffmpeg巨大中途变化。
+
+两轮planned/measured各244点，真实抓起/搬运/落盘/静稳/释放/脱离/回位全pass；安全0、障碍0、free=true、weld/mocap0。子抬升40.889632mm、hold34.66s、settle7.50s、detach71.48s、释放漂移.258647mm、脱离后0N，视频493/493；父494/494。四独立读回通过、原score/四XML/初态/阈值/native/运输路线一致，仅compact_status_json变化；matched-stage-readback.json显式保留原计时与剔除范围。
+
+F2at采用：默认入口选择compact_status_json.py，原direction_hint_single_pass.py及baseline保持可复跑。底层RoutePolicy.compact_status_json仍false，不叠已拒绝scalar/GC/FK。只紧凑编码实时status，全部字段/发布触发/原子替换/非有限值拒绝保持，归档报告继续原缩进。切换后91相关回归通过，完整日志round59/default-tests.log；先前64、同量正式三对及两工位4/4物理共同构成采用依据。Knowledge=already_covered，已有Wiki性能/版本范围规则覆盖；未向其他对话发消息。
+
+Next F2au：实际源码核对显示pair_result已经用std::array<Vec,19>存方向，不另造固定列表；full_tree的栈存储也已有实验记录，不能凭猜想重复。当前主线程pstats来自采用single-pass和compact-status前，下一项先用原标准cProfile在新默认实际跑一次计数，提取validate_joint_path等真实调用方和完整周期慢拍。它是诊断插桩、不是未插桩A/B或50Hz成绩；保持原90sim/120wall、原裁判/244点/回退，接既有runner资源等待。尚未运行该新默认profile。
