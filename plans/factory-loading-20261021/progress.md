@@ -1362,3 +1362,11 @@ F2bb终态：原runner/evaluator均已退出，source cb1cbb11干净的9d93c587�
 全部3792拍均完整，P95 8.462118ms、max47.300546ms、5拍超20ms，未宣称完整50Hz。资源等待81.839267s单列，load1 5.42→3.97；新旧依赖环境不同且本轮无候选，不把28.49s与旧时钟当算法加速。新环境已过完整原名义物理，原默认与原裁判不变。Knowledge=already_covered，既有性能对照/运行版本分别绑定规则覆盖。
 
 Next F2bc：private round68-runtime-tail-observation/probe.py复用round53 GC callback，并只对原_poll_separation局部计数；probe-origin.json明确Root GPT来源、5拍证据与不变边界。语法预检完成仅为准备，不是本轮新交付；固化计划后用原round10串行runner等待资源并跑原名义观察，保留全部物理结果。不同于已失败的F2ay全主线程profile，也不重跑已拒绝GC窗口/编码候选。终态独立回读GC是否重合、205样本准入真实子调用，再决定是否有值得局部验证的改动。
+
+F2bc终态已独立回读：source5a3f012干净的05cf510a原pass/75.84sim，28.709569process-wall/37.053630process-CPU。原3792完整拍、244点、抓放/释放/脱离/回位与清理通过；GC设置不变，3次主线程gen2与3个长尾重合，22.582/33.800/39.787ms。49次原准入调用中205保存样本完整检查一次；原结果/异常透传、observer恢复，无错/未闭事件。证据output/runtime-tail-observation-20261024/bbbbd0d4-fbc4-4922-8a4b-e9027a7120a3/independent-tail-readback.json。插桩8慢拍不作无插桩50Hz或新候选成绩；不重跑旧GC窗口。
+
+F2bd已完成私有及正式局部对照：F2bb初始化77次连接中75次无效、1.565786s，Root GPT据此生成有界中点顺序+原降序回退，来源与复跑private round69-shortcut-order/{candidate-origin.json,candidate.py,probe.py,production_probe.py}。私有三对中位省1.200145s、生产中位省1.060789s，CPU同向；真实候选查询77→10、7494→2237状态，选中路径字节同、最终513点全部检查，两个原screen eligible。8项新增边界回归及原相关回归通过；independent-local-readback.json同时保留两组三对和资源等待，不将其当整回合交付。
+
+当前approach_midpoint_order默认false，显式候选只改变接近路径的搜索顺序；原2mm/1mm/.005rad/512预算、相邻边回退、最终错误、安全条件和244点均保持。准备固化新源码后原名义父→子完整物理；整对终态、独立读回真实成本才决定跨站子→父复测。没有物理收益前不切默认。Knowledge=already_covered，原组件/物理范围、同源对照和保留反证规则覆盖。
+
+2026-10-24用户要求取消定时并持续做：原生automation_update(mode=delete,id=so101)已返回deleteStatus=deleted，本地对应automation.toml已不存在；仅删除本对话SO101定时器，不重建自动唤醒、不影响已有评测进程。当前根Codex接续实际实验。

@@ -38,6 +38,7 @@ class RoutePolicy:
     float_first_context: bool = False
     flat_policy_preferences: bool = False
     named_context_freeze: bool = False
+    approach_midpoint_order: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -102,6 +103,8 @@ class RoutePolicy:
             raise ValueError('Flat policy preferences selection must be a boolean')
         if not isinstance(self.named_context_freeze, bool):
             raise ValueError('Named context selection must be a boolean')
+        if not isinstance(self.approach_midpoint_order, bool):
+            raise ValueError('Approach midpoint order must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

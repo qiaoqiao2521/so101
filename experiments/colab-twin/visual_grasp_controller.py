@@ -90,7 +90,49 @@ def motion_duration(points):
     return max(2., float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())*1.875/.3)
 
 
-def shorten_path(points, valid, max_checks=128, *, report=None, shortcut_valid=None):
+def _midpoint_shortcut_index(index, last, attempt):
+    """Find a checked chord; feasibility need not be monotonic.
+
+    A midpoint hit is a heuristic, not proof of a globally longest chord. If
+    refinement finds none, retain descending search over untried candidates.
+    ``None`` from attempt means the original edge budget is exhausted.
+    """
+    chosen, tried = index+1, {}
+    if last <= chosen:
+        return chosen
+
+    def query(candidate):
+        if candidate not in tried:
+            tried[candidate] = attempt(candidate)
+        return tried[candidate]
+
+    direct = query(last)
+    if direct:
+        return last
+    if direct is None:
+        return chosen
+    low, high = index+2, last-1
+    while low <= high:
+        midpoint = (low+high)//2
+        outcome = query(midpoint)
+        if outcome is None:
+            break
+        if outcome:
+            chosen, low = midpoint, midpoint+1
+        else:
+            high = midpoint-1
+    if chosen == index+1:
+        for candidate in range(last, index+1, -1):
+            outcome = query(candidate)
+            if outcome is None:
+                break
+            if outcome:
+                return candidate
+    return chosen
+
+
+def shorten_path(points, valid, max_checks=128, *, report=None, shortcut_valid=None,
+                 midpoint_order=False):
     """Bound candidate edges; optional stricter predicate never replaces final valid.
 
     Unshortened raw edges retain the original validity requirement. The returned
@@ -108,18 +150,32 @@ def shorten_path(points, valid, max_checks=128, *, report=None, shortcut_valid=N
     candidate_valid = valid if shortcut_valid is None else shortcut_valid
     while index < len(points)-1:
         next_index = index+1
-        for candidate in range(len(points)-1, index+1, -1):
-            if checks >= max_checks:
-                break
-            checks += 1
-            validation = validate_joint_path([points[index], points[candidate]], candidate_valid, .005)
-            if report is not None:
-                report['attempts'].append({'start_index': index, 'end_index': candidate,
-                                           'validation': validation})
-                report['candidate_checked_states'] += validation['checked_states']
-            if validation['valid']:
-                next_index = candidate
-                break
+        if midpoint_order:
+            def attempt(candidate):
+                nonlocal checks
+                if checks >= max_checks:
+                    return None
+                checks += 1
+                validation = validate_joint_path([points[index], points[candidate]], candidate_valid, .005)
+                if report is not None:
+                    report['attempts'].append({'start_index': index, 'end_index': candidate,
+                                               'validation': validation})
+                    report['candidate_checked_states'] += validation['checked_states']
+                return validation['valid']
+            next_index = _midpoint_shortcut_index(index, len(points)-1, attempt)
+        else:
+            for candidate in range(len(points)-1, index+1, -1):
+                if checks >= max_checks:
+                    break
+                checks += 1
+                validation = validate_joint_path([points[index], points[candidate]], candidate_valid, .005)
+                if report is not None:
+                    report['attempts'].append({'start_index': index, 'end_index': candidate,
+                                               'validation': validation})
+                    report['candidate_checked_states'] += validation['checked_states']
+                if validation['valid']:
+                    next_index = candidate
+                    break
         if next_index == index+1:
             fallback_edges += 1
         result.append(points[next_index])
@@ -312,7 +368,8 @@ class VisualGraspController:
         try:
             self.approach_path = shorten_path(
                 raw_path, executed_path_valid, max_checks=512, report=execution['shortcut'],
-                shortcut_valid=self._approach_shortcut_valid)
+                shortcut_valid=self._approach_shortcut_valid,
+                midpoint_order=getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY).approach_midpoint_order)
         except (ControllerFailure, ValueError, RuntimeError) as error:
             execution['failure_reason'] = str(error)
             reason = ('approach_shortcut_final_path_invalid' if isinstance(error, ControllerFailure)

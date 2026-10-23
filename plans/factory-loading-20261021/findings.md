@@ -419,3 +419,19 @@ Root GPT按F2az反证，仅对原生float64一/二维数组保留原tolist拥有
 完整周期P50 6.150171ms/P95 8.462118ms/max47.300546ms，仍5拍超20ms：approach11.20s 23.600519ms、close19.52s 21.025798ms、transport41.80s 38.038357ms、release66.42s 47.300546ms、separate68.14s 27.505590ms。前三处/释放主峰的controller wall接近线程CPU，不能一律归因宿主等待；分离准入controller22.823ms/CPU19.019ms且实际核对205保存样本。尚未给GC与准入细项打点，不凭位置猜根因。independent-runtime-readback.json保存逐项核准、所有完整周期、生命周期与主机范围；完整50Hz仍未过。
 
 F2bc只读定向归因由Root GPT复用round53 GC观察器，并只给原_poll_separation启用cProfile；原GC enable/thresholds和原方法结果保持。不同于F2ay全主线程插桩，本轮仅核准新环境5拍长尾的GC重合和准入子调用，计时只作归因，不作新性能A/B或默认晋级。private round68-runtime-tail-observation保存probe-origin.json/probe.py；原共享资源观察/90sim120wall/244/全部回退保持，终态前不改源提交。
+
+## F2bc 实际长尾归因与接近搜索瓶颈
+
+原观察回合05cf510a-a394-4fc9-a0b9-1509173da003、source5a3f012干净，原pass/75.84sim，实际28.709569wall/37.053630CPU，等待.029944s单列。完整3792拍、原planned/measured各244、完整抓放/释放/脱离/回位均过；independent-runtime-readback.json和independent-tail-readback.json位于output/runtime-tail-observation-20261024/bbbbd0d4-fbc4-4922-8a4b-e9027a7120a3。观察后的P95 8.436273/max46.110834ms/8慢拍只属于插桩归因，不替换F2bb无局部profile基线或宣称提速。
+
+主线程gen2三次22.581675/33.800125/39.786837ms，分别与approach11.44、transport41.52、release66.32s长尾拍重合；另一次47.430294ms在循环外。GC before/after均enabled=true、thresholds=[700,10,10]；无callback错误/未闭事件，timer与原方法恢复。49次原_poll_separation合计81.748ms插桩累计，其中_separation_binding58.567ms、一次205保存样本校验7.002ms；这些嵌套时钟不可相加或冒称无插桩耗时，也不将F2bb另一回合的每个尖峰重新分类。保持已拒绝GC窗口的旧反证。
+
+另读F2bb原planning：接近路径249原始点，77次连接尝试中75失败，候选采样7494点、最终复核513点，耗时1.565786s，最后选0→173→248。瓶颈是按远到近顺序反复验证相近的失败连接，不是减少执行等待帧。此证据支持只调整接近路径搜索顺序；其余运动段和原裁判保持。
+
+## F2bd 中点搜索顺序的局部实测
+
+Root GPT私有round69-shortcut-order先试整段直连，再对中点连接做有界探测，返回实际已通过原2mm证书的连接；没有命中则按原降序遍历未测候选，预算耗尽退回原相邻边。几何可行性不保证单调，此启发式不宣称全局最长连接；所有选中路径仍用原1mm守卫、.005rad完整复核。没有使用物体真值、缓存不同姿态判定或减少244点闭爪检查。
+
+私有同一原始路径三对wall1.870799→.670654、1.851120→.635369、1.821911→.627067s，CPU同向；候选尝试77→10、候选状态7494→2237，最终仍513点且选中路径逐binary64相同，原screen eligible。等值范围是选中路径/最终判定，不是有意变化的搜索trace。8项边界检查覆盖非单调回退、零/一预算、原最终拒绝及原异常对象透传。
+
+最小生产approach_midpoint_order默认false，原shorten_path默认降序代码保留；仅_plan_approach显式读取该选项，放物后的返回规划仍走原默认。正式生产组件三对wall1.608318→.526674、1.583427→.531428、1.576164→.515375s，CPU同向，路径/最终513状态保持，原screen eligible、中位省1.060789s。private production-local-screen.json和independent-local-readback.json留存；这些仍不是完整物理收益。默认float_first_context不变，显式route_strategies/approach_midpoint_order.py待原两站物理核准。

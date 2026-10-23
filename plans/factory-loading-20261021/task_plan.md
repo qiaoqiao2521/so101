@@ -396,3 +396,18 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 - [x] 独立回读全部3792完整拍、原抓放/释放/脱离/回位、planned/measured各244点和474/474视频；安全0/障碍0、free=true/weld-mocap0，两个worker清理确认。
 - [x] 当前完整P95 8.462118ms、max47.300546ms、5拍超20ms，完整50Hz未过。仅是新环境原版可复跑，不跨环境声称算法提速。
 - Next F2bc：复用round53 GC只读观察器，额外仅对原_poll_separation局部计数；依据5拍真实长尾分离回收/准入成本，不重复整回合cProfile或已淘汰的GC/编码候选。入口private round68-runtime-tail-observation/probe.py与原round10 runner；未运行不记成果。
+
+## F2bc 新环境长尾定向归因（2026-10-24）
+
+- [x] source5a3f012干净，原观察回合05cf510a原pass，75.84sim/28.709569process-wall/37.053630process-CPU；原244、释放/脱离/回位保持。
+- [x] GC设置未变，observer无错且完整恢复。3个主线程gen2分别22.582/33.800/39.787ms与3个长尾拍重合；局部准入49次调用，205样本检查1次，结果/异常原样透传。插桩时钟不作性能对照。
+- [x] 不重跑已拒绝的GC窗口；另由F2bb真实初始化记录定位接近路径77次候选中的75次无效连接，原耗时1.565786s。
+
+## F2bd 接近路径连接搜索顺序
+
+- [x] Root GPT私有round69-shortcut-order，原249点路径上三对77→10次候选，7494→2237候选状态，最终513状态与选中路径字节相同；各省约1.2s，原screen eligible。
+- [x] 最小生产approach_midpoint_order默认false，仅接近路径选顺序；非单调/预算/原路回退/最终拒绝/原异常透传等8项新增回归通过，原相关回归通过。
+- [x] 正式生产组件三对wall各省1.081644/1.052000/1.060789s、CPU同向，原screen eligible；原2mm候选/1mm最终/0.005rad/512预算保持。默认仍float_first_context.py。
+- Next：固化源码后，原名义工位父→子原物理A/B；可靠收益才已有200/200工位子→父反序。完整时钟、初始化、抓放/释放/脱离/回位、全部244点和原时限照旧，未测不记成功。
+
+2026-10-24用户取消SO101定时任务：已通过原生automation_update删除so101，deleteStatus=deleted、本地automation.toml消失；继续当前对话实际工作，不重建定时器。
