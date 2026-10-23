@@ -1,4 +1,4 @@
-"""Root GPT: native field keys with every current value still freshly owned."""
+"""Root GPT experiment: physics passed, full-run cost regressed; not promoted."""
 
 
 def route_preferences():

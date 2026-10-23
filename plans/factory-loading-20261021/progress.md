@@ -1322,3 +1322,11 @@ F2ax接续：5454e77已推且REST/ls-remote一致、起始工作区干净，无o
 F2ax完整构造终态：round63/production-local-screen.json原screen eligible，18旧结构/7762旧权重恢复相同当前RoutePolicy；计时外baseline0/候选15次实际选中，async3结构保留原实现，原所有权/上下文输出同值。三对wall1.013599→.931669、1.070700→.933880、1.034931→.966241s，CPU1.013199→.931051、1.070290→.933465、1.034522→.966033s，等待15.449619s另计。不以减少递归数或约82ms中位组件收益代替原任务成绩。
 
 无owned在途局部/物理；102相关回归通过，原source改动仅默认false选择项/encoder/当前_sweep_binding，old/async回退保持。固化后用round63/prepare_physical.py名义父float_first_context→子named_context，再原round10/run_pair.py等待共享资源。默认/评分/244/90sim120wall不改，整对终态才后续修改或提交。Knowledge=already_covered。
+
+F2ax原物理终态读回：source c244b25两侧dirty_paths=[]，原pair35c4a3cf-f8a9-47f3-a7f3-69a4ad387c94中父01d11403→子bc6c1ad3，整对终态前未改源/提交。四项既有独立读回及components-readback.json完成，原2/2pass、same.scorer=true、actual_policy_delta仅named_context_freeze。process44.696024→54.841364s、CPU52.918897→62.786353s；候选少1hold/3release拍，剔除二阶段后同3264拍CPU29.356399→35.194566s、wall29.680359→35.687373s、controller19.533059→23.039843s。收益不成立，拒绝默认晋级、不追加跨站、不重复择绿，显式候选标明未晋级；默认float_first_context保持。
+
+完整P95 16.880320→20.216508ms、max78.270529→127.878064ms、慢拍101→198，完整50Hz未过。planned/measured各244、原抓放/静稳/释放/脱离/回位/视频全过，安全0/障碍0/free=true/weld-mocap0；子detach68.58s、漂移.249976mm、脱离后0N、475/475帧。两个worker均joined/owned_ack、cleanup_unconfirmed=false，原运输1.602125→1.769021s/分离1.079568→1.652728s；初始化4.646845→5.632617s和完整清理/视频落盘均留在process成本内，嵌套成本不相加。
+
+父资源等待288.960736s、子.050620s单列；load1父13.16→16.71、子16.71→19.04，GUI/Chrome/ffmpeg动态负载保留，未声称恒定宿主或把全部回退归因候选。复跑入口private round63-named-context/prepare_physical.py及原round10-batched-cross-axes/run_pair.py；原102相关测试结果与局部三对保留，不以测试和局部约82ms代替物理收益。Knowledge=already_covered，原性能/版本与负例边界覆盖。
+
+Next：先以本轮真实父版timing及旧F2au调用图找剩余长尾证据；旧profile早于当前float-first默认，无法据其插桩秒数继续叠加微优化。需要新计数时只复用标准cProfile+原evaluate_station.py单回合，计时仅作调用归因、不冒称无插桩性能或50Hz；原共享等待/全部244/90sim120wall保持。不重跑已拒绝flat/scalar/GC/编译选项。

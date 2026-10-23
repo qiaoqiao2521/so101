@@ -367,3 +367,9 @@ F2aw完整构造首版原screen reject/no_median_local_effect，三对.898340→
 三对旧权重局部wall1.257042→1.139917、1.352788→1.195879、1.268308→1.171552s，CPU同向，原screen eligible，等待488.983190s另计。最小生产named_context_freeze默认false，只选单遍快照，异步和非snapshot保持；102相关回归通过。当前未过完整构造器/物理，不按组件晋级。
 
 F2ax正式完整构造三对：恢复相同当前策略对象、真实生产SweepBinding，计时外原baseline0/候选15次实际选中，三个async代表仍原路径。三对wall1.013599→.931669、1.070700→.933880、1.034931→.966241s，CPU1.013199→.931051、1.070290→.933465、1.034522→.966033s，输出双向matches同值，原screen eligible；资源等待15.449619s另计。只支持当前代表结构下完整组件收益，不冒称当前唯一输入或物理任务提速；下一步固化后原名义父→子，默认不变。
+
+F2ax原名义物理终态：source c244b25两侧干净，仅named_context_freeze变化，pair35c4a3cf-f8a9-47f3-a7f3-69a4ad387c94中父01d11403-4eaa-4d22-b245-5744fc79eca8→子bc6c1ad3-43ab-40bb-ac92-69aa638f1b82，原2/2pass。process44.696024→54.841364s、CPU52.918897→62.786353s；sim76.00→75.92s仅少1hold/3release拍。剔除hold/release后同3264拍CPU29.356399→35.194566s、wall29.680359→35.687373s、controller19.533059→23.039843s，明确没有可采用的实际成本收益，拒绝默认晋级且不追加第二工位。
+
+完整P95 16.880320→20.216508ms、max78.270529→127.878064ms、慢拍101→198，完整50Hz未过。原四独立读回通过，评分/四XML/初态/native/运输路径/释放阈值保持；planned/measured闭爪各244点，抓起/搬运/落稳/释放/脱离/回位全过、安全0/障碍0/free=true/weld-mocap0，双方475/475视频。子抬升40.999039mm、hold32.18s、settle7.52s、detach68.58s、释放漂移.249976mm、脱离后0N。
+
+运输worker1.602125→1.769021s、分离1.079568→1.652728s，均joined/owned_ack且cleanup_unconfirmed=false，初始化4.646845→5.632617s计入process；峰RSS1334028→1348544KiB。资源等待288.960736/.050620s单列，实际load1父13.16→16.71、子16.71→19.04，Chrome/GUI/ffmpeg仍有变化，既不把全部10.145s归因编码器，也不据宿主干扰改写实际回退为成功。完整原件及components-readback.json保留于output/named-context-factory-20261023/35c4a3cf-f8a9-47f3-a7f3-69a4ad387c94。默认仍float_first_context；本轮Root GPT候选、原局部收益与物理反证并存。
