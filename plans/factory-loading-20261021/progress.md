@@ -1471,3 +1471,19 @@ Next F2bp：已准备私有round81-guard-cpu-profile，仅重放同96个guard并
 有效调用结构：96次全配置检查、192次上下文绑定、91776次float-first递归、213792次isinstance、43872次pack。profile伪帧的准备/收尾不计热点，不把插桩时间比例当真实成本。原件和independent-profile-readback.json在output/guard-cpu-profile-20261024/v1/v2；私有round81保存修复及CPython3.13.15官方来源。没有新物理成绩，也没有宣称50Hz。
 
 Next F2bq：Root GPT私有round82-exact-type-freeze只做exact builtin类型快捷分派，完整编码、finite/signed-zero检查、原特殊值fallback及所有碰撞保持；38局部语义检查通过。已准备同96原guard+原planner组件与实际binding等值/函数来源/退出恢复核验，三对无profile计时后由原screen决定是否发原物理。尚未运行，不改默认、解释器间隔或相机；不重复旧FK/pack方案。当前无owned本地物理，定时器保持删除、不向其他对话发消息。Knowledge=already_covered，采用原工具/组件/整程独立验真的既有边界；当前版本现象只写本项目。
+
+## F2bq 已淘汰晋级，接F2br持物残差可行性
+
+source fe3463ec，Kaggle exact-type-freeze-component v1准备失败/v2已终态。v1局部结果名遮蔽模块导致测量前UnboundLocalError，原件保留；v2只改该名字，不换候选或样本。三对guard差−15.372/+213.484/−200.274ms，含join和CPU同样无一致减少。实际binding、96条guard报告与原运输路径同、间隔/方法/worker全部恢复。原screen=inconclusive，独立protocol_valid=true；不改字段、不发物理、不切默认、不追绿。原件output/exact-type-freeze-factory-20261024/component-v1/v2，v2含independent-exact-type-readback.json；私有round82保存准确来源和入口。
+
+Next F2br：核查原成功bf95258a表明持物实际jaw约.121221、命令.015rad，对应55点完整在线弦；原工件10g，运输双指最小约1.474/1.487N。Root GPT准备编码器一次性半残差目标的静态保持探针，不先认定夹得住。Kaggle以原评测采到同一份live MjData，再独立复制进行三对等时物理；完整原分辨率/碰撞/监测保持，初始244点不删，原始model/阈值不改。真值仅记录裁决，不进入目标计算；静态保持不是任务通过。无在途物理后才写本记录，默认仍float_first_context。Knowledge=already_covered，原Wiki第20节的实际输出/成对范围与保留反证覆盖；实验数据仍留本项目。
+
+## F2br 静态准入已独立核验，准备原完整对照
+
+Kaggle loaded-jaw-retention v1/v2均终态，source fe3463ec。v1原采集f5a29319原pass，但静态误用旧CollisionChecker，finally缺native属性，且汇总读错点数字段；保留independent-preparation-failure.json，所有v1静态计时无效。v2使用捕获控制器的实际conservative类、记录native batch和checked_states，不换候选/阈值。
+
+v2原采集13e4dd07原pass；independent-retention-readback.json逐项核查来源/原244/全部安全/自由物体/释放脱离回位/录像/两个worker及原完整周期，并核查六个live同起态试验。175拍/3.5sim每例9625→5915检查点，稳定后55→28；三对guard wall省.457255/.475016/.508058s，CPU同向，持续双指夹持成立。关节、物体位置和力逐拍同值，原最小1.701371/1.706333N。原力矩范围±.15，故不再沿用“夹持力降低”的猜测；只认已测的静态保持和减少认证工作。原父进程含静态诊断，不拿其总wall对比旧基线。
+
+原件output/loaded-jaw-preload-factory-20261024/retention-v1/v2；云端private muqiaoqiao/so101-loaded-jaw-retention-20261024不可变v1/v2可恢复准确源码。私有round83-loaded-jaw-preload包含candidate.py/probe.py/read_retention.py、原MJB/integration记录及真实live复制协议；保存数组不冒充bitwise全态离线复现。9个目标语义检查、16个实际controller类阶段/连续坡道/回滚及两个准入端点AST核验通过。
+
+Next：同一Root GPT私有候选跑原名义原版→候选完整物理；只改一次性编码器held目标、原hold1.5s连续坡道及两个运输准入端点。原RGB/arm planner、初始244、全部安全检查/回退/原90sim120wall和评分保持。实际actuator_force仅对称观察，不是策略输入；可靠收益才第二工位反序。当前尚未有候选整程结果，不切默认。Knowledge=already_covered，原Wiki第20节覆盖组件/整程与反证；没有跨项目知识写入，不恢复定时器或向其他对话发消息。

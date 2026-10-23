@@ -518,3 +518,15 @@ Next F2bp：F2bo首站hold慢拍68→69、release22→22，96查询组件中位�
 - [x] 真实计数：96次_configuration_sweep、192次_sweep_binding、91776次float-first递归、213792次isinstance、43872次pack。排除profile伪帧的准备/收尾时间，不把插桩成本按比例外推原回合。
 
 Next F2bq：只为exact builtin的float/tuple/list/标量添加类型快捷分支，所有数组/子类/dict/RoutePolicy及特殊输入仍走原fallback；不缓存、不改变编码或碰撞。私有round82-exact-type-freeze的38项本地值/错误/所有权检查通过，原96-query组件已准备，尚未运行。先真实binding等值和三对原screen，再决定物理，不复跑旧pose-only FK或打包器追绿。Knowledge=already_covered，诊断工具也需独立验真，版本现象保留本项目。
+
+## F2bq 实测终态：无一致收益，不推进
+
+- [x] v1在计时前因局部变量sweep遮蔽模块别名失败，保留原错误。v2仅改局部结果名；同38语义检查、96条输入与原并行planner不变。
+- [x] v2三对guard wall差为−15.372、+213.484、−200.274ms；含join和process CPU同样不一致。原screen=inconclusive，reason=pair_has_no_consistent_wall_reduction。
+- [x] 所有guard数值、实际binding、规划路径、源/函数与退出恢复核验通过。无一致收益，不发整程物理、不切默认、不重复追绿。原件output/exact-type-freeze-factory-20261024，私有round82可复跑。
+
+Next F2br：原成功名义bf95258a持物jaw实际约.121221rad、目标.015rad，在线完整弦约55点；运输双指最小力约1.474/1.487N，10g物体。但力余量不证明动态保持。先用原评测取得live MjData持物副本，再固定一半编码器闭合残差的目标，三对同初态静态物理试验；阈值、分辨率、原模型与初始244点不变。策略只读取编码器/原命令，真值仅供原监测；静态通过不等于搬运成功。尚未运行，Root GPT来源，Kaggle执行，原默认保持。
+
+F2br静态已终态：v1原采集f5a29319通过，但探针误构造旧碰撞类，清理AttributeError；计时无效，保留反证。v2原采集13e4dd07通过，实际conservative类/native batch、三对live同初态175拍/3.5sim、所有原guard与监测独立通过。每例原9625→候选5915点，稳态55→28，guard wall三对省.457255/.475016/.508058s，CPU同向。物理q6/物体/双指力逐拍相同；原夹爪力矩上限±.15，本次不声称夹持力降低或已搬运成功。
+
+Next：私有round83已准备held目标/1.5s连续坡道/两个运输准入端点同步的小候选；9个目标语义检查及16个实际类的时序/回滚/AST检查通过。先原名义父→子完整抓放，有可靠收益才200/200子→父。原初始244、所有阈值/守卫/模型/90sim120wall和回退不变，默认仍float_first_context，尚无候选整程结果。

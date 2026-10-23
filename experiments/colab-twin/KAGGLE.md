@@ -110,3 +110,11 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [固定guard调用归因](https://www.kaggle.com/code/muqiaoqiao/so101-hold-guard-cpu-profile-20261024) v1的原功能通过，但cProfile/thread_time的混线程计时无效，失败保留。v2使用标准库profile.Profile.runcall，只接主线程事件；同96个原guard及并行原planner数值/路径相同，时间/CPU记账/线程/恢复独立检查通过。仅归因，不把profile伪帧或插桩时间当基准。
 
 原件output/guard-cpu-profile-20261024，来源私有round81。有效调用计数提示上下文递归/type判断很多；新私有round82先比较exact builtin快捷分派，保留原fallback和编码。38局部语义检查通过，尚未有组件收益或物理结论。
+
+[exact-type组件](https://www.kaggle.com/code/muqiaoqiao/so101-exact-type-freeze-component-20261024) v1测量前别名遮蔽错误已保留；v2仅修复探针局部名，三对guard差−15/+213/−200ms，原screen=inconclusive。数值/binding/路径/清理同值，不将协议通过当收益，不送物理或默认。原件output/exact-type-freeze-factory-20261024；私有round82保存来源。
+
+下一项F2br先做持物残差可行性探针。只用编码器和原命令锁定半残差目标，从原评测live状态复制三对静态保持；完整扫掠分辨率和安全条件不变，真值只用于原监测。静态保持通过也不能代替完整搬运/释放/回位A/B。Kaggle执行，不占用本机FishBot/渲染资源。
+
+[持物静态探针](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-retention-20261024) v1原采集通过、静态旧碰撞类错误已保留，不用其计时。v2原采集13e4dd07与六个3.5sim live副本试验独立核验通过：每例9625→5915点、稳态55→28，guard三对省.457/.475/.508s，物理q6/物体/双指力逐拍相同。原力矩限幅±.15未改，不声称夹持力降低或完整任务提速。
+
+原件output/loaded-jaw-preload-factory-20261024/retention-v1/v2，v2含independent-retention-readback.json；私有round83保存真实来源与复跑代码。下一步同源原名义完整A/B；候选只将编码器半残差目标沿原hold1.5s坡道接入，原运输准入两个端点同步，检查主体/模型/评分不改。静态准入不是动态验收，默认保持。

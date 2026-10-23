@@ -574,3 +574,13 @@ v2实测profile回调只有主线程；无scipy/optimize及_run_transport_plan�
 可靠调用计数为：_configuration_sweep96、_sweep_binding192、_immutable_float_first_context91776、_immutable_context17472、isinstance213792、pack43872、mj_kinematics5472。纯Python分析器明显增加高调用量路径开销，因此只用调用结构定位候选；self/cumulative时间不当未插桩成本或整程加速。原件output/guard-cpu-profile-20261024/v1/v2分别保留失败与修正版；私有round81包含来源和准确代码。
 
 候选F2bq先沿用float-first编码，仅对type(value)恰为内置float/tuple/list/bytes/str/int/bool的值缩短分支，其余交回原函数。38项本地对照覆盖finite/signed zero/shape/子类/数组/错误/owned副本，全部同值。没有重复采用旧prebound pack，也不改缓存或安全规则；尚未测收益。新组件继续用同96个原guard与原planner，检查实际binding token和函数路径后再三对无分析器计时。
+
+F2bq实测v1在测量前UnboundLocalError；v2仅消除局部sweep别名遮蔽。三对guard1.695650→1.680278、1.775722→1.989206、1.915226→1.714951s，含join差+.006890/+.172954/−.178682s，CPU差+.004172/+.294101/−.283681s。输出、binding、路径及清理均同，原screen=inconclusive。独立protocol_valid=true不等于收益，停止此方向，无物理晋级或默认变化。
+
+F2br假设来自原bf95258a实际轨迹：hold177拍jaw残差中位.106221101rad；transport1294拍中位.106221519rad，双指最小1.474156/1.486890N；lower130拍最小1.485481/1.482202N。原contact-workcell.xml工件mass=.01kg、friction=.8/.005/.0001。闭合目标与被工件阻挡的实际角度之间的距离是实际在线认证工作，不能跳点；可试编码器一次性减半残差作为策略变化，但必须实测力和物体保持，不将静态摩擦估算作验收。候选不读取目标真值；原始闭合及释放扫掠、安全条件保持。
+
+F2br v1原采集通过，但静态构造了collision_scene旧类，退出缺native属性；首例耗时/汇总不采用。v2改用原捕获控制器的实际conservative类型，记录native batch与正确checked_states字段，未改候选或物理。Kaggle原采集13e4dd07原pass，原planned/measured各244、全部自由物体/释放/脱离/回位/完整录像及worker清理独立通过；父进程包含静态试验，不作性能基线。
+
+三对独立live MjData副本，3.5sim/175拍：每侧checked_states9625→5915；guard wall1.790512→1.333257、1.794487→1.319471、1.816197→1.308139s，CPU同向。原全部间距、payload检查、原有限/碰撞/持续夹持判据保持；每对关节、物体状态、双指力逐拍完全相同，双方最小1.701371/1.706333N。候选目标.015→.068110524，仅缩短被完整认证的命令弦。原XML夹爪forcerange±.15，候选仍处大闭合误差区；静态观测不支持“力降低”的原猜测，后续直接记录实际actuator_force核验饱和，不把相同静态状态推广为动态保证。
+
+私有完整候选只在lift→hold读取一次编码器/旧命令、沿原1.5s hold连续坡道改变jaw，后续hold/transport/lower保持该目标。原_poll_transport仅两个待认证端点同步为实际目标，AST还原后与原方法完全同；不修改检查主体、模型、阈值或评分。16个实际类局部检查含一次锁定、起止连续、阶段范围、两个端点、异常退出还原。待原完整A/B，不切默认。
