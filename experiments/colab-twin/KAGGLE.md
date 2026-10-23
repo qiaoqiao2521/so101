@@ -49,3 +49,10 @@ CLI 2.2.5；实际 Python 3.13.15、MuJoCo 3.15.0、NumPy 2.4.6、SciPy 1.17.1�
 三对最终路径各自逐位相同，最终全路径检查保留；偏移组最终检查为 505 状态，前两组为 513。搜索尝试 77→10、77→10、76→10。候选没有稳定的完整任务收益，因此默认仍是 `float_first_context.py`，中点搜索继续显式可选，不晋级。完整 50Hz 未通过。
 
 原件与独立读回位于忽略目录 `output/kaggle-midpoint-factory-20261024/`；结论与接续见[原计划](../../plans/factory-loading-20261021/progress.md)。启动源码与候选来源另保留在本机既有工厂 cache 的 `round70-kaggle-midpoint/`，云端不可变版本是 cache 丢失后的恢复入口。
+
+
+## 后续预编译打包器对照
+
+[完整组件任务](https://www.kaggle.com/code/muqiaoqiao/so101-float-packer-component-20261024)版本2实际使用source9c585cd生产helper，三对准入；[原物理任务](https://www.kaggle.com/code/muqiaoqiao/so101-prebound-physical-ab-20261024)版本1为名义父→子、版本2为200/200子→父。4/4原物理通过。
+
+按父→子process wall64.356→62.556、60.959→62.650s；两站同量主循环CPU均未下降，因此不晋级默认。首运行者在原episode计时窗外始终约多1.25s，须进一步定位启动/收尾，不能把它当算法提速。原件和独立读回在output/prebound-float-factory-20261024；下一轮只观察原默认的回调IO/GC与冷/热导入，尚未修改这些实现。

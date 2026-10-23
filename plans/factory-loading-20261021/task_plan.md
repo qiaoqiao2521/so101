@@ -431,5 +431,15 @@ Root GPT沿当前源码检查每个float调用struct.pack的重复开销，不�
 
 1. 私有候选在Kaggle Python3.13当前原模型/真实RGB估计/q6起点上，29同值/错误/复制检查通过；完整_sweep_binding三对均更快（complete）。
 2. 最小生产选项prebound_float_pack默认false；只在浮点快照路径选Struct('!d').pack，原非snapshot/named/异步编码保持；77相关测试通过（complete）。
-3. 绑定本次源码，在同一候选策略对象下用旧encoder与正式encoder比较完整构造器，再走原screen三对（pending云端正式组件）。
-4. 正式组件若无一致收益就淘汰，不重跑择绿；有收益才接原物理A/B和有益后的跨工位。默认不变，原90sim/120wall/244点及全部回退保持。
+3. 绑定9c585cd，在同一候选策略对象下用旧encoder与正式encoder比较完整构造器；三对再次更快，原screen准入（complete）。
+4. 原名义父→子、200/200子→父共4/4原物理通过，但第二站process回退，两站同量主循环CPU均未下降；不晋级默认，不追加第三站或重复择绿（complete）。原90sim/120wall/244点及全部回退保持。
+
+
+## F2bg 回调等待与启动归因
+
+源于F2bf原版149.687ms慢拍：callbacks wall130.985ms、主线程CPU4.464ms；以及两对中先运行者计时窗外启动/收尾始终约2.40s，后运行者约1.15s。两者不能直接归因编码器。
+
+1. 复用GC回调观察器，原样委托atomic_json、Path.write_text/replace和StationScene.update，记录真实区间及GC重合；全部调用计数，最多保留各类/范围最慢16条，原物理样本不裁剪。
+2. 两次相同importtime短探针记录冷/热导入、目标pyc缓存存在与进程CPU；准备开销另计，不当算法收益。
+3. 串行执行一回合原默认原评分，保持所有GC开关/阈值；观察器异常不覆盖原操作/异常，最后恢复全部方法。此轮只归因，不作新性能A/B或50Hz成绩。
+4. 实际数据回读后才决定是否有值得尝试的IO/GC改动，不先写异步发布器或重测已拒绝的整窗禁GC。当前probe局部真实IO/异常/计数检查通过，尚未执行观察回合。

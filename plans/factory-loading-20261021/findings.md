@@ -458,3 +458,12 @@ Root GPT私有round69-shortcut-order先试整段直连，再对中点连接做�
 原cloud wrapper曾携带上轮midpoint的candidate_origin描述；实际candidate.py/probe源码和当前round71来源文件明确为预绑定packer。原字段不覆盖，independent-component-readback.json注明这一元数据复用瑕疵并核对实际candidate源码逐字节相同。后续正式packet使用本轮来源，不冒称CLI生成。组件原件保存在output/prebound-float-factory-20261024/component-v1。
 
 生产只加默认关闭的prebound_float_pack选择及同值helper；中点搜索不叠加。首轮新增fallback测试错误地向原非snapshot路径传ndarray，原拒绝正确；仅改测试为该路径支持的标量tuple，未放宽类型或修改实现。77项相关测试通过，原所有权和原非snapshot/named路径保持。正式接入后的完整组件尚未测，不凭私有结果宣称生产提速。
+
+
+F2bf正式组件v2已实际完成：source9c585cd、实际encoder_source=configuration_sweep.py/_immutable_prebound_float_context，同一候选策略对象中只将reference强制为旧encoder。29检查与实际compiled228/generic1路径通过；三对wall1.585310→1.532471、1.577534→1.545221、1.656146→1.539245s，CPU同向，原screen eligible，中位省.052839s。该v2来源字段已改为本轮描述；v1旧描述原样保留并独立说明。原件component-v2和independent-component-readback.json不当物理成绩。
+
+原物理source9c585cd，两侧干净、唯一prebound_float_pack变化。名义paira47e7ef1：父e6536f3d→子b2f25a5f，wall64.356296→62.556288s、CPU74.174232→72.902600s、sim75.82→75.86。200/200反序pair363c3c4b：子de6815c8→父04128d49，按父→子wall60.958649→62.650278s、CPU71.690680→73.237305s，sim均78.66。4/4原pass，原计划/实测244、自由物体、全部碰撞/释放/脱离/回位与workers清理均过，视频名义父474/474/子475/475，第二站两侧492/492；原C库/flags/四XML/初态/阈值与规划运输路径保持。
+
+同量非hold/release：名义3264拍CPU41.327230→41.396429s；第二站3366拍39.704162→39.870501s，均无可采用的控制链成本收益。原完整P95父→子19.101252→19.029101、17.186022→17.951875ms；慢拍148→148、154→162，max149.687→57.914、148.470→151.417ms。完整50Hz未过，默认float_first_context不变。局部打包收益保留为事实，但不晋级或追加物理追绿。
+
+实际process wall减去全部原episode生命周期/完整周期后，名义父/子余量2.407206/1.155890s，反序第二站父/子1.152166/2.397721s：先运行者约多1.25s，独立于候选。这是计时窗外启动/收尾差，不凭猜测全算为import或算法。名义原版最长拍在hold30.999999s，callbacks130.985wall/4.464thread-CPU毫秒，源数据只说明主线程等待。F2bg定向观察IO和全局GC，再区分文件操作、其他线程暂停与导入冷启动；不先改变GC或发布调度。

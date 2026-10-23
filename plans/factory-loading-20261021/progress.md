@@ -1391,3 +1391,14 @@ Knowledge=already_covered：已核对Wiki/ROS2 与 FishBot.md第20节，采用�
 Kaggle私有v1实际完成，29边界检查/实际调用路径通过。三对wall1.450869→1.382857、1.498944→1.401262、1.444858→1.422921s，CPU同向，原screen eligible；6772重复只有一个真实reset/approach快照，不当整回合收益。旧wrapper来源描述复用瑕疵已在独立读回说明，实际执行源码与round71源文件吻合。
 
 正式prebound_float_pack默认false，仅额外选择预编译同值浮点encoder。77相关测试通过；先修正了测试中不受原非snapshot接口支持的ndarray输入，原拒绝保持。scorer/碰撞/native C++/阈值/90sim120wall均未改，默认仍float_first_context。下一步以新源码做正式完整组件三对；无一致收益即淘汰，有益才原物理，不把组件准入当任务成功。当前无在途原物理，根Codex维护本分支。
+
+
+## F2bf 原物理两站反序结束：不晋级（2026-10-24）
+
+正式完整组件三对再次准入（中位省52.839ms/6772次）；77相关用例为77独立ID。9c585cd1e24a089bce79e7ebda896f1755bde6c1已推送并经REST/ls-remote核实。物理名义a47e7ef1和200/200反序363c3c4b共4/4原pass；源码两侧干净，唯一prebound_float_pack变化；原C库/flags、场景、规划路径、90sim120wall、244点、全部安全/释放/脱离/回位/worker清理和完整录像保持。
+
+按父→子process wall64.356→62.556、60.959→62.650s，CPU74.174→72.903、71.691→73.237s。实际同3264/3366非hold/release拍CPU41.327→41.396、39.704→39.870s均未下降，故不把首站总差归打包器、不切默认、不追加第三站/追绿。完整50Hz仍未过。原件与独立库存位于output/prebound-float-factory-20261024/independent-physical-inventory.json，private round71保留来源、组件和原物理复跑源码，Kaggle两个私有任务保留不可变版本。
+
+Next F2bg：计时窗外先运行者稳定多约1.25s；149.687ms慢拍中callbacks130.985ms wall但仅4.464ms主线程CPU。原数据未证明是磁盘或GC。准备了只读GC+IO/scene区间观察器，真实文件字节、异常对象透传与有界计数局部6检查通过；所有调用计数，仅留各类最慢16条，原物理完整计时不裁剪。下一回合先做冷/热导入短探针，再跑一次原默认归因；不改变GC设置、不造新发布器、不将插桩成绩作性能改进。根Codex串行维护，观察回合尚未开始。
+
+Knowledge=already_covered：继续采用Wiki/ROS2 与 FishBot.md第20节的完整任务/组件与来源边界；当前启动/回调现象未归因，保留项目证据，不提炼为跨环境结论。
