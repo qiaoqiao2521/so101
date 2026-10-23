@@ -1250,3 +1250,13 @@ F2at私有组件完成：Root GPT的round59-compact-status/candidate.py仅改std
 F2at正式组件终态：production_probe.py使用实际atomic_json(compact=True)，原代表结构同482次原子写入。三对wall.819002→.225473、.870550→.232473、.900551→.258322s；线程CPU.818303→.225395、.869865→.232466、.900083→.258003s，原screen eligible/consistent_local_effect，中位省.638077s。全部完整解析值/负零及原错误类型与已有目标文件保持，scope明确为空白格式可异，不伪称原JSON字节同。原资源等待182.918933s独立记，结束共享重任务空。
 
 Root独立回读正式三对、64相关回归日志与实际差异，仅生产writer可选参数、实时publish选择和RoutePolicy单flag；原评分/原244点/触发频次/取消与物理未变。现在固化源码与本节，再用既有prepare_physical.py和round10/run_pair.py执行名义父→子；整对终态前不改源或提交。当前default未改，未将组件称为物理通过。Knowledge=already_covered。
+
+F2at名义物理终态：sourcea846fe7已推送且REST/ls-remote一致；523641ac-26e0-4485-9bbc-bc45e2c45ff6全程未改源或提交。父825e7b2f-6843-4665-bafc-b5f658c11aad→子e0e8af9d-065f-49a1-822b-1bd67ad29a07均原pass；process94.374539→51.816783s、CPU77.041531→53.444087s，sim76.12→76.00s，少13hold/多7release拍。去掉两段同3264拍，wall57.186004→30.172750s、线程CPU44.874373→29.710033s、controller34.534667→19.334106s。不能把少6仿真拍或整个42.558s归给JSON。
+
+原完整周期P95 51.133603→15.420779ms、max284.491642→61.973957ms、慢拍933→98；完整50Hz仍未过。父开始load1=11.87且多个Chrome/ffmpeg，结束42.12并新ffmpeg约455%CPU；子开始42.12、结束27.75，该ffmpeg已退出。宿主负载明显改变，连未改controller CPU也整体变化，不据本对宣称45%或42s算法提速。资源观察器原未将独立ffmpeg列为互斥类，不改在途规则或删除该证据。
+
+父/子原worker运输4.017336→1.568727s、分离3.864683→.828686s，均原joined/owned_ack确认、cleanup_unconfirmed=false，嵌套范围不再加总。planned/measured各244点、真实抓起/搬运/放盘/静稳/释放/脱离/回位全过，安全0、障碍0、free=true、weld/mocap0。子抬升40.998940mm、hold32.24s、settle7.52s、detach68.66s、释放漂移.250092mm、脱离后0N，视频475/475；父476/476。四项独立读回原pass/same.scorer=true，初态/四XML/阈值/native/规划路径保持，只有compact_status_json flag变化；轨迹不冒称同位。
+
+实际scene_seq653→347，发布触发仍原.1/.4s按墙钟，次数受整轮耗时影响，不当成同量写入的算法证据；原正式组件才是同482写入。两版最终status顶层/scene字段集相同，status-publication-readback.json保留完整周期各段CPU和实际发布次数；格式空白不同，数据未删除。峰RSS1416996→1402216KiB，原资源等待单独计量。
+
+本轮决定仍不改默认。正式组件三对提供同量序列化收益且原物理安全通过，但名义对照的宿主混杂很大；按既有协议只接第二已有200/200工位反序，保留本对，不追加同工位重跑追绿。第二对须看同阶段CPU/发布次数与原完整周期，再决定采用或淘汰。Knowledge=already_covered，性能与版本/范围规则沿用原Wiki；不联系其他对话。
