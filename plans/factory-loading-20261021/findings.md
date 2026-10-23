@@ -341,3 +341,7 @@ F2au新默认原物理profile/pass：主线程_immutable_snapshot_context3787928
 生产最小接入新增默认false的float_first_context、独立同语义helper与显式候选；只在snapshot_context=True选用，异步和其他freeze保留原路径。88项相关回归通过，默认compact_status_json保持。正式完整构造器三对由round61/production_probe.py接原资源等待；不把旧two-pass父版作为当前基线，不重复已拒绝scalar/GC/编译候选。
 
 F2av正式完整构造器：双方都使用当前fused实现，原async保持；同18旧代表/7762旧次数三对wall .930442→.802920、.977845→.884843、.881772→.809585s，线程CPU .930344→.802684、.976967→.884380、.881667→.809548s，全部matches双向同值，原screen eligible。等待.042644s另计；不将约93ms中位组件节省当整轮加速。原件round61/production-local-screen.json，接原名义父→子物理；默认保持。
+
+F2av首工位终态：667bd6c干净源码，60aa6404-1516-4f88-a6db-3f3721034274的父55373c9b-2aa5-41be-a277-e39bde7dd26f/子0e56b2d2-7453-4553-9cc7-60807bb8fb1e均原pass。47.374765→42.096212process-s、54.951899→50.392922CPU-s；sim75.98→76.00，反而多1hold拍。去掉hold/release同3264拍，wall30.186544→27.119947、线程CPU30.123009→27.006922、controller19.594019→17.497929s。组件中位只省93ms，不能将整个5.279s强归此次分支顺序；宿主load1父11.03→11.18、子11.18→12.29且GUI持续活跃，未控制频率/调度。保留本对，按协议只接第二已有200/200反序，不重复首站择绿。
+
+完整P95 15.806564→14.811197ms、max64.719597→52.436018ms、慢拍118→98，完整50Hz未过。原planned/measured均244、全部物理/释放/脱离/回位通过，安全0/障碍0/free=true/weld-mocap0；子释放漂移.250053mm、脱离后0N、475/475视频。原评分/四XML/初态/native/释放阈值/运输路径相同，动态轨迹不声称逐位相同，仅float_first_context变化。四独立读回及components-readback.json保留源、原job与所有扫掠。

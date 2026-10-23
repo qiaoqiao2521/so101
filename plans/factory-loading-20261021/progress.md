@@ -1284,3 +1284,11 @@ F2av接续：已独立回读round61/local-screen.json，56项同值、三对原w
 Next：round61/production_probe.py对当前fused完整构造器做三对；原async/所有guards不变。通过后固化提交并接prepare_physical.py及既有round10/run_pair.py，未运行前不记成功。默认不改；Knowledge=already_covered，沿用原Wiki性能/版本范围规则。
 
 F2av完整构造器正式三对终态，原screen eligible/输出同值，wall中位省.093002s，CPU一致减少；无在途局部或物理。已验证新账户qiaoqiao2521(id238822818)与目标qiaoqiao2521/so101(id1381253802)，使用隔离GH配置与命令级3067代理。固化本次8个显式文件后，round61/prepare_physical.py准备原名义父compact_status_json→子float_first_context，既有run_pair逐case等资源。原90sim/120wall、244点、全部物理/评分保持。Knowledge=already_covered。
+
+F2av名义物理完成：667bd6c已正常推送且REST/ls-remote一致；整对终态前未改源/提交。原件output/float-first-context-factory-20261023/60aa6404-1516-4f88-a6db-3f3721034274，父55373c9b/子0e56b2d2两轮原pass，process47.374765→42.096212s、CPU54.951899→50.392922s；多1hold拍，不按等仿真时长假报加速。同3264个非hold/release拍CPU30.123009→27.006922s、wall30.186544→27.119947s，controller19.594019→17.497929s；整个5.279s差不强归93ms组件候选。
+
+P95 15.806564→14.811197ms，max64.719597→52.436018ms，慢拍118→98，完整50Hz未过。两轮planned/measured各244，原真抓起/搬运/落稳/释放/脱离/回位全过；安全0、障碍0、free=true、weld/mocap0。子抬升40.998973mm、hold32.22s、settle7.52s、detach68.66s、释放漂移.250053mm、脱离后0N；双方视频475/475。四独立读回pass/same.scorer=true、仅float_first_context变化。
+
+运输worker2.050457→1.630159s、分离1.106442→1.058488s，均joined/owned_ack且cleanup_unconfirmed=false；初始化5.254278→4.731000s与后处理计入process，嵌套worker时钟不相加。峰RSS1403836→1412000KiB；父资源等待1791.261646s与子.046556s另计，开始结束共享任务空。宿主load1 11.03→11.18→12.29与GUI后台活动保留，未证明完全同负载/同频率。
+
+Next：默认保持，记录本对后用原round61/prepare_physical.py --cross在已有200/200工位子→父反序，再经原round10/run_pair.py；等待不计性能，不新建平台，不并发。Knowledge=already_covered，沿用原Wiki的性能/版本范围与负例规则。
