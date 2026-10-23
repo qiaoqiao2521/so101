@@ -25,6 +25,7 @@ class RoutePolicy:
     batch_configuration_sweep: bool = False
     smooth_jaw_dwell: bool = False
     map_context_freeze: bool = False
+    preallocate_worker_models: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -69,6 +70,8 @@ class RoutePolicy:
             raise ValueError('Continuous jaw dwell selection must be a boolean')
         if not isinstance(self.map_context_freeze, bool):
             raise ValueError('Context map selection must be a boolean')
+        if not isinstance(self.preallocate_worker_models, bool):
+            raise ValueError('Worker model preallocation must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

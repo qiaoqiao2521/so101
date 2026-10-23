@@ -14,6 +14,7 @@ from dataclasses import replace
 import json
 import mujoco
 import numpy as np
+import warnings
 
 from conservative_collision import ConservativeCollisionChecker as CollisionChecker
 from configuration_sweep import ConfigurationSweepInvocation, SweepBinding, _configuration
@@ -24,7 +25,7 @@ from visual_localization import TopDownCalibration
 from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob, AsyncTransportPlanningJob
 from separation_worker import (SeparationSnapshot, AsyncSeparationPlanningJob,
                                run_separation_plan, validate_separation_samples)
-from released_object import floor_yaw_rotation
+from released_object import ReleasedObjectQuery, floor_yaw_rotation
 from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
 
@@ -229,6 +230,11 @@ class VisualGraspController:
                 raise ValueError('Payload query only supports the known box/plane static map')
             self.world.append((rig.geom(i).name, kind, self.query.geom_xpos[i].copy(),
                                rotation, rig.geom_size[i].copy()))
+        self._prepared_worker_models = None
+        self._prepared_worker_report = None
+        if bool(getattr(getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY),
+                        'preallocate_worker_models', False)):
+            self._prepare_worker_models()
 
     @staticmethod
     def _target(xy):
@@ -591,6 +597,74 @@ class VisualGraspController:
             self.transport_job.reject('transport_context_changed')
             raise ControllerFailure('transport_context_changed')
 
+    def _prepare_worker_models(self):
+        report = {'stage': 'worker_model_preallocation', 'ready': False,
+                  'models_prepared': 0, 'prepare_wall_s': 0.,
+                  'used_transport': False, 'used_separation': False,
+                  'fallback_reason': None}
+        started = time.perf_counter()
+        prepared = None
+        try:
+            released = self.released_query
+            released_model = released.model if released is not None else None
+            if not isinstance(getattr(self, 'rig', None), mujoco.MjModel):
+                report['fallback_reason'] = 'rig_not_native_mjmodel'
+            elif released is None:
+                report['fallback_reason'] = 'released_query_absent'
+            elif type(released) is not ReleasedObjectQuery:
+                report['fallback_reason'] = 'released_query_unsupported'
+            elif not isinstance(released_model, mujoco.MjModel):
+                report['fallback_reason'] = 'released_model_not_native_mjmodel'
+            elif not isinstance(getattr(released, 'object_id', None), (int, np.integer)):
+                report['fallback_reason'] = 'released_query_unsupported'
+            else:
+                prepared = {
+                    'source_rig': self.rig,
+                    'source_released_query': released,
+                    'source_released_model': released_model,
+                    'object_id': int(released.object_id),
+                    'transport_rig': copy.copy(self.rig),
+                    'separation_rig': copy.copy(self.rig),
+                    'released_model': copy.copy(released_model),
+                }
+                report.update(ready=True, models_prepared=3)
+        except Exception as error:
+            # Preparation fallback is optional; keep the eager-copy path.
+            report['fallback_reason'] = type(error).__name__
+        finally:
+            report['prepare_wall_s'] = time.perf_counter() - started
+        self._prepared_worker_models = prepared
+        self._prepared_worker_report = report
+        if report['fallback_reason'] is not None:
+            warnings.warn('worker model preallocation unavailable: %s'
+                          % report['fallback_reason'])
+        self.plan_reports.append(report)
+
+    def _transport_worker_model(self):
+        prepared = getattr(self, '_prepared_worker_models', None)
+        if (prepared is not None
+                and prepared.get('source_rig') is getattr(self, 'rig', None)):
+            self._prepared_worker_report['used_transport'] = True
+            return prepared['transport_rig']
+        return copy.copy(self.rig)
+
+    def _separation_worker_models(self):
+        prepared = getattr(self, '_prepared_worker_models', None)
+        released = self.released_query
+        released_model = released.model if released is not None else None
+        if (prepared is not None and released is not None
+                and prepared.get('source_rig') is self.rig
+                and prepared.get('source_released_query') is released
+                and prepared.get('source_released_model') is released_model
+                and prepared.get('object_id') == getattr(released, 'object_id', None)):
+            object_id = prepared['object_id']
+            prepared['released_model'].geom_pos[object_id] = released_model.geom_pos[object_id].copy()
+            prepared['released_model'].geom_quat[object_id] = released_model.geom_quat[object_id].copy()
+            prepared['released_model'].geom_sameframe[object_id] = released_model.geom_sameframe[object_id].copy()
+            self._prepared_worker_report['used_separation'] = True
+            return prepared['separation_rig'], prepared['released_model']
+        return copy.copy(self.rig), copy.copy(released_model)
+
     def _start_transport(self, q6, elapsed):
         if self.transport_job is not None:
             raise ControllerFailure('transport_request_already_started')
@@ -614,8 +688,8 @@ class VisualGraspController:
                                                     'payload_rotation', 'world',
                                                     'payload_uncertainty', 'elapsed_s',
                                                     'release_pinch_height_m')}})
-        # Model cloning remains main-thread cost and is measured in the cycle.
-        self.transport_job.start(_run_transport_plan, copy.copy(self.rig), snapshot,
+        # The original fallback clones here; optional owned clones were prepared before updates.
+        self.transport_job.start(_run_transport_plan, self._transport_worker_model(), snapshot,
                                  self.transport_job.cancel_event)
 
     def _poll_transport(self, q6, elapsed, *, admit=True):
@@ -704,6 +778,10 @@ class VisualGraspController:
                 report['planner_execution'].update(self.transport_job.execution)
         if errors:
             raise errors[0]
+        # Release prepared worker-model clones only after every worker
+        # joined cleanly. A cleanup failure above preserves them and
+        # re-raises the original error.
+        self._prepared_worker_models = None
 
     def _route_ik(self, xyz, initial):
         policy = getattr(self, 'route_policy', DEFAULT_ROUTE_POLICY)
@@ -879,9 +957,10 @@ class VisualGraspController:
                                        'snapshot_elapsed_s': snapshot.elapsed,
                                        'place_height_m': snapshot.place_height_m,
                                        'release_stage_started_s': self.stage_started})
-        # Cloning is main-loop cost. Both MjData instances are worker-owned.
-        self.separation_job.start(run_separation_plan, copy.copy(self.rig),
-                                  copy.copy(self.released_query.model), snapshot,
+        # Fallback cloning stays measured here. Both MjData instances remain worker-owned.
+        separation_rig, separation_released_model = self._separation_worker_models()
+        self.separation_job.start(run_separation_plan, separation_rig,
+                                  separation_released_model, snapshot,
                                   self.separation_job.cancel_event)
 
     def _initialize_separation(self, q6):

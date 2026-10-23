@@ -265,3 +265,20 @@ CLI33只减少汇总结果中的重复数组转换。创建查询绑定时选择
 `route_strategies/map_context_freeze.py`在当前默认父版上仅启用`map_context_freeze`。它对每个新绑定使用map遍历，保留原所有字段、浮点位编码、有限值/类型检查和独立副本；不跨观察缓存，async绑定保持原路径。
 
 153相关回归及原局部三对通过，nominal两轮原物理pass；但CPU、非等待成本、P95和慢拍数未改善，且同时发现宿主机Blender争用，候选未晋级、不进第二工位。默认仍`smooth_jaw_leg_clock.py`，原生成器实现保持。复跑沿原evaluate_station入口加此`--candidate`；准确argv和原失败收益判定见厂区计划F2ae。
+
+
+### 可选：在控制循环外准备规划模型
+
+显式选用 `route_strategies/preallocate_worker_models.py`。它在当前已采用连续夹爪及换段时钟策略上，只增加 `preallocate_worker_models=True`；默认仍为 `smooth_jaw_leg_clock.py`，map遍历候选仍关闭。
+
+三份独立模型在初始化准备。释放估计冻结后同步代理几何的三行位姿，再交给原worker及原核验；所有worker完成清理后才释放模型。模型或query被替换时回退原现复制。准备、额外内存持有与销毁均属于实际成本，没有删扫掠点、放松碰撞/释放门或改90sim/120wall。
+
+两工位反序4轮原物理均通过，两次规划启动拍由约55–87ms降至11–17ms，但整程37.778→38.448s、39.582→39.926s，没有可靠总耗时收益。因此只保留可选复跑，不能据此声称完整50Hz。详见[原计划F2af](../../plans/factory-loading-20261021/progress.md#f2af-独立规划模型预准备2026-10-23四轮通过保持可选)。
+
+复跑：
+
+~~~bash
+MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python experiments/colab-twin/evaluate_station.py --station experiments/colab-twin/scenarios/factory-loading/capability-segments-0mm.json --candidate experiments/colab-twin/route_strategies/preallocate_worker_models.py --output-dir /tmp/so101-preallocation-evaluation --timing
+~~~
+
+运行目录为仓库根。保持原默认作对照时，将candidate改为 `smooth_jaw_leg_clock.py`；每个独立结果使用自己的output目录。上述一轮只回答对应工位，不能替代两工位比较。

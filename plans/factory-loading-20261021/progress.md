@@ -974,3 +974,41 @@ F2ad已本地提交9340dc5。标准cProfile同原入口回合b4865cdd-a716-4d5d-
 已向用户异步说明GitHub登录401及并行渲染优先级；新账户身份复查仍401，不切旧账户或写全局认证。已有有效本地提交e857f6e/eb99ad0/9340dc5保留，推送pending。原private round10 run_pair.py已备份并补每个子进程前后宿主负载（comm/CPU/elapsed，无参数和凭据）；观察位于子进程wall与rusage测量之外，optional不可用只记录诊断，无新阻塞或限额。后续性能数据应携带此负载记录。
 
 F2ae Knowledge：no_reusable_delta。组件/整程分层及宿主机争用边界已在本计划记录，未另建知识框架；F2ab/F2ac Wiki串行写回pending仍归研究根。Next：先核算同步_start_transport/.072s和_start_separation/.117s剖析成本，查模型复制/线程握手是否持GIL；局部可证伪后再给原CLI新策略，不改评分或当前已采用默认。
+
+
+### F2af 独立规划模型预准备（2026-10-23，四轮通过、保持可选）
+
+原profile的_start_transport约72ms、_start_separation约117ms包含4次copy.copy累计172ms。实际65geom/6joint/MuJoCo3.15原AsyncJob三对：主线程复制最大观察间隙42.564/43.049/41.688ms；移入worker仍37.955/37.755/38.597ms，淘汰直接搬线程，不泛化为已证明GIL根因。CLI44初稿时钟边界错误未运行，修正后真实测量与清理回执保留。
+
+CLI45生成循环前准备三份独立模型的候选。原释放query.freeze只改代理geom的pos/quat/sameframe，交接前精确同步三行，原worker位姿核验不变。实际yaw0/.25时旧模板被原worker拒绝，同步后整模型MJB逐位相同、4个实际q的距离/指尖顶点逐位相同；仅测试比对，不加运行时哈希或缓存。
+
+根审查修正整数id为强引用/is，限制标准ReleasedObjectQuery；CLI修正请求429额度用尽，未冒称CLI已修复。原transformer遗漏初始化锚点空行、未应用即拒绝；根只修该锚点。新fixture把object_id硬写0而实际已为0，120项中1失败留证；修为另一个有效id后120项全过。原清理失败和全部worker错误透传，模型仅在原join成功后释放。
+
+生产局部三对完整调用原helper/AsyncJob/close，控制窗口最大间隙79.611→.382、80.404→.402、75.161→.397ms；完整wall121.271→113.779、122.231→112.491、113.013→112.630ms，含准备与销毁。这里主要是把约103ms准备/10ms销毁移到控制窗口外，不能宣传算法少算或完整50Hz。显式preallocate_worker_models.py默认false，只比当前smooth_jaw_leg_clock父版增加该字段，map仍false。
+
+已与研究根同步，实际机器人仿真进程空闲、宿主load1=1.30/16逻辑核，启动nominal父→子原物理成对。原90sim120wall/全部244扫掠/碰撞/释放/任务裁判与回退保持；新runner负载观察在process计量窗口外。当前无物理收益结论；若有效再已有200/200反序，不先切默认。
+
+原件：experiments/colab-twin/output/worker-preallocation-factory-20261023/5df8e9c8-1236-46fd-9831-8d5470e32bda/prepared.json及原evaluation/timing/scene/source；私有round44-model-copy、round45-preallocated-models含CLI回执、失败、原输入与准确复跑入口。GitHub新账户401推送pending；CodeBuddy429阻塞新生成，不重复撞服务。
+
+Knowledge：pending，owner=根Codex；先看两工位实测，F2ab/F2ac共享Wiki串行归属不变。
+
+F2af nominal原物理终态：父cc245a2f-2522-4920-8b29-c3f164fdf39e与子3145ff49-298c-40bc-b655-229b98ec1116均原pass。transport请求拍56.078→16.682ms，separation请求拍84.884→13.403ms，最大84.884→59.847ms；这两个启动尖峰消除。子预准备.102431s、3模型ready/used两项true、无fallback，计入lifecycle和全process。全process37.777648→38.448315s、CPU44.402610→45.817299s变慢；P95 13.250306→13.358788ms、慢拍44→48略退。sim75.36→75.34仅少1release拍，剔除hold/release同阶段同拍数仍wall26.900461→27.432231s。原4XML/初态/评分/释放门/native/path同值，全部抓放/释放/脱离/回位通过。只承认请求拍和最大时延改善，不称整程提速。为验证这项时延收益跨工位可复现，继续同源码已有200/200子→父反序；默认保持旧父版，完整50Hz未过。
+
+F2af已有200/200反序a86caf7a-b3ed-4bf9-9d43-5b0c9c8abfdf：子a6da119f-8dc2-40f6-b814-01b63036c0c9→父a72b5244-2825-40cf-898d-d36ea2dff65a均原pass。按父→子，transport请求55.215→15.687ms、separation请求87.078→11.150ms，最大87.078→76.499ms；P95 13.578917→13.421834ms、慢拍50→34。全process39.582148→39.925882s仍慢，CPU47.284384→46.811579s下降；sim78.02→78.08反多3release拍，剔除hold/release同阶段同拍数仍wall28.185435→28.415911s、CPU28.173364→28.399563s、controller20.782398→20.889861s，不能宣称整程可靠提速。原规划路径、4XML/初态/原评分与阈值、native核/库/flags同值，两子释放漂移.248988/.257261mm、脱离后0N、视频471/471与488/488，全部物理抓放/释放/脱离/回位pass。
+
+晋级结论：这项消除了两个工位的复制启动慢拍，可保留显式调度候选；总process两处都慢、非等待成本也未降，故不切默认、不宣传算法提速或完整50Hz。原默认仍smooth_jaw_leg_clock.py；裸RoutePolicy/最初baseline保持原行为。不是重跑同源择绿，也没有漏掉准备/清理成本。
+
+Next：实际残余40–70ms仍主要在controller线程CPU，且部分目标不动；用原默认单回合只读gc.callbacks对齐现有时钟，保持gc启用/阈值不变，查自动GC是否与慢拍重合。诊断不作为性能A/B；CodeBuddy429和GitHub401外部阻塞保留。
+
+
+### F2ag 原默认GC只读归因（2026-10-23，已完成诊断，下一候选未生成）
+
+沿用原evaluate_station.evaluate与当前smooth_jaw_leg_clock默认单回合，增加gc.callbacks只读观察并对齐原EpisodeTiming.active的sim_start_s；不调用enable/disable/collect/set_threshold。实际df1c70c2-2a77-443a-8bb6-9ba25c3c7ce0原pass，75.36sim/36.699episode-wall，完整抓放/释放/脱离/回位、安全与原90sim120wall保持。GC仍启用、阈值前后相同，callback错误0、未闭合事件0，退出finally移除回调并恢复原timer类；没有修改生产控制器或评分器。此为带观察器诊断，不冒充未插桩速度或性能A/B。
+
+共877次回收（gen0=799/gen1=73/gen2=5），874次主线程回收累计.278120s；所有线程累计.278484s。四次控制窗口内主线程gen2：8.68sim回收21.518ms/周期25.283ms；35.66sim回收45.874ms/周期59.374ms；63.42sim回收37.059ms/周期44.691ms；74.68sim回收58.133ms/周期68.339ms，均在controller分段。另一次gen2在窗口外19.382ms。不能称所有37慢拍都来自GC：两模型启动、首个闭爪预检、规划接纳及并行hold仍有其它长尾；本诊断P95 13.256ms/最大84.751ms、37拍超20ms，完整50Hz未通过。
+
+下一项仅研究已测gen2回收的调度位置，保留调用方GC状态/所有异常/原清理与内存成本；不直接修改GC或切默认。原native CLI已返回429额度用尽，因此新候选生成pending，待补额度后复用同session；pending-native-request.txt已存原测量、范围和反证，不反复请求失败或换未授权账号。GitHub新账户401仍阻塞正常push，有效代码、回归与原计划本地提交保全；新账户401复查仍失败，未尝试旧账号或推送。
+
+原件：experiments/colab-twin/output/gc-tail-diagnostic-20261023/98e68487-3f4c-415a-8910-e0bef6095e1a/{diagnostic.json,gc-observation.json,gc-cycle-readback.json,original/}；私有round46-gc-observation/{probe.py,argv.json,pending-native-request.txt}。复跑为原argv指向的probe.py，output使用新目录；仅序列化与既有机器人仿真共用窗口。
+
+Knowledge：pending，owner=研究根Codex串行维护共享Wiki。新增候选经验为“静止目标的controller长尾须核对实际自动gen2回收；GC总时长很小也可能集中毁坏20ms周期；移动清理不能隐去总process和内存成本”。本轮只提供原GC事件与原周期对齐证据，不宣称已优化或已写Wiki。F2af本身no_reusable_delta，来源/适用范围已在原计划记录；F2ab/F2ac共享Wikipending保持。

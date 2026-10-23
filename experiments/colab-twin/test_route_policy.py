@@ -58,6 +58,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(smooth_jaw_dwell=1)
         with self.assertRaises(ValueError):
             RoutePolicy(map_context_freeze=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(preallocate_worker_models=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
