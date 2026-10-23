@@ -1402,3 +1402,22 @@ Kaggle私有v1实际完成，29边界检查/实际调用路径通过。三对wal
 Next F2bg：计时窗外先运行者稳定多约1.25s；149.687ms慢拍中callbacks130.985ms wall但仅4.464ms主线程CPU。原数据未证明是磁盘或GC。准备了只读GC+IO/scene区间观察器，真实文件字节、异常对象透传与有界计数局部6检查通过；所有调用计数，仅留各类最慢16条，原物理完整计时不裁剪。下一回合先做冷/热导入短探针，再跑一次原默认归因；不改变GC设置、不造新发布器、不将插桩成绩作性能改进。根Codex串行维护，观察回合尚未开始。
 
 Knowledge=already_covered：继续采用Wiki/ROS2 与 FishBot.md第20节的完整任务/组件与来源边界；当前启动/回调现象未归因，保留项目证据，不提炼为跨环境结论。
+
+
+## F2bg / F2bh 归因已终态（2026-10-24）
+
+Kaggle默认观察e7e5fd52通过；独立readback及attribution-readback均通过，3788完整拍、全部244/自由物体/释放/脱离/回位、474/474视频与worker清理齐全。原P95 15.041296/max60.788477ms/115慢拍不作无插桩提速。GC开关/阈值/freeze_count保持、方法恢复、无观察错误。先前131ms回调未复现；此次atomic最大3.247ms，主线程gen2一次35.373ms在50.90s控制器，未证实worker GC/磁盘根因。冷/热import4.345/0.774s单列为环境准备。
+
+随后私有视觉组件完整渲染中位1.937ms、定位4.812ms，13份实际640×480图/39次结果同值；原循环约20ms差额尚未解释。首次读回误测64×64预检形状，保留attempt1，实际npz13×480×640×3读回通过。source450e5e34和两个Kaggle不可变v1保存复跑源码，未改生产控制、图像、安全条件或默认。
+
+## F2bi 两工位原物理已结束：掩码不晋级（2026-10-24）
+
+当前全部云评测终态，无owned本地物理，不触碰Mint/他人Blender或其他对话。Root GPT来源，未冒称CodeBuddy生成。私有round74-opencv-mask组件穷举16777216种RGB、308值检查/原19视觉测试通过；三对完整渲染+定位中位省120.539ms/104次，原screen准入。
+
+so101-opencv-mask-physical-ab-20261024私有v1名义父→子dd574067、v2已有200/200子→父ae817356，4/4原pass。两侧route均float_first，候选只外围显式替换mask；detector-implementation.json记录实际candidate.py函数、14次mask及全部还原。原评分器/90sim120wall/244/全部碰撞和回退不改，无目标真值进入候选。原XML/初态/native及规划路径同，两站14个定位输出/时序完全一致，视频475/475→474/474、492/492两侧，释放/脱离/回位、两个worker清理均过。
+
+父→子wall56.898594→55.672351、59.184210→60.791135s，CPU65.968246→64.966110、69.114080→70.791598s；sim75.86→75.80、78.64→78.70，仅等待拍差异不计算法提速。同3264/3366非hold/release拍CPU37.218970→36.590408、38.984965→39.796654s。定位本身13次省12.862/13.915ms，但整程方向不一致，不晋级、不重复择绿。默认仍float_first_context，没有新增生产mask选项。完整P95 16.831→16.146、17.496→19.119ms，慢拍125→121、157→180，完整50Hz未过。
+
+证据output/opencv-mask-factory-20261024/independent-physical-inventory.json；私有round74含candidate.py、probe.py、physical_probe.py、read_detector.py、physical-primary/cross-path.txt。复跑采用原round10 runner，云端不可变component v1与physical v1/v2能恢复全部私有源码。当前源码仍450e5e34，所有成对评测终态后才编辑本次记录。
+
+Next F2bj：真实循环render_rgb约191ms/13次，显著高于静态组件；先只读记录控制进程实际GL vendor/renderer、update_scene/render/copy子时钟及同输入复放。录像是控制结束后的独立渲染，尚未证明是GPU竞争，不先改异步管线、阴影、精度或视觉频率。Root Codex继续实际执行，so101定时器保持删除；本段之后不需用户确认。Knowledge=already_covered，Wiki/ROS2 与 FishBot.md第20节的真实路径/组件与整体/反证边界已覆盖，无新跨项目写入。

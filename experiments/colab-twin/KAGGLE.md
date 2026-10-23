@@ -56,3 +56,13 @@ CLI 2.2.5；实际 Python 3.13.15、MuJoCo 3.15.0、NumPy 2.4.6、SciPy 1.17.1�
 [完整组件任务](https://www.kaggle.com/code/muqiaoqiao/so101-float-packer-component-20261024)版本2实际使用source9c585cd生产helper，三对准入；[原物理任务](https://www.kaggle.com/code/muqiaoqiao/so101-prebound-physical-ab-20261024)版本1为名义父→子、版本2为200/200子→父。4/4原物理通过。
 
 按父→子process wall64.356→62.556、60.959→62.650s；两站同量主循环CPU均未下降，因此不晋级默认。首运行者在原episode计时窗外始终约多1.25s，须进一步定位启动/收尾，不能把它当算法提速。原件和独立读回在output/prebound-float-factory-20261024；下一轮只观察原默认的回调IO/GC与冷/热导入，尚未修改这些实现。
+
+
+## 回调与视觉接续（2026-10-24）
+
+- [原默认归因](https://www.kaggle.com/code/muqiaoqiao/so101-callback-attribution-20261024) v1：原抓放pass，IO/GC/冷热导入只读记录；131ms回调未复现，未改GC或发布器。
+- [视觉组件拆分](https://www.kaggle.com/code/muqiaoqiao/so101-perception-components-20261024) v1：实际640×480静态图，分别量渲染和定位；不当整拍验收。
+- [OpenCV掩码组件](https://www.kaggle.com/code/muqiaoqiao/so101-opencv-mask-component-20261024) v1：全RGB穷举同值、原19项视觉检查及完整组件三对准入。
+- [掩码原物理](https://www.kaggle.com/code/muqiaoqiao/so101-opencv-mask-physical-ab-20261024) v1名义父→子、v2已有200/200子→父，4/4原pass。采用私有明确实现替换；detector-implementation.json记录实际来源，不能把相同route-policy当完全相同实现。
+
+source450e5e34两站定位合计各省约13ms，但process wall父→子56.899→55.672、59.184→60.791s，整程不一致，不晋级。默认/阈值/90sim120wall/244保持，完整50Hz未过。原件及独立读回见output/callback-attribution-20261024、perception-components-20261024、opencv-mask-factory-20261024。实际控制循环渲染约14.7ms/次，与静态探针不同；下一项记录控制进程GL及子区间，不凭本页旧预检推断。

@@ -467,3 +467,30 @@ F2bf正式组件v2已实际完成：source9c585cd、实际encoder_source=configu
 同量非hold/release：名义3264拍CPU41.327230→41.396429s；第二站3366拍39.704162→39.870501s，均无可采用的控制链成本收益。原完整P95父→子19.101252→19.029101、17.186022→17.951875ms；慢拍148→148、154→162，max149.687→57.914、148.470→151.417ms。完整50Hz未过，默认float_first_context不变。局部打包收益保留为事实，但不晋级或追加物理追绿。
 
 实际process wall减去全部原episode生命周期/完整周期后，名义父/子余量2.407206/1.155890s，反序第二站父/子1.152166/2.397721s：先运行者约多1.25s，独立于候选。这是计时窗外启动/收尾差，不凭猜测全算为import或算法。名义原版最长拍在hold30.999999s，callbacks130.985wall/4.464thread-CPU毫秒，源数据只说明主线程等待。F2bg定向观察IO和全局GC，再区分文件操作、其他线程暂停与导入冷启动；不先改变GC或发布调度。
+
+
+## F2bg 原默认回调/启动的真实归因
+
+Kaggle私有so101-callback-attribution-20261024版本1，源码450e5e34，原e7e5fd52原pass。原3788拍、244/抓放/释放/脱离/回位/完整474帧、两个worker清理均过。52.392385process-wall/61.514648CPU秒只属于带观察的默认回合，不替代无插桩性能；P95 15.041296ms/max60.788477ms/115慢拍，完整50Hz未过。
+
+160次GC事件中主线程gen0/1/2为145/13/1，worker gen0为1。唯一gen2为35.373009ms，在50.90s控制器区间；未找到worker GC解释先前131ms回调的证据。本轮callback整体最大6.044649ms，atomic_json/文件write/replace最大3.246828/2.183711/1.078208ms，最慢atomic区间无GC重叠；scene.update最大3.126980ms，与1.640948ms主线程gen1重合。嵌套时钟不相加。所有方法恢复、观察无错、GC设置保持。先前131ms等待未复现，不声明根因已解决，不据此造异步发布器或改GC。
+
+同模块冷/热导入4.345017/0.774024wall秒，CPU3.012986/1.977449秒，4个目标pyc由无到有；CPU含导入库线程。证明当前冷/热差和缓存创建，不将此前约1.25s计时窗外余量全部算导入。准备成本分列。原件及independent-attribution-readback.json在output/callback-attribution-20261024/v1。
+
+## F2bh 静态真实姿态的完整视觉组件
+
+私有so101-perception-components-20261024 v1复用上述通过回合的场景和0..6s关节姿态，静态自由物体仅用于生成测试图像，未给控制器真值。13份640×480 uint8 RGB，完整渲染40次中位1.937163ms（update_scene .028104、render1.835264、copy .071582ms），原定位39次中位4.812061ms。另行cProfile显示mask表达式是定位函数最大self成本，cvtColor和连通域各约.634/.930ms。39结果同值，但与原循环约20ms区域不一致，不能把组件结果当整拍或唯一根因。
+
+独立读回首次误用共享64×64 graphics preflight形状检查，已保留independent-readback-attempt-1.json；改读实际perception-frames.npz，确认13×480×640×3 uint8，当前readback通过。没有改探针或物理结果。该反证只属于读回目标选择，非算法失败。
+
+## F2bi OpenCV掩码的局部收益与完整任务反证
+
+Root GPT沿用现有OpenCV5的inRange、uint8饱和减法与compare，保持HSV H40..92/S≥55/V≥30、G-R≥10、G-B≥6。负差值饱和到0仍不通过正阈值；输出仍为bool，再进入完全相同的连通域、尺寸/遮挡拒绝和标定计算。[官方数组运算](https://docs.opencv.org/5.0/main_modules/core_array.html)核实端点包含和饱和语义，实际5.0.0穷举16777216种RGB并逐值核验，不只凭文档推定。
+
+私有component v1：308同值/负步幅检查、原19项视觉测试均过。完整render_rgb+localize（104帧/次）三对wall .778854→.658316、.853530→.735098、.863767→.741707s，线程CPU同向；原screen eligible，约省1.159ms/图，仅为组件准入。未新增生产开关，实际物理通过private physical-probe.py外围显式替换run_visual_grasp的定位函数，副本仅替换mask表达式，其余函数原源码复用。两侧策略/控制器/评分相同，实际差异由detector-implementation.json记录，不能因Git clean或route-policy delta为空就把它误写成完全原实现。
+
+原物理名义dd574067：父ccf67022→子36717b2e，wall56.898594→55.672351、CPU65.968246→64.966110s、sim75.86→75.80s。200/200反序ae817356：子4305dc0a→父b55e90bc，按父→子wall59.184210→60.791135、CPU69.114080→70.791598s、sim78.64→78.70s。4/4原pass，planned/measured各244，原native/flags/XML/初态/裁判/安全阈值和规划路径保持；释放/脱离/回位、自由物体及worker清理全过，视频475/475→474/474和492/492两侧。
+
+真实循环每侧14次定位（含初始化），候选mask实际调用14次，baseline0；14个结果与timestamp一致，方法全部恢复、GC设置保持。循环13次定位分别62.949→50.087、66.294→52.379ms，组件收益在真实任务中重现。此收益只约13ms，不能解释process秒级差；同3264/3366非hold/release拍CPU37.218970→36.590408、38.984965→39.796654s方向不一致。完整P95父→子16.831275→16.145838、17.496097→19.118577ms，慢拍125→121、157→180；两侧接近段仍13慢拍。无可靠完整任务收益，保持私有证据、不切默认、不追加追绿回合，完整50Hz仍未过。
+
+额外实际render_rgb在名义两侧分别191.311/191.062ms（13次），约14.7ms/次；这是下一项比对的真实线索。DeferredVideo在控制退出后另进程渲染，不能把该耗时归因同时录像。F2bj只读拆控制进程GL与渲染子区间，再决定改动，不据预检NVIDIA结果推定控制进程或先禁阴影/降分辨率。原件output/opencv-mask-factory-20261024及independent-physical-inventory.json保存全部对照。
