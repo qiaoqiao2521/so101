@@ -466,3 +466,19 @@ Root GPT沿当前源码检查每个float调用struct.pack的重复开销，不�
 - [x] 定位13次合计省12.862/13.915ms；process wall父→子56.899→55.672、59.184→60.791s，CPU65.968→64.966、69.114→70.792s。第二站回退，默认float_first_context不变，不重复择绿。
 
 Next F2bj：真实循环render_rgb合计约191ms/13次（约14.7ms/次），静态探针约1.94ms/次；只读记录实际控制进程GL设备、update_scene/render/copy区间及可复放RGB/积分状态。预检GPU可见不替代真实控制进程证据。暂不改图像、精度、视觉频率、GC或执行器。OMPL2.0.1的ropeShortcutPath官方能力已核对，但本任务收益未测，本轮未实施。Knowledge=already_covered，沿用原Wiki性能范围/真实调用和反证规则。
+
+
+## F2bj 实际控制渲染器归因已完成
+
+- [x] source b37171cb，原默认cbe532f0原pass；75.86sim/54.252358process-wall/63.422622CPU，原244/释放/脱离/回位/475帧/worker清理保持。
+- [x] 控制进程直接读取GL vendor=NVIDIA、renderer=Tesla T4；13次update_scene合计.589ms，中位.044484ms；Renderer.render合计189.130ms，中位14.562754ms。不是仅从独立预检推断GPU。
+- [x] 14份RGB/积分状态/渲染pose及实际编译MJB已保存，观察方法全部恢复、GC设置保持、无观察错误。
+- [x] 两种离线复放均0/14逐像素等同（相差少量边缘像素），保留失败，不把1.8ms复放当同输入提速。完整50Hz未过。
+
+## F2bk 出图间隔与原生读回观察已完成
+
+- [x] 私有paced-render v1，按原循环实测间隔.233840443s，与连续出图做三组成对观察；不修改驱动设置，不计等待为渲染成本。
+- [x] 连续模式后两组也约14ms，单纯出图间隔解释不足。时间集中在mjr_readPixels；GPU0 P0/585MHz的23样本读回中位1.459570ms，P8/300MHz的46样本13.905005ms，只记关联。
+- [x] 当前单context复放仍有最多59像素差异，原exact_rgb=false保留，不宣称图像等值、算法收益或50Hz通过。
+
+Next F2bl：在新分配Kaggle任务中先核对GPU0身份/独占和CLI能力，再尝试原生585MHz受支持频率的短环境对照，成功后finally恢复默认。若无权限或所有权不明确，仅记录并跳过配置，不提权、不重置GPU、不改功率/驱动/物理参数。原控制实现、评分器与90sim/120wall/244保持。该项是环境实验，不是算法候选。

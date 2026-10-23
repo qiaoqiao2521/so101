@@ -1421,3 +1421,14 @@ so101-opencv-mask-physical-ab-20261024私有v1名义父→子dd574067、v2已有
 证据output/opencv-mask-factory-20261024/independent-physical-inventory.json；私有round74含candidate.py、probe.py、physical_probe.py、read_detector.py、physical-primary/cross-path.txt。复跑采用原round10 runner，云端不可变component v1与physical v1/v2能恢复全部私有源码。当前源码仍450e5e34，所有成对评测终态后才编辑本次记录。
 
 Next F2bj：真实循环render_rgb约191ms/13次，显著高于静态组件；先只读记录控制进程实际GL vendor/renderer、update_scene/render/copy子时钟及同输入复放。录像是控制结束后的独立渲染，尚未证明是GPU竞争，不先改异步管线、阴影、精度或视觉频率。Root Codex继续实际执行，so101定时器保持删除；本段之后不需用户确认。Knowledge=already_covered，Wiki/ROS2 与 FishBot.md第20节的真实路径/组件与整体/反证边界已覆盖，无新跨项目写入。
+
+
+## F2bj / F2bk 已终态：真实T4、慢在读回
+
+b37171c已推送，REST与ls-remote独立一致。F2bj原默认cbe532f0原pass，75.86sim/54.252358wall/63.422622CPU，原244/释放/脱离/回位/475帧/两个worker清理齐全；方法全部恢复、GC设置保持。真实控制context是Tesla T4，update_scene中位.044ms，Renderer.render中位14.563ms。原完整P95 15.701/max59.459ms/115慢拍，完整50Hz未过。
+
+保存14份真实渲染输入及MJB；两种独立复放都0/14逐像素一致，原失败留在renderer-replay.json，不把约1.8ms复放当同输入收益。通用cloud-run.scope旧paired用词与实际单回合不符，已在independent-renderer-readback.json说明；原实际case只有1个，不宣称A/B。
+
+F2bk按原实测.233840443s间隔对比burst，84个样本/三对。P0/585MHz样本读回约1.460ms，P8/300MHz约13.905ms；连续出图也在后两组变慢，暂不把间隔当修复。NVML只读、GPU设置未改，逐像素同样未等同（最多59像素差）；不宣称算法进步或50Hz。原件及独立读回分别在output/live-render-attribution-20261024和paced-render-observation-20261024。
+
+Next F2bl：原生CLI检查本Kaggle GPU0的身份/独占与时钟配置权限；允许才做585MHz短环境干预，finally恢复默认，保留全部命令/返回码与恢复结果。拒绝则跳过，不提权、不GPU reset、不改功率/驱动或物理条件。Root Codex继续，不恢复定时任务。Knowledge=already_covered，原Wiki性能范围/反证及环境与算法区分规则覆盖；当前GPU状态关联仍留项目，不提升为跨平台结论。

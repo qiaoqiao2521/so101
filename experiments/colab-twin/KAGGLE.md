@@ -66,3 +66,10 @@ CLI 2.2.5；实际 Python 3.13.15、MuJoCo 3.15.0、NumPy 2.4.6、SciPy 1.17.1�
 - [掩码原物理](https://www.kaggle.com/code/muqiaoqiao/so101-opencv-mask-physical-ab-20261024) v1名义父→子、v2已有200/200子→父，4/4原pass。采用私有明确实现替换；detector-implementation.json记录实际来源，不能把相同route-policy当完全相同实现。
 
 source450e5e34两站定位合计各省约13ms，但process wall父→子56.899→55.672、59.184→60.791s，整程不一致，不晋级。默认/阈值/90sim120wall/244保持，完整50Hz未过。原件及独立读回见output/callback-attribution-20261024、perception-components-20261024、opencv-mask-factory-20261024。实际控制循环渲染约14.7ms/次，与静态探针不同；下一项记录控制进程GL及子区间，不凭本页旧预检推断。
+
+
+## 实际渲染与GPU状态观察
+
+[真实控制渲染归因](https://www.kaggle.com/code/muqiaoqiao/so101-live-render-attribution-20261024) v1的原默认抓放通过，控制context确认Tesla T4，场景更新约.044ms、渲染约14.563ms。14份MJB/状态/pose/RGB用于离线复放；两种复放均未逐像素等同，不宣称同输入加速。
+
+[节奏与NVML只读观察](https://www.kaggle.com/code/muqiaoqiao/so101-paced-render-observation-20261024) v1中，连续模式也出现慢读回；P0/585MHz与P8/300MHz关联到约1.46/13.91ms读回，但未干预时钟，尚非因果结论。GPU设置未改，图像逐像素检查失败保留。当前不靠重复出图或修改物理判据追绿。下一项是本任务GPU原生时钟配置权限与可恢复短对照；平台拒绝时不提权。

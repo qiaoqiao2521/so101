@@ -494,3 +494,20 @@ Root GPT沿用现有OpenCV5的inRange、uint8饱和减法与compare，保持HSV 
 真实循环每侧14次定位（含初始化），候选mask实际调用14次，baseline0；14个结果与timestamp一致，方法全部恢复、GC设置保持。循环13次定位分别62.949→50.087、66.294→52.379ms，组件收益在真实任务中重现。此收益只约13ms，不能解释process秒级差；同3264/3366非hold/release拍CPU37.218970→36.590408、38.984965→39.796654s方向不一致。完整P95父→子16.831275→16.145838、17.496097→19.118577ms，慢拍125→121、157→180；两侧接近段仍13慢拍。无可靠完整任务收益，保持私有证据、不切默认、不追加追绿回合，完整50Hz仍未过。
 
 额外实际render_rgb在名义两侧分别191.311/191.062ms（13次），约14.7ms/次；这是下一项比对的真实线索。DeferredVideo在控制退出后另进程渲染，不能把该耗时归因同时录像。F2bj只读拆控制进程GL与渲染子区间，再决定改动，不据预检NVIDIA结果推定控制进程或先禁阴影/降分辨率。原件output/opencv-mask-factory-20261024及independent-physical-inventory.json保存全部对照。
+
+
+## F2bj 控制进程的实际GL与渲染子区间
+
+source b37171cb干净，私有so101-live-render-attribution v1原cbe532f0原pass；75.86sim/54.252358process-wall/63.422622CPU，3793完整拍，原抓放/244/释放/脱离/回位/475帧与worker清理全过。P95 15.700948/max59.458898ms/115慢拍仅属于观察回合，完整50Hz未过。
+
+从真正正在渲染的context读取NVIDIA/Tesla T4/driver580.178.04。13次RGB中update_scene中位.044484ms、合计.589194ms；Renderer.render中位14.562754ms、合计189.129708ms，RGB整体190.717758ms。方法与GC设置全部恢复、无观察错误。14个状态/派生pose/RGB和实际MJB保存，仅用于离线图像复放，未进入策略输入。原录像仍在控制退出后另进程渲染。
+
+新进程对积分状态forward和保存render poses两种复放均0/14逐像素相同，分别最多48/56像素不同；两种复放虽中位1.976/1.799ms，不能叫同输入加速。保留所有差异和原始exact=false，不放宽像素判据。原cloud-run通用STATE.scope沿用旧paired字样；实际cases/runs只有1个原默认观察，observer/独立readback明确无候选/无A/B。元数据用词瑕疵保留说明，未改原物理裁决。
+
+## F2bk 同context出图节奏与像素读回
+
+私有so101-paced-render-observation v1沿上轮原MJB/姿态，在一个context内做burst与按实际中位.233840443s间隔出图三对，各42样本。间隔单列，不把sleep计为渲染成本；NVML只读clock/pstate，不改变设置。实际Tesla T4，NVML全部query成功。逐像素比较仍false、最多59像素不同，不因进入同context就宣称已等值。
+
+三对burst/paced的render中位2.000/2.340、14.457/14.701、14.006/14.722ms；连续模式后两组同样慢，不能把“只要连续渲染”当修复。时间集中在mjr_readPixels：GPU0调用前P0/585MHz的23样本读回中位1.459570ms，P8/300MHz的46样本13.905005ms；其余P8/360、375MHz各6/9样本也约13.4/13.5ms。此处是状态关联，不是控制过频率的因果实验。GPU1始终P8/300MHz。
+
+已核对[NVIDIA原生锁频/恢复说明](https://docs.nvidia.com/deploy/nvidia-smi/index.html)及[NVML查询](https://docs.nvidia.com/deploy/nvml-api/latest/api/group__nvmlDeviceQueries.html)。后续F2bl优先尝试当前私有任务内原生命令、明确设备与finally恢复；未授权提权、GPU reset、驱动/功率修改或别的任务资源操作。平台不允许时记录真实拒绝，不重复权限尝试。图像/控制/评分均不变，环境收益不能冒充算法收益。
