@@ -471,6 +471,9 @@ class VisualGraspController:
                 'contact_evidence': 'unobserved', 'guard_extent': 'full_reference_chord'}
 
     def _set_motion(self, points, jaw, elapsed):
+        if (hasattr(self, '_loaded_jaw_target')
+                and self.stage in ('hold', 'transport', 'lower') and float(jaw) == .015):
+            jaw = self._loaded_jaw_target
         self.points = np.asarray(points, dtype=float)
         self.jaw = float(jaw)
         self.duration = motion_duration(self.points)
@@ -493,7 +496,17 @@ class VisualGraspController:
         captured command continuity value to the dwell target over the dwell
         duration, reusing sample_minimum_jerk. Terminal age returns the exact
         dwell target; nonpositive age returns the exact captured start.
+        An opt-in loaded hold uses its original dwell duration and the same
+        command continuity, without repeatedly following the encoder.
         """
+        if self.stage == 'hold' and hasattr(self, '_loaded_jaw_target'):
+            if age <= 0:
+                return self.jaw_dwell_start
+            if age >= self.duration:
+                return self.jaw
+            return float(sample_minimum_jerk(
+                np.array([[self.jaw_dwell_start], [self.jaw]], dtype=float),
+                age / max(self.duration, 1e-9))[0])
         policy = getattr(self, 'route_policy', None)
         if not (policy is not None
                 and bool(getattr(policy, 'smooth_jaw_dwell', False))
@@ -777,7 +790,7 @@ class VisualGraspController:
             return False
         proposal = self.transport_job.peek(self._async_transport_binding())
         paths = [np.asarray(path, dtype=float) for path in proposal.paths]
-        endpoint = np.r_[paths[0][0], .015]
+        endpoint = np.r_[paths[0][0], getattr(self, '_loaded_jaw_target', .015)]
         sweep = self._configuration_sweep(q6, endpoint)
         self.sweep_reports.append({'stage': 'transport_admission', **sweep})
         bridge = {'event': 'admission', 'elapsed_s': float(elapsed),
@@ -795,7 +808,7 @@ class VisualGraspController:
             raise ControllerFailure('transport_admission_payload_invalid')
         if not admission_binding.matches(self._sweep_binding(q6, endpoint, 'online_chord')):
             raise ControllerFailure('transport_admission_observation_changed')
-        first_command = np.r_[q6[:5], .015]
+        first_command = np.r_[q6[:5], getattr(self, '_loaded_jaw_target', .015)]
         first_sweep = self._configuration_sweep(q6, first_command)
         first_binding = self._sweep_binding(q6, first_command, 'online_chord')
         first_payload = (validate_joint_path([q6[:5], q6[:5]], self._payload_valid, .005)
@@ -1261,6 +1274,17 @@ class VisualGraspController:
             self.stage = 'lift'
             self._set_motion([q6[:5], self.lift], .015, elapsed)
         elif self.stage == 'lift':
+            if (getattr(getattr(self, 'route_policy', None), 'loaded_jaw_preload', False)
+                    and not hasattr(self, '_loaded_jaw_target')):
+                # Encoder/command only. Latch once; repeated following would
+                # progressively unload the grasp. Every new chord is guarded.
+                previous = float(self.last_command[5])
+                self._loaded_jaw_target = previous + .5 * max(0., float(q6[5])-previous)
+                self._loaded_jaw_latch = {
+                    'elapsed_s': float(elapsed), 'encoder_rad': float(q6[5]),
+                    'previous_target_rad': previous, 'target_rad': self._loaded_jaw_target,
+                    'inputs': ['encoder.q6[5]', 'previous_command[5]']}
+                self.plan_reports.append({'stage': 'loaded_jaw_preload', **self._loaded_jaw_latch})
             self._set_dwell('hold', self.lift, .015, elapsed, 1.5)
         elif self.stage == 'hold':
             if self.transport_job is None:

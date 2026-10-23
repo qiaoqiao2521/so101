@@ -152,6 +152,22 @@ class AsyncAdmissionTests(unittest.TestCase):
     def arm_rows(self, c):
         return np.asarray([row[1] for row in c.trace if row[0] == 'arm'])
 
+    def test_loaded_jaw_admission_and_first_command_guard_use_actual_held_target(self):
+        c = self.controller()
+        c._loaded_jaw_target = c.jaw = .068
+        c.reference[5] = c.last_command[5] = .068
+        job = self.attach(c, ready=True)
+        self.assertTrue(c._poll_transport(self.measured(c), 12.1))
+        bridge = c.transport_events[-1]
+        self.assertEqual(bridge['end_q6'][5], .068)
+        first = bridge['first_command_guard']
+        self.assertEqual(first['end_q6'][5], .068)
+        for guard in (bridge['configuration_sweep'], first['configuration_sweep']):
+            self.assertTrue(guard['valid'])
+            self.assertEqual(guard['checked_states'], guard['required_states'])
+            self.assertEqual(guard['jaw_resolution_rad'], .002)
+        self.assertEqual(job.consume_count, 1)
+
     def payload_rows(self, c):
         return np.asarray([row[1] for row in c.trace if row[0] == 'payload'])
 

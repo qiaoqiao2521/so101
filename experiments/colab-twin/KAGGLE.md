@@ -118,3 +118,7 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [持物静态探针](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-retention-20261024) v1原采集通过、静态旧碰撞类错误已保留，不用其计时。v2原采集13e4dd07与六个3.5sim live副本试验独立核验通过：每例9625→5915点、稳态55→28，guard三对省.457/.475/.508s，物理q6/物体/双指力逐拍相同。原力矩限幅±.15未改，不声称夹持力降低或完整任务提速。
 
 原件output/loaded-jaw-preload-factory-20261024/retention-v1/v2，v2含independent-retention-readback.json；私有round83保存真实来源与复跑代码。下一步同源原名义完整A/B；候选只将编码器半残差目标沿原hold1.5s坡道接入，原运输准入两个端点同步，检查主体/模型/评分不改。静态准入不是动态验收，默认保持。
+
+[持物目标原物理](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-physical-ab-20261024) v1名义原版→候选、v2已有200/200候选→原版，source6ef85f70，4/4原pass。wall62.631→56.097、61.430→56.592s，CPU同向；候选sim反多.82/1.06s，不是少等待。剔除hold/release仍少约5.95/5.44s主线程CPU，第二站多1拍lower。原完整244/模型/评分/全部碰撞及自由物体/释放/脱离/回位保持，实际力矩持物阶段均原−.15饱和。
+
+完整慢拍128→138、165→143，50Hz仍未过；运输worker wall未加速，不能把总收益叫规划提速。证据output/loaded-jaw-preload-factory-20261024/independent-physical-inventory.json，私有round83及云端版本可恢复。正式default-off策略现已接入，166相关测试通过；下一轮直接选正式loaded_jaw_preload.py与原float_first_context.py，绑定新源码、移除私有控制器覆盖，不抢先切默认。

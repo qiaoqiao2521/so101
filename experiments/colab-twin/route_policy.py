@@ -40,6 +40,7 @@ class RoutePolicy:
     named_context_freeze: bool = False
     approach_midpoint_order: bool = False
     prebound_float_pack: bool = False
+    loaded_jaw_preload: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -108,6 +109,8 @@ class RoutePolicy:
             raise ValueError('Approach midpoint order must be a boolean')
         if not isinstance(self.prebound_float_pack, bool):
             raise ValueError('Prebound float pack must be a boolean')
+        if not isinstance(self.loaded_jaw_preload, bool):
+            raise ValueError('Loaded jaw preload must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

@@ -1,5 +1,20 @@
 # 工作站草稿执行适配
 
+## 持物夹爪目标候选（2026-10-24，默认关闭）
+
+`route_strategies/loaded_jaw_preload.py` 仅在抬起后用编码器/旧命令锁定一次半残差目标，沿原1.5s hold连续接入，并同步原运输准入端点。原始两类244点闭合预检、全部在线碰撞、模型、90sim/120wall及释放/脱离/回位判据保持。当前默认仍`float_first_context.py`。
+
+私有同逻辑两站4/4原pass且wall/CPU同降；正式源码已通过166相关测试，待原物理复验，不将私有覆盖结果冒充正式实现。完整50Hz仍未过。显式复跑：
+
+```bash
+python experiments/colab-twin/evaluate_station.py \
+  --station experiments/colab-twin/scenarios/factory-loading/capability-segments-0mm.json \
+  --candidate experiments/colab-twin/route_strategies/loaded_jaw_preload.py \
+  --output-dir experiments/colab-twin/output/loaded-jaw-check --timing
+```
+
+原版使用同一命令，`--candidate`改为`route_strategies/float_first_context.py`的完整路径。当前证据见[厂区进度](../../plans/factory-loading-20261021/progress.md)。
+
 `station_executor.py` 将网页 Station JSON 接到原 `run_visual_grasp.run_physical_episode`。输入支持裸 Station，或 `{id, submittedAt, station}` 任务快照。仅运行 MuJoCo 仿真，不访问机械臂串口或恢复训练。
 
 ```bash

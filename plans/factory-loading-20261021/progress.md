@@ -1487,3 +1487,15 @@ v2原采集13e4dd07原pass；independent-retention-readback.json逐项核查来�
 原件output/loaded-jaw-preload-factory-20261024/retention-v1/v2；云端private muqiaoqiao/so101-loaded-jaw-retention-20261024不可变v1/v2可恢复准确源码。私有round83-loaded-jaw-preload包含candidate.py/probe.py/read_retention.py、原MJB/integration记录及真实live复制协议；保存数组不冒充bitwise全态离线复现。9个目标语义检查、16个实际controller类阶段/连续坡道/回滚及两个准入端点AST核验通过。
 
 Next：同一Root GPT私有候选跑原名义原版→候选完整物理；只改一次性编码器held目标、原hold1.5s连续坡道及两个运输准入端点。原RGB/arm planner、初始244、全部安全检查/回退/原90sim120wall和评分保持。实际actuator_force仅对称观察，不是策略输入；可靠收益才第二工位反序。当前尚未有候选整程结果，不切默认。Knowledge=already_covered，原Wiki第20节覆盖组件/整程与反证；没有跨项目知识写入，不恢复定时器或向其他对话发消息。
+
+## F2br 私有完整两工位通过，正式选项等待新源码复验
+
+source6ef85f70，名义796670f1（6791f1d4/519e72b2）、200/200反序02761778（a7ea4be0/0ee9df35），4/4原pass。六项独立读回均完成：原244/原生库flags/模型/评分/阈值/自由物体/夹取释放脱离回位/视频/两个worker清理不改；原接近/运输路径、14次RGB定位相同。preload-implementation.json确认实际方法来源、一次锁定、真实command/guard端点及退出恢复；不能仅看相同route-policy判实现相同。
+
+原版→候选process wall62.630972→56.096788、61.429735→56.591874s；CPU72.755506→66.642117、72.007610→67.158207s。sim75.80→76.62、78.70→79.76，候选多等38/50拍hold。剔除hold/release CPU40.803190→34.857922（同3264拍）、40.090904→34.652309（3366→3367拍，lower多1），收益不来自删等待或少物理工作。原native认证110382→66860、117561→70892点，原间距不改、初始planned/measured各244保持。
+
+完整慢拍128→138、165→143，候选P95 16.879/17.226ms但最大53.764/147.724ms，仍非完整50Hz。持物实际力矩两侧均−.15饱和，不是降低力/改模型；子释放漂移.211512/.172091mm、脱离后0N。运输worker wall两站都反增，明确不是规划加速，详细planning/worker/进程分列在findings与独立库存。
+
+原件output/loaded-jaw-preload-factory-20261024/physical-v1/v2及independent-physical-inventory.json，Kaggle私有so101-loaded-jaw-physical-ab-20261024不可变v1/v2；round83保存准确candidate/physical_probe/read_preload和两个路径指针。正式生产新增loaded_jaw_preload=False，显式route_strategies/loaded_jaw_preload.py只启用此一项；166项相关测试通过，默认float_first_context不变，尚无正式源码物理成绩。
+
+Next：固化源码后跑正式选项原名义A/B，再据实际收益第二站反序；不复用私有覆盖成绩冒充新实现。原judge/模型/C++/90sim120wall/所有回退保持。Root GPT来源，无CodeBuddy代生成声明。Knowledge=already_covered；同第20节范围、反证与真实实现/整程验真，无新增知识页或定时器，不向其他对话发消息。

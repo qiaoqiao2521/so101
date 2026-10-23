@@ -393,9 +393,51 @@ class VisualControllerTests(unittest.TestCase):
                 for age in (0., 1., 3., 6.):
                     self.assertEqual(c._jaw_reference(age), .015)
 
+    def test_loaded_jaw_latches_once_after_lift_with_original_dwell_and_stage_scope(self):
+        from route_policy import RoutePolicy
+        for enabled in (False, True):
+            with self.subTest(enabled=enabled):
+                c = self.controller(route_policy=RoutePolicy(loaded_jaw_preload=enabled))
+                self.assertEqual(c.sweep_reports[0]['checked_states'], 244)
+                c.stage, c.last_command = 'lift', np.r_[c.lift, .015]
+                c._transition(np.r_[c.lift, .121], 1.)
+                self.assertEqual(c.duration, 1.5)
+                if not enabled:
+                    self.assertFalse(hasattr(c, '_loaded_jaw_target'))
+                    self.assertEqual(c.jaw, .015)
+                    continue
+                self.assertEqual(c._loaded_jaw_target, .068)
+                self.assertEqual(c._jaw_reference(0.), .015)
+                self.assertEqual(c._jaw_reference(1.5), .068)
+                values = [c._jaw_reference(t) for t in np.linspace(0., 1.5, 76)]
+                self.assertTrue(all(a <= b for a, b in zip(values, values[1:])))
+                c.stage = 'lift'
+                c._transition(np.r_[c.lift, .4], 4.)
+                self.assertEqual(c._loaded_jaw_target, .068)
+                for stage, request, expected in [('hold', .015, .068), ('transport', .015, .068),
+                                                  ('lower', .015, .068), ('release', .5, .5),
+                                                  ('descend', .5, .5), ('retreat', .5, .5)]:
+                    c.stage = stage
+                    c._set_motion([c.lift, c.lift], request, 5.)
+                    self.assertEqual(c.jaw, expected)
+
+    def test_loaded_jaw_ramp_keeps_interior_collision_guard(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(loaded_jaw_preload=True))
+        c.stage, c.last_command, c.target_frozen = 'lift', np.r_[c.lift, .015], True
+        q = np.r_[c.lift, .121]
+        c._transition(q, 1.)
+        c._payload_valid = lambda q5: True
+        c.checker.evaluate.side_effect = lambda q6, **kw: {'valid': not .09 < q6[5] < .10}
+        result = c.update(q, np.zeros(6), 1.75)
+        self.assertEqual(result['status'], 'failed')
+        self.assertFalse(c.last_sweep_report['valid'])
+        self.assertEqual(c.last_sweep_report['jaw_resolution_rad'], .002)
+        self.assertGreater(c.last_sweep_report['checked_states'], 1)
+
     def test_continuous_close_keeps_full_measured_closure_precheck(self):
         from route_policy import RoutePolicy
-        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True, loaded_jaw_preload=True))
         c.target_frozen = True
         q = np.r_[c.down, .5]
         c.last_command = q.copy()
@@ -408,6 +450,7 @@ class VisualControllerTests(unittest.TestCase):
         self.assertEqual(c.sweep_reports[-1]['stage'], 'measured_closure')
         self.assertEqual(c.sweep_reports[-1]['checked_states'], 244)
         self.assertEqual(c.last_sweep_report['checked_states'], 2)
+        self.assertFalse(hasattr(c, '_loaded_jaw_target'))
 
     def test_continuous_jaw_still_rejects_collision_inside_actual_command_chord(self):
         from route_policy import RoutePolicy

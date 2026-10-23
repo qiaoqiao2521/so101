@@ -286,5 +286,17 @@ class RoutePolicyTests(unittest.TestCase):
             self.assertIsNone(result['candidate']['loaded_path'])
 
 
+    def test_loaded_jaw_candidate_changes_only_one_explicit_default_off_choice(self):
+        child, _ = load_route_policy(Path(__file__).parent/'route_strategies/loaded_jaw_preload.py')
+        parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/float_first_context.py')
+        self.assertFalse(RoutePolicy().loaded_jaw_preload)
+        self.assertFalse(parent.loaded_jaw_preload)
+        self.assertTrue(child.loaded_jaw_preload)
+        self.assertEqual({k: v for k, v in child.preferences().items() if k != 'loaded_jaw_preload'},
+                         {k: v for k, v in parent.preferences().items() if k != 'loaded_jaw_preload'})
+        with self.assertRaisesRegex(ValueError, 'Loaded jaw'):
+            RoutePolicy(loaded_jaw_preload=1)
+
+
 if __name__ == '__main__':
     unittest.main()
