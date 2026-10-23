@@ -82,7 +82,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/smooth_jaw_dwell.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/smooth_jaw_leg_clock.py'
 
 
 def load_route_policy(path=None):

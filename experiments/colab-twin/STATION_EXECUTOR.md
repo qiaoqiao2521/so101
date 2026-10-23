@@ -240,14 +240,22 @@ CLI33只减少汇总结果中的重复数组转换。创建查询绑定时选择
 
 批量父版`route_strategies/batch_configuration_sweep.py`在summary_fast父版上只启用`batch_configuration_sweep`，也是下节连续夹爪默认的检查路径。原244点、.005rad臂/.002rad夹爪密度、首失败停止、1mm碰撞、释放与90sim/120wall保持。逐点FK仍调用原Python MuJoCo接口，原ns_evaluate_hinted库、数学与flags不变；仅减少Python逐姿态打包与汇总。无跨姿态证书缓存，不操作实体。
 
-桥在每个选用进程初始化时，用现有g++和匹配MuJoCo头/库编译，耗时计入完整进程。缺依赖、编译失败/超时或不支持的checker/观察器等情况退回原检查。规划副本保留原标量路径。单回合`collision_backend.library.process_sweep_bridge`记录实际查询数和回退数；诊断缺失不修改原物理判定。`summary_fast.py`和`baseline.py`仍可显式复跑，`refresh_leg_age`不与默认组合。
+桥在每个选用进程初始化时，用现有g++和匹配MuJoCo头/库编译，耗时计入完整进程。缺依赖、编译失败/超时或不支持的checker/观察器等情况退回原检查。规划副本保留原标量路径。单回合`collision_backend.library.process_sweep_bridge`记录实际查询数和回退数；诊断缺失不修改原物理判定。`summary_fast.py`和`baseline.py`仍可显式复跑；本节F2ab尚未组合换段修复，最新默认见下节F2ad。
 
 两工位反序四轮原物理全部通过，完整进程47.950→42.018s、59.348→52.193s；候选分别多9/13拍hold，剔除hold后仍更快。P95由23.578/28.575降至19.138/22.298ms，但仍168/231拍超20ms，完整50Hz未通过。准确argv、原报告和规划耗时见厂区计划F2ab。
 
 ### 已采用连续夹爪目标
 
-工厂默认`route_strategies/smooth_jaw_dwell.py`在批量父版上仅启用`smooth_jaw_dwell`。close/release从上一已发命令起，用原minimum-jerk在既有6s内到达原最终目标，原+.6s到位等待不变。planned/measured_closure各244点完整保留，每拍仍按当前实测q6到本拍reference检查原全部采样；没有固定55点的新上限或抽稀。`self.jaw`仍是阶段最终目标，实际下发目标以轨迹`command`为准。
+连续开合父版`route_strategies/smooth_jaw_dwell.py`在批量父版上仅启用`smooth_jaw_dwell`。close/release从上一已发命令起，用原minimum-jerk在既有6s内到达原最终目标，原+.6s到位等待不变。planned/measured_closure各244点完整保留，每拍仍按当前实测q6到本拍reference检查原全部采样；没有固定55点的新上限或抽稀。`self.jaw`仍是阶段最终目标，实际下发目标以轨迹`command`为准。
 
 脱离预取仍须实测jaw>=.45及arm_arrived；选中连续开合时，还要求本拍reference与上一命令均已精确到最终jaw，保持原冻结last_command绑定。首版释放途中被原绑定正确拒绝的失败已保留；未删除该字段或放宽任何物理评分。新策略改变运动指令，验收使用原完整物理，而非声称与父版轨迹逐位相同。
 
-两工位反序四轮原抓放/释放/脱离/回位全pass，整process57.098→52.464s、64.257→59.682s，CPU/非hold同降，候选反多22/32拍release。P95 26.593→17.979ms、27.329→23.283ms，仍102/537拍超20ms，完整50Hz未通过。`batch_configuration_sweep.py`、`summary_fast.py`和最初`baseline.py`保留显式复跑；`refresh_leg_age`仍默认false。原准确argv与独立时钟/失败链见[厂区进度F2ac](../../plans/factory-loading-20261021/progress.md)。
+两工位反序四轮原抓放/释放/脱离/回位全pass，整process57.098→52.464s、64.257→59.682s，CPU/非hold同降，候选反多22/32拍release。P95 26.593→17.979ms、27.329→23.283ms，仍102/537拍超20ms，完整50Hz未通过。`batch_configuration_sweep.py`、`summary_fast.py`和最初`baseline.py`保留显式复跑；本节F2ac对照双方`refresh_leg_age=false`。原准确argv与独立时钟/失败链见[厂区进度F2ac](../../plans/factory-loading-20261021/progress.md)。
+
+### F2ad 新基线已采用换段修复
+
+当前工厂默认`route_strategies/smooth_jaw_leg_clock.py`仅在连续开合父版上加`refresh_leg_age=True`，复用原已实现的换腿后时间重取，不改路径、IK、检查或评分。旧summary基线的性能不一致记录保持；本次更换了基线且由新的最大慢拍触发复验。
+
+新基线两工位反序原物理4/4pass，全process40.028→37.928s、50.219→40.971s。原规划路径完全相同；剔除全部hold/release后，各阶段拍数相同且仍省.215/7.143s，不把少等几拍算成提速。运输参考最大单轴步进.780/.829rad→.00484/.00483rad，六次往返目标脉冲均消失。P95 13.371/13.447ms，但仍42/48拍超20ms、最大80.163/91.544ms，完整50Hz未通过。
+
+原版、批量父版、连续夹爪父版和旧clock-only源继续显式可跑。准确argv、实际加载策略、原核/库、视频、原释放审计和时钟读回见[厂区进度F2ad](../../plans/factory-loading-20261021/progress.md)。本轮未启动20+20、学习或实体操作。

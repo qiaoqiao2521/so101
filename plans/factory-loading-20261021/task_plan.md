@@ -200,3 +200,13 @@ Next Step：依据本轮余下close/release超时拍核验夹爪目标变化，�
 本候选有意改变开合目标，不能伪造逐位等值screen；所有完整闭爪预检/每拍实际弦、原6s+.6s等待、90sim120wall和评分保持。GitHub新账户token失效，e857f6e先本地保留，恢复登录后正常推送，不切旧账户。
 
 Next Step：以本轮新基线复验既有refresh_leg_age，仅单字段改变。新实际最大三拍对应运输目标.62–.78rad跳变；旧summary父版的性能不一致结论保留，不无依据重测旧源码。新候选继续原物理两工位反序，未通过前不切默认。完整50Hz仍未过。
+
+## F2ad 新基线的换段计时修复复验
+
+- [x] 按F2ac原最大三拍定位；CLI42仅输出smooth_jaw_leg_clock.py，唯一变化refresh_leg_age=True。
+- [x] 四项既有真实状态机回归通过，三条实际边界弦三对原guard都valid且成本下降；命令有意不同，不伪造output-equivalent裁决。
+- [x] nominal父smooth→子换段修复原物理2/2pass，全process40.028→37.928s；剔除hold/release后同阶段同拍数仍更快。
+- [x] 有收益后已有200/200反序原物理2/2pass，50.219→40.971s；同原规划路径，非等待同拍数也改善，采用smooth_jaw_leg_clock.py。
+- [x] 原版/父版保持可跑，73项默认/失败透传/换段回归通过，完整50Hz仍未过。
+
+Next Step：P95本轮13.371/13.447ms均在20ms内，但仍42/48拍超时。剩余hold/release占34/41拍；对原入口加标准cProfile诊断，保留原120wall/90sim。插桩成绩不冒充未插桩性能验收，未定瓶颈前不生成下一生产改动。

@@ -936,3 +936,21 @@ F2ac第二工位已终态：反序子7b358882-2a0e-4d58-afcf-7783c42ee5b7→父8
 独立四XML/初态/目标/裁判/原释放门均同值，四轮原抓放/释放/脱离/回位pass；native-policy-readback确认原C kernel/lib/flags/python_summary同值，父smooth=false、子true、双方clock=false。生产默认source采用smooth_jaw_dwell.py，RoutePolicy()/baseline及batch父版均保留。默认/执行器/原失败透传/报告69项通过；未机械追加相同控制路径的第五完整回合。既有累计实验预算仍无上限，原90sim120wall保持。
 
 F2ac Knowledge：pending，owner=研究根Codex。可复用新增为“原先稳定的下发命令改成连续轨迹后，异步快照若绑定last_command，就必须等待终点稳定再冻结；不能删除绑定掩盖错误”。具体来源为首个真实失败、binding-failure-cause.json、原CLI41及次拍真实完整绑定回归。既有共享Wiki仍有并行未提交工作，沿用F2ab串行整合归属，不另建知识台账；没有声称已写回。
+
+### F2ad 新基线换段修复（2026-10-23，已采用）
+
+F2ac有效工作已本地提交eb99ad0，GitHub身份401未恢复，推送pending。原native会话CLI42仅生成新显式smooth_jaw_leg_clock.py，现有Controller不改，唯一字段refresh_leg_age=True。旧F2aa在summary父版上性能不一致的原件与结论保持；本次是batch+smooth新基线的已测最大三拍复验，不是重复旧源码择绿。
+
+原四项真实状态机回归均通过；按F2ac实际proposal第1/2/3运输换腿与原前状态，完整原configuration_sweep三对成本74.454→23.369、77.845→25.221、78.323→24.382ms，原检查量566→165且原guard均valid。命令端点有意改变，不称逐位等值或factory_minimum_suite通过；局部不含完整payload二级检查与物理推进，不外推全周期收益。原scene、q与两端目标保存在私有round41-smooth-leg-clock/frames.json，原选择/三对/CLI回执齐全。
+
+nominal父→子原物理d5ecdeae-6770-472a-90f5-6c8df739a9cc已启动，原90sim120wall、全部碰撞/释放及worker保持，源码已快照，默认仍smooth_jaw_dwell.py。尚无本候选完整物理收益结论。
+
+首对已终态，父be5e66bc-0bcb-408b-8780-d3d90eb92f4f→子a1d7acef-6015-494f-9dd8-c4d77e1832da原2/2pass。全process40.028290→37.928470s，CPU47.459069→45.279297s，P95 14.585882→13.370898ms，最大134.496551→80.162557ms，超20ms90→42。sim75.44→75.36少4release拍；排除全部hold/release后各阶段拍数完全相同，wall27.142446→26.927025s、线程CPU27.114140→26.885023s、controller20.023202→19.757991s。不能把整程2.100s全归于三拍修复。transport/lower共1424拍完全同数、原规划路径相同，运动段controller13.270444→13.038548s。原最大reference步进.780291→.004836rad，六次目标来回脉冲→0；释放漂移.248956mm、脱离后0N，原pass。
+
+既有200/200反序原件f6ca982e-5d9b-4d51-8f92-4ee477e08f8f，子5a5b006f-3f1f-4abe-be5f-c9825674530e→父cb6380a1-0473-4703-bf95-f8766837c8b1均原pass。父→子全process50.218805→40.971192s，CPU58.718622→49.103637s，sim78.00→78.06反多2release/1hold拍；排除全部hold/release各阶段拍数同值、原运输路径相同，wall35.936931→28.793605s，线程CPU35.904086→28.765946s，controller26.085475→21.159042s。transport/lower共1527同拍数，controller17.203961→13.835476s。P95 17.033569→13.446834ms，最大165.145778→91.543817ms，超20ms102→48；reference步进.828836→.004829rad、脉冲6→0。释放漂移.257223mm、脱离后0N，原释放/脱离/回位pass。
+
+四XML/初态/目标/原裁判/释放门及原native核/库/flags均独立同值，实际策略仅clock false→true，四轮视频完整。上述pair各有independent-pair、jaw-command-nonhold与policy-and-transfer-readback；source准确快照和argv保留。采用smooth_jaw_leg_clock.py为默认，旧summary基线的性能不一致记录、原版与直接smooth父版均保持。73项默认/执行器/原失败透传/报告及换段检查通过，不机械追加相同控制路径的第五完整回合。
+
+F2ad Knowledge：no_reusable_delta。补充新基线实际反证与采用证据，年龄缺陷及组件/任务边界已在F2aa/F2ab记录；F2ab/F2ac共享Wiki写回pending仍由研究根串行处理，不冒充已完成。本轮P95达20ms内不等于完整50Hz，候选仍42/48慢拍、最大80/92ms，未启动20+20、学习或实体操作。
+
+Next：原入口同进程调用run_physical_episode已核实；使用标准python -m cProfile叠加原--timing诊断剩余hold/release及同步转换，只做归因，不把插桩时钟当未插桩验收。原90sim120wall保持，未定瓶颈前不追加生产策略。
