@@ -373,3 +373,13 @@ F2ax原名义物理终态：source c244b25两侧干净，仅named_context_freeze
 完整P95 16.880320→20.216508ms、max78.270529→127.878064ms、慢拍101→198，完整50Hz未过。原四独立读回通过，评分/四XML/初态/native/运输路径/释放阈值保持；planned/measured闭爪各244点，抓起/搬运/落稳/释放/脱离/回位全过、安全0/障碍0/free=true/weld-mocap0，双方475/475视频。子抬升40.999039mm、hold32.18s、settle7.52s、detach68.58s、释放漂移.249976mm、脱离后0N。
 
 运输worker1.602125→1.769021s、分离1.079568→1.652728s，均joined/owned_ack且cleanup_unconfirmed=false，初始化4.646845→5.632617s计入process；峰RSS1334028→1348544KiB。资源等待288.960736/.050620s单列，实际load1父13.16→16.71、子16.71→19.04，Chrome/GUI/ffmpeg仍有变化，既不把全部10.145s归因编码器，也不据宿主干扰改写实际回退为成功。完整原件及components-readback.json保留于output/named-context-factory-20261023/35c4a3cf-f8a9-47f3-a7f3-69a4ad387c94。默认仍float_first_context；本轮Root GPT候选、原局部收益与物理反证并存。
+
+## F2ay 当前默认的部分回合计数（2026-10-23）
+
+复用原标准cProfile和round10原runner。首段等待最后写于14:53:14 UTC，当前宿主启动约15:06:34，原runner已消失、runs=[]且无evaluation/pstats；归类interrupted_before_physical_start，不是物理失败。保留pair-process-results-before-restart.json、pair-console-before-restart.log和interruption-readback.json，再用同一prepared恢复，未改生产源码或默认。
+
+恢复后source3459889干净，run b27bb920-f451-462b-b8da-e873d6a7a94a原verdict=fail/wall_time_limit。67.58sim、123.021035报告wall、130.914600实际process-wall/83.978684process-CPU。已抓起40.998841mm、持物32.30s，但place=false/settled=0、release_audit未detached，脱离/回位未完成；安全0、障碍0、free=true/weld-mocap0，planned/measured闭爪各244点。视频仅423捕获/0编码、complete=false，不能宣称完整产物。
+
+运输worker6.815939s且joined/owned_ack；分离worker在原墙钟退出时abort_requested=true、state=rejected，joined/owned_ack且cleanup_unconfirmed=false。初始化14.346100s和清理/产物落盘保留在总成本；恢复后资源等待.175506s单列。原启动观察active=[]，运行中出现Blender29863；load1 11.95→42.48，ffmpeg/Chrome亦活跃。保留这些混杂，不能把131s全归因代码、插桩或宿主中的任何单项，也不放宽120s重测。
+
+本轮只提供部分主线程归因：3379完整拍和1未完整拍，_sweep_binding6772次、_immutable_float_first_context3310824次、validate_joint_path3463次、scalar summary22188次；工作线程未插桩。原完整拍P95 73.405771ms/max255.357161ms/2344慢拍属于有插桩且未完成回合，不作无插桩速度对照或50Hz成绩。证据output/post-float-first-profile-20261023/4d681d22-bb8e-4de1-bb14-70580ef579ba/independent-profile-readback.json。下一项先看当前原始数组字段和Python逐浮点编码，不直接重复旧CLI13前置snapshot或已淘汰的named/flat/GC候选。

@@ -1330,3 +1330,9 @@ F2ax原物理终态读回：source c244b25两侧dirty_paths=[]，原pair35c4a3cf
 父资源等待288.960736s、子.050620s单列；load1父13.16→16.71、子16.71→19.04，GUI/Chrome/ffmpeg动态负载保留，未声称恒定宿主或把全部回退归因候选。复跑入口private round63-named-context/prepare_physical.py及原round10-batched-cross-axes/run_pair.py；原102相关测试结果与局部三对保留，不以测试和局部约82ms代替物理收益。Knowledge=already_covered，原性能/版本与负例边界覆盖。
 
 Next：先以本轮真实父版timing及旧F2au调用图找剩余长尾证据；旧profile早于当前float-first默认，无法据其插桩秒数继续叠加微优化。需要新计数时只复用标准cProfile+原evaluate_station.py单回合，计时仅作调用归因、不冒称无插桩性能或50Hz；原共享等待/全部244/90sim120wall保持。不重跑已拒绝flat/scalar/GC/编译选项。
+
+F2ay当前归因终态：原round64-current-profile/prepared-path.txt指向4d681d22-bb8e-4de1-bb14-70580ef579ba。首段资源等待在宿主重启前丢失，原runs=[]、无evaluation/main.pstats；已保留before-restart原件和interruption-readback.json，未把未测记为失败。15:13 UTC在同source3459889/干净工作区、相同prepared和原runner恢复；原物理回合b27bb920-f451-462b-b8da-e873d6a7a94a因wall_time_limit失败，67.58sim/130.914600process-wall/83.978684process-CPU，123.021035报告wall保留。
+
+独立回读independent-profile-readback.json：抓起40.998841mm、hold32.30s、place=false/settled=0、release未detached、回位未完成；安全0/障碍0/free=true/weld-mocap0，planned/measured均244。运输workerjoined/owned_ack；分离worker随超时中止并rejected，joined/owned_ack、cleanup_unconfirmed=false。视频423捕获/0编码且不完整，不宣称全流程通过。恢复后等待.175506s另计，中途新增Blender29863，load1 11.95→42.48及ffmpeg/Chrome负载保留；原时限不放宽、不重复择绿。
+
+当前部分主线程共37260346调用，_sweep_binding6772次、float-first编码3310824次；3379完整拍+1未完整拍。完整拍P95 73.405771ms/max255.357161ms/2344超20ms仅属于这次插桩失败，不代替正常性能基线或50Hz验收。Next：先核对当前数组原始类型与编码路径是否触达，再考虑仅私有的同float64字节编码探针；旧CLI13只跳过前置snapshot，不能将它与本轮已合并后的编码混为同一实验。先读真实路径、再三对局部，无可靠收益不接生产或原物理。Knowledge=already_covered，原证据范围/性能负例规则覆盖。

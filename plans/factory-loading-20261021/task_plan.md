@@ -366,3 +366,10 @@ Current：默认float_first_context.py；上一版compact_status_json.py和更�
 - [x] 保留原四项独立读回、全部244点/释放/脱离/回位和宿主变化；显式候选仅供复跑，默认仍float_first_context，完整50Hz未过。
 
 Current：F2ax名义物理安全通过但等工作量成本回退，不将局部约82ms收益冒充完整任务提速。停止该候选晋级；下一项先检查当前默认实际长尾与调用归因，必要时复用原标准cProfile单回合，不按旧插桩秒数盲选新改动。尚无下一候选成功结果。
+
+## F2ay 当前默认的部分回合归因
+
+- [x] 原资源等待在宿主重启前中断，未产生物理回合；保留原console/results与interruption-readback.json，同一prepared入口恢复，无重复已完成实验。
+- [x] source3459889干净的原cProfile回合b27bb920触发wall_time_limit，67.58sim/130.915process-wall；抓起但未完成释放脱离/回位，原fail保留，不冒充完整成功或50Hz证据。
+- [x] 独立回读3379完整拍、原planned/measured各244点、worker清理和当前调用量；保留中途新增Blender、负载上升及不完整视频，不为择绿复跑。
+- 当前仍有3310824次float-first编码、6772次_sweep_binding。下一项仅私有核对实际数组字段与逐元素编码成本；与旧CLI13前置快照区分，实际目标未触达或组件无收益即停止，不改默认或原裁判。
