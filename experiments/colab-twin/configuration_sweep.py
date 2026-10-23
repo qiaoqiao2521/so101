@@ -176,6 +176,26 @@ def _immutable_snapshot_context(value):
     return _immutable_context(value)
 
 
+def _immutable_float_first_context(value):
+    """Keep the same owned encoding with floating-point leaves tested first."""
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError('Sweep context floats must be finite')
+        return ('float64', struct.pack('!d', value))
+    if isinstance(value, (tuple, list)):
+        return tuple(map(_immutable_float_first_context, value))
+    if value is None or isinstance(value, (bytes, str, int, bool)):
+        return value
+    if isinstance(value, np.ndarray):
+        return _immutable_float_first_context(value.tolist())
+    if isinstance(value, dict):
+        return tuple((_immutable_context(key), _immutable_float_first_context(item))
+                     for key, item in sorted(value.items()))
+    if isinstance(value, RoutePolicy):
+        return _immutable_context(tuple(value.preferences().items()))
+    return _immutable_context(value)
+
+
 @dataclass(frozen=True, eq=False)
 class SweepBinding:
     """Process-local arm guard ownership; not a continuous-motion certificate.
@@ -192,6 +212,7 @@ class SweepBinding:
     guard_scope: str = 'arm_q6_chord'
     map_context: bool = field(default=False, repr=False, compare=False)
     snapshot_context: bool = field(default=False, repr=False, compare=False)
+    float_first_context: bool = field(default=False, repr=False, compare=False)
     _jaw_bits: bytes = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -208,7 +229,9 @@ class SweepBinding:
             raise TypeError('Sweep context must be a tuple')
         object.__setattr__(self, 'jaw_intent_rad', jaw)
         object.__setattr__(self, '_jaw_bits', struct.pack('!d', jaw))
-        freeze = (_immutable_snapshot_context if self.snapshot_context is True else
+        snapshot = (_immutable_float_first_context if self.float_first_context is True
+                    else _immutable_snapshot_context)
+        freeze = (snapshot if self.snapshot_context is True else
                   _immutable_context_map if self.map_context is True else _immutable_context)
         object.__setattr__(self, 'context', freeze(self.context))
 

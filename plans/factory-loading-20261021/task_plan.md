@@ -339,5 +339,8 @@ F2as生产接入：默认关闭的标量方向索引路径与9项新边界回归
 
 ## F2av 热路径浮点分支前移
 
-- [ ] private round61-float-first-context仅交换原单遍helper的float与tuple/list分支；原编码/有限值/副本/错误保持，先34边界与18代表结构、原7762次数三对局部。
+- [x] private round61-float-first-context只交换float与tuple/list分支；18旧代表结构/7762旧次数和34边界+复制/正负零共56检查同值，三对局部wall一致减少。
+- [x] 最小生产float_first_context默认false，原helper/默认与async路径保留；88项相关回归通过。
+- [x] 正式完整构造器三对输出同值，wall .930442→.802920、.977845→.884843、.881772→.809585s，CPU同向，原screen eligible。
+- [ ] 固化源码后接原名义物理A/B；有实际收益再已有200/200反序。
 - [ ] 无收益即淘汰；有收益再最小生产接入、原物理与跨站反序。当前生产/default不变。

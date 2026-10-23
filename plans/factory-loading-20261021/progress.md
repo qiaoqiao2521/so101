@@ -1278,3 +1278,9 @@ F2au完成：sourcebe4aaad干净，新默认compact-status标准cProfile原回�
 新主线程45392061总/37176288 primitive calls；_sweep_binding7624次，_immutable_snapshot_context3787928次/约5.404s累计，validate_joint_path3889次/7.692s，其中update3803次占5.585s、shorten_path78次占1.981s。它们是插桩主线程归因，worker不在pstats。原碰撞积分处的set交集生成器也是热点，但不碰原物理守卫或裁判。插桩完整周期P95 15.970445ms、max69.018531ms、105慢拍，只存证，不当作未插桩50Hz成绩或与旧profile构成性能A/B。
 
 Next F2av：Root GPT在round61-float-first-context从现有helper AST提取，只将float判断移至tuple/list前，数学和float64位编码、排序键、有限值/未知类型拒绝与副本保持；原函数不动。以原18拥有结构和34边界、原7762旧权重做私有三对，只检验这个热分支假设；不伪称当前7624个唯一在线输入或物理通过。当前尚未运行该新局部，不改default、不盲扫参数、不复试旧scalar/GC/编译。Knowledge=already_covered，原性能/版本范围规则覆盖。
+
+F2av接续：已独立回读round61/local-screen.json，56项同值、三对原wall screen eligible，中位省52.517ms/7762旧加权helper访问，资源等待67.264s另计。无owned在途物理；当前背景Blender占用保持原等待，不强停。默认关闭的生产分支及7项新回归完成，相关88项通过，测试中的故障输出属于既有失败传播fixture，不计物理结果。
+
+Next：round61/production_probe.py对当前fused完整构造器做三对；原async/所有guards不变。通过后固化提交并接prepare_physical.py及既有round10/run_pair.py，未运行前不记成功。默认不改；Knowledge=already_covered，沿用原Wiki性能/版本范围规则。
+
+F2av完整构造器正式三对终态，原screen eligible/输出同值，wall中位省.093002s，CPU一致减少；无在途局部或物理。已验证新账户qiaoqiao2521(id238822818)与目标qiaoqiao2521/so101(id1381253802)，使用隔离GH配置与命令级3067代理。固化本次8个显式文件后，round61/prepare_physical.py准备原名义父compact_status_json→子float_first_context，既有run_pair逐case等资源。原90sim/120wall、244点、全部物理/评分保持。Knowledge=already_covered。

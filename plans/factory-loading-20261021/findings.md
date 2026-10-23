@@ -333,3 +333,11 @@ F2at首工位原物理2/2pass，94.375→51.817process-s与同3264拍CPU44.874�
 F2at第二已有工位反序2/2原pass，process38.628→37.426s、CPU46.844→45.512s；剔除hold/release/lower后同3236拍CPU24.450→23.279s，callbackCPU1.181→.594s但发布307→293，不冒称相同写入次数。采用紧凑实时status，首站42s差仍按宿主混杂，release慢拍15→24及分离worker反慢保留，完整50Hz未过。默认入口compact_status_json.py，底层flag仍false，91相关默认回归通过；历史single-pass/原版可复跑。下一项先更新旧于两项采用的主线程profile，方向列表已是std::array19，不重复重写。
 
 F2au新默认原物理profile/pass：主线程_immutable_snapshot_context3787928次/5.404累计插桩秒，validate_joint_path3889次主要来自update3803与shorten_path78。下一F2av仅把原float判断移到容器判断前，保持所有位编码/错误，用旧18代表结构/34边界及原7762权重先三对。原C方向已是19数组，原积分守卫不改；未测局部不记成功。
+
+## F2av 浮点分支前移的组件证据（2026-10-23）
+
+当前F2au归因只支持热类型判断假设，不是算法或50Hz结论。Root GPT的私有round61保留原helper作为父版，仅把相同float分支移至tuple/list前；原float64位编码、有限值拒绝、dict键合同、数组复制和错误不变。18旧捕获形状按7762旧次数加权，另34边界及4拥有/正负零检查共56项同值；三对wall .781317→.684620、.741920→.689402、.752161→.716843s，CPU同向，原screen eligible。它不是当前7624个唯一在线输入，也不是完整构造器或物理成绩。
+
+生产最小接入新增默认false的float_first_context、独立同语义helper与显式候选；只在snapshot_context=True选用，异步和其他freeze保留原路径。88项相关回归通过，默认compact_status_json保持。正式完整构造器三对由round61/production_probe.py接原资源等待；不把旧two-pass父版作为当前基线，不重复已拒绝scalar/GC/编译候选。
+
+F2av正式完整构造器：双方都使用当前fused实现，原async保持；同18旧代表/7762旧次数三对wall .930442→.802920、.977845→.884843、.881772→.809585s，线程CPU .930344→.802684、.976967→.884380、.881667→.809548s，全部matches双向同值，原screen eligible。等待.042644s另计；不将约93ms中位组件节省当整轮加速。原件round61/production-local-screen.json，接原名义父→子物理；默认保持。

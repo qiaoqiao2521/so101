@@ -384,7 +384,9 @@ class VisualGraspController:
         return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context,
                             map_context=bool(getattr(getattr(self, 'route_policy', None),
                                                      'map_context_freeze', False)),
-                            snapshot_context=fused)
+                            snapshot_context=fused,
+                            float_first_context=bool(getattr(getattr(self, 'route_policy', None),
+                                                             'float_first_context', False)))
 
     def _jaw_intent(self):
         """Describe stage intent without inferring contact from encoders."""
