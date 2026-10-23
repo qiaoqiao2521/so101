@@ -194,9 +194,10 @@ def validate_station(station):
             'mapping': describe()['notes']}
 
 
-def atomic_json(path, value):
+def atomic_json(path, value, *, compact=False):
     temp = path.with_suffix('.tmp')
-    temp.write_text(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False)+'\n')
+    formatting = {'separators': (',', ':')} if compact else {'indent': 2}
+    temp.write_text(json.dumps(value, ensure_ascii=False, allow_nan=False, **formatting)+'\n')
     temp.replace(path)
 
 
@@ -257,7 +258,10 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
 
     def publish(**changes):
         current.update(changes)
-        atomic_json(output/'status.json', current)
+        if getattr(route_policy, 'compact_status_json', False):
+            atomic_json(output/'status.json', current, compact=True)
+        else:
+            atomic_json(output/'status.json', current)
 
     def check_cancel():
         if cancel_file is not None and cancel_file.exists():

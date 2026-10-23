@@ -31,6 +31,7 @@ class RoutePolicy:
     direction_hint_sweep: bool = False
     fused_context_freeze: bool = False
     scalar_direction_hints: bool = False
+    compact_status_json: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -87,6 +88,8 @@ class RoutePolicy:
             raise ValueError('Single-pass context selection must be a boolean')
         if not isinstance(self.scalar_direction_hints, bool):
             raise ValueError('Scalar direction hint selection must be a boolean')
+        if not isinstance(self.compact_status_json, bool):
+            raise ValueError('Compact status JSON selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

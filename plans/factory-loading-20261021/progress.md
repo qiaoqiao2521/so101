@@ -1240,3 +1240,13 @@ F2as原物理终态：source9e3bf73已推送且REST/ls-remote一致；nominal 08
 父/子资源等待765.438041/.066521s单独记。开始均无共享重任务；候选启动后新增后台Blender，结束仍在，启动检查不能保证全程同负载。不能凭此把回退全部抹掉，也不能从一对数值宣称所有场景无收益。F2as决定：未展示可靠完整成本改善，拒绝默认晋级，不用第二工位重复追绿；显式候选/原父/负例完整保留。Knowledge=already_covered，继续原Wiki性能与运行版本范围；不联系其他对话。
 
 Next F2at：现有F2aq实际主线程profile的atomic_json482次累计4.682s、JSON.dumps494次5.470s；当前慢拍中callback有数毫秒额外CPU。源码实时状态始终indent=2，进入Python逐项格式化。先在私有目录比较原stdlib写法与其已有紧凑C编码路径，不加库/缓存/调度器，不减少字段、场景更新、取消检查或发布频率，也不改评分。代表结构从原真实status的运行中字段复构，原482次数量，先等值/错误边界及三对，再决定是否最小生产接入。尚无本项实测或生产改动。
+
+F2at私有组件完成：Root GPT的round59-compact-status/candidate.py仅改stdlib格式选项。原status剔除最终才添加的report/artifacts/result/video四字段，保留全部运行字段并复构running/retreat，代表结构原482次原子写入，不伪称482个唯一在线观测或完整实时回调。三对wall.995594→.306137、.981129→.285137、1.021379→.257571s；线程CPU.992934→.304317、.979490→.283430、1.020773→.257356s。原screen eligible，中位省.695993s；文件44160→20609bytes，解析值相同，非原文件空白逐位同，原screen旧outputs_byte_equivalent字段仅在明确解析值scope下使用，未改裁判。
+
+边界完整字段/Unicode/转义/负零同；NaN/Inf/循环引用/不支持对象保持原异常类型且不覆盖已有文件。资源等待.034817s独立记，结束共享重任务空。最小生产改动atomic_json可选compact，只从实时publish按RoutePolicy.compact_status_json调用；默认false，归档/布局等原调用继续indent2。没有删数据或改.1/.4s原发布触发、取消、安全检查、244点及评分。新compact_status_json.py只比采用single-pass父版增一个bool，不叠已拒绝scalar/GC/FK。
+
+64相关回归通过，日志round59/tests.log；含默认原缩进字节、完整解析值/负零、原异常与原子替换失败透传、取消/非法场景完整状态与单变量默认关闭。尚无F2at物理结果。下一步production_probe.py用正式compact参数再做同482写入三对，仍按原共享资源观察等待；结束后根独立读回、提交固化，再prepare_physical.py接既有round10 run_pair.py，不在在途修改源或提交。Knowledge=already_covered，性能/运行范围沿用原Wiki；不联系其他对话。
+
+F2at正式组件终态：production_probe.py使用实际atomic_json(compact=True)，原代表结构同482次原子写入。三对wall.819002→.225473、.870550→.232473、.900551→.258322s；线程CPU.818303→.225395、.869865→.232466、.900083→.258003s，原screen eligible/consistent_local_effect，中位省.638077s。全部完整解析值/负零及原错误类型与已有目标文件保持，scope明确为空白格式可异，不伪称原JSON字节同。原资源等待182.918933s独立记，结束共享重任务空。
+
+Root独立回读正式三对、64相关回归日志与实际差异，仅生产writer可选参数、实时publish选择和RoutePolicy单flag；原评分/原244点/触发频次/取消与物理未变。现在固化源码与本节，再用既有prepare_physical.py和round10/run_pair.py执行名义父→子；整对终态前不改源或提交。当前default未改，未将组件称为物理通过。Knowledge=already_covered。
