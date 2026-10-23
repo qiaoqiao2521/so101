@@ -307,8 +307,14 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 - [x] Root GPT私有单遍原型，18旧捕获形状/7762真实阶段次数及34边界/复制/正负零检查同值，三对局部wall一致减少。
 - [x] 正式默认false的fused_context_freeze只改变当前_sweep_binding预处理与该次构造；异步绑定、owner/阶段/有限值/位身份检查保留。185相关回归通过。
 - [x] 正式完整构造器三对wall1.757154→.717590、1.782356→.781854、1.728119→.702169s，原screen eligible；不是当前唯一在线样本或物理成绩。
-- [ ] 固化新源码后原nominal物理A/B，原90sim/120wall、244点及全部回退保持；有可靠收益才已有200/200反序。
+- [x] source fbaea07固化后nominal与已有200/200反序4/4原pass，原来源/评分一致性均过、244点全保留。
+- [x] 两站总process/CPU及各自同阶段同拍数CPU改善，采用direction_hint_single_pass.py；原父版保留，完整50Hz未过。
 
-Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk/单遍上下文默认关闭，完整50Hz未过。F2ao跨站回退、F2ap局部收益不足均拒绝；F2aq计数已完成，F2ar软件和局部通过、原物理待执行。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+## F2as 标量布尔臂检查的方向搜索局部核算
+
+- [ ] 按F2aq主线程8682次_arm_valid及源码的原标量查询，私有测量实际q6的原搜索和已有方向提示；每次重新求证，不复用几何结论。
+- [ ] 只比较_arm_valid布尔输出及最终FK数据；方向/下界/hint诊断允许不同，不能冒充raw ABI等值。原评分/diagnostics不在修改范围，局部有收益再讨论最小生产接入。
+
+Current：默认direction_hint_single_pass.py；direction_hint_preallocated.py/方向提示/smooth父版均保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2ar两工位4/4通过并采用；F2as只按已测热点做私有布尔guard局部核算，未接生产。全部在途检查终态后才提交。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。

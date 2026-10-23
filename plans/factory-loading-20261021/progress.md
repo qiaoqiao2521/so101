@@ -1198,3 +1198,17 @@ Root GPT在private round57-single-pass-context生成own_context原型，以原_s
 生产完整构造器再三对wall1.757154→.717590、1.782356→.781854、1.728119→.702169s，CPU1.757162→.717573、1.781899→.781808、1.728065→.702170s；原screen eligible，双向.matches全部同，异步阶段使用原路径。该fixture是18旧拥有上下文形状，包含原snapshot预处理成本的重放，不是当前7762唯一在线值或完整controller/物理成绩；production-local-screen.json保存范围及三对原件。
 
 Next：先固化源码与本节，再用原evaluate_station.py做名义父→候选；有原总成本和周期收益才已有200/200反序，不提前改默认。原90sim/120wall、全部244点/碰撞/释放/脱离/回位及回退保持；在途终态前不改源或commit。Knowledge=already_covered，保留原共享GC经验pending owner，不向「登录 X」或其他对话发送消息。
+
+F2ar实际终态：source fbaea07提交推送并REST/ls-remote读回，整对终态前未改源或提交。nominal 73ec25ad-03e5-468d-87e9-8da47d1ef8ec，父c6d27bfc-03df-4d0f-8032-bfaf38ccbc6b→子e99bfb84-663c-490b-af24-62df9344f271均原pass。process32.330459→30.716627s、CPU40.151486→37.879307s，sim75.96→76.04s多3hold/1release拍；剔除两段同3264拍，wall21.132439→20.253025s、线程CPU21.108118→20.245231s、controller13.872850→13.047328s。P95 11.446778→10.489632ms、max95.515442→49.827666ms、慢拍14→12。worker运输1.142743→1.171850s反慢、分离.617517→.595382s，嵌套计时不加总。
+
+第二已有200/200反序03dc9e19-d8fd-4548-bf31-48d135b64532，子80edef9a-8d8c-40a2-a223-c3413b2d5b7d→父884c7fca-93a9-4d0d-bead-bb9a3f7cf2ae均原pass。按父→子process37.051525→33.466290s、CPU45.006651→41.057887s，sim78.96→78.92少2release拍。剔除hold/release后各阶段同拍数，wall24.295869→21.875791s、CPU24.171251→21.857785s、controller15.909531→14.211605s。P95 14.046515→11.946985ms、max109.639824→78.637009ms、慢拍39→30，但hold慢拍6→10退化。worker运输1.612579→1.603412s、分离1.051547→.968914s，保持嵌套范围。
+
+四轮planned/measured实际各244点通过，真实抓放/静稳/释放/脱离/回位均pass，安全0/障碍0、free_object=true、weld/mocap0、视频全帧。候选释放漂移.250169/.258801mm、脱离后0N。初态/四XML/阈值/scorer/native/规划路径同，实际仅fused_context_freeze变化；动态轨迹/接触不冒称逐位同。两处独立pass/same.scorer=true，四项读回齐全。初始化3.442567→3.488337s、3.531349→3.500857s计入process。两个worker均原join/owned_ack确认、cleanup_unconfirmed=false。峰RSS1374568→1390324KiB、1375016→1419196KiB，实际增幅保留，不声称内存必降。
+
+资源等待nominal父/子.029/48.546s，第二子/父9.140/.029s，均单独计量。首父运行中新增两个后台Blender，首子结束重任务为空；第二候选开始load1=8.60、父6.29，各自结束重任务为空。启动检查不能确保全程同负载，不把全部1.614/3.585s归为单遍编码收益，也不将不同轮次绝对秒数串为累计提速。采用依据是三对正式局部、两个工位反序、同阶段同拍数CPU及全部原物理门。
+
+F2ar决定：采用direction_hint_single_pass.py为新工厂默认，保留direction_hint_preallocated.py等原父版；低层RoutePolicy字段仍false，GC/FK不叠加。完整50Hz未过、20+20不启动。Knowledge=already_covered，原Wiki性能与运行版本范围已覆盖，GC共享经验pending仍归本根；未向「登录 X」或其他对话发消息。
+
+默认切换的185项复查先暴露F2ao旧GC测试仍隐式引用最新default，导致单变量断言多出fused_context_freeze差异。将该历史测试父版钉回原direction_hint_preallocated.py，不把已拒绝GC实验升级到新组合；原失败日志default-tests.log保留。默认加载实读为single_pass=True、GC/FK=false；随后185项全部通过，完整输出保存在default-regression-tests.log。
+
+Next F2as：当前profile的_arm_valid主线程8682次，原标量summary仍固定搜索，已采用方向提示只在batch扫掠内复用成功方向。先私有重放真实q6，复用现有C方向入口，每次重新求证，只比较布尔guard/最终FK数据和三对成本。数值下界/方向/提示输出可变，不能冒称raw ABI同值；不改原评分、shortcut数值判断或diagnostics。局部无收益即止损，未接生产或宣称物理通过。
