@@ -1073,7 +1073,7 @@ Next：已有cProfile记录主线程_fk 4644次/.689925累计秒，内部mj_forw
 
 Knowledge：no_reusable_delta；本轮仍是组件时延与整程成本分离及实际争用边界，已采用的Wiki节覆盖。F2ah GC长期取舍的共享Wiki写回pending由当前根Codex保留，不向「登录 X」协调。
 
-### F2aj 复用归档位姿查询，仅隔离FK（2026-10-23，在验证）
+### F2aj 复用归档位姿查询，仅隔离FK（2026-10-23，四轮原物理通过、未晋级）
 
 当前profile的_fk 4644次/.689925s与调用方逐项核对：只消费返回origin/rotation/pinch及独立query.geom_xpos。实际控制器、运输worker和分离worker都有不可变RoutePolicy；碰撞checker另有Data，原solve_pinch_ik不在此切片修改范围。
 
@@ -1092,3 +1092,21 @@ Next：用实际生产_fk而非原型重做原7538输入等值/三对，资源�
 四XML/初态/评分/阈值/原native核库flags/原路径均同，实际仅pose_only_fk改变；视觉逐位同，动态轨迹/接触非逐位同。原244点/实际弦/完整抓放/释放/脱离/回位均通过，子释放漂移.248943mm、脱离后0N；峰RSS1271528→1323012KiB。默认仍smooth_jaw_leg_clock.py，未组合GC/preallocation。
 
 Knowledge：already_covered，复用已有失败经验及组件/整程边界；本节保留旧版未过门，不重复创建知识页。F2ah共享Wiki pending归属不变。
+
+第二已有200/200反序f1b8be85-8c7a-4129-89a2-33e4fe8f00c9原物理终态：子f6bd2387-6ffd-4242-90b2-06ca3013ff6e→父7e182587-f577-4105-84bb-9c978cf6eeaf均原pass。按父→子，process58.055984→84.726749s、CPU67.794358→94.380627s，P95 21.101588→38.528304ms、max114.260653→159.393303ms、慢拍258→1302，明显回退。sim78.12→78.00少6拍；剔除hold/release后各阶段同拍数，wall41.487533→62.275633s、CPU41.405173→61.858837s、controller30.213157→44.652203s仍慢，不能把少等6拍称算法收益。
+
+原运输/分离worker时钟也单独读回：nominal2.096307/1.339403→1.218660/.718712s；200/200为1.784675/1.515690→4.563754/1.318764s。这些是嵌套于总回合的时钟，不能再相加。原路径、四XML/初态/释放阈值/native同值；实际仅pose_only_fk。四轮真实抓放/释放/脱离/回位、安全0、障碍接触0、free_object、weld/mocap0及完整视频保持；第二子漂移.257184mm、脱离后0N。子峰RSS1347916KiB、父1254200KiB。
+
+子资源等待427.663s、父6.143s均不计process。子启动前load1=21.90，结束时新增FishBot合作仿真/planner/controller；父启动13.73，结束共享任务为空。负载与热/调度可能影响时钟，不能把全部差额强归因它们，也不能凭局部约.21s的FK节省宣传整程改善。候选保留显式可复跑，默认不变，不重复同源择绿，不启动20+20，完整50Hz未过。
+
+原独立成对读回未全过：same.scorer=false/pass=false，实际是根Codex在此pair未终态时提交f28fc85，子记录4e73+dirty_paths、父记录f28+clean。该提交未改变正在运行的源码文件，但改变Git来源字段；这是本次操作失误，原失败字段及原件不修改。额外scorer-provenance-readback.json逐字节确认learning_env/placement/station_executor/evaluate_station在两commit与当前文件相同，冻结learning_env快照也相同；只能说明代码未改，不能冒充原来源检查已通过。后续同一pair全部终态后再串行commit，不新增运行锁/哈希门或放宽评分。
+
+F2aj决定：原物理4/4成功、局部FK明确更快，但两工位整程结果互相矛盾且第二来源一致性未过，拒绝默认晋级。源、104回归、首工位证据已提交推送f28fc85；本节追加第二结果。复核Wiki/自动化开发范式与智能体协作「性能对照与运行版本分别绑定」已覆盖此教训，Knowledge=already_covered；F2ah新GC经验的共享写回pending仍归当前根Codex，不联系「登录 X」。
+
+### F2ak 扫掠重复工作最小排除（2026-10-23，计数完成、未写缓存）
+
+复用刚完成原nominal父版保存的机器人q6/几何reference、原configuration_sweep采样和原CollisionChecker pair策略，只做独立mj_kinematics及binary64逐位比较；无mj_step、render、原证书跳过或物体真值输入，不生成新物理裁决。29几何/285pair，原planned/measured均244点，另数close/transport/release各首中末，共11条保存弦。
+
+计划闭爪243相邻比较中每次28几何/259pair位姿不变，上界90.877%；实测闭爪因五轴总跟踪差.000526rad，只剩16几何/44pair不变，上界15.439%。多数在线代表弦也是44/285，纯jaw例外仍259/285。在线55点来自原采样公式和该实际弦，未引入55点上限。这里还没核对传入hint/浮点环境/副作用，因此比例只是pose-only可复用数量上界，不是CPU比例或安全结果。
+
+这组排除了“244点都只动夹爪，缓存能普遍省九成”的主张；不据此先造泛用缓存或花下一整轮物理。Next：只测原C核心中44个静态pair的真实成本份额，再决定是否值得最小复用；保持原FPU拒绝、hint顺序、首次失败及244全部点。private round50-static-work-count/count.py与counts.json是准确局部入口；生产未改。Knowledge=no_reusable_delta，计数是本场景特定事实，留在此计划。

@@ -298,4 +298,4 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 
 显式 `route_strategies/pose_only_fk.py` 仅启用 `pose_only_fk`。复用2026-10-07归档的 `forward_pose_query`，只供控制器独立query的body/geom位姿使用；传感器、插件、mocap或当前回调存在时每次回退full-forward。原IK、碰撞checker、244点扫掠、物理积分、评分及90sim/120wall保持，GC/preallocation不叠加，生产默认仍为 `smooth_jaw_leg_clock.py`。
 
-生产7538真实姿态逐位等值，三对完整FK调用均更快，104相关回归通过。首工位原抓放/释放/脱离/回位2/2pass，但两回合宿主负载不同，整程64.571→49.150s不能全算FK收益。第二已有工位反序仍在接续，尚未采用或证明完整50Hz。旧FK+IK候选未过完整周期门的反证完整保留。复跑沿原evaluate_station显式指定该candidate，新建output目录；见[原计划F2aj](../../plans/factory-loading-20261021/progress.md)。
+生产7538真实姿态逐位等值，三对完整FK调用均更快，104相关回归通过。两工位反序4次原抓放/释放/脱离/回位通过，但整程64.571→49.150s、58.056→84.727s互相矛盾，且两回合宿主负载不同，不作整体提速结论。第二成对来源检查因中途Git提交而未通过，额外比对只确认评分源码相同，原失败保留。候选未采用，完整50Hz未过；旧FK+IK候选未过门反证也保留。复跑沿原evaluate_station显式指定该candidate，新建output目录；见[原计划F2aj](../../plans/factory-loading-20261021/progress.md)。
