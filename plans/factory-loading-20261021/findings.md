@@ -539,3 +539,25 @@ source b37171cb干净，私有so101-live-render-attribution v1原cbe532f0原pass
 两站每侧14个定位输出/拍摄时刻相同，候选13个周期帧全部送达、无丢弃，送达年龄20–60ms。视觉live各328拍；原完整P95 17.264→16.054、17.551→17.533ms，但完整最大56.058→55.105、155.017→152.843ms，不能声称全程50Hz。sim75.84→75.86、78.62→78.72s，仅hold/release计数变化不记提速；同3264/3366非hold/release拍CPU39.173939→36.745708、39.675125→39.691872s，第二站无改善。
 
 决定：视觉阻塞削减是可复现的局部调度收益，尚不足以替换整程默认；保留私有候选与反证，不追第三站。output/async-perception-factory-20261024/independent-physical-inventory.json汇总完整/相机/搜索/策略/worker读回。私有round79-async-perception保存candidate.py/camera.py、generated原episode适配、physical_probe.py/read_camera.py及primary/cross路径；云端不可变v1/v2可恢复完整来源。Next F2bo的1ms切换间隔是待测假设；[Python3.13官方文档](https://docs.python.org/3.13/library/sys.html#sys.setswitchinterval)明确该值只是理想时间片，真实切换可更长，不能宣称硬实时。
+
+
+## F2bo 实际挂载来源与1ms调度反证
+
+Root GPT仅用sys.setswitchinterval(.001)建立私有作用域，finally恢复原.005；不改物理控制或图像路径。首版组件指定旧名义run1d465740，但挂载不含该回合，IndexError发生于任何测量之前。v1原件/独立失败读回保留，不算算法失败或成功。v2 mounted-inputs.json实证仅含最新cross原版5635508a，明确发WARNING后采用这个已经独立验收的原版，三对始终共用同一96行输入。
+
+[当前Kaggle元数据说明](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels_metadata.md)的kernel_sources格式为用户/任务名，不能以附加/version假定挂载旧输出；本机CLI2.2.5的源码下载另有version_label支持，不混淆下载与挂载。后续组件先读实际挂载来源。这里只记录本次实测，不推断其他接口绝不支持版本化。
+
+私有so101-switch-interval-component-20261024 v2：原96次配置扫掠+payload弦检查与原运输planner并行，六例所有查询均发生在planner存活期间；各检查完整输出一致、规划路径逐位同、worker全部owned/joined、间隔与异常退出均恢复。guard窗口2.006142→1.977355、2.034717→1.970130、1.973015→1.943474s；含join总wall2.414782→2.409544、2.435837→2.371231、2.467487→2.380770s，CPU同向。原screen eligible只是原物理准入，不是任务通过。
+
+单次查询主CPU中位仍约12ms，wall约21ms，差约9ms；慢查询64→63、63→66、61→63，没有一致降低。1ms仅理想解释器时间片，未证明原等待由GIL引起，不能据本次小收益宣称硬实时。
+
+私有so101-switch-interval-physical-ab-20261024 v1/v2，source281b049，原同步RGB及float_first路线保持，只私有作用域改变解释器调度。switch-implementation.json记录实际每次控制update值、唯一调度改动、原episode方法不变、before/after及观察方法恢复，防止相同Git/route被误读为无实现差异。
+
+| 工位 | 原版→候选process wall / CPU(s) | 完整慢拍 / P95(ms) | 同量非hold/release CPU(s) |
+| --- | --- | --- | --- |
+| 名义 | 58.905745 / 68.831895 → 56.723904 / 66.385433 | 126→115 / 17.285→16.194 | 38.575252→36.964280 |
+| 200/200，反序 | 70.954440 / 82.778527 → 72.053734 / 83.941889 | 221→276 / 20.709→21.659 | 46.727576→47.090300 |
+
+4/4原pass，源/原XML/初态/native核/flags/裁判/阈值、接近与运输路径、14个同步定位输出均同。planned/measured各244，全部物理安全、自由物体、抓放/释放/脱离/回位保持；worker全部owned/joined无abort/cleanup_unconfirmed，视频474→475和493→492完整。子释放漂移.249861/.258422mm、脱离后0N。sim75.82→75.86、78.74→78.68s仅等待拍变化，不当算法提速。候选最大53.142/178.009ms，完整50Hz未过。
+
+第二站所有完整成本与毛刺回退，淘汰1ms，不改变默认，不再扫间隔或追绿。原件output/switch-interval-factory-20261024/independent-physical-inventory.json；私有round80保存候选、组件v1失败/v2来源收据、原物理和read_switch.py。两Kaggle任务的不可变版本可恢复源码，但输入挂载必须另读实际来源，且不跨云实例串累计加速。下一项只读cProfile归因同96个guard，函数self/cumulative计数分列；插桩时长不作基准。

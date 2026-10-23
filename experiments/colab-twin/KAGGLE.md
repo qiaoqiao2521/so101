@@ -92,3 +92,14 @@ kaggle kernels pull muqiaoqiao/so101-async-camera-physical-ab-20261024/2 -p REST
 ```
 
 复跑保持新版本私有、原90sim120wall/244与scorer，不将跨主机绝对秒数相加，不修改default。下一项只测1ms线程切换间隔的固定工作量组件，尚未有物理结论。
+
+
+## 1ms线程切换间隔（F2bo，淘汰）
+
+[固定guard组件](https://www.kaggle.com/code/muqiaoqiao/so101-switch-interval-component-20261024) v1在测量前缺指定旧run失败；v2先记录mounted-inputs.json，采用已验收cross原版5635508a，六例共用96条原检查输入、原并行运输planner。数值/路径/清理/恢复保持，三对guard窗口省29–65ms，但慢查询没有一致减少；原screen仅准入原物理。
+
+[1ms原物理](https://www.kaggle.com/code/muqiaoqiao/so101-switch-interval-physical-ab-20261024) v1名义原版→候选、v2已有200/200候选→原版，source281b049，4/4原pass。原同步相机/route/评分/90sim120wall/244保持；私有switch-implementation.json记录实际生效和退出恢复。原版→候选process wall58.906→56.724、70.954→72.054s，CPU同样第二站回退，慢拍126→115、221→276。淘汰，不改默认、不扫更多间隔，完整50Hz未过。
+
+CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回读只保存任务slug，本次实际挂载最新cross而非请求的旧名义输出。不要把两种接口混为固定版本输入。采用[官方metadata格式](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels_metadata.md)，并独立记录真实run/原裁决/来源；缺失旧回合保留失败，允许明确采用另一个已验收原版，并保持成对输入一致。
+
+原件与独立库存：output/switch-interval-factory-20261024。复跑私有round80-switch-interval包含candidate.py、probe.py、physical_probe.py、read_switch.py和准确路径；下一项只读同guard的函数CPU/调用归因，不以profile时长作为性能A/B。

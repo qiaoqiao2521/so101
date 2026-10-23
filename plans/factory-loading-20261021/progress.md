@@ -1447,3 +1447,18 @@ F2bn：复用原AsyncTransportPlanningJob生命周期的私有timestamped RGB wo
 原件与independent-physical-inventory.json位于output/async-perception-factory-20261024；两站各有原评分及independent-camera/pair、policy-and-transfer、approach-search、request-startup、gc-physical读回。Kaggle两个private physical不可变v1/v2与protocol v1保留启动源码；私有round79保存最短重放入口和真实实现来源。
 
 Next F2bo：原观察115慢拍中68个hold、22个release主要在controller；93个hold/release慢拍controller中位20.278wall/12.387thread-CPU毫秒，只说明等待、未证明GIL。单变量1ms解释器时间片小对照已准备，重用同一原成功回合guard输入及原并行运输规划器；记录数值/路径/清理、主检查/worker/总墙钟与CPU，finally恢复。先三对组件再决定原物理，尚未运行；当前不改默认、不重建平台。Knowledge=already_covered，Wiki/ROS2 与 FishBot.md第20节覆盖组件与整程、同源和反证边界，无跨项目知识写入。
+
+
+## F2bo 已终态：1ms间隔淘汰（2026-10-24）
+
+Current：所有当前云评测终态，原默认float_first_context和5ms解释器间隔未改；定时器保持删除，不向任何其他对话发消息，无owned本地物理。281b049已推送，GitHub REST/ls-remote独立一致。
+
+v1组件找不到指定旧回合，测量前IndexError，原件保留。v2 mounted-inputs.json确认Kaggle实际挂载最新cross原版5635508a；明确WARNING后只用该已验收回合的固定96行，三对不混输入。当前metadata的kernel_sources不当版本锁；源码pull/version与挂载分开。v2所有数值/路径/清理/间隔恢复及独立读回过，原screen eligible，guard三对各省约29/65/30ms；超过20ms查询没有一致减少，不能当50Hz通过。
+
+原物理24a674d7（bf95258a→57ccda5d）、c47da93c反序（6f8f7e56→5c00fef8）4/4原pass。source281b049干净，同原RGB/route/控制器/scorer/native/90sim120wall/244及全部物理条件；实际controller间隔候选1ms、两侧退出5ms、观察还原，未叠加异步相机。自由物体/抓放/释放/脱离/回位、完整视频和worker清理均通过。
+
+原版→候选process wall58.905745→56.723904、70.954440→72.053734s；CPU68.831895→66.385433、82.778527→83.941889s。完整慢拍126→115、221→276；P95 17.285→16.194、20.709→21.659ms，同量非hold/release CPU38.575252→36.964280、46.727576→47.090300s。第二站候选sim少.06s但真实成本上升，不接受少等几拍的提速说法。淘汰，不切默认，不追加第三站/扫描时间片。
+
+证据output/switch-interval-factory-20261024包含v1准备失败、v2组件/挂载收据与独立读回、physical-v1/v2原件和independent-physical-inventory.json。复跑/候选来源在私有round80-switch-interval；云端component v1/v2、physical v1/v2可取源码。
+
+Next F2bp：已准备私有round81-guard-cpu-profile，仅重放同96个guard并用原planner并行，cProfile主线程thread_time计数；原数据/算法不变，方法/线程退出与数值另验，不把插桩秒数当性能。首站hold慢拍68→69、release22→22证明目标瓶颈未被此次设置消除；尚未定位到具体函数，不先修改算法。尚未运行，根Codex接续；Knowledge=already_covered，原Wiki性能范围与反证边界已覆盖，无跨项目知识写入。
