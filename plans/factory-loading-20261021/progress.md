@@ -1370,3 +1370,17 @@ F2bd已完成私有及正式局部对照：F2bb初始化77次连接中75次无�
 当前approach_midpoint_order默认false，显式候选只改变接近路径的搜索顺序；原2mm/1mm/.005rad/512预算、相邻边回退、最终错误、安全条件和244点均保持。准备固化新源码后原名义父→子完整物理；整对终态、独立读回真实成本才决定跨站子→父复测。没有物理收益前不切默认。Knowledge=already_covered，原组件/物理范围、同源对照和保留反证规则覆盖。
 
 2026-10-24用户要求取消定时并持续做：原生automation_update(mode=delete,id=so101)已返回deleteStatus=deleted，本地对应automation.toml已不存在；仅删除本对话SO101定时器，不重建自动唤醒、不影响已有评测进程。当前根Codex接续实际实验。
+
+## F2be Kaggle 三组成对物理已终态（2026-10-24）
+
+Current：Kaggle实际执行完成；环境适配可复跑。中点搜索不晋级默认，下一项检查预编译浮点packer。定时任务so101已删除，不恢复；当前无owned本地物理评测，也没有向其他对话发消息。整对终态之后才写文档/提交。
+
+Done：v1 ensurepip失败、v2下载403和v3两次原wall_time_limit全部保存。v4确认T4实际用llvmpipe，v5私有NVIDIA EGL配置实测T4；v6/v7/v8源码116b090、两侧干净，名义父→子、200/200子→父、方块X+5mm子→父共6/6原pass。原90sim/120wall、244点、所有碰撞、自由物体、抓放/释放/脱离/回位与完整视频保持，workers均joined/owned_ack且cleanup_unconfirmed=false。
+
+三对按父→子：process wall59.759→54.987、55.744→55.201、51.424→51.585s；CPU69.506→64.746、65.532→64.748、60.169→60.568s；sim75.80→75.80、78.70→78.66、76.34→76.28s。搜索4.016→1.331、3.611→1.101、3.506→1.157s；最终路径各对逐位相同，原最终复核513/513/505点。偏移组整程回退，不能按仅搜索收益切默认或把少3个等待拍算提速。完整50Hz未过。
+
+证据：`experiments/colab-twin/output/kaggle-midpoint-factory-20261024/independent-cloud-inventory.json`汇总原通过/失败，各v6/v7/v8目录有原输出、云环境和独立approach-search/physical/policy/startup读回。v6 pair2748179a、v7 paird7944d4a、v8 pair7f65fccd；云端私有muqiaoqiao/so101-midpoint-physical-ab-20261024不可变版本可恢复启动源码，cache丢失不必重造入口。详见[Kaggle入口](../../experiments/colab-twin/KAGGLE.md)。
+
+Next：F2bf只检验struct.Struct预绑定packer。原F2ay插桩部分回合记录6772次_sweep_binding、3310824次浮点优先helper递归，当前函数每个float仍调用struct.pack('!d', value)。旧profile只支持调用结构，不能拿其秒数当新云环境成本。先同值/错误边界，再在当前环境量完整组件三对；无收益淘汰，不盲发新物理。Root GPT来源沿用用户授权，不冒称CodeBuddy生成。
+
+Knowledge=already_covered：已核对Wiki/ROS2 与 FishBot.md第20节，采用“组件与完整任务分别验证、固定物理条件、保留反证”的既有规则；驱动版本、当前镜像适配和复跑处方留在本项目，不新增跨镜像保证。当前收尾检查/提交推送待完成，owner根Codex。

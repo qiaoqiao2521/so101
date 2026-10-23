@@ -435,3 +435,15 @@ Root GPT私有round69-shortcut-order先试整段直连，再对中点连接做�
 私有同一原始路径三对wall1.870799→.670654、1.851120→.635369、1.821911→.627067s，CPU同向；候选尝试77→10、候选状态7494→2237，最终仍513点且选中路径逐binary64相同，原screen eligible。等值范围是选中路径/最终判定，不是有意变化的搜索trace。8项边界检查覆盖非单调回退、零/一预算、原最终拒绝及原异常对象透传。
 
 最小生产approach_midpoint_order默认false，原shorten_path默认降序代码保留；仅_plan_approach显式读取该选项，放物后的返回规划仍走原默认。正式生产组件三对wall1.608318→.526674、1.583427→.531428、1.576164→.515375s，CPU同向，路径/最终513状态保持，原screen eligible、中位省1.060789s。private production-local-screen.json和independent-local-readback.json留存；这些仍不是完整物理收益。默认float_first_context不变，显式route_strategies/approach_midpoint_order.py待原两站物理核准。
+
+## F2be Kaggle 执行与搜索顺序的跨坐标反证
+
+用户回答“kaggle做”后，本地等待 runner 精确停止（尚无实际评测），原后台动画没有被终止。so101 定时任务已删除。官方 Kaggle CLI 2.2.5 独立环境、既有 muqiaoqiao 身份和私有 kernel 已实际验证；不是新调度平台，不向其他对话发消息。源码固定116b090，云端无本机凭据。
+
+云 Python 3.13.15 原生 venv/ensurepip 失败、astral.sh 403 均保存。官方 PyPI uv wheel 创建环境成功。T4 分配存在，但实际 EGL 是 Mesa llvmpipe；v3 原两回合虽然抓放/释放/回位完成，视频仅148/474、158/475，均原120s墙钟失败，不改判。v4查实际GL vendor/renderer才定位。v5按nvidia-smi实际580.178.04，从NVIDIA官方Ubuntu24.04仓库解包同版本libnvidia-gl/gpucomp到临时目录，私有vendor JSON与LD_LIBRARY_PATH使实际renderer=Tesla T4；640×480同模型热身约118→1ms，只记环境收益。官方 [driver capabilities](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/docker-specialized.html#driver-capabilities) 区分compute/utility与graphics，不从GPU可见推断图形加速。
+
+修复后v6名义原版ab43f72a→子4a07667e；v7已有200/200反序子8908ce53→父a0257b9e；v8方块X+5mm反序子6dc67851→父4d1b2564，6/6原pass。按父→子process wall/CPU分别59.759498/69.506346→54.987126/64.746146、55.744291/65.532078→55.200622/64.747542、51.424321/60.168788→51.585106/60.567585s。搜索4.015863→1.330635、3.611382→1.100844、3.506285→1.156890s，尝试77→10、77→10、76→10；最终路径各对逐位相同，最终513/513/505点完整复核保留。
+
+方块偏移组是在原±10mm范围内固定X+5mm，仅改同一物体输入，不改静态环境/判据，策略仍只用RGB定位/q6。两个原有工位取料点相同，所以增加此单一变体用于验证与接近优化相关的坐标。偏移组虽搜索省2.349394s、初始化省2.168247s，但同3283个非hold/release拍CPU33.626948→34.305411s，整程反慢.160785wall/.398797CPU；不把分段收益当完整收益，不追加同例追绿。默认float_first_context不变，中点搜索只保留显式来源，不晋级。
+
+每轮原244点、自由物体、碰撞/限位、释放漂移、脱离/回位和所有worker清理均通过；v6视频474/474两轮，v7两轮492/492，v8父478/478、子477/477。完整P95父→子17.067704→16.896831、16.196930→17.095961、14.852263→15.522410ms；慢拍127→128、147→150、117→115，完整50Hz仍未过。原软件EGL失败和这些安全通过分别记录，原时钟未删拍。所有JSON/视频与五种独立读回保存在output/kaggle-midpoint-factory-20261024，复跑见experiments/colab-twin/KAGGLE.md。

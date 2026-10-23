@@ -411,3 +411,15 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 - Next：固化源码后，原名义工位父→子原物理A/B；可靠收益才已有200/200工位子→父反序。完整时钟、初始化、抓放/释放/脱离/回位、全部244点和原时限照旧，未测不记成功。
 
 2026-10-24用户取消SO101定时任务：已通过原生automation_update删除so101，deleteStatus=deleted、本地automation.toml消失；继续当前对话实际工作，不重建定时器。
+
+## F2be Kaggle 原物理接续（2026-10-24）
+
+用户取消定时任务，改为持续实际工作；so101 automation 已删除，不恢复定时器。用户明确选择 Kaggle，撤下本地只等待 Blender 的 runner，当时 runs=[]、没有评测子进程；没有中断任何在跑物理或他人渲染。
+
+1. 复用现有 Kaggle 账号/官方 CLI，私有任务拉取公开源码；隔离 Python 与实际 NVIDIA EGL 适配（complete）。
+2. 保留两次环境准备失败和软件 EGL 的两次原 wall_time_limit；不删除或改判（complete）。
+3. 原名义 baseline→candidate、已有 200/200 反序、合法方块 X +5mm 反序，修复环境后原物理 6/6 通过（complete）。
+4. 独立核对原判决、完整时钟、244 点、释放/脱离/回位与完整录像（complete）。三对搜索更快，但偏移组 process wall/CPU 均略回退，因此不晋级默认。
+5. 固化云端复跑入口、结果和反证，必要检查与提交推送（in_progress）。
+
+Next：F2bf 从原 profile 的浮点编码调用量和当前源码出发，检查预编译 struct.Struct('!d').pack 的单变量候选。先检查数值/错误同值，再在当前云环境做完整绑定组件三对；不凭标量 microbenchmark 或旧环境秒数直接进入物理。默认继续 float_first_context，保留旧候选。

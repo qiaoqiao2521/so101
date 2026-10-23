@@ -321,3 +321,5 @@ F2am采用的默认父版 `route_strategies/direction_hint_preallocated.py` 在�
 当前工厂默认采用[浮点优先上下文](route_strategies/float_first_context.py)：在[完整紧凑状态发布父版](route_strategies/compact_status_json.py)上只增加 `float_first_context=True`。单遍快照先判断浮点叶，再判断容器；全部字段、float64位编码、有限值拒绝、复制隔离和原错误保持。异步绑定仍走原路径。底层 `RoutePolicy()` 对应选项仍默认false，父版和[初始原版](route_strategies/baseline.py)可通过 `--candidate` 复跑。
 
 2026-10-23两已有工位反序共4/4原物理通过，原planned/measured各244点及所有抓放、释放、脱离、回位与安全门保持。两站进程47.375→42.096s、42.849→38.174s；各自同3264/3366拍CPU30.123→27.007s、28.157→24.707s。原同量组件三对也更快，但不将完整秒数差全部归于分支顺序，不合并不同负载轮次作累计提速。第二工位仍有54拍超20ms，完整50Hz未通过，详见[原计划F2av](../../plans/factory-loading-20261021/progress.md)。实时status继续紧凑编码，归档文件继续原缩进。
+
+Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。中点搜索候选的三组成对原物理共6/6通过，但方块X+5mm组整程wall/CPU略回退，保持显式可选，当前默认仍为浮点优先上下文。完整50Hz仍未过，不开启20+20评测。
