@@ -297,3 +297,7 @@ F2ao两工位4/4原物理pass，来源与原评分均同。首工位process53.09
 清理137.842/193.114ms计入原进程，两个worker原join/ownership均确认，GC恢复true/error=null；候选峰RSS比各自父版多26.195/45.332MiB。首工位父版运行中新增Blender，不能把23s差额全归GC；跨站前已有ffmpeg并在候选运行中结束，不能排除负载影响，也不能据此把实际回退改成成功。原局部screen=inconclusive与190ms反证保持。四轮抓起/放盘/静稳/释放/脱离/回位、安全0、障碍0、完整视频及free-object条件均通过。完整50Hz未过。
 
 下一项只做原C内核严格浮点下的本机编译局部筛选。已有方向提示路径在线controller仍约4–5ms，实测244点闭爪仍有单拍超20ms；先比较本机指令选择能否减少同一份几何工作。只在私有build追加-march=native，不开fast-math、不改精度或点数；原实际ABI/公开结果等值和三对实测优先，没有组件收益即止损。尚无本项结果或生产修改。
+
+F2ap局部完成，Root GPT私有round55-host-native/probe.py只追加-march=native，原bridge单独保持相同。2816原ABI/802560判定的numeric/flags/hout/dout逐位同；新名义工位11条实际弦、773点公开报告/最终Data同值。三对wall47.298→46.917、47.010→46.950、46.678→45.964ms；线程CPU47.279→46.916、47.009→46.931、46.677→45.962ms。原screen=reject/median_local_effect_below_threshold，中位仅省.381ms，未过原5ms门。淘汰，不追加跨站/整程，不修改生产编译选项或默认。
+
+当前原件仍有同步退回规划与接近段感知等非GC慢拍，不能凭旧119百万调用的profile给新内核排热点。下一步复用标准cProfile+原evaluate_station.py做当前默认一次真实计数，明确它会扰动时钟；只用于调用量/热点定位，保持全部原物理门，不当作性能A/B。

@@ -1176,3 +1176,9 @@ nominal父/子资源等待269.215/245.923s、跨站子/父1475.381/.030s，均�
 F2ao决定：尾延迟/总成本未在第二工位复现，拒绝默认晋级；保留显式候选，默认direction_hint_preallocated.py不变。完整50Hz未过，不启动20+20。四项独立读回及matched-stage原件均齐全；源码未变，沿用原57回归，不为文档重跑物理。Knowledge=already_covered，继续采用Wiki/自动化开发范式与智能体协作「性能对照与运行版本分别绑定」；GC共享经验写回pending归本根，未向「登录 X」或其他对话发消息。
 
 Next F2ap：Root GPT在private round55-host-native只对原support_kernel.cpp追加本机指令编译选项，保留全部严格FP flags/数学顺序。先真实ABI输出等值、实际生产244点/在线弦报告与Data等值，再交替三对CPU/wall；无组件收益立即淘汰，不追加整轮物理。当前未运行此项，生产flags与默认保持。
+
+F2ap完成并淘汰：source85c448d，private round55-host-native/probe.py复用原构建器、真实机器人几何ABI和原configuration_sweep；仅私有kernel追加-march=native，原bridge/严格FP flags/原C++保持。2816输入/802560判定的全部numeric/flags/顶点提示/方向提示逐位同。新名义工位首/中/末11条实际弦773点，公开报告、最终Data和末帧ABI同值。三对wall47.298275→46.916964、47.009995→46.950339、46.678251→45.963553ms；线程CPU47.279151→46.915840、47.008925→46.930949、46.677022→45.962071ms。
+
+原screen=reject/reason=median_local_effect_below_threshold，median=-.381311ms，未过原5ms门；不放大循环次数制造绝对收益，也不把同值局部当抓放交付。资源等待51.792s单独记，前后共享仿真/背景Blender为空，load1约6.06→5.23。没有新增物理、生产flag或默认修改。原primary-results.json与编译manifest、probe.log保留；未测的cross没有记成功。Knowledge=no_reusable_delta，此结论属于当前硬件与原编译器的局部事实。
+
+Next F2aq：旧标准cProfile来自采用方向提示/模型预准备前，已不能代替当前热点排名。复用原evaluate_station.py与标准python -m cProfile，当前默认仅跑一次原物理计数；保持原90sim/120wall、全部点/裁判/回退，记录插桩开销，不拿该秒数作无插桩性能或50Hz成绩。根据当前调用热点再选下一小改动，不盲目重复旧候选。沿用原paired runner的资源观察与进程时钟，不新建平台。
