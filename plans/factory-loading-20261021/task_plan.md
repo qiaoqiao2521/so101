@@ -282,9 +282,15 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 
 ## F2an 新默认剩余长尾的只读GC观察
 
-- [ ] 原round46观察器仅更换显式新默认及输出位置；不关闭GC、不改阈值、不称为性能A/B。
-- [ ] 资源释放后原nominal一轮，同步原周期与GC事件，确认静稳段/运输段controller尖峰归属，再决定下一候选。
+- [x] 原round46观察器只换显式新默认/输出；原物理pass，GC前后启用/阈值不变、回调错误0。
+- [x] 四次gen2回收20.192/30.843/35.527/44.210ms与四个实际慢拍重合；全回合9慢拍，GC不是全部原因。
 
-Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk保持显式关闭，完整50Hz未过。F2al/F2am各4次物理已终态后才改默认；F2an仅只读观察，不先开GC优化。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+## F2ao 既有GC窗口在新默认上的显式对照
+
+- [x] Root GPT仅新增direction_hint_preallocated_gc.py，复用原窗口/线程退出/恢复，57相关回归通过，默认不改。
+- [x] 新真实遥测+旧18形状分配重放三对输出同值/CPU减少，但原wall screen=inconclusive；第二子无GC仍有190ms，反证保留。
+- [ ] 按已确认的物理GC因果进行原nominal显式延迟实验，保留上述不确定结论，不冒充已过局部wall收益门；有真实尾延迟收益才跨站反序。
+
+Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk默认关闭，完整50Hz未过。F2al/F2am各4次物理、F2an只读观察均终态后才提交；F2ao只是显式GC实验，未采用。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。

@@ -1154,3 +1154,13 @@ F2am实际完成：源3f10adb已提交推送、REST/ls-remote一致，两对终�
 ### F2an 新默认剩余长尾只读归因（待执行）
 
 nominal新候选79慢拍中75为controller主导、4为perception；最慢settle57.592ms中controller52.587ms线程CPU，静稳段无重新规划，不能归因模型复制或单纯OS等待。复用原round46-gc-observation/probe.py，只替换显式新默认/输出目录，保持GC启用、阈值和全部原物理门。单轮带观察器只回答GC事件与实际周期重合，不作无插桩性能或新优化成功。资源释放后再执行，再据因果生成单变量候选；原父/子四轮均已终态，提交不会污染在途对照。
+
+F2an完成：源363e03b提交推送且REST/ls-remote一致，原观察器在output/current-gc-observation-20261023/ac5bff31-c894-43da-811e-a963af684479/，原run5385ace2-0a80-4728-a1f2-75a1fb7cc3d5判pass。真实抓放/释放/脱离/回位、安全0/障碍0/free/weld-mocap0/完整视频均通过，观察器前后GC启用及[700,10,10]相同，callback_errors为空、unclosed_events=0。4次main gen2对应t=8.70/34.60/62.84/74.04s，GC wall20.191910/30.843323/35.527245/44.210437ms、线程CPU同量级；对应完整周期26.404868/38.425251/41.802658/54.848757ms，最后完成section均perception（在随后的controller期间发生）。全回合9慢拍，另有separate29.567、close24.984、transport24.205、retreat23.323、release21.778ms，不能说GC是全部瓶颈。independent-gc-readback.json保留逐事件与周期。观察器process31.404s不能作无插桩A/B，峰RSS1388588KiB。Knowledge=already_covered；不改共享GC经验pending原owner。
+
+### F2ao 新默认上的既有GC窗口（软件通过，原物理待执行）
+
+根GPT只写direction_hint_preallocated_gc.py，父版为新已采用方向提示+模型预准备；唯一delta defer_cyclic_gc=True。复用原DeferredGCWindow、原join后cleanup、原状态恢复和原120wall归属，默认不改。57相关回归通过。旧F2ah/F2ai收益不稳定和RSS增加约114–119MiB反证保持，未用新目标重分类旧失败。
+
+局部沿用round47/probe_retained.py的原18形状/7762绑定fixture，只把保留遥测换为本轮F2an实际记录；遥测只作分配重放，绝不进入控制器/规划器决策。三对绑定/完整遥测输出同值，CPU1.686051→1.327692、1.680939→1.465155、1.707448→1.501845s；全含清理wall1.722507→1.327943、1.710544→1.876833、1.727232→1.509974s。原screen=inconclusive/reason=pair_has_no_consistent_wall_reduction；保留不改为pass。第二子max190.781ms，即使自动回收次数[0,0,0]仍可能大幅慢拍，原因未由本探针分离，不能声称GC开关可保证50Hz；第一/三子max.700/1.219ms仅为该局部分配重放。
+
+准入定位为“基于四个原物理GC事件的显式尾延迟对照”，不是通过局部wall收益门的默认晋级候选。已有窗口代码未变、57回归通过且三对CPU减少，直接用原物理检验此前已证实的GC停顿是否移动；不将inconclusive静默删除，不新建强前序锁或改评分。Next：原nominal成对，记录总wall/CPU、GC清理/内存/所有周期及原物理；有实际尾延迟收益才第二已有工位反序。private round54-current-gc-window保留原probe、Root GPT来源、retained-three-pair-screen与190ms反证；不联系「登录 X」。

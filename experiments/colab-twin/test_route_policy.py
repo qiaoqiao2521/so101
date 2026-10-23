@@ -169,6 +169,13 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertFalse(parent.preallocate_worker_models)
         self.assertEqual(child.preferences(), dict(parent.preferences(), preallocate_worker_models=True))
 
+    def test_new_gc_candidate_only_selects_existing_episode_window(self):
+        parent, _ = load_route_policy()
+        child, _ = load_route_policy(
+            Path(__file__).parent/'route_strategies/direction_hint_preallocated_gc.py')
+        self.assertFalse(parent.defer_cyclic_gc)
+        self.assertEqual(child.preferences(), dict(parent.preferences(), defer_cyclic_gc=True))
+
     def test_inline_parent_and_original_remain_available(self):
         child, source = load_route_policy(
             Path(__file__).parent/'route_strategies/leaf_packed_inline.py')
