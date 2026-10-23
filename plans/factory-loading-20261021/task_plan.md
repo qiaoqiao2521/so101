@@ -482,3 +482,19 @@ Next F2bj：真实循环render_rgb合计约191ms/13次（约14.7ms/次），静�
 - [x] 当前单context复放仍有最多59像素差异，原exact_rgb=false保留，不宣称图像等值、算法收益或50Hz通过。
 
 Next F2bl：在新分配Kaggle任务中先核对GPU0身份/独占和CLI能力，再尝试原生585MHz受支持频率的短环境对照，成功后finally恢复默认。若无权限或所有权不明确，仅记录并跳过配置，不提权、不重置GPU、不改功率/驱动/物理参数。原控制实现、评分器与90sim/120wall/244保持。该项是环境实验，不是算法候选。
+
+
+## F2bl / F2bm 已终态：权限与RGBA路径不再追试
+
+- [x] Kaggle GPU0原生锁频返回4、明确无权限；finally恢复命令也返回4。没有成功施加锁频，不宣称恢复命令成功；不提权、不GPU reset、不改驱动/功率。环境路径关闭。
+- [x] 原生mjrContext.readPixelFormat的RGBA读回完成28次同一已绘制帧的双向逐像素检查，GL错误0、canary/格式恢复保持；三个完整渲染+定位对照全部更慢，原screen reject。未启动该候选物理评测。
+
+## F2bn 异步相机：两站原物理结束，保留调度证据，不晋级默认
+
+- [x] 复用AsyncTransportPlanningJob的原owned/join/close生命周期，私有相机适配只移出周期性渲染与原定位；MjData独立复制，仅输出RGB定位和真实capture timestamp，无物体真值进入控制器。
+- [x] 本地5项所有权/异常/迟到拒绝/退出测试通过；Kaggle真实EGL的14帧定位同值、时间戳保留、主状态不变、独占context正常退出。此项不是完整周期或任务通过。
+- [x] source dfb9fc32，名义原版→候选b00fed7b、已有200/200候选→原版bf36e788，4/4原物理pass。原90sim/120wall、244点、碰撞/自由物体/释放/脱离/回位、视频和planner/camera清理保持。
+- [x] 两站视觉live各328拍：慢拍13→0、13→2；估计送达年龄20–60ms，原1s TTL与无效图像拒绝保持。14个定位输出/拍摄时间戳逐值相同，未以送达时刻冒充拍摄时刻。
+- [x] process wall原版→候选59.740→56.981、60.837→61.781s；CPU69.671→66.754、71.404→72.478s。完整慢拍124→103、154→147，仍未过50Hz；同量非hold/release CPU第二站39.675→39.692s未改善，不晋级默认、不追加择绿。
+
+Next F2bo：旧默认及此次原版hold/release区间仍有wall大于thread-CPU的慢拍，尚未证明GIL原因。Root GPT已准备同一原成功回合的固定guard查询+原并行运输规划器小对照，只比较默认切换间隔与1ms，finally恢复。先看三对的数值、路径、主检查/worker/完整进程成本，再决定原物理；暂未运行，不改生产默认，不并发抢占在途评测。Knowledge=already_covered，原Wiki/ROS2 与 FishBot.md第20节已覆盖组件/整程与反证边界。

@@ -73,3 +73,22 @@ source450e5e34两站定位合计各省约13ms，但process wall父→子56.899�
 [真实控制渲染归因](https://www.kaggle.com/code/muqiaoqiao/so101-live-render-attribution-20261024) v1的原默认抓放通过，控制context确认Tesla T4，场景更新约.044ms、渲染约14.563ms。14份MJB/状态/pose/RGB用于离线复放；两种复放均未逐像素等同，不宣称同输入加速。
 
 [节奏与NVML只读观察](https://www.kaggle.com/code/muqiaoqiao/so101-paced-render-observation-20261024) v1中，连续模式也出现慢读回；P0/585MHz与P8/300MHz关联到约1.46/13.91ms读回，但未干预时钟，尚非因果结论。GPU设置未改，图像逐像素检查失败保留。当前不靠重复出图或修改物理判据追绿。下一项是本任务GPU原生时钟配置权限与可恢复短对照；平台拒绝时不提权。
+
+
+## 权限拒绝、读回格式与异步相机
+
+- [时钟权限](https://www.kaggle.com/code/muqiaoqiao/so101-clock-control-component-20261024) v1：GPU0锁频及finally恢复均rc4，平台拒绝；未成功施加时钟，不宣称恢复成功，不提权重试。
+- [RGBA组件](https://www.kaggle.com/code/muqiaoqiao/so101-rgba-readback-component-20261024) v1：28次同draw像素等值，但完整组件三对均更慢，原screen reject，不发物理。
+- [异步相机协议](https://www.kaggle.com/code/muqiaoqiao/so101-async-camera-protocol-20261024) v1：14帧实际EGL定位同值、capture timestamp保留、主状态不变、owned线程/context正常退出；不当50Hz或任务通过。
+- [异步相机原物理](https://www.kaggle.com/code/muqiaoqiao/so101-async-camera-physical-ab-20261024) v1名义原版→候选、v2已有200/200候选→原版，4/4原pass。真实实现外围替换通过camera-implementation.json与generated episode源码记录，不能只看同route-policy。
+
+source dfb9fc32，两站视觉live慢拍13→0、13→2，capture到送达20–60ms，原1s TTL与无效结果拒绝保持。完整process wall原版→候选59.740→56.981、60.837→61.781s，CPU69.671→66.754、71.404→72.478s，整程收益不一致；完整慢拍仍103/147，不晋级默认，不宣称完整50Hz。
+
+证据分别在output/clock-control-component-20261024、rgba-readback-factory-20261024、async-perception-factory-20261024；最后一项的independent-physical-inventory.json保留所有原物理与时间戳/清理核验。私有工厂cache round79-async-perception保存来源、协议、完整两站wrapper与read_camera.py。恢复云端来源用现有CLI：
+
+```bash
+kaggle kernels pull muqiaoqiao/so101-async-camera-physical-ab-20261024/1 -p RESTORE_PRIMARY --metadata
+kaggle kernels pull muqiaoqiao/so101-async-camera-physical-ab-20261024/2 -p RESTORE_CROSS --metadata
+```
+
+复跑保持新版本私有、原90sim120wall/244与scorer，不将跨主机绝对秒数相加，不修改default。下一项只测1ms线程切换间隔的固定工作量组件，尚未有物理结论。

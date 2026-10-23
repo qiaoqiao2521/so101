@@ -1432,3 +1432,18 @@ b37171c已推送，REST与ls-remote独立一致。F2bj原默认cbe532f0原pass�
 F2bk按原实测.233840443s间隔对比burst，84个样本/三对。P0/585MHz样本读回约1.460ms，P8/300MHz约13.905ms；连续出图也在后两组变慢，暂不把间隔当修复。NVML只读、GPU设置未改，逐像素同样未等同（最多59像素差）；不宣称算法进步或50Hz。原件及独立读回分别在output/live-render-attribution-20261024和paced-render-observation-20261024。
 
 Next F2bl：原生CLI检查本Kaggle GPU0的身份/独占与时钟配置权限；允许才做585MHz短环境干预，finally恢复默认，保留全部命令/返回码与恢复结果。拒绝则跳过，不提权、不GPU reset、不改功率/驱动或物理条件。Root Codex继续，不恢复定时任务。Knowledge=already_covered，原Wiki性能范围/反证及环境与算法区分规则覆盖；当前GPU状态关联仍留项目，不提升为跨平台结论。
+
+
+## F2bl / F2bm / F2bn 已独立读回（2026-10-24）
+
+Current：四个异步相机原物理全部终态。原默认仍float_first_context；未向其他对话发消息，未启用定时器，无owned本地物理，不触碰Mint/他人渲染。Root GPT来源，未冒称CodeBuddy生成。
+
+F2bl：Kaggle原生锁频和finally恢复均权限拒绝rc4，clock_applied=false，没有成功恢复回执，不提权/重试。F2bm：RGBA在28个同draw逐像素检查中等值、GL错误0，但完整渲染+定位三对全部慢，原screen reject，未发物理。真实拒绝/负收益及独立读回分别在output/clock-control-component-20261024和rgba-readback-factory-20261024。
+
+F2bn：复用原AsyncTransportPlanningJob生命周期的私有timestamped RGB worker；本地5测试及实际EGL14帧协议通过。完整名义原版→候选b00fed7b（1d465740/ef1f3c1d），第二站200/200候选→原版bf36e788（09b40a9f/5635508a），4/4原pass。source dfb9fc32、原XML/初态/native/规划路径、90sim120wall/244、全部碰撞与回退不改；自由物体/抓放/释放/脱离/回位、完整视频、planner/camera清理全通过。14个定位输出及capture时刻相同，周期13帧无丢弃，送达20–60ms，原1s TTL不变、迟到无效结果仍失败。
+
+按原版→候选process wall59.740308→56.980533、60.836932→61.781233s；CPU69.670976→66.754354、71.404051→72.478014s。完整慢拍124→103、154→147；视觉live各328拍慢拍13→0、13→2、最大34.981→18.471、33.533→20.769ms。全程P95均小于20ms仍不等于完整50Hz，候选最大55.105/152.843ms，门槛未过。第二站同量非hold/release CPU略升，不晋级默认、不追加择绿，不把少等待计作提速。
+
+原件与independent-physical-inventory.json位于output/async-perception-factory-20261024；两站各有原评分及independent-camera/pair、policy-and-transfer、approach-search、request-startup、gc-physical读回。Kaggle两个private physical不可变v1/v2与protocol v1保留启动源码；私有round79保存最短重放入口和真实实现来源。
+
+Next F2bo：原观察115慢拍中68个hold、22个release主要在controller；93个hold/release慢拍controller中位20.278wall/12.387thread-CPU毫秒，只说明等待、未证明GIL。单变量1ms解释器时间片小对照已准备，重用同一原成功回合guard输入及原并行运输规划器；记录数值/路径/清理、主检查/worker/总墙钟与CPU，finally恢复。先三对组件再决定原物理，尚未运行；当前不改默认、不重建平台。Knowledge=already_covered，Wiki/ROS2 与 FishBot.md第20节覆盖组件与整程、同源和反证边界，无跨项目知识写入。

@@ -511,3 +511,31 @@ source b37171cb干净，私有so101-live-render-attribution v1原cbe532f0原pass
 三对burst/paced的render中位2.000/2.340、14.457/14.701、14.006/14.722ms；连续模式后两组同样慢，不能把“只要连续渲染”当修复。时间集中在mjr_readPixels：GPU0调用前P0/585MHz的23样本读回中位1.459570ms，P8/300MHz的46样本13.905005ms；其余P8/360、375MHz各6/9样本也约13.4/13.5ms。此处是状态关联，不是控制过频率的因果实验。GPU1始终P8/300MHz。
 
 已核对[NVIDIA原生锁频/恢复说明](https://docs.nvidia.com/deploy/nvidia-smi/index.html)及[NVML查询](https://docs.nvidia.com/deploy/nvml-api/latest/api/group__nvmlDeviceQueries.html)。后续F2bl优先尝试当前私有任务内原生命令、明确设备与finally恢复；未授权提权、GPU reset、驱动/功率修改或别的任务资源操作。平台不允许时记录真实拒绝，不重复权限尝试。图像/控制/评分均不变，环境收益不能冒充算法收益。
+
+
+## F2bl 原生时钟权限真实拒绝
+
+私有so101-clock-control-component-20261024 v1确认Tesla T4/GPU0和空GPU进程表后，原生--lock-gpu-clocks=585,585返回4，平台明确拒绝权限；finally --reset-gpu-clocks同样返回4。clock_applied=false，没有执行有效时钟对照，没有成功恢复回执，不进行提权或重复权限尝试。原件与independent-clock-readback.json在output/clock-control-component-20261024/v1。
+
+## F2bm RGBA原生读回：同像素但更慢
+
+核对MuJoCo3.15.0原生mjr_readPixels与Python绑定，私有候选仅临时设置readPixelFormat为GL_RGBA，原生完成MSAA resolve，再复制为原RGB3；异常/退出恢复原格式，深度/分割路径回退原实现。28次同一已绘制帧按两种读取顺序均逐像素相等，缓冲区边界/GL错误0/格式恢复通过。4项局部语义检查和84次定位同值保持。
+
+完整渲染+定位三对原版→候选.168728→.306468、.281103→.304399、.283074→.307708s，全部更慢，原screen reject/no_median_local_effect。42次实际RGBA路径、0回退，不以同值掩盖负收益，不进行该候选物理。私有so101-rgba-readback-component-20261024 v1；output/rgba-readback-factory-20261024/component-v1及independent-component-readback.json保留原件。
+
+## F2bn 真实异步相机：视觉长尾改善，整程收益不稳定
+
+来源Root GPT，未冒称CodeBuddy生成。沿用AsyncTransportPlanningJob的plan_type扩展、owned/join/close，以独立模型和逐帧MjData复制在worker渲染RGB。控制器只收到原localize_green_target输出与capture timestamp；原1s TTL、冻结后迟到无效帧拒绝、初始同步定位及最终截图保留。worker驻留时间与控制重叠，不相加为规划成本。原评分器、原规划/控制和安全条件未改，私有camera-implementation.json显式记录真实替换函数、一次episode调用及所有还原。
+
+本地5项协议测试通过；私有so101-async-camera-protocol-20261024 v1实测14个EGL帧定位相等、timestamp保留、主qpos/qvel不变、context在owned线程关闭。该组件只验协议，约1ms快照提交不称完整50Hz。完整物理另用so101-async-camera-physical-ab-20261024 v1/v2，同source dfb9fc32，名义原版→候选与已有200/200候选→原版。
+
+| 工位 | 原版→候选process wall / CPU(s) | 完整慢拍 | 视觉live慢拍 / 最大拍(ms) |
+| --- | --- | --- | --- |
+| 名义 | 59.740308 / 69.670976 → 56.980533 / 66.754354 | 124→103 | 13→0 / 34.981→18.471 |
+| 200/200，反序 | 60.836932 / 71.404051 → 61.781233 / 72.478014 | 154→147 | 13→2 / 33.533→20.769 |
+
+4/4原pass；XML/初态/native核与flags/原裁判/阈值、接近和运输规划路径均同。planned/measured各244，全部碰撞/自由物体/抓放/释放/脱离/回位保持；视频474/474→475/475、492/492两侧完整，两个planner与相机均joined/owned_ack、无cleanup_unconfirmed。两子释放漂移.249861/.258347mm，脱离后峰力0N。
+
+两站每侧14个定位输出/拍摄时刻相同，候选13个周期帧全部送达、无丢弃，送达年龄20–60ms。视觉live各328拍；原完整P95 17.264→16.054、17.551→17.533ms，但完整最大56.058→55.105、155.017→152.843ms，不能声称全程50Hz。sim75.84→75.86、78.62→78.72s，仅hold/release计数变化不记提速；同3264/3366非hold/release拍CPU39.173939→36.745708、39.675125→39.691872s，第二站无改善。
+
+决定：视觉阻塞削减是可复现的局部调度收益，尚不足以替换整程默认；保留私有候选与反证，不追第三站。output/async-perception-factory-20261024/independent-physical-inventory.json汇总完整/相机/搜索/策略/worker读回。私有round79-async-perception保存candidate.py/camera.py、generated原episode适配、physical_probe.py/read_camera.py及primary/cross路径；云端不可变v1/v2可恢复完整来源。Next F2bo的1ms切换间隔是待测假设；[Python3.13官方文档](https://docs.python.org/3.13/library/sys.html#sys.setswitchinterval)明确该值只是理想时间片，真实切换可更长，不能宣称硬实时。
