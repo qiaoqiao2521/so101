@@ -196,6 +196,29 @@ def _immutable_float_first_context(value):
     return _immutable_context(value)
 
 
+_FLOAT64_PACK = struct.Struct('!d').pack
+
+
+def _immutable_prebound_float_context(value):
+    """Preserve the original tokens through one precompiled float64 packer."""
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError('Sweep context floats must be finite')
+        return ('float64', _FLOAT64_PACK(value))
+    if isinstance(value, (tuple, list)):
+        return tuple(map(_immutable_prebound_float_context, value))
+    if value is None or isinstance(value, (bytes, str, int, bool)):
+        return value
+    if isinstance(value, np.ndarray):
+        return _immutable_prebound_float_context(value.tolist())
+    if isinstance(value, dict):
+        return tuple((_immutable_context(key), _immutable_prebound_float_context(item))
+                     for key, item in sorted(value.items()))
+    if isinstance(value, RoutePolicy):
+        return _immutable_context(tuple(value.preferences().items()))
+    return _immutable_context(value)
+
+
 def _immutable_named_context(value):
     """Own each value; native field keys need no generic recursive encoding."""
     if type(value) is not tuple:
@@ -224,6 +247,7 @@ class SweepBinding:
     snapshot_context: bool = field(default=False, repr=False, compare=False)
     float_first_context: bool = field(default=False, repr=False, compare=False)
     named_context_freeze: bool = field(default=False, repr=False, compare=False)
+    prebound_float_pack: bool = field(default=False, repr=False, compare=False)
     _jaw_bits: bytes = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -241,6 +265,8 @@ class SweepBinding:
         object.__setattr__(self, 'jaw_intent_rad', jaw)
         object.__setattr__(self, '_jaw_bits', struct.pack('!d', jaw))
         snapshot = (_immutable_named_context if self.named_context_freeze is True else
+                    _immutable_prebound_float_context if self.float_first_context is True
+                    and self.prebound_float_pack is True else
                     _immutable_float_first_context if self.float_first_context is True
                     else _immutable_snapshot_context)
         freeze = (snapshot if self.snapshot_context is True else

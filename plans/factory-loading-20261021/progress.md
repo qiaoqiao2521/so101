@@ -1383,4 +1383,11 @@ Done：v1 ensurepip失败、v2下载403和v3两次原wall_time_limit全部保存
 
 Next：F2bf只检验struct.Struct预绑定packer。原F2ay插桩部分回合记录6772次_sweep_binding、3310824次浮点优先helper递归，当前函数每个float仍调用struct.pack('!d', value)。旧profile只支持调用结构，不能拿其秒数当新云环境成本。先同值/错误边界，再在当前环境量完整组件三对；无收益淘汰，不盲发新物理。Root GPT来源沿用用户授权，不冒称CodeBuddy生成。
 
-Knowledge=already_covered：已核对Wiki/ROS2 与 FishBot.md第20节，采用“组件与完整任务分别验证、固定物理条件、保留反证”的既有规则；驱动版本、当前镜像适配和复跑处方留在本项目，不新增跨镜像保证。当前收尾检查/提交推送待完成，owner根Codex。
+Knowledge=already_covered：已核对Wiki/ROS2 与 FishBot.md第20节，采用“组件与完整任务分别验证、固定物理条件、保留反证”的既有规则；驱动版本、当前镜像适配和复跑处方留在本项目，不新增跨镜像保证。F2be文档检查/相对链接/diff通过，7c355bfee5432a09173ca5e4e5f51df683b613aa已推送，GitHub REST与ls-remote独立读回一致。
+
+
+## F2bf 接续：私有完整绑定三对准入，正式选项默认关闭
+
+Kaggle私有v1实际完成，29边界检查/实际调用路径通过。三对wall1.450869→1.382857、1.498944→1.401262、1.444858→1.422921s，CPU同向，原screen eligible；6772重复只有一个真实reset/approach快照，不当整回合收益。旧wrapper来源描述复用瑕疵已在独立读回说明，实际执行源码与round71源文件吻合。
+
+正式prebound_float_pack默认false，仅额外选择预编译同值浮点encoder。77相关测试通过；先修正了测试中不受原非snapshot接口支持的ndarray输入，原拒绝保持。scorer/碰撞/native C++/阈值/90sim120wall均未改，默认仍float_first_context。下一步以新源码做正式完整组件三对；无一致收益即淘汰，有益才原物理，不把组件准入当任务成功。当前无在途原物理，根Codex维护本分支。

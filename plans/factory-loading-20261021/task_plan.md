@@ -420,6 +420,16 @@ Current：F2ax名义物理安全通过但等工作量成本回退，不将局部
 2. 保留两次环境准备失败和软件 EGL 的两次原 wall_time_limit；不删除或改判（complete）。
 3. 原名义 baseline→candidate、已有 200/200 反序、合法方块 X +5mm 反序，修复环境后原物理 6/6 通过（complete）。
 4. 独立核对原判决、完整时钟、244 点、释放/脱离/回位与完整录像（complete）。三对搜索更快，但偏移组 process wall/CPU 均略回退，因此不晋级默认。
-5. 固化云端复跑入口、结果和反证，必要检查与提交推送（in_progress）。
+5. 固化云端复跑入口、结果和反证，必要检查与提交推送（complete：7c355bf，REST/ref双读回一致）。
 
 Next：F2bf 从原 profile 的浮点编码调用量和当前源码出发，检查预编译 struct.Struct('!d').pack 的单变量候选。先检查数值/错误同值，再在当前云环境做完整绑定组件三对；不凭标量 microbenchmark 或旧环境秒数直接进入物理。默认继续 float_first_context，保留旧候选。
+
+
+## F2bf 预编译浮点打包器（2026-10-24）
+
+Root GPT沿当前源码检查每个float调用struct.pack的重复开销，不恢复中点搜索默认、不修改评分/物理。
+
+1. 私有候选在Kaggle Python3.13当前原模型/真实RGB估计/q6起点上，29同值/错误/复制检查通过；完整_sweep_binding三对均更快（complete）。
+2. 最小生产选项prebound_float_pack默认false；只在浮点快照路径选Struct('!d').pack，原非snapshot/named/异步编码保持；77相关测试通过（complete）。
+3. 绑定本次源码，在同一候选策略对象下用旧encoder与正式encoder比较完整构造器，再走原screen三对（pending云端正式组件）。
+4. 正式组件若无一致收益就淘汰，不重跑择绿；有收益才接原物理A/B和有益后的跨工位。默认不变，原90sim/120wall/244点及全部回退保持。

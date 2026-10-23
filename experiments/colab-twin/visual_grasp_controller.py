@@ -445,7 +445,9 @@ class VisualGraspController:
                             float_first_context=bool(getattr(getattr(self, 'route_policy', None),
                                                              'float_first_context', False)),
                             named_context_freeze=bool(getattr(getattr(self, 'route_policy', None),
-                                                              'named_context_freeze', False)))
+                                                              'named_context_freeze', False)),
+                            prebound_float_pack=bool(getattr(getattr(self, 'route_policy', None),
+                                                             'prebound_float_pack', False)))
 
     def _jaw_intent(self):
         """Describe stage intent without inferring contact from encoders."""

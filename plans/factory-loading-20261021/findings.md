@@ -447,3 +447,14 @@ Root GPT私有round69-shortcut-order先试整段直连，再对中点连接做�
 方块偏移组是在原±10mm范围内固定X+5mm，仅改同一物体输入，不改静态环境/判据，策略仍只用RGB定位/q6。两个原有工位取料点相同，所以增加此单一变体用于验证与接近优化相关的坐标。偏移组虽搜索省2.349394s、初始化省2.168247s，但同3283个非hold/release拍CPU33.626948→34.305411s，整程反慢.160785wall/.398797CPU；不把分段收益当完整收益，不追加同例追绿。默认float_first_context不变，中点搜索只保留显式来源，不晋级。
 
 每轮原244点、自由物体、碰撞/限位、释放漂移、脱离/回位和所有worker清理均通过；v6视频474/474两轮，v7两轮492/492，v8父478/478、子477/477。完整P95父→子17.067704→16.896831、16.196930→17.095961、14.852263→15.522410ms；慢拍127→128、147→150、117→115，完整50Hz仍未过。原软件EGL失败和这些安全通过分别记录，原时钟未删拍。所有JSON/视频与五种独立读回保存在output/kaggle-midpoint-factory-20261024，复跑见experiments/colab-twin/KAGGLE.md。
+
+
+## F2bf 预绑定Struct的私有完整组件结果
+
+原F2ay部分插桩回合确实调用struct.pack1654240次、浮点优先helper递归3310824次；仅用作结构线索，不把旧3.11环境的秒数当Kaggle3.13成本。Root GPT私有round71只把有限float叶的struct.pack('!d',value)替换为一次构造的Struct('!d').pack；每个值仍新建原byte token，类型、有限检查、负零、排序、数组tolist复制和错误保持，无结果缓存。
+
+私有Kaggle muqiaoqiao/so101-float-packer-component-20261024 v1复用上轮v8成功baseline的原grasp-planning.xml、真实RGB估计和reset q6，原控制器构造/0秒update后，仅重复完整_sweep_binding。29值/错误/拥有检查通过；计时外原229次generic pack，子1次generic+228次compiled；两侧helper均477次，双向matches同值，确认走到目标。6772次重复的三对wall1.450869→1.382857、1.498944→1.401262、1.444858→1.422921s，线程CPU同向；原screen eligible，中位省.068012s。范围仅一个真实起点的完整组件，不是全阶段、唯一在线输入、物理成功或50Hz成绩。
+
+原cloud wrapper曾携带上轮midpoint的candidate_origin描述；实际candidate.py/probe源码和当前round71来源文件明确为预绑定packer。原字段不覆盖，independent-component-readback.json注明这一元数据复用瑕疵并核对实际candidate源码逐字节相同。后续正式packet使用本轮来源，不冒称CLI生成。组件原件保存在output/prebound-float-factory-20261024/component-v1。
+
+生产只加默认关闭的prebound_float_pack选择及同值helper；中点搜索不叠加。首轮新增fallback测试错误地向原非snapshot路径传ndarray，原拒绝正确；仅改测试为该路径支持的标量tuple，未放宽类型或修改实现。77项相关测试通过，原所有权和原非snapshot/named路径保持。正式接入后的完整组件尚未测，不凭私有结果宣称生产提速。
