@@ -954,3 +954,23 @@ nominal父→子原物理d5ecdeae-6770-472a-90f5-6c8df739a9cc已启动，原90si
 F2ad Knowledge：no_reusable_delta。补充新基线实际反证与采用证据，年龄缺陷及组件/任务边界已在F2aa/F2ab记录；F2ab/F2ac共享Wiki写回pending仍由研究根串行处理，不冒充已完成。本轮P95达20ms内不等于完整50Hz，候选仍42/48慢拍、最大80/92ms，未启动20+20、学习或实体操作。
 
 Next：原入口同进程调用run_physical_episode已核实；使用标准python -m cProfile叠加原--timing诊断剩余hold/release及同步转换，只做归因，不把插桩时钟当未插桩验收。原90sim120wall保持，未定瓶颈前不追加生产策略。
+
+### F2ae 上下文遍历（2026-10-23，未晋级）
+
+F2ad已本地提交9340dc5。标准cProfile同原入口回合b4865cdd-a716-4d5d-9c91-49c94d60902e原pass，75.32sim/107.139episode-wall/110.506process，原120wall不改。插桩119744969次调用显著扰动时间，不称未插桩50Hz或提速对照。_sweep_binding 7550次、15.3165s累计，_immutable_context 7752外层/3916383总调用、7.7317s；snapshot 3069142次。原pstats和main-cost-readback在output/factory-tail-profile-20261023/8c7a5cdd-5d9b-43f5-b30a-d275bc1a65c4/。
+
+只读采样使用同原入口，包装SweepBinding.__post_init__先运行原全部验证，成功后只在主线程采样原context；失败原样传播，可选写盘错误不改物理结果。回合ec9602c2-69e4-4d00-ac1d-bc9dbbc762e7原pass，75.38sim/37.704process；18类/7762次真实阶段计数、零采样错误。原owned pickle由本机生成，只本机加载，不提交运行产物。样本在output/factory-context-capture-20261023/cd0bdf4e-09e2-4871-a8e6-476318f14527/contexts/。采样后已向研究根归还该重仿真窗口。
+
+原CLI43同native会话8.876s/success，仅替换递归生成器为map，math.isfinite/!d浮点位编码、符号零和未知类型拒绝均不变，不删字段/访问/回退，不做跨调用缓存。18捕获输入按阶段计数加权及25边界/副本/符号零检查同值。私有三对1.147389→.905416、1.128836→.926831、1.153288→.897381s，原screen eligible；这是代表形状按实际次数回放，不是7762条不同在线值或任务pass。
+
+生产薄接入只在原RoutePolicy中加默认false的map_context_freeze、在本次SweepBinding实例上选实现；无全局状态，原_immutable_context及async原路径保留，逻辑matches/原所有验证不变。生产构造原三对1.487833→1.120147、1.351615→1.113206、1.356702→1.103977s，中位省.252725s；153相关回归通过（包括位身份、输入变动拒绝、未知/非有限值同错）。默认仍9340的smooth_jaw_leg_clock.py。
+
+与研究根同步新窗口且核对实际无其他仿真后，nominal原父→候选9939de33-5f26-4f4f-8c5e-8b0e89d086fe已启动，原90sim120wall、碰撞/释放/全部扫掠保持。尚无本候选整程收益结论，只有可靠收益才反序第二工位。
+
+原父8c6367be-b9a6-40c1-a2e7-fa8ebd24e320与子999208df-f06b-44e1-a043-c6f20148e8a0均原pass，75.42→75.44sim，全process60.208307→59.548003s。CPU67.761540→67.989059s、nonhold wall47.570173→47.844158s/线程CPU47.165729→47.433288s；去除全部hold/release后同阶段同拍数，wall43.106746→43.277671s、线程CPU43.006381→43.184394s、controller31.011789→31.099744s，均回退。P95 21.745085→22.363426ms、超20ms346→427退化，最大117.001743→110.948567ms略降。原四XML/初态/目标/评分/阈值/C核/库/flags同值，原运输路径相同，实际map false→true。原释放/脱离/回位通过，子漂移.249001mm、脱离后0N，不能将总wall少.660s当算法可靠收益。
+
+晋级结论reject/mixed_end_to_end_effect，map_context_freeze保持默认false，仅显式复跑；不进第二工位。profile输入计数和局部收益仍保留，不否认组件结果，也不靠重跑同源挑绿。物理完成后只读ps发现两后台Blender平均CPU381%/312%、loadavg15.19/11.80/9.53、16逻辑核，随后还曾有新后台Blender469%，这会干扰时钟归因；不能宣称这就是全部差异根因。host-load-readback.json保留原观察。两个后台渲染后来自然结束，当前仅低占用Blender GUI，未暂停/终止任何其他任务；先前资源优先提问无需因已结束渲染执行暂停。
+
+已向用户异步说明GitHub登录401及并行渲染优先级；新账户身份复查仍401，不切旧账户或写全局认证。已有有效本地提交e857f6e/eb99ad0/9340dc5保留，推送pending。原private round10 run_pair.py已备份并补每个子进程前后宿主负载（comm/CPU/elapsed，无参数和凭据）；观察位于子进程wall与rusage测量之外，optional不可用只记录诊断，无新阻塞或限额。后续性能数据应携带此负载记录。
+
+F2ae Knowledge：no_reusable_delta。组件/整程分层及宿主机争用边界已在本计划记录，未另建知识框架；F2ab/F2ac Wiki串行写回pending仍归研究根。Next：先核算同步_start_transport/.072s和_start_separation/.117s剖析成本，查模型复制/线程握手是否持GIL；局部可证伪后再给原CLI新策略，不改评分或当前已采用默认。

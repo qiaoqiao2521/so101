@@ -24,6 +24,7 @@ class RoutePolicy:
     refresh_leg_age: bool = False
     batch_configuration_sweep: bool = False
     smooth_jaw_dwell: bool = False
+    map_context_freeze: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -66,6 +67,8 @@ class RoutePolicy:
             raise ValueError('Configuration sweep batching must be a boolean')
         if not isinstance(self.smooth_jaw_dwell, bool):
             raise ValueError('Continuous jaw dwell selection must be a boolean')
+        if not isinstance(self.map_context_freeze, bool):
+            raise ValueError('Context map selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

@@ -361,7 +361,9 @@ class VisualGraspController:
                     ('released_center', snapshot(released_values.get('center'))),
                     ('released_rotation', snapshot(released_values.get('rotation'))),
                     ('released_uncertainty_m', released_values.get('uncertainty_m')))
-        return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context)
+        return SweepBinding(self, self.checker, self.rig, self.stage, float(end[5]), context,
+                            map_context=bool(getattr(getattr(self, 'route_policy', None),
+                                                     'map_context_freeze', False)))
 
     def _jaw_intent(self):
         """Describe stage intent without inferring contact from encoders."""

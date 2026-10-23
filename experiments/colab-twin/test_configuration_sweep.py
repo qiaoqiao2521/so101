@@ -11,6 +11,37 @@ from configuration_sweep import (ConfigurationSweepInvocation, SweepBinding,
 
 
 class ConfigurationSweepTests(unittest.TestCase):
+    def test_map_freeze_keeps_bit_identity_owned_values_and_logical_matching(self):
+        owner, checker, model = object(), object(), object()
+        raw = [[1., -0., None, b'x', True]]
+        left = SweepBinding(owner, checker, model, 'close', .015, (raw,))
+        right = SweepBinding(owner, checker, model, 'close', .015, (raw,), map_context=True)
+        self.assertEqual(left.context, right.context)
+        self.assertTrue(left.matches(right))
+        self.assertTrue(right.matches(left))
+        raw[0][0] = 99.
+        self.assertEqual(left.context, right.context)
+        changed = SweepBinding(owner, checker, model, 'close', .015, (raw,), map_context=True)
+        self.assertFalse(left.matches(changed))
+        plus = SweepBinding(owner, checker, model, 'close', .015, (0.,), map_context=True)
+        minus = SweepBinding(owner, checker, model, 'close', .015, (-0.,), map_context=True)
+        self.assertFalse(plus.matches(minus))
+
+    def test_map_freeze_preserves_original_refusal_types_and_messages(self):
+        owner, checker, model = object(), object(), object()
+        for value in (math.nan, math.inf, -math.inf, {}, bytearray(b'x'), object(),
+                      (1., [2., math.nan]), (False, [object()])):
+            with self.subTest(value=type(value).__name__):
+                errors = []
+                for selected in (False, True):
+                    try:
+                        SweepBinding(owner, checker, model, 'hold', .015, (value,),
+                                     map_context=selected)
+                    except (TypeError, ValueError) as error:
+                        errors.append((type(error), str(error)))
+                self.assertEqual(len(errors), 2)
+                self.assertEqual(errors[0], errors[1])
+
     def test_complete_jaw_closure_preserves_endpoints_and_spacing(self):
         start, end = [0., 0., 0., 0., 0., .5], [0., 0., 0., 0., 0., .015]
         seen = []

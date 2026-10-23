@@ -198,3 +198,12 @@ CLI30排序/二分种子节点界表局部成本不一致，未应用生产。CL
 - 两工位候选释放漂移.248956/.257223mm、脱离后峰力0N，原抓放/释放/脱离/回位均pass。首sim75.44→75.36只少4release拍，第二78.00→78.06反多2release/1hold拍；仍有非等待同拍数成本改善。四轮录像完整，原源/默认/策略选择和报告回归73项通过；采用smooth_jaw_leg_clock.py，原所有父版保留。
 
 原件：output/smooth-leg-clock-factory-20261023/{d5ecdeae-6770-472a-90f5-6c8df739a9cc,f6ca982e-5d9b-4d51-8f92-4ee477e08f8f}/，含原评分、准确argv、source快照、独立完整及policy-and-transfer读回。原CLI/三对/复跑在私有round41-smooth-leg-clock。
+
+## F2ae map冻结未晋级（2026-10-23）
+
+- 标准cProfile原物理通过但有显著插桩开销，只作计数；随后原验证成功后的只读采样得到18类实际原输入、7762次阶段频率。CLI43仅生成map遍历改动，所有原字段/访问、float64位身份、符号零、拒绝与副本隔离保持，无缓存或新内容哈希门。
+- 原私有及生产各三对均通过原组件screen；生产每绑定选择、async保持原路径，153相关回归通过。两者作用域是按实际次数加权的捕获形状，不称7762条唯一在线输入或全任务改善。
+- nominal原物理2/2pass，process60.208307→59.548003s，但CPU67.761540→67.989059s、nonhold wall47.570173→47.844158s、P95 21.745085→22.363426ms、慢拍346→427均变差。排除全部hold/release后同阶段同拍数仍wall43.106746→43.277671s，不接受“少了墙钟所以提速”。原路径/评分/阈值与C库同值，实际map false/true已读回，释放漂移.249001mm、脱离后0N，原抓放/释放/脱离/回位通过。
+- 完成时发现并行Blender进程平均CPU381%+312%、load1=15.19/16逻辑核；该宿主机争用会干扰性能归因，不能归咎或归功于候选。两个后台渲染随后自然结束，仅低占用GUI保留；没有停止其他任务。原物理pass保留，性能晋级淘汰，默认仍smooth_jaw_leg_clock.py；map仅显式default-off复跑，不追加第二工位或重跑同源挑绿。
+
+原件output/context-map-factory-20261023/9939de33-5f26-4f4f-8c5e-8b0e89d086fe含host-load-readback及完整/策略/非等待读回；CLI、捕获、边界、三对和准确复跑入口在私有round43-context-map及prepared/source。原private run_pair.py增加前后负载只读记录，观察位于子进程wall/CPU计量窗口之外，无新锁/配额或自动停止其他工作。

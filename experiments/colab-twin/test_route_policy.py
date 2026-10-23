@@ -56,6 +56,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(batch_configuration_sweep=1)
         with self.assertRaises(ValueError):
             RoutePolicy(smooth_jaw_dwell=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(map_context_freeze=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 

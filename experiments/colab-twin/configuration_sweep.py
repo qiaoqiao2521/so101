@@ -137,6 +137,19 @@ def _immutable_context(value):
     raise TypeError('Sweep context requires owned scalar values and tuples')
 
 
+def _immutable_context_map(value):
+    """CLI43: preserve every freeze check and visit with a map iterator."""
+    if isinstance(value, (tuple, list)):
+        return tuple(map(_immutable_context_map, value))
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError('Sweep context floats must be finite')
+        return ('float64', struct.pack('!d', value))
+    if value is None or isinstance(value, (bytes, str, int, bool)):
+        return value
+    raise TypeError('Sweep context requires owned scalar values and tuples')
+
+
 @dataclass(frozen=True, eq=False)
 class SweepBinding:
     """Process-local arm guard ownership; not a continuous-motion certificate.
@@ -151,6 +164,7 @@ class SweepBinding:
     jaw_intent_rad: float
     context: tuple = ()
     guard_scope: str = 'arm_q6_chord'
+    map_context: bool = field(default=False, repr=False, compare=False)
     _jaw_bits: bytes = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -167,7 +181,8 @@ class SweepBinding:
             raise TypeError('Sweep context must be a tuple')
         object.__setattr__(self, 'jaw_intent_rad', jaw)
         object.__setattr__(self, '_jaw_bits', struct.pack('!d', jaw))
-        object.__setattr__(self, 'context', _immutable_context(self.context))
+        freeze = _immutable_context_map if self.map_context is True else _immutable_context
+        object.__setattr__(self, 'context', freeze(self.context))
 
     def matches(self, other):
         return (isinstance(other, SweepBinding)
