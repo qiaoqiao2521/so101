@@ -542,3 +542,7 @@ F2br正式源码46031fff两站原物理4/4通过，全部独立读回完成。�
 原默认CLI已验收：source14d53ce6，3f16af29原pass；76.60sim、47.539583process-wall/56.329792CPU，原244/安全/释放/脱离/回位、479完整帧、两个worker清理独立全过。真实加载默认loaded_jaw_preload.py、无candidate参数、无私有控制器/update/force观察器，只有原计时。P95 14.453/max42.783ms，62慢拍，完整50Hz未过。此单回合不与异VM旧秒数作相对提速。
 
 Next F2bs：正式200/200最慢拍位于separate→retreat，134.155ms中controller127.240wall/127.232thread-CPU；_return_path正在同步完整认证直接回位。先用原已验收200/200的回位输入，复用已有CodeBuddy F2k的box_separation_batched，只比较_return_path范围的原scalar与现成batch轴；逐位/全部点/原screen三对先行。原F2k worker-only整程负结果保留，不混称新方案；尚未运行，不变默认或安全阈值。
+
+F2bs组件已完成：同已验收0c829902回位快照，原_return_path三对138.169→98.729、126.985→95.962、148.977→99.955ms，CPU同向。75个距离查询、q6/全部距离/pad位姿/完整路径均逐位相同，正常/异常恢复通过；原screen=eligible_for_physical_ab，仅组件准入。
+
+Next：私有round86已有原评测薄接入，只在控制线程separate→retreat的_return_path期间使用现成batch轴，冻结worker/其他实时查询保持原scalar；原244/.005和全部阈值不改。先已有200/200原版→候选整程，可靠收益才已有220/170反序。默认仍已采用loaded_jaw_preload，不把约100ms当50Hz通过。

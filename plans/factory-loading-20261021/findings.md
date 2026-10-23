@@ -612,3 +612,7 @@ F2br私有原物理source6ef85f70：名义796670f1（6791f1d4→519e72b2）、20
 原默认CLI验收source14d53ce6，3f16af29原pass：原参数直接evaluate_station.py --timing，不带candidate或私有观察器。实际默认加载loaded_jaw_preload.py，一次encoder latch记录；全部原物理/244/来源/完整周期/479视频和清理通过。76.60sim/47.539583process-wall/56.329792CPU；3830完整拍，P95 14.453ms/max42.783ms、62拍超20ms。单回合只验默认可用，不能把它与其他VM/观察范围的数值相减算新收益。原件output/loaded-jaw-stock-default-20261024，独立runtime及default-selection读回齐全。
 
 下一条已定位证据：正式200/200回位切换cycle3734（t=74.68s）总134.155ms，controller127.240wall/127.232thread-CPU，前帧separate、当帧retreat。_return_path原直接路径验证.005rad，method=validated_direct；不能归因等待或OMPL重搜。ReleasedObjectQuery.distances对pad调用scalar SAT，现成box_separation_batched尚只用于可选冻结worker。F2k worker-only完整70.320→104.705s的负结果与220/170局部inconclusive保留；新假设仅是此同步return范围复用现成批量轴的CPU收益，先同值/同点/三对组件，不先发新物理或假定能过20ms。数学实现原作者CodeBuddy/DeepSeek Pro，当前薄接入由Root GPT，不冒称新CLI生成。
+
+F2bs三对完整_return_path组件（source62af0840，实际挂载正式cross候选0c829902/source46031fff）：从原归档FK释放估计重建几何、初态及实际执行回位起点/目标，复算原完整函数。每例75次原native arm+释放距离查询；q6、全部距离、pad末状态和回位路径逐位相同，并与归档直接路径同值。scalar→batch wall138.169→98.729、126.985→95.962、148.977→99.955ms；CPU差−39.451/−30.990/−48.638ms。正常/异常实例方法恢复通过，原screen准入，独立读回protocol_valid=true。并非整程物理或20ms达标。
+
+原件output/return-batch-axes-factory-20261024/component-v1；actual mounted-inputs、四个必要输入副本及每个binary64距离可复查。私有round86复用原CodeBuddy F2k数学函数，Root GPT只写_return_path作用域接入；新的原物理将以线程身份+stage约束仅控制线程separate→retreat启用，冻结worker不启用，避免复跑旧worker-only方案或混变量。默认保持已采用loaded_jaw_preload，下一步200/200父→子，净收益才220/170反序。

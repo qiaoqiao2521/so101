@@ -129,4 +129,8 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 
 [原默认CLI验收](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-stock-default-20261024) v1，source14d53ce6，3f16af29原pass。原evaluate_station.py --timing、不传--candidate、无额外私有观察器；实际加载新默认、原244/全部物理/释放回位/479完整视频/worker清理独立通过。76.60sim、47.540process-wall/56.330CPU；P95 14.453/max42.783ms、62慢拍，50Hz仍未过。此单例不作与别的VM旧数的A/B。
 
-默认原件output/loaded-jaw-stock-default-20261024，round85与云版本保留入口。下一项F2bs只核算已定位的同步直接回位CPU尖峰，复用旧CodeBuddy现成批量SAT轴，先_same输入/_return_path完整点集合与原screen，不复跑已淘汰worker-only方案追绿。
+默认原件output/loaded-jaw-stock-default-20261024，round85与云版本保留入口。下一项F2bs只核算已定位的同步直接回位CPU尖峰，复用旧CodeBuddy现成批量SAT轴，先比较同输入、_return_path完整点集合和原screen，不复跑已淘汰worker-only方案追绿。
+
+[同步回位组件](https://www.kaggle.com/code/muqiaoqiao/so101-return-batch-axes-component-20261024) v1：同正式cross已验收输入，完整_return_path三对138→99、127→96、149→100ms，75点的距离/姿态/路径全部逐位相同，原screen准入。原件output/return-batch-axes-factory-20261024/component-v1，含实际挂载来源及必要输入副本，private round86保存接入和独立读回。
+
+下一项原200/200完整物理，线程+stage限定仅控制线程回位用batch轴，冻结worker保持scalar。旧F2k worker-only负结果仍保留；局部约100ms不算50Hz或整程收益，默认仍已采用loaded_jaw_preload。

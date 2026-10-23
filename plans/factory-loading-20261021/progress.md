@@ -1517,3 +1517,11 @@ Next：固化源码后跑正式选项原名义A/B，再据实际收益第二站�
 76.60sim/47.539583process-wall/56.329792CPU，3830完整周期，P95 14.453ms/max42.783ms、62慢拍，完整50Hz仍未过。原planned/measured各244、全部安全/自由物体/抓放/释放/脱离/回位、479/479视频和两个worker清理保持；漂移.211512mm、脱离后0N。原件output/loaded-jaw-stock-default-20261024/v1，runtime及default-selection两个独立读回；私有round85和Kaggle不可变v1可恢复入口。它只验证默认可用，不与旧VM拼累计提速。
 
 Next F2bs：正式cross原输出cycle3734，separate→retreat时134.155ms中controller127.240wall/127.232thread-CPU，是同步_return_path的完整直接路径认证（非OMPL）。Root GPT先准备同原200/200回位快照的全函数小对照，只复用现有CodeBuddy F2k的box_separation_batched到_return_path作用域；现有.005、每点原_arm_valid/距离检查及阈值不改。原F2k worker-only负结果不删，不当新方向已成功；同值/同点三对原screen准入才考虑物理。当前未运行，默认保持已采用loaded_jaw_preload。Knowledge=already_covered；原第20节覆盖组件/完整/真实实现与保留反证，实验明细留项目。不恢复定时器，不向其他对话发消息，不动Mint/其他机器人资源。
+
+## F2bs 回位组件准入，等待原物理
+
+source62af0840，Kaggle return-batch-axes-component v1终态。实际挂载已验收正式cross候选0c829902（source46031fff），记录真实来源，不将kernel_sources当版本锁。重建声明几何与原实际回位输入，复算原完整_return_path；原数据/路径、.005及全部native arm/距离条件不变，唯一差异是既有SAT函数的batch_cross_axes=True。
+
+三对wall138.169→98.729、126.985→95.962、148.977→99.955ms；CPU同向省39.451/30.990/48.638ms。75点的q6/每一距离/pad位姿/最终路径均逐位一致，结果与归档直接路径同值，正常及异常退出方法恢复齐全。原screen=eligible_for_physical_ab/consistent_local_effect；独立protocol_valid=true，只代表局部准入，约100ms仍远超20ms。完整原件output/return-batch-axes-factory-20261024/component-v1，含真实输入副本、mounted-inputs和independent-return-component；云端private不可变v1可恢复来源。
+
+Next：私有round86 physical_probe.py只在控制线程separate→retreat的_return_path范围切换现成batch轴；冻结worker/其他实时查询仍scalar，用return-axes-implementation.json记录真实线程/计数/恢复。先已有200/200原版→候选完整原物理，净收益才已有220/170反序，不动默认。旧F2k worker-only完整负结果保持。原judge/全部244/90sim120wall和回退不改。Root GPT薄接入，数学原作者为F2k实际CodeBuddy/DeepSeek Pro；Knowledge=already_covered，当前组件事实留项目。无新定时器/对话消息/本地机器人占用。
