@@ -306,4 +306,8 @@ MUJOCO_GL=egl /home/muqiao/.cache/so101-graspgenx/upstream/.venv/bin/python expe
 
 两工位反序原物理4/4通过，process84.384→56.037s、79.304→48.649s，CPU及相同阶段/拍数成本均下降，候选反多等待。两处来源门通过，所有释放/脱离/回位与原安全条件保持。P95 18.786/20.759ms，仍104/235拍超过20ms且第二最大拍回退；完整50Hz未通过。实际负载和最大拍反证见[原计划F2al](../../plans/factory-loading-20261021/progress.md)。旧 `smooth_jaw_leg_clock.py` 保留显式对照。
 
-`route_strategies/direction_hint_preallocated.py` 只在该新默认上开已有模型预准备，用于接续原物理复验；当前未采用。初始化和清理成本仍计入完整进程，旧预准备/GC/FK候选不自动叠加。
+### 当前默认：方向提示与已有模型预准备
+
+最新工厂默认 `route_strategies/direction_hint_preallocated.py` 在方向提示父版上只开已有模型预准备。两工位反序原物理4/4通过，整process41.205→36.451s、37.354→32.488s；CPU与相同阶段/拍数成本均下降。三个模型提前复制的131.319/102.612ms和清理仍计入完整进程，原释放估计同步/所有权/回退不变。
+
+启动拍67/108→16/14ms、52/85→12/10ms；P95 12.491/10.349ms，但仍79/12拍超过20ms，完整50Hz未过。旧方向提示父版、smooth、最初baseline均可显式复跑，GC/FK等旧实验不叠加。详见[原计划F2am](../../plans/factory-loading-20261021/progress.md)。不同负载下的F2al/F2am各轮耗时不直接串成累计提速比例。

@@ -1142,3 +1142,15 @@ F2al决定：采用direction_hint_sweep.py为工厂默认，旧smooth_jaw_leg_cl
 新父版nominal运输/分离启动周期62.005/143.672ms，仍是主要controller长尾。根GPT只新增direction_hint_preallocated.py，既有helper/快照/释放几何同步/所有权及失败回退不改，不叠加GC/FK。原F2af/F2ai总成本无益记录保持。复用原round45生产helper/AsyncJob/close三对，在新真实场景最大main gap102.376/116.824/104.967→.481/.684/.632ms，全部独立且同值；但总成本156.145→172.269、184.258→175.153、156.856→205.992ms，有两对反多，严格只按启动延迟收益准入。
 
 Next：固化源码和实际来源后原nominal物理A/B，若启动时延收益真实再第二已有工位反序；记录初始化成本、原规划/整程/释放及所有慢拍，无默认预准备或50Hz承诺。private round52保存Root GPT来源、原生产probe及旧反证。Knowledge=already_covered；新GC经验共享写回pending仍由本根承担，不联系「登录 X」。
+
+F2am实际完成：源3f10adb已提交推送、REST/ls-remote一致，两对终态前未改源/提交。nominal 248099cb-ed98-4a4c-9e31-90048da801be父3aebc84c-a8ab-473e-a0ae-4d96388f2abf→子966c35ca-0a22-4710-b8e1-e194038a7fcc均原pass。process41.205097→36.450521s、CPU49.507729→43.757982s，sim76.00→75.92s；剔除hold/release后同阶段/拍数wall27.504489→24.316226s、CPU27.464449→24.280902s。原运输/分离worker1.539326/.895266→1.681775/.665591s，运输反慢，保持嵌套口径。启动拍67.353/108.481→16.184/13.525ms，准备131.319ms计入总进程；三个独立模型ready/used=true、fallback=null。P95 14.093721→12.490834ms、max108.480933→57.591562ms，但慢拍62→79反退。
+
+已有200/200反序3d27f948-2eb3-4dba-a4ae-37322e10d313，子37cd2052-ea75-4ac5-8ae6-7cc631324b50→父279e0b5b-7e26-453f-964b-64e6029230a5均原pass。父→子process37.353874→32.487697s、CPU44.916011→40.305805s，sim同78.94s；剔除hold/release同阶段/拍数wall25.017726→21.225903s、CPU24.996836→21.178768s。worker1.831364/.931188→1.553582/.804968s；启动拍51.901/84.765→12.197/9.632ms，准备102.612ms完整计入。P95 13.603126→10.349280ms、max84.764967→75.113557ms、慢拍42→12。
+
+原四次抓放/静稳/释放/脱离/回位全过，安全及障碍接触0，free_object、weld/mocap0、完整视频保持。候选释放XY漂移.249938/.258801mm、脱离后0N。两处独立same.scorer/pass=true，四XML/初态/阈值/native/原规划路径相同，仅preallocate_worker_models变化；outside同拍数，不把少等4拍当计算收益。独立4读回齐全。nominal父/子各等待213.415/170.156s，跨站.029/.030s；等待不计process。父版运行中都新增Blender，nominal子load1始8.88高于父5.06，跨站约4.1–4.2；不能保证中途独占或把全部4.8s归因复制调度。
+
+采用direction_hint_preallocated.py为新默认；旧方向提示父版、旧smooth及更早原版保留。根据两处真实启动延迟及同拍数CPU/整程收益采用，不改写旧F2af/F2ai负收益，也不把不同负载两轮绝对秒数串成累计提速比例。默认入口78相关回归通过。完整50Hz未过、20+20未启动。Knowledge=already_covered；保留GC共享经验pending的原owner，不联系「登录 X」。
+
+### F2an 新默认剩余长尾只读归因（待执行）
+
+nominal新候选79慢拍中75为controller主导、4为perception；最慢settle57.592ms中controller52.587ms线程CPU，静稳段无重新规划，不能归因模型复制或单纯OS等待。复用原round46-gc-observation/probe.py，只替换显式新默认/输出目录，保持GC启用、阈值和全部原物理门。单轮带观察器只回答GC事件与实际周期重合，不作无插桩性能或新优化成功。资源释放后再执行，再据因果生成单变量候选；原父/子四轮均已终态，提交不会污染在途对照。

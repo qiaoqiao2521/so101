@@ -277,8 +277,14 @@ Next：用原保存轨迹检查独立_fk只算运动学的输出等值和三对�
 
 - [x] 据F2al实际62/144ms规划启动尖峰，仅重用原preallocate_worker_models；不叠加GC、FK或改评分。
 - [x] 同新场景三对原生产helper/原异步交接独立且同值，最大主线程空档102–117ms→.48–.68ms；总成本不稳定、两对增加，按启动时延收益准入，不当整体加速。
-- [ ] 先原nominal成对；启动时延有真实收益再已有200/200反序，全部原条件保持。若无收益淘汰；不每轮询问用户。
+- [x] 原nominal及已有200/200反序4/4原pass，整程/CPU/两处启动拍均改善，采用direction_hint_preallocated.py，旧父版保留。
+- [x] 记录nominal慢拍62→79反退及跨站42→12改善，完整50Hz未过；默认切换78项入口/原回退检查通过。
 
-Current：默认direction_hint_sweep.py；原smooth_jaw_leg_clock.py保留。GC、preallocation、pose_only_fk均保持显式，完整50Hz未过。F2al四次物理已终态后才改默认；F2am尚待原物理。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
+## F2an 新默认剩余长尾的只读GC观察
+
+- [ ] 原round46观察器仅更换显式新默认及输出位置；不关闭GC、不改阈值、不称为性能A/B。
+- [ ] 资源释放后原nominal一轮，同步原周期与GC事件，确认静稳段/运输段controller尖峰归属，再决定下一候选。
+
+Current：默认direction_hint_preallocated.py；direction_hint_sweep.py及smooth_jaw_leg_clock.py保留。GC/pose_only_fk保持显式关闭，完整50Hz未过。F2al/F2am各4次物理已终态后才改默认；F2an仅只读观察，不先开GC优化。GitHub新账户与3067命令级代理正常，绝不向「登录 X」发消息。
 
 Current：GitHub新账号+命令级3067代理已恢复，ba9bc82远端读回一致，b3e839a已正常推送；CodeBuddy不再阻塞生成。本对话串行使用实际空闲仿真资源，原runner逐case检查，等待单独计量；绝不向「登录 X」发送消息。
