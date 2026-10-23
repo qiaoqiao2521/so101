@@ -111,7 +111,7 @@ def main():
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--cancel-file', type=Path)
     parser.add_argument('--candidate', type=Path,
-                        help='Local route_preferences() source; default: verified leaf_packed.py')
+                        help='Local route_preferences() source; default: verified loaded_jaw_preload.py')
     parser.add_argument('--timing', action='store_true', help='Record exclusive original-loop timings')
     args = parser.parse_args()
     return evaluate(args.station, args.output_dir, args.cancel_file,

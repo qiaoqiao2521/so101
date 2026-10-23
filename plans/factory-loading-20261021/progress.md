@@ -1499,3 +1499,13 @@ source6ef85f70，名义796670f1（6791f1d4/519e72b2）、200/200反序02761778�
 原件output/loaded-jaw-preload-factory-20261024/physical-v1/v2及independent-physical-inventory.json，Kaggle私有so101-loaded-jaw-physical-ab-20261024不可变v1/v2；round83保存准确candidate/physical_probe/read_preload和两个路径指针。正式生产新增loaded_jaw_preload=False，显式route_strategies/loaded_jaw_preload.py只启用此一项；166项相关测试通过，默认float_first_context不变，尚无正式源码物理成绩。
 
 Next：固化源码后跑正式选项原名义A/B，再据实际收益第二站反序；不复用私有覆盖成绩冒充新实现。原judge/模型/C++/90sim120wall/所有回退保持。Root GPT来源，无CodeBuddy代生成声明。Knowledge=already_covered；同第20节范围、反证与真实实现/整程验真，无新增知识页或定时器，不向其他对话发消息。
+
+## F2br 正式两站原物理通过，选择默认并待原CLI验收
+
+46031fff已推送并由REST/ls-remote读回。正式Kaggle v1名义63c9aafd、v2已有200/200反序44f6782a，4/4原pass。实际只选Git策略文件，两侧控制方法均来自Git控制器，不再用私有方法覆盖；唯一实际policy_delta=loaded_jaw_preload。pair/feature/policy/search/startup/physics六项独立读回全部完成，原244、全部安全/自由物体/释放/脱离/回位/完整录像与worker清理保持。
+
+原版→正式候选process wall57.144542→51.039758、54.868112→50.695892s；CPU66.594016→60.786096、64.620440→60.672692s。sim75.80→76.62、78.72→79.74；剔除hold/release CPU36.968793→31.787454（同3264拍）、35.359965→31.077601（3366→3367拍，lower反多1）。两站等待反多，收益不是删等待；规划worker wall没有一致减少，详细分项在原库存，不把重叠时间相加。
+
+完整慢拍127→83、153→101；候选P95 15.916/16.163ms，但最大51.163/134.155ms，完整50Hz仍未通过。全程原native认证110382→66860、117563→70864，初始244与所有间距不变。原件output/loaded-jaw-formal-factory-20261024，Kaggle私有formal-ab不可变v1/v2；round84保存真实入口和两个路径。Root GPT来源。
+
+决定选择loaded_jaw_preload.py为工厂默认，RoutePolicy()和显式父版仍保留。166算法相关测试此前通过；本次默认选择改动另跑44相关测试通过，不累计成210个独立测试。Next：固化新源码后用原evaluate_station.py直接跑名义单回合，--timing但无额外私有观察器、不传--candidate；验证实际默认选择/物理/全周期，不拿它与不同VM旧秒数作A/B。尚未产生此结果，不先记通过。Knowledge=already_covered，原第20节的验真范围与反证规则覆盖；不恢复定时器，不向其他对话发消息，不触碰Mint或他人物理工作。

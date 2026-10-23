@@ -1,10 +1,10 @@
 # 工作站草稿执行适配
 
-## 持物夹爪目标候选（2026-10-24，默认关闭）
+## 已采用持物夹爪目标（2026-10-24）
 
-`route_strategies/loaded_jaw_preload.py` 仅在抬起后用编码器/旧命令锁定一次半残差目标，沿原1.5s hold连续接入，并同步原运输准入端点。原始两类244点闭合预检、全部在线碰撞、模型、90sim/120wall及释放/脱离/回位判据保持。当前默认仍`float_first_context.py`。
+工厂默认选择`route_strategies/loaded_jaw_preload.py`，仅在抬起后用编码器/旧命令锁定一次半残差目标，沿原1.5s hold连续接入，并同步原运输准入端点。原始两类244点闭合预检、全部在线碰撞、模型、90sim/120wall及释放/脱离/回位判据保持。底层`RoutePolicy()`仍为原版，`float_first_context.py`可显式复跑。
 
-私有同逻辑两站4/4原pass且wall/CPU同降；正式源码已通过166相关测试，待原物理复验，不将私有覆盖结果冒充正式实现。完整50Hz仍未过。显式复跑：
+正式源码46031fff在两站反序4/4原pass：process wall57.145→51.040、54.868→50.696s，CPU同降。候选sim反多.82/1.02s，原安全与完整回位不改；相关166测试通过，完整50Hz仍未过。默认选择已切换，下一项是不带额外观察器的原CLI单回合验收。显式复跑：
 
 ```bash
 python experiments/colab-twin/evaluate_station.py \
@@ -333,8 +333,8 @@ F2am采用的默认父版 `route_strategies/direction_hint_preallocated.py` 在�
 
 同源码两工位反序4/4原物理通过，process32.330→30.717s、37.052→33.466s；剔除hold/release后，两站各自相同阶段/拍数CPU21.108→20.245s、24.171→21.858s。P95 11.447→10.490ms、14.047→11.947ms，慢拍14→12、39→30，完整50Hz仍未过。实际负载、所有规划/释放与反证见[原计划F2ar](../../plans/factory-loading-20261021/progress.md)，不将不同轮次的绝对秒数相加作累计提速。GC延后与本机编译候选未采用。
 
-当前工厂默认采用[浮点优先上下文](route_strategies/float_first_context.py)：在[完整紧凑状态发布父版](route_strategies/compact_status_json.py)上只增加 `float_first_context=True`。单遍快照先判断浮点叶，再判断容器；全部字段、float64位编码、有限值拒绝、复制隔离和原错误保持。异步绑定仍走原路径。底层 `RoutePolicy()` 对应选项仍默认false，父版和[初始原版](route_strategies/baseline.py)可通过 `--candidate` 复跑。
+2026-10-23曾采用[浮点优先上下文](route_strategies/float_first_context.py)：在[完整紧凑状态发布父版](route_strategies/compact_status_json.py)上只增加 `float_first_context=True`。单遍快照先判断浮点叶，再判断容器；全部字段、float64位编码、有限值拒绝、复制隔离和原错误保持。异步绑定仍走原路径。底层 `RoutePolicy()` 对应选项仍默认false，父版和[初始原版](route_strategies/baseline.py)可通过 `--candidate` 复跑。
 
 2026-10-23两已有工位反序共4/4原物理通过，原planned/measured各244点及所有抓放、释放、脱离、回位与安全门保持。两站进程47.375→42.096s、42.849→38.174s；各自同3264/3366拍CPU30.123→27.007s、28.157→24.707s。原同量组件三对也更快，但不将完整秒数差全部归于分支顺序，不合并不同负载轮次作累计提速。第二工位仍有54拍超20ms，完整50Hz未通过，详见[原计划F2av](../../plans/factory-loading-20261021/progress.md)。实时status继续紧凑编码，归档文件继续原缩进。
 
-Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。中点搜索候选的三组成对原物理共6/6通过，但方块X+5mm组整程wall/CPU略回退，保持显式可选，当前默认仍为浮点优先上下文。完整50Hz仍未过，不开启20+20评测。
+Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。中点搜索候选的三组成对原物理共6/6通过，但方块X+5mm组整程wall/CPU略回退，保持显式可选；此轮当时默认仍为浮点优先上下文。完整50Hz仍未过，不开启20+20评测。

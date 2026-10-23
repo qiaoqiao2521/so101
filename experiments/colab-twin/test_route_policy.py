@@ -147,9 +147,11 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertTrue(recommended.refresh_leg_age)
         self.assertTrue(recommended.direction_hint_sweep)
         self.assertTrue(recommended.preallocate_worker_models)
+        self.assertTrue(recommended.loaded_jaw_preload)
         self.assertEqual(source['entrypoint_path'], str(DEFAULT_SOURCE.resolve()))
         original, source = load_route_policy(BASELINE_SOURCE)
         self.assertFalse(original.leaf_packed)
+        self.assertFalse(original.loaded_jaw_preload)
         self.assertEqual(original, RoutePolicy())
         self.assertEqual(source['entrypoint_path'], str(BASELINE_SOURCE.resolve()))
 

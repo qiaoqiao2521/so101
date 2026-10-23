@@ -122,3 +122,7 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [持物目标原物理](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-physical-ab-20261024) v1名义原版→候选、v2已有200/200候选→原版，source6ef85f70，4/4原pass。wall62.631→56.097、61.430→56.592s，CPU同向；候选sim反多.82/1.06s，不是少等待。剔除hold/release仍少约5.95/5.44s主线程CPU，第二站多1拍lower。原完整244/模型/评分/全部碰撞及自由物体/释放/脱离/回位保持，实际力矩持物阶段均原−.15饱和。
 
 完整慢拍128→138、165→143，50Hz仍未过；运输worker wall未加速，不能把总收益叫规划提速。证据output/loaded-jaw-preload-factory-20261024/independent-physical-inventory.json，私有round83及云端版本可恢复。正式default-off策略现已接入，166相关测试通过；下一轮直接选正式loaded_jaw_preload.py与原float_first_context.py，绑定新源码、移除私有控制器覆盖，不抢先切默认。
+
+[正式持物策略](https://www.kaggle.com/code/muqiaoqiao/so101-loaded-jaw-formal-ab-20261024) v1/v2，source46031fff，两站反序4/4原pass。实际选Git策略文件、没有私有控制器覆盖，唯一选项差异loaded_jaw_preload。wall57.145→51.040、54.868→50.696s，CPU同向；候选sim反多.82/1.02s，原244/所有物理安全和回退保持。完整慢拍127→83、153→101，最大仍51.163/134.155ms，完整50Hz未过。
+
+正式结果在output/loaded-jaw-formal-factory-20261024/independent-physical-inventory.json，round84保留CLI及来源。工厂现选择loaded_jaw_preload.py为默认，显式父版与RoutePolicy()保留；44默认切换相关测试通过。下一项原CLI不传--candidate、不加私有update/force观察器的单回合，尚未有结果，不先记通过或与旧VM串累计提速。
