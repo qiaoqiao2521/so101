@@ -321,3 +321,5 @@ F2as私有实测完成：从已采用候选的approach/close/transport/release/r
 F2as正式边界：只有布尔_arm_valid选择方向复用，ConservativeCollisionChecker默认3位置summary调用保持，所有需要数值下界的路径不选新入口。索引不是证书，原C仍逐帧全重新证明且失败/不支持时走原C搜索；observer或缺符号走原Python/ABI，不能跳过用户安装的观察。240回归通过，但正式组件和原物理尚未运行；NaN字典测试断言错误的原日志保留，不能将它描述成算法失效或通过。
 
 F2as正式组件移除了私有Python observer，以真实生产_arm_valid开关重测500实际q6；三对wall省28.887/26.204/33.142ms，CPU同向，原screen eligible。只有布尔与最终FK Data等值，未宣称原数值下界/方向/提示同位；尚需原物理证明任务与总成本收益。等待2794.826s单独记，不能作为算法提速。
+
+F2as名义原物理2/2pass且原评分/244点/所有成功条件保持，但去掉hold/release后同3264拍CPU23.119→23.672s，完整成本收益未被证实。拒绝默认晋级，不追加第二工位；候选中途新增Blender的干扰与worker时钟改善均保留，不据此删负例。F2at据原profile的482次状态JSON写入与实际callback慢拍，仅筛选现有stdlib紧凑编码，数据/发布频次/原子替换/NaN拒绝不变，生产尚未修改。
