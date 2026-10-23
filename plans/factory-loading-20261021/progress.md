@@ -910,3 +910,29 @@ nominal父cc92c707-da81-48c8-a25a-a96a739522f0→子f3b7fb70-9e56-4abd-b06a-0e67
 Next：从本轮余下close/release超时拍核验期望夹爪目标的一拍变化，优先评估复用既有dwell时长的连续目标轨迹；planned/measured完整闭爪扫掠和实际下发弦仍须全部检查，任何新策略先由原CLI单变量生成并保留原stage等待/超时/碰撞/释放。此方向尚未实施，不混入本次采用。
 
 F2ab Knowledge closeout：pending。既有Wiki/ROS2 与 FishBot第20节与开发知识入口均有其他未提交工作，本轮不并发改写共享页。新增可复用结论为“C ABI批量化仍须保留原Python FK错误作用域、首失败前缀与已提交hint；FatalError不是RuntimeError，可选计数失败不得改物理结果”。已在本findings F2ab留下具体源和实测。owner=研究根Codex串行整合；最短回读为sweep_batch.py及保护版16边界报告。前文already_covered只对应F2aa旧原则，不冒充本新增知识已写回。
+
+### F2ac 连续夹爪目标与冻结预取（2026-10-23，已采用）
+
+F2ab有效工作已本地提交e857f6e；本轮命令级新账户两次api/user均HTTP401，gh auth status明确qiaoqiao2521 token invalid。目标仓库仍qiaoqiao2521/so101，不切旧账户/改全局配置。推送pending，须恢复该账户既有登录后正常推送；本地仿真继续。
+
+对F2ab两轮candidate原轨迹/时钟回读：close与release各331拍，目标一拍分别跳-.485/+.485rad，按原每拍前状态到reference重建完整采样，首次分别244/191点。nominal两阶段总41478点、133慢拍；200/200总41500点、163慢拍。不是新插桩或反事实物理。原证据私有round40-jaw-dwell/parent-tail-audit.json。
+
+原CLI39请求仅复用既有6s dwell与minimum-jerk作连续夹爪目标，所有完整闭爪/实际下发弦检查保持，不改等待/阈值/评分/默认或混入refresh_leg_age。首稿给采样器传shape(2,)导致中点AxisError，已保存v0源和v0-rejection.json并反馈同一native会话修正；未接生产/物理。该行为候选不伪造output-equivalent局部门，须先状态机/实际弦碰撞拒绝，再原物理A/B及第二工位反序。
+
+首对nominal原父97549ec4-c4eb-4d15-9ba2-2ccf0cbabf53完整pass：75.00sim/59.104937process；子e3c25fbb-984b-4b23-8a31-55ed2608cee9在65.20sim因controller:separation_context_changed原判fail，虽已真实夹起搬至盘内，release_audit仍false，不把44.515315process/P95 18.251ms当收益。四XML/初态/原裁判/释放阈值均同值；原件output/jaw-dwell-factory-20261023/e9a89455-5150-4807-aef4-f955e1dd86dc/。独立reader最初把失败报告缺失controller_done及worker字段timing读错，错误和旧脚本留证；新私有读回缺失保留None，原判fail不变。
+
+原绑定明确含last_command：65.18s预取快照捕获.449794922，当前拍又下发.451484822，次拍正确拒绝，变化.001689900rad。已存binding-failure-cause.json并反馈原CLI；修正只允许选中新策略且“本拍reference与上一已发命令都精确到最终jaw”后预取，原q>=.45/全绑定检查/6s+.6s切换与90sim120wall保持。未删除绑定字段或放宽物理评分；修正版需重新原物理对照，尚未采用。
+
+原CLI41仅加入稳定jaw的选中分支，完整_separation_binding不改。首个新增fixture用.46→.5恰落原采样浮点间距拒绝边界，161项中1项未过，虽然后接git diff命令总exit0，也按失败记录。local-initial-failure.json保存逐拍证据；只改fixture到.4511/.4491真实门边两侧，不改原采样器/阈值。重新161项全部通过，含前6s不预取、首个最终命令不预取、仍须实测>=.45、稳定后启动及次拍真实完整绑定通过。修正后新nominal父→子原物理对照298eeb34-35de-48f9-96fd-c0342f69d2bb在途；历史失败不覆盖。
+
+修正版nominal父ba40807d-4fda-40bc-96d6-81b4b2accb2c→子2e4657ee-407f-418d-b291-fc7030640e32均原pass，全process57.097628→52.463659s，CPU65.036809→60.359784s。sim74.98→75.42，hold阶段不变，子release反多22拍（331→353），非等待总wall46.939957→42.261778s/线程CPU46.644664→41.965861s，controller非hold34.910749→29.717537s，不能声称各阶段拍数完全相同。close仍331拍，原29553检查点→6210，release11925→4661，因实际目标变近而非抽稀；原planned/measured_closure各244点、.002rad保持。每拍jaw最大变化.485→.00303116rad，首拍0；P95 26.592508→17.979371ms，超20ms290→102，但最大167.737283→173.763191ms回退。原抓放/释放/脱离/回位、安全及4XML/初态/评分/阈值均通过，释放漂移.262046mm、脱离后0N。worker separation .806583→.842661s更慢，原等待与失败均保留。
+
+第二既有200/200工位在aeecfa9f-0941-4b62-b369-8fba9a387bba按子→父反序运行，同源码无改动。已完成的子原pass；父未终态前不宣称跨工位收益或切默认。主次pair均保留source/argv/独立完整与jaw/nonhold读回。
+
+完成的nominal余下最大3拍均为transport：173.763/148.316/127.600ms，线程CPU接近，reference步进.780291/.722037/.618851rad，直接复现既有CLI35同名换腿age缺陷。旧summary父版CLI35跨工位收益不一致，仍不改写淘汰晋级记录。已将本轮改变后的batch+smooth基线及新实测瓶颈交同原CLI，只生成私有单字段refresh_leg_age=True组合候选，等F2ac第二工位结束再决定接续。未修改物理进行中源码或冒称50Hz。
+
+F2ac第二工位已终态：反序子7b358882-2a0e-4d58-afcf-7783c42ee5b7→父870481af-0f46-43af-a65d-5b7e0a1515fc均原pass。父→子全process64.256692→59.682278s，CPU73.064543→67.901262s，sim77.34→78.04，子release多32拍、hold多3拍；nonhold wall52.705456→48.257982s，线程CPU52.312687→47.802945s，controller39.274275→34.648054s。close仍331拍，29553原采样→6210；release331→363拍，11947→4680原采样。P95 27.328608→23.282950ms，超20ms633→537，最大238.731780→209.864040ms；此工位50Hz仍不通过。worker transport1.804990→2.201944s更慢、separation1.138487→1.142434s略慢，不能称规划加速。原释放漂移.268190mm、脱离后峰力.003687N在原.02N界内，不能称零力。
+
+独立四XML/初态/目标/裁判/原释放门均同值，四轮原抓放/释放/脱离/回位pass；native-policy-readback确认原C kernel/lib/flags/python_summary同值，父smooth=false、子true、双方clock=false。生产默认source采用smooth_jaw_dwell.py，RoutePolicy()/baseline及batch父版均保留。默认/执行器/原失败透传/报告69项通过；未机械追加相同控制路径的第五完整回合。既有累计实验预算仍无上限，原90sim120wall保持。
+
+F2ac Knowledge：pending，owner=研究根Codex。可复用新增为“原先稳定的下发命令改成连续轨迹后，异步快照若绑定last_command，就必须等待终点稳定再冻结；不能删除绑定掩盖错误”。具体来源为首个真实失败、binding-failure-cause.json、原CLI41及次拍真实完整绑定回归。既有共享Wiki仍有并行未提交工作，沿用F2ab串行整合归属，不另建知识台账；没有声称已写回。

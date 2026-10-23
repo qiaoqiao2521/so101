@@ -179,3 +179,13 @@ CLI30排序/二分种子节点界表局部成本不一致，未应用生产。CL
 - 批量统计只属于本次选用的运行报告，不能因import一个模块就改变原native库元数据；可选诊断失败不得改写物理结果。默认入口与原报告/loader兼容77项检查通过。
 
 采用源route_strategies/batch_configuration_sweep.py；原版与summary_fast父版保留，不叠加未晋级的换段修复。原两pair独立读回及非等待/规划/视频时钟在output/batch-sweep-factory-20261023/，原CLI和复跑在私有round38-batch-sweep、round39-protected-batch。
+
+## F2ac 连续开合的可证伪假设（2026-10-23）
+
+- 两轮真实batch轨迹close/release各331拍，首指令跳-.485/+.485rad，实际弦首拍分别244/191点。两阶段累计41478/41500采样点，仍133/163拍超过20ms。来源round40-jaw-dwell/parent-tail-audit.json；这些是按原前状态和原reference重算采样量，不是新物理或当时ABI插桩。
+- 物理夹持后jaw约.121rad而闭爪命令.015rad，不能把两者混为一谈。连续策略从上一条命令衔接，使用既有6s dwell和原minimum-jerk；实际q到本拍目标继续原完整碰撞检查，整闭爪预检查244点保持。
+- 原CLI39首稿把两1D点写成shape(2,)，实际中点调用AxisError，未接生产；同native会话CLI40仅修正为shape(2,1)，错误源和回执保留。新bool默认false、不叠加换段计时修复，84项相关检查通过。运动指令有意改变，仍须原抓放/接触/释放/脱离/回位及延迟实测，不由静态或局部测试认定收益。
+
+- 首次真实原评测因separation_context_changed失败：预取冻结上一jaw命令.449795，而同拍改发.451485，原last_command绑定正确拒绝。CLI41只要求连续分支的本拍reference与上一已发命令均到精确最终jaw才预取，原实测>=.45/完整绑定/6+.6s与物理门保持；没有移除保护。失败原件及初始诊断脚本错误均保留。
+- 修正后两工位反序4轮原物理pass，全process57.097628→52.463659s、64.256692→59.682278s，CPU和nonhold成本都降；子release反多22/32拍，第二hold多3拍，不能算少等待。原planned/measured各244点，实际弦close采样29553→6210来自目标距离缩短，密度和全路径检查保持。
+- 连续开合已采用，原版及batch父版显式保留。P95 17.979/23.283ms，超20ms102/537，最大173.763/209.864ms，完整50Hz未过。第二子释放峰力.003687N在原界内，两个worker耗时并未更快。准确argv、source快照与独立指标在output/jaw-dwell-factory-20261023/{298eeb34-35de-48f9-96fd-c0342f69d2bb,aeecfa9f-0941-4b62-b369-8fba9a387bba}/；原失败为e9a89455-5150-4807-aef4-f955e1dd86dc。

@@ -391,9 +391,37 @@ class VisualGraspController:
         self.stage_started = float(elapsed)
 
     def _set_dwell(self, stage, q5, jaw, elapsed, duration):
+        # Capture command jaw continuity before the dwell target changes. The
+        # smooth jaw reference ramps from this command, never the measured jaw
+        # (contact separates the measured jaw from the issued setpoint).
+        self.jaw_dwell_start = float(self.last_command[5])
         self.stage = stage
         self._set_motion([q5, q5], jaw, elapsed)
         self.duration = duration
+
+    def _jaw_reference(self, age):
+        """Return the jaw setpoint for this tick.
+
+        Default is the exact original setpoint. When smooth_jaw_dwell is
+        enabled and the stage is a close/release dwell, ramp the jaw from the
+        captured command continuity value to the dwell target over the dwell
+        duration, reusing sample_minimum_jerk. Terminal age returns the exact
+        dwell target; nonpositive age returns the exact captured start.
+        """
+        policy = getattr(self, 'route_policy', None)
+        if not (policy is not None
+                and bool(getattr(policy, 'smooth_jaw_dwell', False))
+                and self.stage in ('close', 'release')):
+            return self.jaw
+        if age <= 0:
+            return self.jaw_dwell_start
+        duration = max(self.duration, 1e-9)
+        if age >= duration:
+            return self.jaw
+        ramped = sample_minimum_jerk(
+            np.array([[self.jaw_dwell_start], [self.jaw]], dtype=float),
+            age / duration)
+        return float(ramped[0])
 
     def _set_continuous_motion(self, points, elapsed):
         """Preserve holding bias while planning in achieved-configuration space.
@@ -1199,7 +1227,7 @@ class VisualGraspController:
                     age = elapsed - self.stage_started
                 elif self.stage != previous_stage:
                     age = 0.
-            self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self.jaw]
+            self.reference = np.r_[sample_minimum_jerk(self.points, age/max(self.duration, 1e-9)), self._jaw_reference(age)]
             command = self.reference.copy()
             if self.stage == 'release' and self.separation_live_ready:
                 # Keep the original holding setpoint while querying achieved
@@ -1246,7 +1274,13 @@ class VisualGraspController:
                     command = self.reference.copy()
                     self.last_sweep_report = self.transport_events[-1]['first_command_guard']['configuration_sweep']
             # Prefetch changes no release motion or switching deadline.
-            if self.stage == 'release' and q6[5] >= .45 and arm_arrived:
+            # A continuous jaw command must already be at its final value when
+            # the separation snapshot is taken: the binding includes last_command,
+            # and an evolving command invalidates it on the next tick.
+            stable_jaw = (
+                not bool(getattr(getattr(self, 'route_policy', None), 'smooth_jaw_dwell', False))
+                or (self.reference[5] == self.jaw and self.last_command[5] == self.jaw))
+            if self.stage == 'release' and q6[5] >= .45 and arm_arrived and stable_jaw:
                 if self.separation_job is None:
                     self._start_separation(q6, elapsed)
                 if self._poll_separation(q6, elapsed, admit=release_ready):

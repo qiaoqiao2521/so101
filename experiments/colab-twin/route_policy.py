@@ -23,6 +23,7 @@ class RoutePolicy:
     summary_fast: bool = False
     refresh_leg_age: bool = False
     batch_configuration_sweep: bool = False
+    smooth_jaw_dwell: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -63,6 +64,8 @@ class RoutePolicy:
             raise ValueError('Motion leg clock refresh must be a boolean')
         if not isinstance(self.batch_configuration_sweep, bool):
             raise ValueError('Configuration sweep batching must be a boolean')
+        if not isinstance(self.smooth_jaw_dwell, bool):
+            raise ValueError('Continuous jaw dwell selection must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
@@ -79,7 +82,7 @@ class RoutePolicy:
 
 DEFAULT_ROUTE_POLICY = RoutePolicy()
 BASELINE_SOURCE = Path(__file__).parent/'route_strategies/baseline.py'
-DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/batch_configuration_sweep.py'
+DEFAULT_SOURCE = Path(__file__).parent/'route_strategies/smooth_jaw_dwell.py'
 
 
 def load_route_policy(path=None):

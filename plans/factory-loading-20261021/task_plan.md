@@ -188,3 +188,15 @@ Next Step：核算批量执行原FK与原逐姿态证书的最小接入成本，
 - [x] 采用batch_configuration_sweep.py为工厂默认；77项默认/报告/原loader检查通过，保留原版和summary_fast父版。
 
 Next Step：依据本轮余下close/release超时拍核验夹爪目标变化，再给原CLI一个连续目标策略；未实施，不降采样或改原门槛。当前P95 19.14/22.30ms且168/231拍超20ms，完整50Hz仍未通过。
+
+## F2ac 既有时长内的夹爪目标连续性
+
+- [x] 两工位实际close/release指令均一拍跳.485rad，首次原弦244/191点，133/163慢拍；完整扫掠仍保留。
+- [x] 原CLI39首稿shape错误保留并反馈；CLI40修正，显式smooth_jaw_dwell默认关闭，84项相关回归通过。
+- [x] 首对原物理因冻结last_command被演进指令改变而失败，保留并反馈CLI41，完整绑定保持；161相关回归通过。
+- [x] 修正后同一nominal工位父batch→子连续目标原物理2/2pass，wall/CPU/nonhold均下降。
+- [x] 同源码既有200/200工位反序原物理2/2pass，wall/CPU/nonhold也下降；采用smooth_jaw_dwell.py，父版及原版保留。
+
+本候选有意改变开合目标，不能伪造逐位等值screen；所有完整闭爪预检/每拍实际弦、原6s+.6s等待、90sim120wall和评分保持。GitHub新账户token失效，e857f6e先本地保留，恢复登录后正常推送，不切旧账户。
+
+Next Step：以本轮新基线复验既有refresh_leg_age，仅单字段改变。新实际最大三拍对应运输目标.62–.78rad跳变；旧summary父版的性能不一致结论保留，不无依据重测旧源码。新候选继续原物理两工位反序，未通过前不切默认。完整50Hz仍未过。

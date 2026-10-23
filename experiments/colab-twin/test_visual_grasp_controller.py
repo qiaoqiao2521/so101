@@ -363,6 +363,110 @@ class VisualControllerTests(unittest.TestCase):
         self.assertFalse(result['controller_completion_is_task_success'])
         np.testing.assert_allclose(c.payload_rotation, np.eye(3))
 
+    def test_continuous_jaw_uses_command_endpoints_and_original_dwell(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        for stage, start, goal in (('close', .5, .015), ('release', .015, .5)):
+            with self.subTest(stage=stage):
+                c.last_command[5] = start
+                c._set_dwell(stage, c.down, goal, 12., 6.)
+                self.assertEqual(c.stage_started, 12.)
+                self.assertEqual(c.duration, 6.)
+                self.assertEqual(c._jaw_reference(0.), start)
+                self.assertEqual(c._jaw_reference(6.), goal)
+                self.assertEqual(c._jaw_reference(6.6), goal)
+                values = np.array([c._jaw_reference(t) for t in np.arange(301)*.02])
+                direction = np.sign(goal-start)
+                self.assertTrue(np.all(np.diff(values)*direction >= 0))
+                self.assertLessEqual(float(np.max(np.abs(np.diff(values)))),
+                                     1.875*abs(goal-start)/6*.02+1e-12)
+                self.assertEqual(c._jaw_reference(3.), c._jaw_reference(3.))
+                self.assertAlmostEqual(c._jaw_reference(3.), (start+goal)/2)
+
+    def test_original_jaw_step_and_other_stages_are_preserved(self):
+        from route_policy import RoutePolicy
+        for enabled, stage in ((False, 'close'), (True, 'hold')):
+            with self.subTest(enabled=enabled, stage=stage):
+                c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=enabled))
+                c.last_command[5] = .5
+                c._set_dwell(stage, c.down, .015, 0., 6.)
+                for age in (0., 1., 3., 6.):
+                    self.assertEqual(c._jaw_reference(age), .015)
+
+    def test_continuous_close_keeps_full_measured_closure_precheck(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        c.target_frozen = True
+        q = np.r_[c.down, .5]
+        c.last_command = q.copy()
+        c.stage = 'descend'
+        c._set_motion([c.down, c.down], .5, 0.)
+        result = c.update(q, np.zeros(6), c.duration+.6)
+        self.assertEqual(result['stage'], 'close')
+        self.assertEqual(result['status'], 'running')
+        self.assertEqual(result['command'][5], .5)
+        self.assertEqual(c.sweep_reports[-1]['stage'], 'measured_closure')
+        self.assertEqual(c.sweep_reports[-1]['checked_states'], 244)
+        self.assertEqual(c.last_sweep_report['checked_states'], 2)
+
+    def test_continuous_jaw_still_rejects_collision_inside_actual_command_chord(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        c.target_frozen = True
+        q = np.r_[c.down, .5]
+        c.last_command = q.copy()
+        c._set_dwell('close', c.down, .015, 0., 6.)
+        checked = []
+        def validity(pose, **kwargs):
+            checked.append(np.asarray(pose).copy())
+            return {'valid': not .36 < pose[5] < .37}
+        c.checker.evaluate.side_effect = validity
+        result = c.update(q, np.zeros(6), 3.)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['failure_reason'], 'current_pose_command_chord_invalid')
+        self.assertTrue(any(.36 < pose[5] < .37 for pose in checked))
+        self.assertEqual(c.last_sweep_report['jaw_resolution_rad'], .002)
+        np.testing.assert_array_equal(c.last_command, q)
+
+    def test_continuous_close_does_not_shorten_original_encoder_wait(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        c.target_frozen = True
+        c._set_dwell('close', c.down, .015, 0., 6.)
+        q = np.r_[c.down, .12]
+        self.assertEqual(c.update(q, np.zeros(6), 6.)['stage'], 'close')
+        self.assertEqual(c.update(q, np.zeros(6), 6.61)['stage'], 'lift')
+
+    def test_continuous_release_prefetch_requires_open_jaw_and_stable_bound_command(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(smooth_jaw_dwell=True))
+        c.target_frozen = True
+        c.last_command = np.r_[c.down, .015]
+        c._set_dwell('release', c.down, .5, 0., 6.)
+        def start(q6, elapsed):
+            c.separation_request_binding = c._separation_binding()
+            c.separation_job = Mock()
+        c._start_separation = Mock(side_effect=start)
+        c._poll_separation = Mock(return_value=False)
+        result = c.update(np.r_[c.down, .12], np.zeros(6), 3.)
+        self.assertEqual(result['status'], 'running')
+        self.assertAlmostEqual(result['command'][5], .2575)
+        c._start_separation.assert_not_called()
+        c._poll_separation.assert_not_called()
+        result = c.update(np.r_[c.down, .4511], np.zeros(6), 4.)
+        self.assertEqual(result['stage'], 'release')
+        c._start_separation.assert_not_called()
+        c.update(np.r_[c.down, .4511], np.zeros(6), 6.)
+        c._start_separation.assert_not_called()  # Previous issued command still evolves.
+        c.update(np.r_[c.down, .4491], np.zeros(6), 6.02)
+        c._start_separation.assert_not_called()  # Original measured-open gate remains.
+        c.update(np.r_[c.down, .4511], np.zeros(6), 6.04)
+        c._start_separation.assert_called_once()
+        c._poll_separation.assert_called_once()
+        result = c.update(np.r_[c.down, .4511], np.zeros(6), 6.06)
+        self.assertEqual(result['status'], 'running')
+        c.separation_job.reject.assert_not_called()  # Real full binding passes next tick.
+
     def test_uncertain_payload_envelope_preserves_point_two_mm_margin(self):
         c = self.controller()
         c.payload_relative = np.zeros(3)

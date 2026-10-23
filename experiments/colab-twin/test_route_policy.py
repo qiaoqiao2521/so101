@@ -54,6 +54,8 @@ class RoutePolicyTests(unittest.TestCase):
             RoutePolicy(refresh_leg_age=1)
         with self.assertRaises(ValueError):
             RoutePolicy(batch_configuration_sweep=1)
+        with self.assertRaises(ValueError):
+            RoutePolicy(smooth_jaw_dwell=1)
         with self.assertRaises(FrozenInstanceError):
             RoutePolicy().separation_steps = 1
 
@@ -204,6 +206,18 @@ class RoutePolicyTests(unittest.TestCase):
         parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/seed_bound_direct.py')
         self.assertFalse(parent.summary_fast)
         self.assertTrue(parent.seed_bound_direct)
+
+    def test_continuous_jaw_is_adopted_with_unchanged_batch_parent(self):
+        child, _ = load_route_policy(Path(__file__).parent/'route_strategies/smooth_jaw_dwell.py')
+        parent, _ = load_route_policy(Path(__file__).parent/'route_strategies/batch_configuration_sweep.py')
+        self.assertTrue(child.smooth_jaw_dwell)
+        self.assertFalse(parent.smooth_jaw_dwell)
+        self.assertTrue(load_route_policy()[0].smooth_jaw_dwell)
+        self.assertFalse(child.refresh_leg_age)
+        self.assertEqual({key:value for key,value in child.preferences().items()
+                          if key != 'smooth_jaw_dwell'},
+                         {key:value for key,value in parent.preferences().items()
+                          if key != 'smooth_jaw_dwell'})
 
     def test_evaluator_forwards_actual_choices_and_keeps_physical_failure(self):
         with tempfile.TemporaryDirectory() as directory:
