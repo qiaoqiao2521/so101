@@ -244,6 +244,11 @@ class VisualGraspController:
             from sweep_batch import make_validator
             self.batch_sweep_validator = make_validator(
                 self.checker, direction_hints=self.route_policy.direction_hint_sweep)
+        self.transport_prefix_validator = None
+        if self.route_policy.transport_refinement_prefix:
+            from sweep_batch import make_validator
+            self.transport_prefix_validator = make_validator(
+                self.checker, direction_hints=False, refinement_prefix=True)
         self.initial_q = finite_vector(initial_q6, 6, 'initial_q6')
         self.last_command = self.initial_q.copy()
         self.reference = self.initial_q.copy()
@@ -450,9 +455,14 @@ class VisualGraspController:
         invocation = ConfigurationSweepInvocation(
             start, end, binding=binding,
             arm_resolution_rad=.005, jaw_resolution_rad=jaw_resolution, max_samples=4096)
+        batch = getattr(self, 'batch_sweep_validator', None)
+        if purpose == 'online_chord' and getattr(self, 'stage', None) == 'transport':
+            prefix = getattr(self, 'transport_prefix_validator', None)
+            if prefix is not None:
+                batch = prefix
         invocation.execute(
             lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'],
-            batch_valid=getattr(self, 'batch_sweep_validator', None))
+            batch_valid=batch)
         return invocation.consume(self._sweep_binding(start, end, purpose))
 
     def _sweep_binding(self, start, end, purpose):

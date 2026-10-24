@@ -423,3 +423,11 @@ Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。�
 等待期间全部碰撞、244点扫掠、持物保护和物理时钟继续运行。原hold阶段大约有7.4仿真秒可接续，墙钟窗口可能更短；超时仍是原 `encoder_stage_timeout`。这不是无限暂停，继续不会重置90秒仿真／120秒墙钟。
 
 等待姿态本身不证明抓住。网页单列原 `skill_evidence.grasp` 证据；该证据只观察，不给控制器提供物体真值。手动继续也不代表任务完成，仍须原释放、脱离和回位通过。当前切片不等于六技能行为树或同世界重抓。
+
+### 显式运输前缀开发候选
+
+`route_strategies/loaded_jaw_transport_prefix.py` 继承detail-reuse父候选，只在transport的online_chord启用同owner保守批量前缀。未获证书时完整回退；闭爪244点、1mm及原物理判据保持。当前仅mock／协议回归通过，云组件和完整物理待验；不是默认策略。
+
+```bash
+python evaluate_station.py --station scenarios/workspace-station/fixed-x-minus20.json --candidate route_strategies/loaded_jaw_transport_prefix.py --output-dir output/transport-prefix-dev --timing
+```

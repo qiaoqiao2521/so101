@@ -205,3 +205,9 @@ round122原全弦筛选与三对已终态，结果见[m1b记录](m1b-refinement-
 round125已实测77个arena指针为NULL，102真实NumPy数组＋77 NULL标记组成179比较条目；前轮11个争议getter在native NULL时另行分配临时NumPy数组。不能把临时内容当MjData状态，也不能整体略过efm字段。保持私有候选不变后5functional和7组云内状态比较通过，详细证据与同版源码见[m1b结果](m1b-refinement-details-results.md)。根179项、独立414项读回通过；原数组bytes未归档，不称下载后独立字节验证。
 
 同VM三对wall／CPU中，运输两工位中位wall比分别.734709／.720192；close三对全慢。snapshot／rollback成本已计入，支持继续显式transport-only生产适配，不支持全阶段开启或默认晋级。原1mm、285对／244、90sim120wall和原物理裁判保留；未新增Station物理、连续域、20＋20或完整50Hz成绩。外部CLI后续仅AGY／Zcode，已知耗尽的Qoder／CodeBuddy及停用dsh不试探；本轮Zcode超时不计审核成功。
+
+## 正式运输前缀的作用域与首次异常
+
+新增选项仅供transport online_chord，close仍完整原链，不能将前轮close负收益隐藏为全阶段优化。正式实现比私有原型增加逐FK binding／generation核验，成本须重新测量。首次FK异常与binding变化可能同时发生；后者不能优先触发回退，否则一次性异常会被第二次成功执行抹掉。已修复优先级并独立复现，83项本地协议回归通过；尚无本轮实际模型／完整物理成绩。
+
+round126私有目录：`/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round126-production-transport-prefix/`。复用round120原runtime与component slot，实际有效数组bytes压缩归档，压缩在测量区间外；不再只保存云内比较回执。AGY90s超时保留，不能称外部审核通过。最新CLI约定以本轮AGENTS为准：Qoder／CBC每批调用前查usable，ZCode用edit，DSH暂停；旧文中的永久禁用描述仅属当时状态。

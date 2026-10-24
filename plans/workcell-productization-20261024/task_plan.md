@@ -161,3 +161,7 @@ round122全弦组件已结束：六组lift／hold／transport三对更快，但s
 round124已定位为arena字段差异；当前下一动作是同版原生NULL观察，而不是删字段、放宽数据比较或直接补训练。原私有候选保持逐字相同；实际NULL／有效数组、初始状态与functional核准后才恢复原7组组件计时。
 
 round125原生NULL已实测确认：102有效数组＋77 NULL标记、5functional和7组云内等价通过；运输两工位三对快，close三对全慢。下一动作转为薄的显式transport-only生产选项，默认关闭且原scalar回退保持。先补生命周期／错误注入及压缩原数组，再原Station反序物理；私有源码变换与诊断观察器不进热路径，现有默认不变。
+
+## 2026-10-25 接续：M1b 运输专用前缀
+
+正式transport-only薄适配与83项mock回归完成。下一步固定本次提交，先Kaggle正式组件等值／首次失败／实际数组归档和两工位三对成本；仅组件准入后接原Station两工位反序与中心回归。原1mm／285对／244点、90sim120wall及全部回退不变，默认仍loaded_jaw_preload；本批尚未运行。详见[进度](progress.md)和[m1b结果](m1b-refinement-details-results.md)。

@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 运输专用批量前缀接入，原物理待验
+
+Current：round126接入正式 `transport_refinement_prefix`，默认false。显式候选仅继承 `loaded_jaw_midpoint_details.py` 并开此选项；控制器仅在transport阶段的online_chord选择新validator。其它阶段、planned／measured闭爪244点、1mm和全部285对保持原链。无默认晋级、连续域、20＋20或完整50Hz通过宣称。
+
+Done：同owner原C循环复用；完整MjData快照、回滚和hint成本计入调用。无法给出保守证书时恢复原状态并完整scalar/refiner回退；binding／generation变化不覆盖新状态。独立审查发现“一次性FK异常同时改变绑定被回退抹去”，已修复为保留首次RuntimeError／ValueError失败，其他BaseException原样传播。83项本地mock／协议回归通过；不是实模FK或物理结果。AGY同步审核90s超时，不计成功；内部GPT独立复现修复反例通过。
+
+Next：固化源后在Kaggle复用原bootstrap／component slot／evaluate_station，先正式组件7组与5功能、完整状态原bytes和三对wall／CPU；两运输组均可靠受益才串行原Station左工位B→C、第二放置工位C→B及中心回归。失败保留并停止该批物理；不将私有round125收益当正式实现收益。当前云任务尚未提交，完整批次在途期间不改源码或提交。
+
+Knowledge=pending：原Wiki§20和入口已有在途修改，根Codex继续串行处理；本轮采用该节“组件、交接和完整任务分别验收”，新NULL getter经验仍未回写。清理：本轮仅新增小源码／探针，没有删除旧原件或重复计算既有132,513,792B清理量。无本地模型或实体动作，Mint不动。
+
 ## 2026-10-25 — 同owner组件通过，运输受益／闭爪全慢
 
 Current：round125固定f922da9，原Kaggle v1终态。5功能检查通过，7组原完整报告／hint／q6同值，云内有效数组比较回执相同。根179项／独立414项读回0失败；不是Station物理或生产资格。详见[m1b结果](m1b-refinement-details-results.md)。

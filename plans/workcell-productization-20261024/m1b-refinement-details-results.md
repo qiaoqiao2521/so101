@@ -242,3 +242,11 @@ round123／124各37个归档regular文件已逐字节核对，无缺失／额外
 本接续已记录的清理累计132,513,792已分配字节（约126.4MiB），不将共享磁盘其它任务的空闲变化算为收益。任一原件恢复：`python3 -m tarfile -e <该目录/so101-evidence.tgz> <该目录/unpacked>`；独立报告恢复用`gzip -dk <independent-readback.json.gz>`。当前没有拥有的本地FK／评测进程或在途云任务；未停他人Blender／FishBot／Drone，未动Mint。
 
 Knowledge=pending：候选经验为“MuJoCo同版NULL arena getter不等于有效数据，按原生分配状态比较，保留原错误”。原Wiki《ROS2 与 FishBot》§20与开发知识入口均已有在途修改，本轮未并发写入或整仓提交。Owner根Codex；最短接续是读两文件现有diff，在原分层验收节补同版源码和本轮native NULL证据，并同步入口触发词，再独立读回。不得将本段pending当已回写知识。
+
+## 2026-10-25 正式运输前缀：代码完成，云验收待执行
+
+RoutePolicy新增默认关闭的 `transport_refinement_prefix`；显式 `loaded_jaw_transport_prefix.py` 仅在完整detail-reuse父候选上增加该选项。新validator仍使用同owner／同C循环，仅transport online_chord调度，close及全部244点保持原链。保守证书不足恢复原完整MjData／hint后完整回退；实际异常优先于绑定变化，不重放一次性失败。
+
+本地83项mock／协议测试通过，含关闭owner、重入、绑定变化、invalid-q、观察器及首次异常；不能当实模FK或物理通过。独立审查发现并复现异常优先级缺口后修复，原反例保留。新生产实现的逐FK身份检查成本必须重新测量，不沿用round125私有速度数字。
+
+复跑：`round126-production-transport-prefix/build_kernel.py --source-revision <本轮提交>`。沿用原Kaggle bootstrap、component slot及Station runner；正式7组＋5功能及完整数组bytes归档后，组件准入才执行左B→C／第二放置工位C→B／中心回归。当前尚未提交云任务，未产生本轮原物理结论。原默认loaded_jaw_preload不变。

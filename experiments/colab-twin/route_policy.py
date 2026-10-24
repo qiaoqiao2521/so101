@@ -44,6 +44,7 @@ class RoutePolicy:
     async_measured_return: bool = False
     mesh_box_axis_refinement: bool = False
     reuse_refinement_details: bool = False
+    transport_refinement_prefix: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -120,6 +121,8 @@ class RoutePolicy:
             raise ValueError('Mesh-box axis refinement must be a boolean')
         if not isinstance(self.reuse_refinement_details, bool):
             raise ValueError('Refinement detail reuse must be a boolean')
+        if not isinstance(self.transport_refinement_prefix, bool):
+            raise ValueError('Transport refinement prefix must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""
