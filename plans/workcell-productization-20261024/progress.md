@@ -1,5 +1,21 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 左侧闭爪真实归因完成，单行提示优化淘汰
+
+Current：round127／128／129全部云任务终态；生产源码仍为9cca89a，无默认切换。原左X−20mm插桩物理1/1通过，定位到244点实测闭爪认证与持续在线弦成本。单行hint校验候选状态等值，但三对收益不一致，淘汰；不再重复跑同候选追绿。详见[m1b结果](m1b-refinement-details-results.md#2026-10-25实测闭爪归因与单行提示反证)。
+
+Done：round127原run63bbbf0e-abab-4078-bce9-c4bb9d764e94通过，74.04sim／86.564906process-wall／96.658863CPU，原1mm／285对／planned244／measured244、抓放释放脱离回位和自由物体保持。update1008从descend进入close：451.885ms，其中measured_closure244点441.843ms，随后online_chord仅2点3.975ms；不是两次完整244点叠加。普通close330拍的在线6362点耗时12.096504s，lift143拍8008点耗时5.228489s。插桩成本单列，不能与未插桩批次算提速；完整50Hz仍未过。
+
+Done：round128用原保存244／48点弦及XML，fresh query MjData/hint进行原cProfile，两报告与原件exact。hint校验244次累计77.932ms，但488次_detail_arrays是244个全285对＋244个单行hint，不是重复两次全285对。round129私有单行校验实际876请求无回退，12份真实NPZ共7,931,340数组字节相同；独立117项通过。三对合并wall节省55.644／−2.764／70.606ms，CPU第二对也更慢，原门槛不通过；未接生产，未启动候选原物理。
+
+Failures：round129 v1漏arena_observation.prepare，baseline首次快照报错，零完整配对；v2仅补setup初始化，候选不变。独立reader的旧路径／字段错误已按原schema改正，原失败日志保留。外部Codex CLI首次只读无文件交付、后续120s审查超时，均不计有效实现／审查成功；根与内部GPT完成实际私有文件和独立回读。
+
+Cleanup：round127／128／129的53／27／31＋46个归档原件逐字节核对且无额外／缺失，删除重复unpacked；独立JSON压缩后解压回读一致。合计实际释放34,209,792已分配字节，不重计先前清理。TGZ、日志、gzip独立报告和各cleanup-readback.json保留；恢复入口见结果文档。未停止他人渲染／Colab或触碰Mint。
+
+Next：根Codex先核现有loaded_jaw_preload能否提前至lift，读取原执行器系数并在原保存q6／qvel下对比反事实力矩与原采样成本。只做只读组件，不改6s闭爪、244点、1mm、285对或原裁判。单帧饱和不证明20ms动态等效，后续仍须新源码原物理；当前没有新可交付算法、连续域、20＋20或完整50Hz成绩。
+
+Knowledge=pending：沿用Wiki《ROS2 与 FishBot》§20对组件／交接／完整任务的分层；原共享知识页已有在途修改，根串行核diff后再回写，不冒称已更新。
+
 ## 2026-10-25 — 正式运输前缀两工位受益，原物理5/5通过
 
 Current：round126完整源58da5048275cff2669e84f89ada0df5d92cd207a，Kaggle `muqiaoqiao/so101-transport-prefix-physical-20261025/2`终态。正式组件等值且两运输组三对wall／CPU均快，接原Station串行5例全部原pass。独立715项通过、unknown为空；根另重读实际数组和原裁决。保留显式 `loaded_jaw_transport_prefix.py` 为X左侧已验候选，全局默认仍loaded_jaw_preload，不将固定点推成连续域。

@@ -214,3 +214,11 @@ round126私有目录：`/home/muqiao/.cache/ros2-factory/codebuddy-so101-2026102
 
 
 round126正式生产实现完成实际验收：5功能／7组三对与86份原数组归档独立同值，两transport三对wall／CPU均快；原Station两工位反序＋中心5/5pass。两站进程wall省1.373／2.376s，非hold controller亦下降；不以少1hold拍解释全部收益。原1mm／285对／244、自由物体、释放脱离回位保持，显式候选保留、不切默认。v1短ref fetch失败与v2旧physical_status文本均保留。完整50Hz仍未过；新时序仅定位最大close段controller约398ms，内部planned／measured尚未细分，不从残量猜OMPL或相机。证据、实际清理与下一步见[m1b结果](m1b-refinement-details-results.md)。
+
+## 实测闭爪与单行提示反证
+
+round127新增原物理通过，最大close进入拍不是两次完整扫掠叠加：原measured244占441.843ms，随后online只有2点3.975ms，transition是包含子项的442.048ms，不可相加。普通close仍330拍／6362点／12.096504s；lift143拍／8008点／5.228489s。仅搬出一次transition认证不能消除持续成本。
+
+round128原输入fresh-state cProfile中，488次_detail_arrays包含全285对与单行hint各244次；不能据函数调用量声称全明细重复两遍。round129针对单行hint避免向量校验虽12份NPZ真实状态同字节、876请求全部命中，三对wall与CPU的第二对均变慢，故按原门槛淘汰。组件正确与收益稳定是不同条件，不能以55.644ms中位掩盖反向对；不进入原物理追绿。来源、实际失败和复跑入口见[m1b结果](m1b-refinement-details-results.md#2026-10-25实测闭爪归因与单行提示反证)。
+
+已有预载只在lift→hold固定一次目标，输入为encoder和previouscommand；提前到lift可能缩短在线认证弦，但原sts3215增益、速度阻尼、力限幅及周期内变化需实测。静态同力不是接触轨迹或持物成功证明，先只读筛选。原1mm与所有点不减。

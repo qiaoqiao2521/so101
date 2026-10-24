@@ -278,3 +278,57 @@ RoutePolicy新增默认关闭的 `transport_refinement_prefix`；显式 `loaded_
 清理：v1五个与v2 266个regular原件逐字节相同、无额外／缺失后移除重复展开；3派生JSON gzip后逐字节回读一致，本轮释放104,292,352已分配B。原TGZ／最终视频／轨迹／输入均在归档保留。恢复：`python3 -m tarfile -e <kaggle-v2/so101-evidence.tgz> <kaggle-v2/unpacked>`；派生报告用 `gzip -dk <报告.json.gz>`。不把上一轮已释放量重复记入本轮。
 
 Knowledge=pending：根Codex仍须先核原Wiki§20／入口在途改动，再串行写回native NULL和首次异常经验；本轮记录仅为本项目事实。无新平台、定时器、实体动作或其它聊天消息。
+
+## 2026-10-25：实测闭爪归因与单行提示反证
+
+源码固定`9cca89ab9e77df753296c8a6ff5f47089b47e338`。本节新增一次原左侧物理和两个只读／私有组件批次；三者范围不同，不串成累计加速。
+
+### round127：原完整闭爪的实际时序
+
+Kaggle `muqiaoqiao/so101-close-attribution-20261025/1`，原Station UUID `63bbbf0e-abab-4078-bce9-c4bb9d764e94`，74.04sim／85.055249episode-wall／86.564906process-wall／96.658863CPU。原裁决pass，planned／measured各244、原1mm／285对、抓放／释放／脱离／回位、自由物体weld0／mocap0通过，无安全停机或障碍接触；释放漂移.214634884mm，脱离后峰值力0N。44项独立检查全部通过。observer仅扩展原timing记录，原checker一次性观察恢复后调用，transport前缀仍1195次／34655状态／fallback0。
+
+| 位置 | 原点数 | wall ms | CPU ms | 归属 |
+| --- | ---: | ---: | ---: | --- |
+| update1008，sim20.14，descend→close | — | 451.885330 | 约451.806 | update总量 |
+| `_transition` | — | 442.047557 | — | 包含measured子项，不重复相加 |
+| `measured_closure` | 244 | 441.842506 | 441.768244 | 原全扫 |
+| 随后`online_chord` | 2 | 3.975422 | 3.978814 | 非第二次全244 |
+| 同拍GC | — | .454 | — | 已包含于闭爪子项 |
+
+普通close（排除进入拍）330次online／6362点，12.096503617wall／12.092411831CPU秒；含进入拍331次／6364点／12.100479039wall。最慢普通online为update1260，sim25.18，48点121.551492ms。lift在线143次／8008点，5.228489298wall秒。原planned_closure发生于初始化／replan，未被update观察器计时，不据本结果猜其耗时。
+
+完整3702拍P50／P95／P99／max为17.507488／41.209125／117.995219／460.323155ms，880拍>20ms；这是插桩结果，完整50Hz未过。不能将本进程与round126未插桩进程绝对秒数作A/B。现有worker没有可直接接纳的closure任务，SweepBinding含实际起点、观察时序与上下文；提前完成但现场起点变化的证书不能直接复用。
+
+### round128：保存原输入的cProfile
+
+Kaggle `muqiaoqiao/so101-close-profile-20261025/1`。原XML与上述244／48点真实弦逐字保留，fresh query MjData／hint，先预热再cProfile；不是原历史MjData恢复，也不是Station任务。两原报告exact，34项独立检查通过，无未知。244点profile wall.572910651s，`_hint_detail`244次累计.077932469s；48点hint48次累计.015212753s。`_detail_arrays`488／96次分别是全285对＋单行hint各244／48次，不能解释成双倍全明细。两组所有点均需原几何补证，不能用raw-clear捷径跳过。
+
+`production_component_not_admitted`与physical_started=false是该只读profile的明确边界，不是物理失败。原查询、native flags和全部采样保持。cProfile有插桩成本，不用其秒数预报生产加速。
+
+### round129：单行hint校验等值但收益不一致，淘汰
+
+私有GPT候选仅在已预热owner实例的`_hint_detail`校验已认证单行native数组；不支持／未认证／异常走原helper，原调用错误不被重试抹去。原全285对、native几何、方向、阈值与点数保持。11项无模型测试包含358个原AST差分输入；外部Codex CLI只读未写文件，未将其声称的14／492算交付。
+
+Kaggle `muqiaoqiao/so101-single-hint-20261025/2`，原244／48点各AB／BA／AB。876次候选请求，fallback0；原report／hint／统计／generation／恢复同值，12份NPZ的102有效数组＋77 NULL标记独立原字节比较一致，共7,931,340B。独立117项检查全部通过、unknown为空。安装／恢复／计数已含计时，状态归档在计时外。
+
+| 成对序号 | 244点wall节省 s | 48点wall节省 s | 合计wall节省 s | 合计CPU节省 s |
+| --- | ---: | ---: | ---: | ---: |
+| 1，B→C | .042334453 | .013309499 | .055643952 | .055792359 |
+| 2，C→B | −.002614534 | −.000149354 | −.002763888 | −.002671905 |
+| 3，B→C | .052240065 | .018366226 | .070606291 | .067639094 |
+
+原三对均省>5ms且CPU均降门槛未通过。**淘汰晋级，不接生产，不追加同候选物理追绿。** 中位数为正不能消除反向对。私有helper还不具备生产observer／自定义方法身份回退合同，未宣称生产实现完成。
+
+v1漏`arena_observation.prepare()`，baseline快照报RuntimeError，零完整配对；v2仅补setup初始化，候选不变。独立reader旧scene路径／旧字段／清理后展开路径错误已依据原TGZ修正，失败日志保留，不重跑云端。后续Codex CLI只读审查120s超时，不计审查通过。
+
+### 原件、复跑和实际清理
+
+私有复跑脚本均在`/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/`：round127-close-attribution、round128-close-profile、round129-single-hint-validation，各保留build_kernel、精确云源码、提交回执、原输入和独立reader。复建沿用既有Kaggle component／Station入口，不新建调度器。
+
+原件目录分别为`experiments/colab-twin/output/close-attribution-20261025/kaggle-v1`、`close-profile-20261025/kaggle-v1`、`single-hint-validation-20261025/kaggle-v1`与`kaggle-v2`。原TGZ、日志、root小摘要、gzip独立读回与cleanup-readback.json保持git忽略。
+
+round127核53原件、round128核27原件、round129 v1／v2核31／46原件，归档与展开全部字节相同且无缺／额外；删除重复展开并压缩独立JSON，实际分别释放32,092,160／282,624／196,608／1,638,400已分配字节，合计34,209,792B。不重计round126或更早清理。
+
+恢复指定目录：`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`；恢复派生读回：`gzip -dk <目录>/<对应报告>.json.gz`。只删已核可重建副本，原输入、最终证据、私有源码和失败保留。
+
+下一项只读核已有loaded-jaw preload提前至lift的执行器力矩／采样成本。原6s闭爪和全部244不改；单帧力矩饱和不能证明20ms周期中等效。没有可靠收益不切默认，不宣称连续X域、20＋20或完整50Hz。
