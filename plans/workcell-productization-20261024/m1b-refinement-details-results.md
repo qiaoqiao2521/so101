@@ -192,3 +192,13 @@ round122独立reader另从原件核161项，0失败，共2744个screen状态；�
 本次诊断脚本遗漏保存具体差异字段，只留data_arrays_equal=false，无法归因。根保留原失败、不猜是初始化噪声、不先剔除字段。下一动作是保持私有候选逐字相同，在云端只补字段名、dtype、shape和数值差异；无论结果是否一致都不跑性能对照。生命周期close／重入／native-status／invalid-q注入仍未验，不能用这5项替代生产资格。
 
 原件：`experiments/colab-twin/output/same-owner-prefix-20261025/kaggle-v1/so101-evidence.tgz`，私有复建`round123-same-owner-prefix/build_kernel.py`；下一只读字段探针`round124-data-field-diagnostic/`已准备，尚未运行。Knowledge=already_covered，仍沿Wiki§20分层验收；owner根Codex。
+
+## 2026-10-25：数据差异已定位，原生NULL状态仍待实测
+
+固定c15bde3，Kaggle `muqiaoqiao/so101-data-field-diagnostic-20261025/1`原生终态，字段诊断完成、候选仍未通过。组件UUID `866f57c8-454a-4428-a351-b9256eea9f26`，进程wall2.788950s／CPU3.528708s；performance_pairs_run=false，无Station verdict。候选same_owner_prefix.py与失败版逐字相同，未改算法或阈值。
+
+每run观察179个Python NumPy字段。clear差异11字段：efm_K_rownnz、efm_aid、efm_ak/as/c/ca/ck/diag/sdiag及map_dof2idof、map_idof2dof；其余4项只剩上述7个efm浮点字段。qpos、几何姿态等其它字段没有观测到差异。报告／异常／历史／后续查询仍一致，不能据此改写原失败。
+
+同版官方源码提供了可核实假设：[Python getters](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.cc#L856)按模型尺寸暴露arena字段，[InitPyArray](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.h#L981)只对空shape特殊处理，原[resetData](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_io.c#L1231)将arena指针清为NULL；[字段宏](https://github.com/google-deepmind/mujoco/blob/3.15.0/include/mujoco/mjxmacro.h#L940)中的部分shape仍为nv／nactuator。NULL传给Python数组构造可能得到独立未初始化内容，不能以getter的shape判定原生数据有效。这是源码解释，当前云件尚未读取指针，未证明本次就是NULL。与nflex是否为0不能混为一谈。
+
+下一步保持私有候选不变，用同包原生头文件生成只读arena指针观察器。逐字段记录NULL／非NULL及原计数，NULL显式作为NULL比较；有原生数据的全部NumPy数组继续逐字节比较，不能按efm或map名称整体排除。先验证初始／setup前后、5项functional和后续查询，再决定是否跑原7组计时；仍不接生产。原件`experiments/colab-twin/output/data-field-diagnostic-20261025/kaggle-v1/so101-evidence.tgz`；私有round124包含原probe、builder与提交回执，round125准备中。Knowledge=no_reusable_delta：因实际NULL尚未确认，暂留项目假设，不写共享知识；owner根Codex。

@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 11个arena字段差异已定位，先核原生NULL
+
+Current：round124字段诊断终态，5项原比较仍false；具体差异仅efm／island映射11字段，四个异常case仅7个efm浮点字段。其它179字段中的观测、错误和历史事实见[m1b结果](m1b-refinement-details-results.md)。无计时或新物理。
+
+Done：根与GPT独立核同版官方Python getter、InitPyArray、resetData和arena宏，识别“native NULL但Python固定shape”假设；未按字段名删比较，也未把源码解释当现场证明。原失败保留。
+
+Next：根集成GPT的只读native pointer观察器，在云端核每字段是否NULL、相关计数及setup前后；有原生数据字段仍字节相等，NULL明确记录。功能全过才做同7组计时，仍不生产qualify／不改默认。Knowledge=no_reusable_delta，未确认的假设只留项目。
+
 ## 2026-10-25 — 同owner功能未过，暂停计时而非洗掉失败
 
 Current：round123源2a167c0，云v1终态。原生COMPLETE但组件exit1／complete=false，5项functional的全部数组字节比较均false，性能pairs未运行，原物理未启动。report／error／hint／followup均相同，但不能据此晋级。原失败与遗漏字段证据保留，详见[m1b记录](m1b-refinement-details-results.md)。
