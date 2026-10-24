@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 运输段同输入诊断完成，未改生产
+
+Current：上一轮=progress，原物理5/5与结果b236ff4已推。接续原运输反增问题，固定b236ff4在Kaggle so101-transport-detail-20261025 v1完成18组同输入组件；[完整诊断](m1b-refinement-details-results.md)。本轮不是新抓放或50Hz验收。
+
+Done：两原baseline各自模型、3阶段×3jaw变体，162声明查询；每组90返回，预热和AB/BA/AB无hook计时，另计数。全部返回／hint/stat exact，实际285对与配置不变。lift各组原80 clear／10需补证，候选省10 detail、补方向10保持；hold／transport全部90 clear、两边native90，没有native工作减少，但候选仍进明细入口90次。根78项及独立原件读回通过，6输入逐字一致、actual library flags齐、unknown=[]。
+
+Remaining：transport配对CPU差中位每query增加3.2–24.4μs，仅第二工位固定jaw组三对wall／CPU均慢，其余有反向对。hold某组零工作节省却三对更快，噪声反证保留。不能归因原整段新增.922／1.684s，不据此加采样／调参／改默认。原5/5和4.924／5.002s整程收益仍有效，完整50Hz仍未过。
+
+Next：根先完整检查保存q6→reference弦的所有原采样点，再决定既有raw batch认证前缀是否值得组件对照；未获证／None／错误回原scalar refiner，不减少285对或244。旧round116 close全需补证且更慢的失败保持，不原样重跑。当前只准备私有新探针，无生产改动／新物理。组件process wall29.515s／CPU30.674s单列。zcode实调90s超时，根／内部GPT完成独立核验。Knowledge=already_covered，owner根Codex。
+
 ## 2026-10-25 — 生产明细组件与原物理五例完成
 
 Current：固定5badfff，Kaggle so101-refinement-details-physical-20261025 v1已COMPLETE，五原进程均终态pass；[生产结果](m1b-refinement-details-results.md)。新收益来自实际评测，没有重跑上一批。

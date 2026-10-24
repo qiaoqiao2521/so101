@@ -98,9 +98,36 @@ Kaggle `muqiaoqiao/so101-refinement-details-physical-20261025/1` 已COMPLETE，�
 
 agent-link dsh实调120s超时，无有效审查结果；内部GPT只读未发现本轮复用新增回归。另确认父500dc47已有直接bound API特殊margin.__float__关闭native后的handle生命周期边界，普通checker预转float，本批不触发；未调用真实悬空指针，另留最小修复。
 
-接续Owner=根Codex：保留候选、不切默认，先按实际transport/lift/hold谓词做同输入调用与成本证据。连续X域、20＋20、完整50Hz、真实Carry HTTP整链未完成。Knowledge=already_covered，沿用Wiki§20。
+接续Owner=根Codex：保留候选、不切默认。transport/lift/hold同输入组件已完成，见下节；下一步先查完整运输弦中间采样，不从端点直接选择优化。连续X域、20＋20、完整50Hz、真实Carry HTTP整链未完成。Knowledge=already_covered，沿用Wiki§20。
 
 生产原件在`experiments/colab-twin/output/refinement-details-physical-20261025/kaggle-v1/`，batch=`399996d5-3611-454c-9886-f3e474282647`。root-readback.json、independent-readback.json与TGZ保持Git忽略。私有复建入口`round120-refinement-details-physical/build_kernel.py --source-revision 5badfff07c3cfbc2afab91a654e93e68d801462f`；原evaluate命令显式指定`route_strategies/loaded_jaw_midpoint_details.py`复跑，对照用midpoint父版。
+
+## 运输段诊断：额外入口存在，秒级归因尚不成立
+
+固定源码`b236ff4c18314392f3f4cdcf128ee621e893e303`（相对5badfff只有文档），Kaggle `muqiaoqiao/so101-transport-detail-20261025/1` 已COMPLETE，单次提交。使用上一批两个原baseline各自的planning XML，资产目录仅重映射；lift／hold／transport每阶段均匀选9个保存帧，分别检查实测q6、reference q6、实测q5＋payload子谓词固定jaw=.015，共18组、162个声明查询。每组固定重复10遍，先B/C各预热一次，再AB/BA/AB；正式计时不装observer，计数另跑。原1mm、完整285对及七项native配置保持。
+
+这些是物理推进后保存帧的派生输入，不是原始ABI调用或原控制弦；新鲜checker历史也不是现场阶段入口历史。只测机械臂几何子谓词，不测payload包络、worker／context、完整controller或抓放。mj_step及Renderer在组件内禁止；原bootstrap预检渲染单列。没有Station verdict或50Hz结果。
+
+18组的所有返回、refinement stats、两类方向／witness历史在预热、计时及独立计数pass均exact。每组90返回；lift各组原80 clear／10需补证，候选固定轴100→90、原detail10→0、完整285对仍查，补方向仍10。6个lift组中4组三对wall／CPU全降、2组混合，不能统一报一个阶段加速比。
+
+hold／transport各组90/90均原clear，两边固定轴90、detail0、补方向0、复制／provider消费0；候选仍进入summary_with_details90次。它没有减少这些样本的native工作，支持检查clear入口额外工作，但不证明整段秒级退化的唯一根因。
+
+| transport样本 | CPU比中位 C/B | 配对CPU差中位 μs/query | 三对CPU／wall均更慢 |
+| --- | ---: | ---: | --- |
+| 主工位 measured q6 | 1.007335 | +3.207 | 否；CPU全慢但wall混合 |
+| 主工位 reference q6 | 1.035761 | +14.834 | 否 |
+| 主工位 q5＋.015 | 1.055900 | +24.376 | 否 |
+| 第二工位 measured q6 | 1.032593 | +13.748 | 否 |
+| 第二工位 reference q6 | 1.034404 | +14.511 | 否 |
+| 第二工位 q5＋.015 | 1.048888 | +21.415 | 是 |
+
+噪声反证保留：第二工位hold的q5＋.015没有少任何native查询，却三对都更快；reference组配对CPU差−216.9／+77.7／+66.6μs/query。不能从若干中位值外推原transport新增.922／1.684s，更不能宣称把50Hz问题定位完成。不据此重训、改精度、改阈值或直接改默认。
+
+组件进程wall29.515147s／CPU30.673979s，含预热、对照、计数和文件输出，不能计作抓放节拍。实际loaded-library flags／metadata本次已归档，与配置一致；不是对上一批缺收据的补造。六输入逐字一致，根纯原件／算术78项和独立reader均通过，unknown=[]，ctypes ABI符号未改。agent-link zcode只读实调90s超时，无有效结论；根与内部GPT核源码及实际原件。
+
+下一项只读组件：先在原分辨率下完整枚举这些保存q6→reference派生弦，数中间点是否也直接clear，再考虑复用既有batch入口作为完整原轴认证前缀。任何None／未认证／错误须回完整原scalar refiner；保留全部285对／原采样和244闭爪。旧round116的close九弦571态全需补证、batch前缀三对更慢，继续保留淘汰；不能因为运输端点clear就重贴旧失败为收益。尚未改生产或运行该新候选。
+
+原件：`experiments/colab-twin/output/transport-detail-20261025/kaggle-v1/`，组件UUID=`7352919e-c4fc-4796-917e-9b87fd420b3d`；root-readback.json、independent-readback.json及TGZ均Git忽略。私有复跑入口`round121-transport-detail-probe/build_kernel.py`，同原bootstrap执行`SO101_ROOT=/tmp/so101-eval <original-runtime-python> probe.py`；输出按case／stage／variant分开，不池化成绩。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
 
 ## 私有原型原件与复跑
 
