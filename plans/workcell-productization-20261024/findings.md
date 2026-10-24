@@ -211,3 +211,6 @@ round125已实测77个arena指针为NULL，102真实NumPy数组＋77 NULL标记�
 新增选项仅供transport online_chord，close仍完整原链，不能将前轮close负收益隐藏为全阶段优化。正式实现比私有原型增加逐FK binding／generation核验，成本须重新测量。首次FK异常与binding变化可能同时发生；后者不能优先触发回退，否则一次性异常会被第二次成功执行抹掉。已修复优先级并独立复现，83项本地协议回归通过；尚无本轮实际模型／完整物理成绩。
 
 round126私有目录：`/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round126-production-transport-prefix/`。复用round120原runtime与component slot，实际有效数组bytes压缩归档，压缩在测量区间外；不再只保存云内比较回执。AGY90s超时保留，不能称外部审核通过。最新CLI约定以本轮AGENTS为准：Qoder／CBC每批调用前查usable，ZCode用edit，DSH暂停；旧文中的永久禁用描述仅属当时状态。
+
+
+round126正式生产实现完成实际验收：5功能／7组三对与86份原数组归档独立同值，两transport三对wall／CPU均快；原Station两工位反序＋中心5/5pass。两站进程wall省1.373／2.376s，非hold controller亦下降；不以少1hold拍解释全部收益。原1mm／285对／244、自由物体、释放脱离回位保持，显式候选保留、不切默认。v1短ref fetch失败与v2旧physical_status文本均保留。完整50Hz仍未过；新时序仅定位最大close段controller约398ms，内部planned／measured尚未细分，不从残量猜OMPL或相机。证据、实际清理与下一步见[m1b结果](m1b-refinement-details-results.md)。

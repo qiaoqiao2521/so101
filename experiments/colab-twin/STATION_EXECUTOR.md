@@ -426,8 +426,10 @@ Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。�
 
 ### 显式运输前缀开发候选
 
-`route_strategies/loaded_jaw_transport_prefix.py` 继承detail-reuse父候选，只在transport的online_chord启用同owner保守批量前缀。未获证书时完整回退；闭爪244点、1mm及原物理判据保持。当前仅mock／协议回归通过，云组件和完整物理待验；不是默认策略。
+`route_strategies/loaded_jaw_transport_prefix.py` 继承detail-reuse父候选，只在transport的online_chord启用同owner保守批量前缀。未获证书时完整回退；闭爪244点、1mm及原物理判据保持。2026-10-25正式组件与两工位原物理已验，详见下方结果；不是全局默认策略。
 
 ```bash
 python evaluate_station.py --station scenarios/workspace-station/fixed-x-minus20.json --candidate route_strategies/loaded_jaw_transport_prefix.py --output-dir output/transport-prefix-dev --timing
 ```
+
+2026-10-25 验收更新：上述显式候选完成固定X−20mm两放置工位反序与中心回归，原物理5/5pass；相对detail-reuse父候选，两工位进程wall分别少1.373／2.376s，CPU／非hold控制成本也下降。默认仍loaded_jaw_preload，闭爪244保持；完整50Hz、连续区域、20＋20尚未通过。组件与原物理详见[结果](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。

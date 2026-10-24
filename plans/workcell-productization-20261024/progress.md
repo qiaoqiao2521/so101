@@ -1,5 +1,21 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 正式运输前缀两工位受益，原物理5/5通过
+
+Current：round126完整源58da5048275cff2669e84f89ada0df5d92cd207a，Kaggle `muqiaoqiao/so101-transport-prefix-physical-20261025/2`终态。正式组件等值且两运输组三对wall／CPU均快，接原Station串行5例全部原pass。独立715项通过、unknown为空；根另重读实际数组和原裁决。保留显式 `loaded_jaw_transport_prefix.py` 为X左侧已验候选，全局默认仍loaded_jaw_preload，不将固定点推成连续域。
+
+Done：两工位进程wall74.963946→73.590872、78.357657→75.982074s，CPU83.864978→82.564069、88.159918→85.634905s。非hold controller46.612581→44.652556、48.742175→45.800050s；hold162→162、183→182，第二组少1拍不当算法收益。原初态、场景、OMPL及实际接近路径一致。主候选1195批／34655原状态，次候选1298批／37642原状态，fallback0；不是改等待或路径获得的局部胜利。
+
+Done：5功能、7组报告／hint／q6及86份原NPZ独立字节重建一致；102有效数组＋77NULL标记，原始有效数组字节共56,841,270B。运输两组wall中位比.842309／.823997；close中位1.006343且三对两慢一快，继续禁用其前缀。原1mm／285对／244闭爪、无障碍碰撞／无安全停机、自由物体weld0/mocap0、释放脱离回位全保留。中心回归亦原pass，但不是中心前缀收益对照。
+
+Remaining：完整50Hz未过，左候选477慢拍／max404.727ms、第二489／405.447ms，P95为36.469／34.112ms。现有完整分段记录最大close拍controller397.814／398.626ms；尚未细分该拍内planned与measured认证，不将其猜成OMPL或相机。下一步沿原244闭爪调用与现有worker合同核清同步责任，再决定能否预计算或安全交接；不全阶段开启本前缀，也不重复无假设物理。
+
+Failure retained：v1用短ref58da504，GitHub fetch128，组件／物理均未启动。改传相同完整提交后v2运行，不改bootstrap、算法或裁判。v2原cloud physical_status遗留pending文本，但终态stage及5份原verdict独立已验；不修改原件掩盖元数据缺口。
+
+Delivery／cleanup：源已推送58da504，账户／REST／ls-remote一致。本批所有评测终态才写本节。v1的5原件和v2的266原件逐字节核对后移除重复展开，3份派生JSON压缩并解压回读一致，本轮释放104,292,352已分配字节；TGZ、root摘要、gzip独立报告与恢复命令保留在output/transport-prefix-physical-20261025。详见[m1b结果](m1b-refinement-details-results.md)。无本地物理、Mint或其它机器人资源操作，无恢复定时器。
+
+Knowledge=pending：采用原Wiki§20“组件、交接和完整任务分别验证”。NULL getter及首次失败经验待根Codex核原两页在途diff后合入；本轮只写项目实测，不冒称知识已更新。
+
 ## 2026-10-25 — 运输专用批量前缀接入，原物理待验
 
 Current：round126接入正式 `transport_refinement_prefix`，默认false。显式候选仅继承 `loaded_jaw_midpoint_details.py` 并开此选项；控制器仅在transport阶段的online_chord选择新validator。其它阶段、planned／measured闭爪244点、1mm和全部285对保持原链。无默认晋级、连续域、20＋20或完整50Hz通过宣称。

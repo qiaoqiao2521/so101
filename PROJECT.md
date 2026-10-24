@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-25 [X左侧运输前缀](plans/workcell-productization-20261024/m1b-refinement-details-results.md)正式实现已完成Kaggle两工位反序与中心原物理5/5pass；两工位相对detail-reuse父候选进程wall少1.373／2.376s，CPU与非hold控制耗时同降。1mm／285对／244、自由物体、释放脱离回位保持，显式候选保留、全局默认不变。完整50Hz仍未过（候选477／489慢拍，最大约405ms）；下一项核原闭爪同步认证，不宣称连续X域或20＋20。
+
 2026-10-24 [固定红盘X向原Station入口](plans/workcell-productization-20261024/m1a-x-station-fixed-results.md)已验：显式预收爪／补证接入原执行器，两端点及原中心3/3完成原抓放、释放、脱离与回位；关闭适配的两个原拒绝保留。四份可编辑Station样例保持红盘不动、cube独立定位，默认不变，不新增mode。左侧本次98.140wall，903慢拍／最大617.523ms，接近后处理与close成本待继续拆分；完整50Hz仍未过。实际新固定盘浏览器／HTTP链、连续域与20＋20另验。
 
 2026-10-24 [X向新请求](plans/workcell-productization-20261024/m1a-x-interior-results.md)新增固定红盘X±11mm原物理2/2通过，均用原60mm高位／.5rad开度及完整244扫掠。[位置相关RGB面板](plans/workcell-productization-20261024/m1a-x-perception-results.md)17/17通过，五正例最大误差.616511mm、12负例无坐标，17份原PNG独立重算一致。定位与物理分别验收，默认／网页±10mm不变；轴齐／已知高度、连续域、20＋20与完整50Hz边界保留。原5186已恢复并服务Carry入口，实际ready／终态拒绝已验，活动网页接续整链仍待做。

@@ -165,3 +165,6 @@ round125原生NULL已实测确认：102有效数组＋77 NULL标记、5functiona
 ## 2026-10-25 接续：M1b 运输专用前缀
 
 正式transport-only薄适配与83项mock回归完成。下一步固定本次提交，先Kaggle正式组件等值／首次失败／实际数组归档和两工位三对成本；仅组件准入后接原Station两工位反序与中心回归。原1mm／285对／244点、90sim120wall及全部回退不变，默认仍loaded_jaw_preload；本批尚未运行。详见[进度](progress.md)和[m1b结果](m1b-refinement-details-results.md)。
+
+
+2026-10-25 实测更新：上述正式组件已准入，Kaggle v2原物理5/5pass；两工位进程wall／CPU均下降，显式transport-only候选保留，默认不变。完整50Hz、连续X域与20＋20未过。下一切片先核原闭爪244同步责任／worker交接，原最大close控制段约398ms；不提前认定可删检查或全阶段开启前缀。实际结果和复跑见[m1b结果](m1b-refinement-details-results.md)。

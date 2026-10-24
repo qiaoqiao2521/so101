@@ -250,3 +250,31 @@ RoutePolicy新增默认关闭的 `transport_refinement_prefix`；显式 `loaded_
 本地83项mock／协议测试通过，含关闭owner、重入、绑定变化、invalid-q、观察器及首次异常；不能当实模FK或物理通过。独立审查发现并复现异常优先级缺口后修复，原反例保留。新生产实现的逐FK身份检查成本必须重新测量，不沿用round125私有速度数字。
 
 复跑：`round126-production-transport-prefix/build_kernel.py --source-revision <本轮提交>`。沿用原Kaggle bootstrap、component slot及Station runner；正式7组＋5功能及完整数组bytes归档后，组件准入才执行左B→C／第二放置工位C→B／中心回归。当前尚未提交云任务，未产生本轮原物理结论。原默认loaded_jaw_preload不变。
+
+## 2026-10-25 正式运输前缀：两工位原物理与中心回归
+
+源码 `58da5048275cff2669e84f89ada0df5d92cd207a`。Kaggle private `muqiaoqiao/so101-transport-prefix-physical-20261025/2` 已终态，原bootstrap／runtime／runner字节保持，cloud拉回源码与提交的kernel相同。基线为完整detail-reuse父候选；仅新增 `transport_refinement_prefix=true`，不拿全局preload作弱对手。两工位B→C／C→B及原中心候选回归串行执行，无共享任务竞争。
+
+| 原case | 原run ID | sim(s) | 进程wall(s) | 进程CPU(s) | 原裁决 |
+| --- | --- | ---: | ---: | ---: | --- |
+| 左基线 | 07f71a35-1a80-4422-9de1-2a4a4316f0fb | 74.06 | 74.963946 | 83.864978 | pass |
+| 左候选 | 2432273e-69c5-4edb-b0f4-19bb59d7f906 | 74.02 | 73.590872 | 82.564069 | pass |
+| 第二放置候选 | 19efdab0-a9f1-44af-b192-8605a8826de4 | 76.74 | 75.982074 | 85.634905 | pass |
+| 第二放置基线 | 8fecd9fd-6bc4-40b9-a4c0-78caa5ce8b3a | 76.80 | 78.357657 | 88.159918 | pass |
+| 中心回归 | 81030a70-a616-46ee-8ed2-94b1104e8df1 | 77.42 | 47.904504 | 57.466926 | pass |
+
+左／第二进程wall分别省1.373075／2.375584s，CPU省1.300909／2.525013s。原请求、resolved场景、初始qpos/qvel、OMPL路径、实际接近路径及最终路径认证一致。非hold controller累计46.612581→44.652556、48.742175→45.800050s；hold为162／162和183／182拍。sim与hold微差完整保留，不把少1拍当加速，也不与round120或其它VM秒数串成累计收益。
+
+正式组件先于物理完成：5功能、7组／各三对全部报告、覆盖、hint、q6及有效原Data字节等价。86份NPZ共56,841,270原有效数组bytes，每份102有效数组＋77原生NULL标记；独立解码复算，不再仅信云summary。运输两组wall中位比.842309／.823997，CPU.842314／.824007，全部6对均更快。close中位1.006343（两慢一快），完整571状态与原244报告一致，保持负对照，不在controller close启用。本组件进程31.327947wall／31.639800CPU包含准备、回放和存证，不是工位节拍。
+
+5原物理均保留1mm、全部285对、planned／measured完整244、无障碍接触／无安全停机、free_object、weld0/mocap0、原2ms释放审计和完整回位。两左候选实有1195／1298批、34655／37642原状态及fallback0；中心原refinement关闭，走原direction batch，中心通过不当该前缀提速证据。独立715项全通过、unknown0；根重读原裁决与逐字段bytes也无失败（根字段数是存证检查，不作算法质量指标）。
+
+完整50Hz仍未通过：左候选P95 36.469ms／477拍>20ms／max404.727ms，第二34.112ms／489／405.447ms；中心亦103慢拍。现有分段最大close的controller397.814／398.626ms，不能归给OMPL随机性或相机；planned／measured内部归因尚缺。下一项核现有闭爪244同步责任与worker交接，不以减少点数、阈值或全阶段前缀换成绩。保留显式候选，不切全局默认，不宣称连续X域或20＋20。
+
+失败原件：v1误传短ref，fetch128，组件与物理0次；v2仅改完整提交参数。原cloud的physical_status仍留component_admitted_pending_original_runner，而stage=transport_prefix_physical_terminal、5份原verdict均pass；独立读回保留该警告，不回写原件。
+
+证据目录：`experiments/colab-twin/output/transport-prefix-physical-20261025/kaggle-v2/`，含原 `so101-evidence.tgz`、`root-summary.json`、`root-readback.json.gz`、`root-physical-readback.json.gz`、`independent-readback.json.gz`、`next-bottleneck-readback.json`与cleanup回执。原物理批次目录UUID `5f8e184d-0367-4f4f-8d8a-9141751956d0`。私有round126保留build_kernel.py、production-component.py、原fixture、原station_probe、两reader、云精确源和提交回执；原CLI复跑仍使用STATION_EXECUTOR中的显式候选命令。
+
+清理：v1五个与v2 266个regular原件逐字节相同、无额外／缺失后移除重复展开；3派生JSON gzip后逐字节回读一致，本轮释放104,292,352已分配B。原TGZ／最终视频／轨迹／输入均在归档保留。恢复：`python3 -m tarfile -e <kaggle-v2/so101-evidence.tgz> <kaggle-v2/unpacked>`；派生报告用 `gzip -dk <报告.json.gz>`。不把上一轮已释放量重复记入本轮。
+
+Knowledge=pending：根Codex仍须先核原Wiki§20／入口在途改动，再串行写回native NULL和首次异常经验；本轮记录仅为本项目事实。无新平台、定时器、实体动作或其它聊天消息。
