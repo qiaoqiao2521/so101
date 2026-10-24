@@ -2,11 +2,15 @@
 import copy
 import json
 from pathlib import Path
+import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from station_executor import (FIXED_NODES, SEGMENTS, TEMPLATE, UnsupportedStation,
-                              compile_program, run, validate_station)
+                              WORKSPACE_DEVELOPMENT_MODE, WORKSPACE_TARGET_REGION,
+                              compile_program, describe, run, validate_station)
 
 
 def station():
@@ -18,7 +22,151 @@ def station():
                         for i, (action, target) in enumerate(TEMPLATE)]}
 
 
+def workspace_station(side):
+    value = station()
+    cube_x, pick_x, hover, place_xy = ((.26, .26, .054, [.24, .14]) if side == 'right'
+                                      else (.22, .235, .06, [.20, .20]))
+    value['execution'] = {'mode': WORKSPACE_DEVELOPMENT_MODE, 'pick_xy_m': [pick_x, -.13],
+                          'pickup_hover_z_m': hover,
+                          'target_region_xy_m': copy.deepcopy(WORKSPACE_TARGET_REGION)}
+    for node in value['nodes']:
+        if node['id'] == 'pick':
+            node['position'] = [pick_x, -.13, 0.]
+        elif node['id'] == 'cube':
+            node.update(parent='world', position=[cube_x, -.13, .01])
+        elif node['id'] in ('approach', 'grasp'):
+            node['position'] = [cube_x, -.13, hover+.02 if node['id'] == 'approach' else .02]
+        elif node['id'] in ('place', 'release', 'clear'):
+            node['position'][:2] = place_xy
+    return value
+
+
 class AdmissionTests(unittest.TestCase):
+    def test_workspace_execution_is_explicit_and_keeps_default_admission(self):
+        default = validate_station(station())
+        for key in ('execution', 'development_only', 'not_admitted'):
+            self.assertNotIn(key, default)
+        value = station()
+        value['nodes'][-1].update(parent='world', position=[.26, -.13, .01])
+        with self.assertRaisesRegex(UnsupportedStation, 'cube'):
+            validate_station(value)
+        modes = describe()['execution_modes']
+        self.assertEqual(modes['default']['declaration'], 'omit execution')
+        self.assertTrue(modes[WORKSPACE_DEVELOPMENT_MODE]['not_admitted'])
+
+    def test_both_workspace_x_examples_preserve_development_only_semantics(self):
+        for side, cube_x, pick_x, hover, place_xy in (
+                ('right', .26, .26, .054, [.24, .14]),
+                ('left', .22, .235, .06, [.20, .20])):
+            value = workspace_station(side)
+            with self.subTest(side=side):
+                result = validate_station(value)
+                self.assertTrue(result['development_only'])
+                self.assertTrue(result['not_admitted'])
+                self.assertEqual(result['cube_xyz_m'], [cube_x, -.13, .01])
+                self.assertEqual(result['execution']['pick_xy_m'], [pick_x, -.13])
+                self.assertEqual(result['place_xy_m'], place_xy)
+                self.assertEqual(result['resolved_positions_m']['approach'], [cube_x, -.13, hover+.02])
+                self.assertEqual(result['resolved_positions_m']['grasp'], [cube_x, -.13, .02])
+                value['execution']['pick_xy_m'][0] = 99
+                self.assertEqual(result['execution']['pick_xy_m'], [pick_x, -.13])
+
+    def test_workspace_rejects_node_inconsistency_and_out_of_prior_cube(self):
+        for ident, coordinate, delta in (('pick', 0, .001), ('approach', 0, .001),
+                                         ('approach', 2, .001), ('grasp', 1, .001),
+                                         ('grasp', 2, .001), ('base', 0, .001),
+                                         ('jaw', 0, .001), ('release', 2, .001),
+                                         ('clear', 2, .001), ('cube', 2, .001),
+                                         ('cube', 0, .011)):
+            value = workspace_station('right')
+            next(node for node in value['nodes'] if node['id'] == ident)['position'][coordinate] += delta
+            with self.subTest(ident=ident, coordinate=coordinate), self.assertRaisesRegex(UnsupportedStation, ident):
+                validate_station(value)
+
+    def test_workspace_rejects_null_bad_modes_bad_values_and_changed_prior(self):
+        bad = [None, {}, {'mode': 'unknown'}]
+        for field, invalid_values in (
+                ('pick_xy_m', ([True, -.13], [.26], [float('nan'), -.13], ['.26', -.13])),
+                ('pickup_hover_z_m', (True, None, '.054', float('inf'), .053999, .060001)),
+                ('target_region_xy_m', (None, [[.20, .27], [-.16, -.10]],
+                                       [[True, .27], [-.16, -.10]]))):
+            for invalid in invalid_values:
+                execution = workspace_station('right')['execution']
+                execution[field] = invalid
+                bad.append(execution)
+        for execution in bad:
+            value = workspace_station('right')
+            value['execution'] = execution
+            with self.subTest(execution=execution), self.assertRaisesRegex(UnsupportedStation, 'execution'):
+                validate_station(value)
+
+    def test_workspace_optional_metadata_warns_and_round_trips_without_becoming_parameters(self):
+        value = workspace_station('right')
+        value['execution']['editor_note'] = {'label': '我改过的工位', 'gripper_force': 999}
+        with self.assertWarnsRegex(RuntimeWarning, 'editor_note.*不参与执行，原阈值不变'):
+            result = validate_station(value)
+        restored = json.loads(json.dumps(result, ensure_ascii=False))
+        self.assertEqual(restored['execution']['editor_note'], value['execution']['editor_note'])
+        self.assertEqual(restored['execution']['pickup_hover_z_m'], .054)
+        self.assertTrue(restored['development_only'])
+        self.assertTrue(restored['not_admitted'])
+        value['execution']['editor_note']['gripper_force'] = 0
+        self.assertEqual(result['execution']['editor_note']['gripper_force'], 999)
+
+    def test_workspace_run_forwards_declaration_and_keeps_original_judge_limits(self):
+        for side in (None, 'right', 'left'):
+            value = station() if side is None else workspace_station(side)
+            seen = {}
+
+            def build_contact(source, folder, **kwargs):
+                seen['builder'] = kwargs
+                folder.mkdir(parents=True, exist_ok=True)
+                for name in ('contact-workcell.xml', 'grasp-planning.xml'):
+                    (folder/name).write_text('<mujoco><worldbody/></mujoco>')
+                return object(), object(), folder/'contact-workcell.xml'
+
+            def physical(source, output, budget, case, candidate, **kwargs):
+                seen.update(budget=budget, case=case, controller=kwargs['controller_options'])
+                kwargs['scene_builder'](source, output/'scene')
+                return {'passed': False, 'failure_reason': 'mock_only', 'simulation_s': 0.}
+
+            names = ('quad_vertices', 'small_direction_cache', 'tree_leaf8', 'leaf_packed',
+                     'packed_inline', 'seed_bound_direct', 'summary_fast')
+            native = SimpleNamespace(**{'configure_'+name: lambda value: None for name in names})
+            policy = SimpleNamespace(**{name: False for name in (*names, 'compact_status_json')})
+            modules = {'support_native': native,
+                       'grasp_episode': SimpleNamespace(build_contact_scene=build_contact,
+                                                       numbers=lambda values: ' '.join(map(str, values))),
+                       'run_visual_grasp': SimpleNamespace(SOURCE=Path('/unused-source.xml'),
+                                                          run_physical_episode=physical),
+                       'mujoco': SimpleNamespace(MjModel=SimpleNamespace(from_xml_path=lambda path: object()))}
+            with self.subTest(side=side), tempfile.TemporaryDirectory() as folder, \
+                    patch.dict(sys.modules, modules):
+                root = Path(folder)
+                source = root/'request.json'
+                source.write_text(json.dumps({'station': value}))
+                (root/'status.json').write_text(json.dumps({'status': 'succeeded', 'report': {'passed': True}}))
+                self.assertEqual(run(source, root, None, route_policy=policy), 1)
+                status = json.loads((root/'status.json').read_text())
+                self.assertEqual(status['status'], 'failed')
+                self.assertFalse(status['report']['passed'])
+                self.assertEqual(seen['budget'], {'max_episode_wall_s': 120, 'max_sim_s': 90})
+                self.assertEqual(seen['case']['initial_xy_m'], validate_station(value)['cube_xyz_m'][:2])
+                if side is None:
+                    self.assertNotIn('pick_xy', seen['builder'])
+                    self.assertNotIn('pickup_hover_z_m', seen['controller'])
+                    self.assertNotIn('target_region_xy_m', seen['controller'])
+                    self.assertNotIn('development_only', status)
+                else:
+                    execution = value['execution']
+                    self.assertEqual(seen['builder']['pick_xy'], execution['pick_xy_m'])
+                    self.assertEqual(seen['controller']['pickup_hover_z_m'], execution['pickup_hover_z_m'])
+                    self.assertEqual(seen['controller']['target_region_xy_m'], execution['target_region_xy_m'])
+                    self.assertEqual(status['execution'], execution)
+                    self.assertTrue(status['development_only'])
+                    self.assertTrue(status['not_admitted'])
+                    self.assertTrue(status['layout']['not_admitted'])
+
     def test_place_frame_moves_release_and_clear_by_same_task_goal(self):
         value = station()
         for node in value['nodes']:

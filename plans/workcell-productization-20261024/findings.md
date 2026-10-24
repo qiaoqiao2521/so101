@@ -112,3 +112,7 @@
 本次选择显式工位布局薄适配，保持原检查器、阈值、夹持／释放裁判。新参数与测试分别在grasp_workcell.py、grasp_episode.py、visual_grasp_controller.py及run_workspace_case.py。原网页与±10mm不变；局部筛选仅是原物理的前置。右侧最薄证书仅比1mm多约4μm，动态跟踪风险必须由原物理核验。
 
 X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/measured244、RGB、释放/脱离/回位和worker独立回读均完整。新布局可复跑，原固定盘位X拒绝并未消失。完整50Hz未过。具体输入、成绩、反证与复跑见m1a-x-results.md，不将布局结果写成算法加速或区域全覆盖。
+
+## Station入口接续的实际所有权
+
+5186源码实际在FishBot的独立工作树`/home/muqiao/worktrees/fishbot-workbench-code-rebuild-20261018`，分支codex/workbench-code-rebuild-20261018，入口apps/fishbot-control-station/so101-runtime.cjs与Lichtblick RobotStation；不是主FishBot dirty main。复用原task-runtime、任务UUID、取消、scene与录像。此前仅写FishBot仓库相对路径的记录不足以确定运行checkout，本轮已更正。开发参数用显式execution对象而非隐藏profileID覆盖节点；只有省略execution才用原默认，坏声明保留给原准入拒绝。

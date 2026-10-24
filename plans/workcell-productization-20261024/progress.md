@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 接续 M1a：Station／网页入口实施中
+
+上一目标轮次分类=progress：X两新布局及两中心原物理4/4，源码与证据已交付。当前沿M1a把已验参数接入原Station与既有网页，仍不宣称连续区域或M1a整体完成。
+
+新增可编辑execution开发声明，缺省保留原±10mm；盘位／高位／静态视觉先验显式保存，节点与声明不一致则具体拒绝。未知可选元信息警告保留，不参与物理参数。原判据、244、90sim/120wall与原reset/RGB数据边界保留。网页添加两样例按钮，载入仅新建草稿并清除当前结果关联，原任务记录保留；导入、保存与复制保留execution。
+
+实际工作台位于FishBot独立工作树 `/home/muqiao/worktrees/fishbot-workbench-code-rebuild-20261018`，既有codex分支，非dirty main。agent-link已发现可用：AGY实调参数不兼容失败，CodeBuddy实调返回空正文，未冒称有效产出；当前GPT与两个内置工作者完成薄实现。网页工作树另有DroneDiagnostics/drone-diagnostics在途修改，保留不纳入本轮提交；主FishBot的mecanum/delivery-timing也未触碰。
+
+当前局部Python／数据层检查已做，根复验与生产构建进行中。浏览器与新Station原物理待验，不能由先前run_workspace_case成绩代替。Owner=根Codex；构建结束后先无运动浏览器往返，再资源允许时单次网页真实抓放。Knowledge=already_covered，第20节分层验收；输入合同与新结果留原计划。
+
 ## 2026-10-24 — X 新布局原物理4/4通过，保持开发能力
 
 源码e7f921c在Kaggle v1单VM串行结束；两个X新布局与两个原中心全部原pass。右侧X+20mm用红盘+20mm／高位54mm，左侧X−20mm用红盘−5mm／原60mm；不是原固定盘包络扩展。原真实夹持、搬运、落盘、释放、脱离、回位、planned/measured244、双worker清理与自由物体均核实，无障碍接触或安全停机。详细原成绩、UUID、规划/进程wall/CPU见[m1a-x-results.md](m1a-x-results.md)。

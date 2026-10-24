@@ -1,5 +1,13 @@
 # 工作站草稿执行适配
 
+## 从 Station／网页使用开发布局
+
+原默认工位仍使用 ±10mm。显式 `execution.mode=workspace-development-v1` 可从现有 Station 任务入口传红盘中心、取料高位和固定视觉先验。两份可导入示例为 [X+20mm](scenarios/workspace-station/x-plus20.json) 与 [X−20mm](scenarios/workspace-station/x-minus20.json)，来自网页真实导出，节点与参数同源。省略 execution 才使用旧默认；坏声明不会被删掉或偷偷换成旧场景。未知可选元信息警告并保留，原物理阈值不变。
+
+在5186工作台点击“载入 X+20mm 布局”或“载入 X−20mm 布局”，再显式点击“规划并运行仿真”。载入只建立新草稿，不发起任务，不继承历史成功。红盘 pick 节点与 execution.pick_xy_m 应保持一致；接近／抓取点世界XY与 cube 一致，接近设计Z为高位+.02m。改变参数后仍由原 IK、244扫掠和物理裁判逐任务检查。区域是定位先验，不是已经证明的连续抓放包络。
+
+本轮入口相关检查与无运动浏览器已通过；新入口完整物理正在接续，原开发CLI的4/4不替代它。
+
 ## X 方向工位开发参数（2026-10-24）
 
 `run_workspace_case.py --profile scenarios/workspace-x-m1a.json` 可复跑指定红盘布局的 X 方向试验。`pick_xy_m` 仅平移完整红盘，`pickup_hover_z_m` 只修改取料接近／抬升高位；默认仍是原盘位和 .06m。下探 .019m、原 IK、1mm、244 点扫掠及物理裁判不变。新布局不改变网页 ±10mm 准入，也不算原固定盘位包络扩大。两个X新布局及两个原中心开发原物理4/4通过；完整50Hz、连续包络及扰动验收仍未通过。诊断、配置和阶段结果见 [X 方向记录](../../plans/workcell-productization-20261024/m1a-x-results.md)。

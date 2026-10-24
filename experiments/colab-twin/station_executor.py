@@ -6,11 +6,13 @@ before simulation rather than being replaced with the historical default scene.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import os
 from pathlib import Path
 import time
+import warnings
 import xml.etree.ElementTree as ET
 
 
@@ -29,6 +31,8 @@ FIXED_NODES = {
     'release': ('target', [.24, .14, .03]), 'clear': ('target', [.24, .14, .1]),
 }
 OBSTACLE_HALF_SIZE = [.025, .028, .065]
+WORKSPACE_DEVELOPMENT_MODE = 'workspace-development-v1'
+WORKSPACE_TARGET_REGION = [[.21, .27], [-.16, -.10]]
 
 
 def describe():
@@ -43,6 +47,23 @@ def describe():
                      for name, steps in SEGMENTS.items()},
         'supported_segment_sequences': [list(SUPPORTED_SEGMENTS)],
         'supported_cube_xy_m': {'center': [.24, -.13], 'half_extent': [.01, .01]},
+        'execution_modes': {
+            'default': {'declaration': 'omit execution',
+                        'supported_cube_xy_m': {'center': [.24, -.13], 'half_extent': [.01, .01]},
+                        'pickup_hover_z_m': .06, 'pick_xy_m': [.24, -.13]},
+            WORKSPACE_DEVELOPMENT_MODE: {
+                'development_only': True, 'not_admitted': True,
+                'target_region_xy_m': [axis.copy() for axis in WORKSPACE_TARGET_REGION],
+                'pickup_hover_z_range_m': [.054, .06],
+                'example': {'mode': WORKSPACE_DEVELOPMENT_MODE, 'pick_xy_m': [.26, -.13],
+                            'pickup_hover_z_m': .054,
+                            'target_region_xy_m': [axis.copy() for axis in WORKSPACE_TARGET_REGION]},
+                'node_mapping': {'pick': 'execution.pick_xy_m, world Z=0',
+                                 'approach': 'cube world XY, world Z=pickup_hover_z_m+0.02',
+                                 'grasp': 'cube world XY, world Z=0.02'},
+                'scope': '固定视觉先验不是连续可抓取范围；已有点位通过不能继承到新布局，每次仍做原 IK、碰撞、244 点与物理裁决。',
+            },
+        },
         'cube_z_m': .01, 'cube_size_m': [.018, .018, .016],
         'fixed_nodes_world_m': {name: xyz for name, (_, xyz) in FIXED_NODES.items()
                                 if name not in ('place', 'release', 'clear')},
@@ -70,6 +91,44 @@ class UnsupportedStation(ValueError):
     def __init__(self, issues):
         self.issues = issues
         super().__init__('；'.join(issues))
+
+
+def workspace_execution(station):
+    """Parse an explicit development declaration without widening defaults."""
+    if 'execution' not in station:
+        return None
+    execution = station['execution']
+    if not isinstance(execution, dict) or execution.get('mode') != WORKSPACE_DEVELOPMENT_MODE:
+        raise UnsupportedStation([f'execution 必须声明 mode={WORKSPACE_DEVELOPMENT_MODE}；省略 execution 才使用原默认工位'])
+    issues = []
+    allowed = {'mode', 'pick_xy_m', 'pickup_hover_z_m', 'target_region_xy_m'}
+    extras = [key for key in execution if key not in allowed]
+    if extras:
+        warnings.warn('WARNING: execution 附加字段 '+', '.join(sorted(map(str, extras)))+
+                      ' 仅保留为来源信息，不参与执行，原阈值不变', RuntimeWarning, stacklevel=2)
+
+    def finite_pair(value):
+        return (isinstance(value, list) and len(value) == 2 and
+                all(not isinstance(x, bool) and isinstance(x, (int, float)) and math.isfinite(x)
+                    for x in value))
+
+    pick_xy = execution.get('pick_xy_m')
+    if not finite_pair(pick_xy):
+        issues.append('execution.pick_xy_m 必须为两个有限非布尔米制数')
+    hover = execution.get('pickup_hover_z_m')
+    if (isinstance(hover, bool) or not isinstance(hover, (int, float)) or
+            not math.isfinite(hover) or not .054 <= hover <= .06):
+        issues.append('execution.pickup_hover_z_m 必须为 .054..06m 内有限非布尔数')
+    region = execution.get('target_region_xy_m')
+    if (not isinstance(region, list) or len(region) != 2 or
+            not all(finite_pair(axis) for axis in region) or region != WORKSPACE_TARGET_REGION):
+        issues.append('execution.target_region_xy_m 必须保持固定视觉先验 [[0.21,0.27],[-0.16,-0.10]]；不代表连续物理已验')
+    if issues:
+        raise UnsupportedStation(issues)
+    return {**copy.deepcopy(execution),
+            'mode': WORKSPACE_DEVELOPMENT_MODE, 'pick_xy_m': [float(x) for x in pick_xy],
+            'pickup_hover_z_m': float(hover),
+            'target_region_xy_m': [axis.copy() for axis in WORKSPACE_TARGET_REGION]}
 
 
 def compile_program(program):
@@ -114,6 +173,7 @@ def validate_station(station):
     issues = []
     if not isinstance(station, dict):
         raise UnsupportedStation(['工作站必须为 JSON 对象'])
+    execution = workspace_execution(station)
     nodes = station.get('nodes')
     if not isinstance(nodes, list):
         raise UnsupportedStation(['nodes 必须为数组'])
@@ -156,6 +216,12 @@ def validate_station(station):
     place_shift = [place[0]-.24, place[1]-.14, place[2]]
     for ident, (kind, original) in FIXED_NODES.items():
         xyz = [a+b for a, b in zip(original, place_shift)] if ident in ('place', 'release', 'clear') else original
+        if execution is not None:
+            if ident == 'pick':
+                xyz = [*execution['pick_xy_m'], 0.]
+            elif ident in ('approach', 'grasp'):
+                xy = resolved.get('cube', [.24, -.13, .01])[:2]
+                xyz = [*xy, execution['pickup_hover_z_m']+.02 if ident == 'approach' else .02]
         node = by_id.get(ident)
         if node is None:
             issues.append(f'固定模板缺少节点：{ident}')
@@ -168,7 +234,12 @@ def validate_station(station):
         issues.append('需要 cube 物体节点')
     elif 'cube' in resolved:
         x, y, z = resolved['cube']
-        if abs(x-.24) > .01000001 or abs(y+.13) > .01000001 or abs(z-.01) > 1e-8:
+        if execution is not None:
+            if (any(value < low or value > high
+                    for value, (low, high) in zip((x, y), WORKSPACE_TARGET_REGION)) or
+                    abs(z-.01) > 1e-8):
+                issues.append('cube 开发工位需在固定 target_region_xy_m 视觉先验内，Z=0.01m；仍须逐任务物理检查')
+        elif abs(x-.24) > .01000001 or abs(y+.13) > .01000001 or abs(z-.01) > 1e-8:
             issues.append('cube 支持世界 XY=(0.24±0.01,-0.13±0.01)m，Z=0.01m')
     obstacles = []
     for ident, node in by_id.items():
@@ -191,7 +262,9 @@ def validate_station(station):
             'place_height_m': resolved['place'][2],
             'additional_obstacles': obstacles,
             'resolved_positions_m': resolved, 'program': program_plan,
-            'mapping': describe()['notes']}
+            'mapping': describe()['notes'],
+            **({'execution': execution, 'development_only': True, 'not_admitted': True}
+               if execution is not None else {})}
 
 
 def atomic_json(path, value, *, compact=False):
@@ -280,7 +353,9 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
         atomic_json(output/'resolved-station.json', layout)
         publish(phase='initializing', message='加载现有 MuJoCo / IK / OMPL 执行器',
                 station_name=station.get('name', 'SO101'), layout=layout,
-                capability=describe())
+                capability=describe(),
+                **({key: layout[key] for key in ('execution', 'development_only', 'not_admitted')}
+                   if 'execution' in layout else {}))
         os.environ.setdefault('MUJOCO_GL', 'egl')
         from support_native import (configure_quad_vertices, configure_small_direction_cache,
                                     configure_tree_leaf8, configure_leaf_packed,
@@ -299,8 +374,11 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
 
         def build_scene(source, folder, **kwargs):
             check_cancel()
+            development_options = ({'pick_xy': layout['execution']['pick_xy_m']}
+                                   if 'execution' in layout else {})
             model, rig, path = build_contact_scene(source, folder, place_xy=layout['place_xy_m'],
-                                                   place_height_m=layout['place_height_m'], **kwargs)
+                                                   place_height_m=layout['place_height_m'],
+                                                   **development_options, **kwargs)
             for name in ('contact-workcell.xml', 'grasp-planning.xml'):
                 filename = folder/name
                 tree = ET.parse(filename)
@@ -353,17 +431,19 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                 'perturbed': False, 'offset_rad': [0.]*5,
                 'obstacle_geom_names': ['approach_obstacle']+
                     [row['geom_name'] for row in layout['additional_obstacles']]}
+        controller_options = {'release_rotation_mode': 'floor_yaw', 'release_pinch_height_m': .028,
+                              'place_xy': layout['place_xy_m'], 'place_height_m': layout['place_height_m'],
+                              'route_policy': route_policy}
+        if 'execution' in layout:
+            controller_options.update(pickup_hover_z_m=layout['execution']['pickup_hover_z_m'],
+                                      target_region_xy_m=layout['execution']['target_region_xy_m'])
         report = run_physical_episode(SOURCE, output/'episode',
                     {'max_episode_wall_s': 120, 'max_sim_s': 90}, case, None,
                     video=True, scene_builder=build_scene, progress_callback=progress,
                     **({'timing': timing} if timing is not None else {}),
                     scene_callback=scene,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
-                    controller_options={'release_rotation_mode': 'floor_yaw',
-                                        'release_pinch_height_m': .028,
-                                        'place_xy': layout['place_xy_m'],
-                                        'place_height_m': layout['place_height_m'],
-                                        'route_policy': route_policy})
+                    controller_options=controller_options)
         cancelled = cancel_file is not None and cancel_file.exists()
         artifacts = {'report': str(output/'episode/report.json'),
                      'trajectory': str(output/'episode/trajectory.json'),
