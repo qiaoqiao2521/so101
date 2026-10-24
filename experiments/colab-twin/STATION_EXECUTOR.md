@@ -361,3 +361,9 @@ F2am采用的默认父版 `route_strategies/direction_hint_preallocated.py` 在�
 2026-10-23两已有工位反序共4/4原物理通过，原planned/measured各244点及所有抓放、释放、脱离、回位与安全门保持。两站进程47.375→42.096s、42.849→38.174s；各自同3264/3366拍CPU30.123→27.007s、28.157→24.707s。原同量组件三对也更快，但不将完整秒数差全部归于分支顺序，不合并不同负载轮次作累计提速。第二工位仍有54拍超20ms，完整50Hz未通过，详见[原计划F2av](../../plans/factory-loading-20261021/progress.md)。实时status继续紧凑编码，归档文件继续原缩进。
 
 Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。中点搜索候选的三组成对原物理共6/6通过，但方块X+5mm组整程wall/CPU略回退，保持显式可选；此轮当时默认仍为浮点优先上下文。完整50Hz仍未过，不开启20+20评测。
+
+### M1b 显式开发候选：实测位姿异步回位
+
+`--candidate route_strategies/async_measured_return.py --timing` 在当前loaded_jaw_preload父版上只启用实测q异步回位。沿用原worker生命周期及原_return_path；接纳前保留释放估计绑定、实测桥接、首指令、连续偏置与预算，等待中继续原保护。原默认不变。
+
+两个X开发布局反序对照共4/4原物理通过（原版2例、候选2例）；左首回位拍143.018→33.347ms，右36.634→30.314ms。候选仍超20ms，整程wall/CPU两处方向不一致，不能宣称整程提速或完整50Hz通过。源码、复跑、244全扫及原件见[M1b结果](../../plans/workcell-productization-20261024/m1b-return-results.md)。

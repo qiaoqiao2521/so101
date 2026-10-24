@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — M1b 实测q异步回位4/4，保持显式候选
+
+Current：本轮原物理与证据闭环结束，详见[m1b-return-results.md](m1b-return-results.md)。固定b317d4f在Kaggle同VM右B→C／左C→B四次原pass，源码运行期间未改。X开发布局保持，未改IK或盘壁阈值。
+
+Done：根101相关CPU检查通过；同模型三对path/method/report和75state/arm/distance覆盖逐位等价。根与独立reader回读原4/4、244+244、全部15635轨迹、释放脱离回位、自由物体、视频和worker回执，warnings=0。候选return job均consumed/joined/owned_ack，首指令accepted+issued且保持连续。
+
+Remaining：左首retreat完整拍143.018→33.347ms，右36.634→30.314ms；候选仍超20ms。process wall右50.884→49.745s，左50.878→51.119s；整程收益不一致，不切默认、不宣称提速或50Hz。原默认loaded_jaw_preload保留，候选显式可复跑。M2恢复、20+20、配方卸货仍未完成。
+
+Issues：新等待右6拍／左13拍，原hold/release另有调度差；不把等待或其他VM秒数计入算法收益。原轨迹未存逐拍全部sweep点，只核已记录guard与原裁决。Qoder审查超时、CBC空正文未计有效复审。
+
+Next：根Codex只针对候选接纳的controller 22.779/25.369ms做实际分段测量，区分绑定、桥接和首指令；先证因果再改动。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》第20节，不把候选保留写成默认晋级。
+
 ## 2026-10-24 — M1b 实测回位候选，默认关闭
 
 Current：X两侧已验开发布局沿用，不重写IK或放松盘壁阈值。接续旧周期最大140.476ms的separate→retreat入口。新Kaggle原观察ca00cc74…原物理pass，78.34sim/48.142episode-wall、49.470process-wall/59.080process-CPU；244+244、自由物体、释放脱离回位和490帧均独立回读。插桩复制快照额外120ms，cProfile树父帧不完整，不能把341ms最大拍写成原固有成本。
