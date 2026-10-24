@@ -591,3 +591,8 @@ F2ca已实测淘汰：Kaggle private so101-return-array-view-20261024 v1，原32
 F2cb本地归因确认视图省复制但增加比较成本；6616节点的Python树遍历与372次NumPy调用均有成本，不把子时长加到父时长。F2cc元组分派Kaggle v1/source714b810三对main差-8.074/+1.369/+2.283ms，原screen仍拒绝；实际路径/fresh/pad/q保持，未发物理。v1另有单元素畸形/identity比较回归，保留反例；round97已补worker不可变树一次性验收与严格通用比较，81本地回归通过。合法hotpath无新变化，不为correctness修复重复跑无益云组件，未提交v2。
 
 字节比较方向收口，不切默认。下一项只查worker窗口的controller子段与旧GIL/暂停反证，取得更细证据再决定候选；不从wall/CPU差猜原因，不改线程/预算/阈值。Knowledge仍pending。
+
+
+F2cd原默认Kaggle真实单回合fc416915已原pass；244、全部碰撞、自由物体、释放脱离回位、完整视频和worker清理独立通过。3873完整拍/P9517.675ms/109late，完整50Hz仍未过。新的controller子段协议独立通过；context check成本小，ratchet全176次约651ms、慢窗口36次约205ms，非新的性能A/B。
+
+Next F2ce：private round99单次ratchet内复用原谓词已算的同q实际distance/pad sample，禁止跨拍近似缓存或改判定。用本轮trace的176实际pre-q和69.18s真实guard初始化；旧200/200 MJB不可充作220/170。先同fresh场景局部验证全guard与可查MjData效果、三对测实际总组件；历史Data未归档须保留边界，未经准入不发候选物理。Root GPT整合与Kaggle，内部两Agent分写候选/fixture，尚无本项实测。Knowledge仍pending。

@@ -1675,3 +1675,18 @@ F2cc v1（private round96）只把普通tuple交回内置比较，数组leaf保�
 private round97已修复：worker构证时仅接收exact tuple/bytes/str/int/bool/None的不可变树，冻结byte_tree_valid与同一树绑定；验证MemoryError/RecursionError则无证据并回原算法。通用binding_equal恢复旧严格递归，快路只对已验worker证书开放。新增单元素、共享数组/view、真实畸形证书和验证OOM回原返回identity，根侧81项通过，独立只读审查未发现新缺口。该修复不改变v1合法hotpath，故不再送云追绿；没有所谓Kaggle v2成绩。生产默认、所有原244/碰撞/阈值/90sim120wall与回退不变。
 
 当前字节比较方向收口。下一项只读核对worker工作窗口controller慢拍的剩余粒度，先查旧GIL/暂停/归因记录，避免重复；不得从窗口集中直接断言调度或native原因。根Codex接续，尚无新候选或物理。Knowledge=pending沿用原两页未审改动原因，项目负例只留本计划，不增通用宣称。定时器未恢复，不发其他对话消息，不触碰Mint或实体设备。
+
+
+## F2cd 原默认真实控制器分项通过；接F2ce单次释放采样复用
+
+source0a7fded，Kaggle private so101-controller-window-20261024不可变v1终态。原默认220/170单回合fc416915-6f09-4963-aea4-f14dfd42656a原pass，77.46sim/52.832577process-wall/62.968718CPU。原244 planned/measured、全部trajectory guard/碰撞阈值、自由物体、抓放释放脱离回位及两worker consumed/joined/owned_ack清理独立读回通过。释放70.26s脱离，max XY漂移.200111mm、脱离后峰值力0N；485/485视频帧，ffprobe另核640x480/6.25fps/485帧。初始规划elapsed .279891s、planning .119322s、506checks，预分配 .181799s。此为带观察器的原默认任务，不与旧VM秒数比较、不称算法提速。
+
+3873拍完整：P5010.039ms/P9517.675ms/max80.608ms，109拍>20ms，完整50Hz未过。观察器只透明包装update、两类context check/binding及ratchet，main-only，原对象/异常透传，全部方法恢复；未包装native/checker/predicate，不用cProfile。trace与原timing的seq/elapsed/stage/controller区间逐拍对齐，父子树、两时钟、无观察错误均通过，independent-controller-window-readback.json的protocol_valid=true。
+
+慢worker状态窗口hold39/release45拍。其内transport check79次共43.044ms、separation check91次55.840ms，单次max .725/.912ms；包含binding，不能再把子时间加上。check-minus-binding残差仅3.040/4.006ms，非纯matches/GIL等待。全量check最高1.123ms，不能笼统称所有事件都<1ms。ratchet慢窗口36次wall205.162ms/CPU150.030ms，最高10.363ms；全量176次wall651.454ms/CPU596.234ms。根侧复核原poll是非阻塞False，无pause API，不从状态窗口推断确切线程调度原因。
+
+原件output/controller-window-attribution-20261024/v1，单回合目录observation/a3ffa6e7-1f96-49cc-8241-317637c59a6d；独立runtime/controller/source/inventory/video读回齐全。private round98保存observer、原Kaggle薄入口、reader、实际云源码/metadata与physical-path.txt复跑指针。Root GPT云接入，内部GPT观察器与局部fake透传/拒绝测试；未冒称新CodeBuddy生成，生产源码与默认未改。
+
+F2ce源码确认确定重复：原_separation_valid先算distances+pad_vertices，成功后同一_ratchet又在更新floor/high_z前对同q6重复两项。ReleasedObjectQuery没有同q缓存，每次都mj_forward。下一私有round99只试单次调用内首次实际sample复用，仍运行原完整谓词，exact q失配/自定义接口/回调等走原链，不跨拍缓存。176个实际输入从trace精确定位seq3461..3636（release37/separate139），pre-q为trajectory[seq-2].q6；原guard初始化是seq3460/69.18s的pre-q，不能用68.58s worker snapshot替代。
+
+当前scene归档含完整planning XML，资产只作环境路径映射；round89旧MJB的200/200工位与本220/170不同，不能直接借用。完整历史query MjData未归档，下一组件仅可在相同fresh复现场景中mj_copyData初始化，必须明确此范围，先检验原guard/最终状态及全可查Data效果，尚未证明省第二forward等价。原truth只供裁判，不作为候选输入。尚无候选组件或物理成绩，不切默认。Knowledge=pending沿用原知识库未审改动原因，owner根Codex。

@@ -707,3 +707,8 @@ F2ca证伪完成：精确byte-view与安全copying-parent的路径、fresh谓词
 F2cb只读局部事实：view构造省约7ms，但Python逐层比较中位9.579ms，copy tuple比较仅1.449ms；np.array_equal本体子时间约2.7–3.5ms，不能把全部余量归为纯递归。6616个节点、2584tuple、372个数组；逻辑临时bool总尺寸不等于实测峰值。原fixture key与证书不变、观察器恢复，归因并非性能准入。
 
 F2cc把tuple分派交内置实现后，Kaggle同VM对安全copying-parent三对仍两对变慢，中位+1.369ms，原screen拒绝。v1在合法原worker-byte域同值，但独立审查发现单元素ndarray与identity畸形比较可通过；79项绿测没有覆盖此边界。round97修复为worker一次性验证不可变bytes树，主线程只凭该冻结证据开快路，通用比较保留旧行为；81项根侧回归及独立审查通过。不因正确性修复重复无收益云组件，不发物理或默认晋级。反例、精确源与结果分别在output/return-tuple-dispatch-factory-20261024/component-v1、private round96/97；没有v2云成绩。该方向收口，下一证据回到原controller慢拍内部，不继续比较实现追绿。
+
+
+F2cd新观察确实补了旧F2bp之外的粒度。原默认fc416915完整原pass，原244/安全/释放脱离回位/视频/清理独立通过；3873拍仍109late，不能以P9517.675ms称完整50Hz。main context check慢窗口每次<.913ms，全量max1.123ms，不是当前主要单次长尾。ratchet全176次约651ms，其中慢worker窗口36次205ms、max10.363ms。各段inclusive，不相加；worker状态只是诊断窗口，不等于线程CPU/GIL或poll等待原因。
+
+源码_separation_valid与_ratchet之间有确定同q重复distance/pad查询，且query无现成缓存。下一项只限单次调用内实际sample，不能从同q几何断言第二mj_forward的全部Data效果已等价。原176输入与69.18s guard初始化已由trace定位；68.58s worker snapshot不是这次guard初态。当前220/170 planning XML可复用，旧200/200 MJB及释放估计不同，不能混用。历史Data缺失只能明确为fresh同场景局部复现，再由原物理验证，不允许把目标truth注入策略。当前尚无该候选收益或物理结论。
