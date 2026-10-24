@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 左固定盘两放置工位原物理通过
+
+Current：本目标轮次=progress，固定46f5ba5已完成左侧主／第二工位及中心默认回归；[结果与复跑](m1a-x-fixed-certificates.md)。结合580ec56已核右侧结果，原红盘X±20mm固定取料点均能在两已有放置工位真实抓放；默认／网页±10mm不改，不宣称连续区域。
+
+Done：v2左a3adbf9c…pass74.10sim/96.873wall，v3第二3c482379…pass76.84sim/99.990wall；planned/measured各244、原19轴先查与285对／1mm保持，真实抬升／持物／静稳／释放／脱离／回位、自由物体与worker清理通过，464／481实帧。两次实测补证384/384，382hint＋2full，error0；方向建议每帧重投影，不复用认证。原左fbb037d9…初始化拒绝和v1真实超时均保留；中心476fc756…原pass，479实帧。
+
+Done：根241相关检查、同套不含Carry的索引源码241检查通过；1522真实姿态三对与最终定点复核全部返回逐字段相同。根及独立reader核原件、固定场景／初态／RGB／monitor／源码，原runner／probe未改；三批次在完整终态后才改源码／提交。
+
+Remaining：左主／第二完整3705／3842拍，P95=36.279／35.724ms，701／722拍>20ms；完整50Hz未过。close／lift慢拍已有阶段定位，尚缺主控内部剩余成本切片，不凭组件收益宣称整程提速。连续有效区域、20＋20、六技能halt／同世界恢复及FishBot连续卸货均未完成。
+
+Next：根按M1a继续核连续包络与定位拒绝，按M1b只读拆close／lift保留全扫下的剩余成本；不改默认、不先跑新20＋20。Carry在途SO101四文件及工作台八文件保留，owner根，最短入口carry_gate.py／station_executor.py与原runtime测试，尚缺构建／浏览器／物理，不混入X结果。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20；本轮新实测仅留原计划，不改记忆。
+
 ## 2026-10-24 — 左固定盘补证首轮真实超时，接方向建议复用
 
 Current：上一轮为progress，首批已全部终态；[原件与结果](m1a-x-fixed-certificates.md)。26a0a1d原左93d949ce…grasp_leg_collision；显式候选2c6637a9…wall_time_limit停close22.56sim/120.757wall；原中心30819b8a…pass76.72sim。没有以COMPLETE或补证通过冒称抓放成功。

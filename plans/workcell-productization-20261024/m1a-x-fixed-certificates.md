@@ -172,3 +172,42 @@ worker耗时与主回合重叠，不能相加；两个云VM和不同目标的wal
 一次早期筛选只载入旧helper却套新checker，缺少hint_stats导致适配异常，已标无效并单独保留 `hint-local-screen-invalid-reference.json`；未用于上述三对结论。有效原件 `hint-local-screen.json`，私有复跑入口 `~/.cache/ros2-factory/codebuddy-so101-20261021/round111-x-left-refinement/local_screen.py`。固定新源码后再用同profile原物理验证；v1超时不删除、不改判，不放宽原120s。
 
 最终定点核验：hint单方向返回须evaluations=1、成功index=0，miss＋full真实计2次native调用。相关241项检查通过；提示负gap/NaN后全回退、坏ABI/FENV不救回、owner隔离与所有pairs失败不发布均覆盖。统计/ABI小修后的1522姿态再验全部返回逐字段一致，原16.289→候选1.010s、408/408整帧重新认证，原件 `hint-final-readback.json`。原默认与Carry在途代码未纳入本候选。
+
+## 左侧两放置工位：原物理通过
+
+固定源码 `46f5ba590bec2fe4c32542d69f6898f5360c1cae`。Kaggle同kernel v2先串行原左、提示候选、中心；v3在同源码独立验证已有第二放置工位(.20,.20)m。原红盘(.24,−.13)m不移动，取料始终(.22,−.13)m；原60mm高位／.5rad开爪、1mm、全部285对、244点扫掠、90sim／120wall及裁判保持。默认不开启补证，网页准入未变。
+
+| version / case / UUID | 原裁决 | sim s | episode wall s | process wall / CPU s |
+| --- | --- | ---: | ---: | ---: |
+| v2 left_original_axes / fbb037d9-280f-4ffc-9967-81f3ceca55c7 | fail：grasp_leg_collision | 0 | 2.989 | 3.897 / 5.422 |
+| v2 left_refined_axes / a3adbf9c-05c0-400b-885b-c282ca15f87f | pass | 74.10 | 96.873 | 98.038 / 107.612 |
+| v2 center_regression / 476fc756-73d0-4afc-83b3-462558ed35b3 | pass | 76.64 | 49.698 | 50.801 / 60.927 |
+| v3 left_refined_axes_secondary / 3c482379-89ab-4e22-8099-8ec26e6915bc | pass | 76.84 | 99.990 | 101.107 / 111.514 |
+
+左侧主／第二工位分别真实抬升40.960／40.875mm、持物29.72／32.08s、静稳7.54／7.50s。原释放审计通过，66.742／69.520s脱离，XY漂移.214669／.169735mm、脱离后峰值力0；回位最大q6误差.102544／.101346mrad，最终速度9.44e−8／7.64e−8rad/s。无碰撞／安全停机，所有已运行行finite/arm_valid，自由物体、weld0/mocap0不变。
+
+两次planned／measured闭爪各244点通过；主控和实测保守检查均走同一显式开关，批量桥未绕过Python补证。两次实测checker各384次整帧补证全部成功、error0：382次提示＋2次完整搜索，全部是当前p/R下的原native完整顶点重投影。未归档逐调用ABI轨迹；计数／源码和物理原件分别作为对应证据，不称连续CCD。原左初始化拒绝和v1墙钟超时完整保留。
+
+两例transport／separation均consumed／owned_ack／joined，cleanup_unconfirmed=false，无遗留worker。第二工位分离路线沿原 `vertical_ik_limit_after_clearance` 回退，在25.615mm已认证高度接原回位；下一28.462mm IK残差.001365仍拒绝，未改95°限位、原阈值或删回退。录像实际ffprobe为464/464与481/481帧。
+
+| 左侧成功例 | 初次OMPL / 含后处理 s | transport / separation worker wall s | 完整拍数 | P95 / P99 / max ms | >20ms |
+| --- | ---: | ---: | ---: | --- | ---: |
+| 主放置工位 | .141553 / .295674 | 1.974707 / 1.233394 | 3705 | 36.279 / 152.306 / 641.217 | 701 |
+| 第二放置工位 | .173686 / .372213 | 2.512371 / 1.595698 | 3842 | 35.724 / 153.213 / 634.892 | 722 |
+
+中心回归3832拍，P95=14.786ms、max45.634ms、100拍>20ms；479/479实帧、抓放／释放／脱离／回位通过。**本轮不是整程提速A/B或50Hz通过。** 不能用v1失败前缀wall与v2完整成功相减，或把不同云VM／放置目标的秒数累加。主工位close与lift分别251／143慢拍，controller独占累计19.534／5.505s；这只定位下一步应测的阶段，尚未定位内部剩余算子。
+
+根与独立reader分别从原件重放原monitor／skill_evidence，并核固定场景、初态、RGB估计、源码、全扫、释放和清理。v2 batch=`d1ff1b6d-4fb2-4284-b824-0056668e40ab`，v3 batch=`b6967709-1488-4899-9446-ab6a7eb37db3`；原件在 `experiments/colab-twin/output/workspace-x-left-refinement-20261024/kaggle-v{2,3}/`，各含root／independent-readback.json。
+
+已验证入口（在现有EGL／native依赖环境中运行，仍是开发case）：
+
+```bash
+cd /home/muqiao/dev/ros2/_delivery/so101-colab-20261001/experiments/colab-twin
+/home/muqiao/.cache/so101-colab/planning-venv/bin/python run_workspace_case.py \
+  --profile scenarios/workspace-x-left-refinement-m1a.json \
+  --case left_refined_axes --output-dir output/left-refined-replay
+```
+
+第二工位选择 `left_refined_axes_secondary`；原版对照 `left_original_axes`，中心回归 `center_regression`。云端沿私有round111原构建器固定上述SHA，原runner／probe逐字相同。
+
+**固定红盘X−20mm与X+20mm均已在两个已有放置工位完成原物理抓放。** 这是显式开发能力，不是整个±20mm连续区域、扰动20＋20、网页新默认或50Hz认证。连续包络、六技能同世界恢复与卸货仍依原计划推进；Carry在途两仓改动独立保留。
