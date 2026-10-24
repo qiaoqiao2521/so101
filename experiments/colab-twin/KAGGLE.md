@@ -139,3 +139,8 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [同步回位原物理](https://www.kaggle.com/code/muqiaoqiao/so101-return-batch-axes-physical-ab-20261024) v1为200/200 B→C，v2为220/170 C→B，source775302c，共4/4原pass。main return145.006→103.350、62.031→50.641ms，完整回位拍166.345→123.033、79.000→72.602ms；但整程wall50.183834→49.636662、51.464911→54.096420s，CPU/同拍非等待工作亦第二站增，不晋级默认，不宣称50Hz通过。所有原244/安全/自由物体/释放脱离回位/录像/清理保持。
 
 v1错误地以distances实例槽不存在观察worker恢复，原失败记录保留；worker精确身份未插桩。v2只把观察改成原函数身份/slot，实际两侧main/worker均通过。原数学及scope不变，不将观察器缺陷当物理失败或掩去限制。原件output/return-batch-axes-factory-20261024含独立库存；private round86和云版本可恢复精确入口。下一项F2bt先做同输入布尔阈值充分轴组件，不叠加批量轴、不改变原数值距离与评分。
+
+
+[SAT布尔阈值组件](https://www.kaggle.com/code/muqiaoqiao/so101-return-clearance-witness-component-20261024) v1在同75个真实回位点上保持原arm/布尔/最终路径/pad，原numeric API不改。三对155–156→87–89ms，全部1275个robot几何继续检查；原screen准入仅允许物理，不是任务成功。
+
+[原完整物理](https://www.kaggle.com/code/muqiaoqiao/so101-return-witness-physical-ab-20261024) v1为200/200 B→C，v2为220/170 C→B，sourceade153f，共4/4原pass、所有原244/碰撞/阈值/释放回位及完整视频保持。main return126.439→74.009、56.334→33.110ms，完整回位拍141.942→91.393、72.069→49.546ms；但整程wall58.193510→58.710048、47.555413→49.377854s，两边都没有总成本收益，不晋级默认、不称50Hz达标。原件output/return-clearance-witness-factory-20261024含独立库存；private round87/云版本可恢复。首次长标题SaveKernel400保留，缩短后成功，不把平台提交拒绝混为物理失败。下一项round88只读回位成本归因，尚未运行。

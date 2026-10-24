@@ -551,3 +551,8 @@ Next：私有round86已有原评测薄接入，只在控制线程separate→retr
 F2bs完整两工位反序已独立回读：4/4原pass，main return145.006→103.350ms、62.031→50.641ms，但process wall50.183834→49.636662s、51.464911→54.096420s，整程收益不可靠；不晋级默认，不追加追绿。原244/全部安全/释放回位及90sim120wall保持，完整50Hz未过。v1错误恢复观察保留，v2身份/slot核验修正且实际全过；详细边界在progress/findings，原件output/return-batch-axes-factory-20261024。
 
 Next F2bt：独立SAT阈值充分轴见证，只限main回位布尔消费，数值距离与其他阶段/worker保持。正常/边界/异常等值与同真实输入三对组件先行，原screen决定物理准入；尚未实施，不改默认。不重建平台、不恢复定时器，由Root GPT接续。
+
+
+F2bt完成：8局部回归及同真实75点组件通过，原screen准入；两工位反序4/4原物理通过，原全部244/安全/释放回位不变。main return126.439→74.009、56.334→33.110ms，但整程wall58.193510→58.710048、47.555413→49.377854s，匹配非等待CPU亦未减。不晋级默认、不追加追绿；完整50Hz仍未过。原件output/return-clearance-witness-factory-20261024，private round87可复跑。
+
+Next F2bu只读计时真实_return_path分项，区分arm认证、MuJoCo和nonpad几何距离/SAT，不含离线核验，不累加重叠区间、不当性能基准。private round88已准备，尚未运行；不先写新策略，不恢复定时器，由Root GPT继续Kaggle。

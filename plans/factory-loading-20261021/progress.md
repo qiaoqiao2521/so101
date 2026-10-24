@@ -1540,3 +1540,18 @@ v1观察器误把“distances实例属性不存在”当恢复，原worker本来
 原件output/return-batch-axes-factory-20261024/physical-v1/v2及independent-physical-inventory.json；每对保留原裁决及pair/policy/startup/search/physics/return-axes读回。round86保存两个路径、v1错误观察器及修正版、确切云源码/metadata与复跑入口；两个版本均private。
 
 Next F2bt：单独验证原SAT阈值的充分分离轴见证，不叠加F2bs。回位只消费>=1mm的布尔值；若原前三个world轴的同序算式已给出>=1mm，剩余轴不能推翻原max判定，否则回退原完整scalar SAT。所有位姿/robot几何/native arm检查继续，不给ratchet/距离消费者近似数值。先正常/边界/错误策略及真实回位逐点布尔等值，再三对完整_return_path组件；原screen准入后才原物理。尚未运行，不改默认。Knowledge=already_covered，原Wiki第20节覆盖分作用域计时/反证及实际输出验真，本轮项目数据不新增跨项目结论。
+
+
+## F2bt SAT阈值充分轴：局部/尾延迟成立，整程未快（2026-10-24）
+
+Current：Kaggle两工位完整对照均终态，sourceade153f。200/200 B→C 3c1e480b（1f903d44/42d68740）、220/170 C→B d971930d（e4c18fb2/af78c886）共4/4原pass。原模型/native flags/评分/全部244/碰撞/阈值/90sim120wall、自由物体、抓放释放脱离回位、完整视频与worker清理保持；所有main/worker函数身份与属性槽恢复已观察通过。默认仍loaded_jaw_preload，不恢复定时器、不向其他对话发消息、不触碰Mint。
+
+Root GPT独立候选，只在main/separate→retreat消费布尔间距时使用原world轴同序算式的充分见证；不能证明/数值域不支持就完整scalar SAT，不改变原numeric distances或冻结worker。8项局部回归覆盖1200旋转、阈值相邻浮点数、特殊值/严格underflow策略、全部robot几何与异常恢复。Kaggle组件同75点/原arm调用/布尔输出/pad及最终路径一致，150个pad见证、1275个robot几何全查；三对155.465→87.049、155.999→89.384、155.554→87.703ms，原screen eligible，仅组件准入。
+
+物理main return wall/CPU：126.439/126.374→74.009/74.002ms、56.334/56.321→33.110/33.108ms。原完整回位拍141.942→91.393、72.069→49.546ms。分别75×17=1275、37×17=629个robot几何继续全查；原native arm逐点不删，冻结worker保持scalar。候选仅缩短这一处尖峰，不是50Hz通过。
+
+整程process wall58.193510→58.710048、47.555413→49.377854s；CPU69.066153→69.785220、56.758502→58.377603s。剔除hold/release后同3367/3285拍，CPU36.171169→36.277212、29.542729→30.018006s；均没有总成本收益。第二站尚未启用候选的3047拍前缀也已多.430795s，不能将全差单方面归因算法，但实际回退必须保留。慢拍186→152、68→92；完整50Hz未过。拒绝默认晋级，不追加第三站/择绿，不将局部省时外推全任务。
+
+原件output/return-clearance-witness-factory-20261024/component-v1/physical-v1/physical-v2及independent-physical-inventory.json；两对各有原评分与pair/policy/startup/search/physics/feature独立读回。private round87保存原型、8测试、源码pull/metadata和两路径；组件实际slug为so101-return-clearance-witness-component-20261024，物理so101-return-witness-physical-ab-20261024不可变v1/v2。首次51字符标题/slug提交SaveKernel400留submission-failure-v1.json；缩短后成功，不冒称额度不足或已有物理失败。物理算法与安全条件未因提交修正变化。
+
+Next F2bu：只读拆分真实_return_path的inclusive wall/thread-CPU：原arm认证、原MuJoCo更新、nonpad原生距离、SAT/布尔见证。collection仅在回位函数内开启，排除后续75点数值核验；父子区间不累加，不把插桩时长当基准。复用round87已验收输入、现有Kaggle环境与原函数，不再发新物理/新策略，先定位剩余成本。private round88已准备entry，尚未运行；Root GPT接续。Knowledge=already_covered，原Wiki第20节覆盖作用域/反证与实际输出验真，项目现象不升级为通用知识。

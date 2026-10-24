@@ -634,3 +634,19 @@ v1恢复观察器误用实例属性不存在；原worker已在separation_worker.
 原件output/return-batch-axes-factory-20261024/independent-physical-inventory.json分列初始化/shortcut/worker/main-return/完整周期/CPU/释放；原版及候选独立物理读回核对原阈值与全244、0碰撞、完整视频、owned/joined无abort。原件及run ID/复跑位于private round86、云端不可变v1/v2。Source/数学同源，v2只修观察器，未用不同负载绝对秒数串累计收益。
 
 下一个F2bt只比较同原返回输入的SAT布尔阈值查询：原max(gaps)>=margin可以由任一原轴的同值gap证明。必须保留几何有限值/异常行为，不跳过其他robot几何；未能证明或不支持的数值域走完整scalar，原数值距离API不改。尚未有测试或收益，先局部准入，不能称新算法已通过。
+
+
+## F2bt 原SAT布尔阈值的充分见证
+
+原box_separation返回15个同序gap的max。只消费>=.001时，任一个原world轴同值gap>=.001即可证明原max比较为真。仅支持普通binary64有限有界数组与原underflow忽略环境；否则完整scalar回退。所有robot几何仍逐一检查，后续非有限几何仍报原错误，不向数值距离消费者返回近似值。8项回归及真实75点组件逐点判断/原arm调用/最终path/pad保持，原numeric API独立扫描确认，三对CPU/wall一致省约67ms。此候选不叠加F2bs批量轴。
+
+sourceade153f；Kaggle私有component v1及physical v1/v2真实源码、scope和private均独立读回。200/200原B→C 3c1e480b、220/170 C→B d971930d，4/4原pass，实际只main/separate作用域激活，原worker scalar及身份/槽均恢复。全部原244/模型/native/裁判/阈值/自由物体/抓放释放脱离回位/完整视频/清理保持。
+
+| 工位 | 原版→候选process wall/CPU(s) | main return wall/CPU(ms) | 完整回位拍(ms) | 非hold/release CPU(s)/拍数 |
+| --- | --- | --- | --- | --- |
+| 200/200 | 58.193510/69.066153→58.710048/69.785220 | 126.439/126.374→74.009/74.002 | 141.942→91.393 | 36.171169→36.277212，同3367 |
+| 220/170反序 | 47.555413/56.758502→49.377854/58.377603 | 56.334/56.321→33.110/33.108 | 72.069→49.546 | 29.542729→30.018006，同3285 |
+
+两个站都没有整程成本收益，因此不晋级默认；仅保存局部及尾延迟有效的证据。主线程真实分别查75/37点，robot几何1275/629，pad见证150/74，原native arm每点照常；不是删点/放宽阈值。sim79.68→79.78、77.44→77.50s，候选反多5/3拍，不用等待差算算法提速。慢拍186→152、68→92，P95 19.380→18.432、15.098→15.675ms，最大91.393/50.547ms，完整50Hz未过。
+
+第二站前缀3047同拍CPU26.797225→27.228020s、初始化6.679→7.098s，说明总差已有作用域前变化；不作唯一原因判断，也不删除完整实测回退。原件output/return-clearance-witness-factory-20261024/independent-physical-inventory.json分列所有原指标和生命周期。private round87的首次SaveKernel400与后来缩短title/slug成功均保留，未改候选；组件/物理Kaggle确切slug及版本在progress中。下一项仅拆分剩余回位成本，避免继续只优化SAT后无依据外推总任务。
