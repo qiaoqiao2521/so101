@@ -135,43 +135,119 @@ def run_p0(source, out, protocol, deadline):
     tree.write(negative_scene,encoding='utf-8',xml_declaration=True)
     model=mujoco.MjModel.from_xml_path(str(negative_scene))
     calibration=TopDownCalibration.from_mujoco_model(model,width=640,height=480,top_plane_z_m=.018)
+    fixture_ids={name:model.geom(name).id for name in
+                 ('target_collision','p0_occluder','p0_distractor')}
+    indices=list(fixture_ids.values())
+    fixture_baseline={name:np.asarray(getattr(model,name)[indices]).copy()
+                      for name in ('geom_pos','geom_size','geom_rgba')}
+    raw_rgb_dir=out/'rgb'
+    raw_rgb_dir.mkdir(exist_ok=True)
     renderer=mujoco.Renderer(model,height=480,width=640)
+    seen_ids=set()
+
+    def restore_fixture():
+        for name,values in fixture_baseline.items():
+            getattr(model,name)[indices]=values
+
+    def fixture_geometry(data):
+        return {name:{'position_m':np.asarray(data.geom_xpos[index]).tolist(),
+                      'model_position_m':np.asarray(model.geom_pos[index]).tolist(),
+                      'size_m':np.asarray(model.geom_size[index]).tolist(),
+                      'rgba':np.asarray(model.geom_rgba[index]).tolist(),
+                      'alpha':float(model.geom_rgba[index,3])}
+                for name,index in fixture_ids.items()}
+
+    def save_images(case_id,rgb,estimate):
+        raw_path=Path('rgb')/(case_id+'.png')
+        Image.fromarray(rgb).save(out/raw_path)
+        seen_ids.add(case_id)
+        save_overlay(out/(case_id+'.png'),rgb,estimate)
+        return raw_path.as_posix()
+
     rows=[]
     try:
         for case in protocol['p0_positives']:
             if deadline is not None and time.monotonic()>=deadline:
                 break
-            data=reset_scene(model,rig,case['initial_xy_m'])
-            rgb=render_rgb(renderer,data)
-            estimate=localize_green_target(rgb,calibration,timestamp_s=float(data.time))
-            truth=data.xpos[model.body('grasp_target').id,:2].copy()
-            error=float(np.linalg.norm(np.array(estimate.xy_m)-truth)) if estimate.valid else None
-            rows.append({'id':case['id'],'kind':'positive','estimate':estimate.to_dict(),
-                         'truth_xy_m':truth.tolist(),'error_m':error,
-                         'passed':bool(estimate.valid and error<=protocol['p0_max_xy_error_m'])})
-            save_overlay(out/(case['id']+'.png'),rgb,estimate)
-        target=model.geom('target_collision').id
-        occluder=model.geom('p0_occluder').id
-        distractor=model.geom('p0_distractor').id
-        for kind in protocol['p0_negatives']:
+            restore_fixture()
+            try:
+                data=reset_scene(model,rig,case['initial_xy_m'])
+                rgb=render_rgb(renderer,data)
+                estimate=localize_green_target(rgb,calibration,timestamp_s=float(data.time))
+                truth=data.xpos[model.body('grasp_target').id,:2].copy()
+                error=float(np.linalg.norm(np.array(estimate.xy_m)-truth)) if estimate.valid else None
+                rows.append({'id':case['id'],'kind':'positive','estimate':estimate.to_dict(),
+                             'fixture_xy_m':list(case['initial_xy_m']),
+                             'fixture_geometry':fixture_geometry(data),
+                             'raw_rgb_path':save_images(case['id'],rgb,estimate),
+                             'truth_xy_m':truth.tolist(),'error_m':error,
+                             'passed':bool(estimate.valid and error<=protocol['p0_max_xy_error_m'])})
+            finally:
+                restore_fixture()
+        target=fixture_ids['target_collision']
+        occluder=fixture_ids['p0_occluder']
+        distractor=fixture_ids['p0_distractor']
+        for index,case in enumerate(protocol['p0_negatives']):
             if deadline is not None and time.monotonic()>=deadline:
                 break
-            model.geom_rgba[target,3]=1
-            model.geom_rgba[occluder,3]=0
-            model.geom_rgba[distractor,3]=0
-            if kind=='missing': model.geom_rgba[target,3]=0
-            elif kind in ('half_occluded','fully_occluded'):
-                model.geom_rgba[occluder,3]=1
-                model.geom_pos[occluder]=[.250 if kind=='half_occluded' else .24,-.13,.06]
-                model.geom_size[occluder]=[.010 if kind=='half_occluded' else .016,.016,.002]
-            elif kind=='two_candidates': model.geom_rgba[distractor,3]=1
-            else: raise ValueError('Unknown negative fixture')
-            data=reset_scene(model,rig,[.24,-.13])
-            rgb=render_rgb(renderer,data)
-            estimate=localize_green_target(rgb,calibration,timestamp_s=float(data.time))
-            rows.append({'id':kind,'kind':'negative','estimate':estimate.to_dict(),'passed':not estimate.valid})
-            save_overlay(out/(kind+'.png'),rgb,estimate)
+            restore_fixture()
+            case_id=f'negative_{index}'
+            kind=None
+            xy=None
+            try:
+                if isinstance(case,str):
+                    case_id=kind=case
+                    xy=[.24,-.13]
+                elif isinstance(case,dict):
+                    case_id=case.get('id')
+                    kind=case.get('kind')
+                    xy=case.get('initial_xy_m')
+                else:
+                    raise ValueError('Negative fixture must be a name or dictionary')
+                if (not isinstance(case_id,str) or not case_id or case_id in ('.','..')
+                        or any(character.isspace() or not character.isprintable()
+                               or character in '/\\' for character in case_id)):
+                    raise ValueError('Fixture id must be a safe filename')
+                if case_id in seen_ids:
+                    raise ValueError('Duplicate fixture id would overwrite saved evidence')
+                if kind not in ('missing','half_occluded','fully_occluded','two_candidates'):
+                    raise ValueError('Unknown negative fixture')
+                if (not isinstance(xy,(list,tuple)) or len(xy)!=2
+                        or any(isinstance(value,bool) or not isinstance(value,(int,float))
+                               or not math.isfinite(value) for value in xy)):
+                    raise ValueError('initial_xy_m must contain two finite numbers')
+                xy=[float(value) for value in xy]
+            except (TypeError,ValueError,OverflowError) as error:
+                rows.append({'id':case_id if isinstance(case_id,str) else f'negative_{index}',
+                             'kind':'negative','fixture_kind':kind if isinstance(kind,str) else None,
+                             'fixture_error':str(error),'passed':False})
+                continue
+            try:
+                delta=np.asarray(xy)-(.24,-.13)
+                model.geom_pos[occluder,:2]+=delta
+                model.geom_pos[distractor,:2]+=delta
+                if kind=='missing':
+                    model.geom_rgba[target,3]=0
+                elif kind in ('half_occluded','fully_occluded'):
+                    model.geom_rgba[occluder,3]=1
+                    if kind=='half_occluded':
+                        model.geom_pos[occluder,0]+=.010
+                        model.geom_size[occluder,0]=.010
+                else:
+                    model.geom_rgba[distractor,3]=1
+                data=reset_scene(model,rig,xy)
+                rgb=render_rgb(renderer,data)
+                estimate=localize_green_target(rgb,calibration,timestamp_s=float(data.time))
+                rejected=(not estimate.valid and estimate.xy_m is None
+                          and estimate.pixel_xy is None and estimate.uncertainty_m is None)
+                rows.append({'id':case_id,'kind':'negative','fixture_kind':kind,
+                             'fixture_xy_m':xy,'fixture_geometry':fixture_geometry(data),
+                             'raw_rgb_path':save_images(case_id,rgb,estimate),
+                             'estimate':estimate.to_dict(),'passed':rejected})
+            finally:
+                restore_fixture()
     finally:
+        restore_fixture()
         renderer.close()
     errors=[r['error_m'] for r in rows if r['kind']=='positive' and r['error_m'] is not None]
     expected=len(protocol['p0_positives'])+len(protocol['p0_negatives'])

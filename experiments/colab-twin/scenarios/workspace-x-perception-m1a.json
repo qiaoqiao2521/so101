@@ -1,0 +1,26 @@
+{
+  "schema": "so101.workspace-perception.v1",
+  "id": "workspace-x-perception-m1a",
+  "development_only": true,
+  "not_admitted": true,
+  "scope": "Rendered RGB localization and refusal; no grasp verdict",
+  "p0_max_xy_error_m": 0.001,
+  "p0_positives": [
+    {"id": "center", "initial_xy_m": [0.24, -0.13]},
+    {"id": "x_minus20", "initial_xy_m": [0.22, -0.13]},
+    {"id": "x_plus20", "initial_xy_m": [0.26, -0.13]},
+    {"id": "x_minus11", "initial_xy_m": [0.229, -0.13]},
+    {"id": "x_plus11", "initial_xy_m": [0.251, -0.13]}
+  ],
+  "p0_negatives": [
+    "missing", "half_occluded", "fully_occluded", "two_candidates",
+    {"id": "x_minus11_missing", "kind": "missing", "initial_xy_m": [0.229, -0.13]},
+    {"id": "x_minus11_half", "kind": "half_occluded", "initial_xy_m": [0.229, -0.13]},
+    {"id": "x_minus11_full", "kind": "fully_occluded", "initial_xy_m": [0.229, -0.13]},
+    {"id": "x_minus11_two", "kind": "two_candidates", "initial_xy_m": [0.229, -0.13]},
+    {"id": "x_plus11_missing", "kind": "missing", "initial_xy_m": [0.251, -0.13]},
+    {"id": "x_plus11_half", "kind": "half_occluded", "initial_xy_m": [0.251, -0.13]},
+    {"id": "x_plus11_full", "kind": "fully_occluded", "initial_xy_m": [0.251, -0.13]},
+    {"id": "x_plus11_two", "kind": "two_candidates", "initial_xy_m": [0.251, -0.13]}
+  ]
+}
