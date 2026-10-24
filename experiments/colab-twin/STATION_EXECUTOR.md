@@ -386,3 +386,13 @@ Kaggle 已接原物理执行入口，见 [CLI 与云环境复跑](KAGGLE.md)。�
 `--candidate route_strategies/async_measured_return.py --timing` 在当前loaded_jaw_preload父版上只启用实测q异步回位。沿用原worker生命周期及原_return_path；接纳前保留释放估计绑定、实测桥接、首指令、连续偏置与预算，等待中继续原保护。原默认不变。
 
 两个X开发布局反序对照共4/4原物理通过（原版2例、候选2例）；左首回位拍143.018→33.347ms，右36.634→30.314ms。候选仍超20ms，整程wall/CPU两处方向不一致，不能宣称整程提速或完整50Hz通过。源码、复跑、244全扫及原件见[M1b结果](../../plans/workcell-productization-20261024/m1b-return-results.md)。
+
+### 限时等待后继续搬运
+
+在工位声明 `"skillControl": {"mode": "hold-before-carry"}`。默认省略，仍自动执行原抓放。示例配方为 `scenarios/station-carry-m2.json`，来自现有网页导出。
+
+机械臂到达原hold姿态并完成原到位检查后，`status.carry_gate.state` 变为 `waiting`。同一任务继续搬运使用 `carry-resume.request`；网页通过原任务的 `POST /api/so101/tasks/<id>/resume-carry` 写该请求。取消仍使用原任务取消接口。已取消、终态或尚未等待的任务不能接续。
+
+等待期间全部碰撞、244点扫掠、持物保护和物理时钟继续运行。原hold阶段大约有7.4仿真秒可接续，墙钟窗口可能更短；超时仍是原 `encoder_stage_timeout`。这不是无限暂停，继续不会重置90秒仿真／120秒墙钟。
+
+等待姿态本身不证明抓住。网页单列原 `skill_evidence.grasp` 证据；该证据只观察，不给控制器提供物体真值。手动继续也不代表任务完成，仍须原释放、脱离和回位通过。当前切片不等于六技能行为树或同世界重抓。

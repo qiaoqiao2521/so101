@@ -200,7 +200,9 @@ class VisualGraspController:
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
                  place_xy=None, place_height_m=0., route_policy=None,
-                 target_region_xy_m=None, pickup_hover_z_m=.06, pickup_open_jaw_rad=.5):
+                 target_region_xy_m=None, pickup_hover_z_m=.06, pickup_open_jaw_rad=.5,
+                 transport_gate=None):
+        self.transport_gate = transport_gate
         self.route_policy = DEFAULT_ROUTE_POLICY if route_policy is None else route_policy
         if not isinstance(self.route_policy, RoutePolicy):
             raise ValueError('Use immutable route preferences')
@@ -1431,6 +1433,13 @@ class VisualGraspController:
             self._set_dwell('hold', self.lift, .015, elapsed, 1.5)
         elif self.stage == 'hold':
             if self.transport_job is None:
+                gate = getattr(self, 'transport_gate', None)
+                if gate is not None:
+                    allowed = gate(np.asarray(q6).copy(), float(elapsed))
+                    if type(allowed) is not bool:
+                        raise ControllerFailure('invalid_transport_gate_result')
+                    if not allowed:
+                        return  # Keep the original hold target, guards and clock.
                 self._start_transport(q6, elapsed)
             if self._poll_transport(q6, elapsed):
                 self.stage = 'transport'

@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — Carry限时接续收口实施
+
+Current：上一目标轮次=progress，固定盘左右两工位原物理已回读；本轮收口已在途Carry两仓12文件，不重启X项目或覆盖其他工作。见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。
+
+Done：已复核当前009a79e、无本机在途物理，上一Kaggle终态。根审原hold/guard/时钟接点；修observer warning在warnings-as-errors下干扰控制的真实缺陷。根202相关Python通过，前端5runtime／56Jest／生产构建／13浏览器通过，均不是物理。CBC只读仍空正文，内部GPT完成独立审查，不作额度阻塞。
+
+In progress：从真实网页导出的中心配方接原Kaggle，准备同源串行resume、waiting取消、原timeout三例。waiting仅姿态门，原Grasp证据单列，不引对象真值控制；原stage watchdog和90sim120wall不变。原API5186仍旧PID且暂无活动SO101／Drone任务，新字段未上线；根在整合后立即复核再受控重启。
+
+Remaining：Carry原物理和真实新API未验，完整六技能BT／同世界恢复、连续卸货仍未交付。Drone四文件为其原owner在途离线M2，保留，不混合提交或停别人进程。
+
+Next：固定SO101源码并沿原runner跑三例，独立回读后更新此计划与工作台原计划；再接实际用户入口。M1a独立核对建议按每个新请求原验证，不把左右点插值成连续安全域；真实RGB姿态／高度仍有不可辨识先验。Knowledge=already_covered，采用Wiki§20分列物理、交接与晋级，项目新数据仅留本计划。
+
 ## 2026-10-24 — 左固定盘两放置工位原物理通过
 
 Current：本目标轮次=progress，固定46f5ba5已完成左侧主／第二工位及中心默认回归；[结果与复跑](m1a-x-fixed-certificates.md)。结合580ec56已核右侧结果，原红盘X±20mm固定取料点均能在两已有放置工位真实抓放；默认／网页±10mm不改，不宣称连续区域。

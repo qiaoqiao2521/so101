@@ -41,7 +41,14 @@ def describe():
         'message': '已接入本机 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
         'capabilities': ['按 pick → transfer → place 动作段组合搬运任务', '八步原程序仍可直接运行',
                          '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '方块 XY 各 ±10mm',
-                         '固定尺寸附加障碍', '协作停止', '新回合录像和物理报告'],
+                         '固定尺寸附加障碍', '限时等待后继续搬运', '协作停止', '新回合录像和物理报告'],
+        'skill_control_modes': {
+            'hold-before-carry': {
+                'declaration': {'skillControl': {'mode': 'hold-before-carry'}},
+                'default': False, 'original_deadlines_unchanged': True,
+                'scope': '在原hold姿态限时等待继续；等待本身不是Grasp成功证据。',
+            },
+        },
         'template': 'open → approach → grasp → close → approach → release → open → clear',
         'segments': {name: [{'action': action, 'target': target} for action, target in steps]
                      for name, steps in SEGMENTS.items()},
@@ -256,6 +263,10 @@ def validate_station(station):
     except UnsupportedStation as error:
         issues.extend(error.issues)
         program_plan = None
+    skill_control = station.get('skillControl')
+    if 'skillControl' in station and (not isinstance(skill_control, dict)
+            or skill_control.get('mode') != 'hold-before-carry'):
+        issues.append('skillControl 仅支持 mode=hold-before-carry；不支持的声明不会改成自动搬运')
     if issues:
         raise UnsupportedStation(issues)
     return {'cube_xyz_m': resolved['cube'], 'place_xy_m': resolved['place'][:2],
@@ -263,6 +274,7 @@ def validate_station(station):
             'additional_obstacles': obstacles,
             'resolved_positions_m': resolved, 'program': program_plan,
             'mapping': describe()['notes'],
+            **({'skill_control': skill_control} if skill_control is not None else {}),
             **({'execution': execution, 'development_only': True, 'not_admitted': True}
                if execution is not None else {})}
 
@@ -444,6 +456,16 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
         if 'execution' in layout:
             controller_options.update(pickup_hover_z_m=layout['execution']['pickup_hover_z_m'],
                                       target_region_xy_m=layout['execution']['target_region_xy_m'])
+        carry_gate = None
+        if 'skill_control' in layout:
+            from carry_gate import CarryGate
+
+            def carry_status(snapshot):
+                current['carry_gate'] = dict(snapshot, attempt_id=output.name)
+
+            carry_gate = CarryGate(output/'carry-resume.request', on_change=carry_status)
+            carry_status(carry_gate.report())
+            controller_options['transport_gate'] = carry_gate
         report = run_physical_episode(SOURCE, output/'episode',
                     {'max_episode_wall_s': 120, 'max_sim_s': 90}, case, None,
                     video=True, scene_builder=build_scene, progress_callback=progress,
@@ -451,6 +473,8 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                     scene_callback=scene, evidence_callback=evidence,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options=controller_options)
+        if carry_gate is not None:
+            carry_status(carry_gate.finalize(report))
         cancel_requested = current['cancel_requested'] or (cancel_file is not None and cancel_file.exists())
         # A late request cannot replace the physical result or an earlier cause.
         cancelled = (report.get('error_type') == 'Cancelled' and not report['passed']

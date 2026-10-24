@@ -1,0 +1,28 @@
+# M2：限时等待与Carry接续
+
+## 本轮范围
+
+沿用原Station、任务ID、控制器hold、IK/OMPL、worker和评分。用户可在到达原hold姿态后，限时继续Carry或取消；默认不声明仍自动执行。不增加行为树引擎、调度平台、对象真值控制或物理重置。
+
+CarryGate只读q6、当前时钟和同attempt输入文件。False保留原hold目标，全部原守卫／物理／时钟继续；原阶段超时和90sim／120wall保持。waiting不是Grasp成功；Grasp仍取独立原monitor证据，后续失败和取消不改判。
+
+## 已实现与局部验证
+
+- 原SO101四文件在途实现已审阅；补回调告警隔离，防止PYTHONWARNINGS=error使展示失败变成控制故障。
+- 前端／API原八文件补取消竞态：已请求取消拒绝resume；迟到resume响应不覆盖较新取消或失败终态。原server尚未重启，局部新API与正在运行的旧API分列。
+- 根202项相关Python检查通过（含取消、超时、扫掠与transport/separation/return worker）。前端5项runtime、56项Jest、最终生产构建与13项无运动浏览器检查通过；真实控制POST=0、pageerror=0，4次测试POST由HTTP fixture接收。waiting＋未抓住原件仍显示未确认；390px无溢出。
+- 网页导出的 `carry-recipe.json` 原文保存为 `experiments/colab-twin/scenarios/station-carry-m2.json`，普通中心工位，不移动盘或放宽±10mm。
+
+## 原物理面板（待执行）
+
+固定已推送源码，在Kaggle沿原runner串行三例：
+
+1. `resume_after_wait`：从原status观察waiting，1仿真秒后写本attempt的继续标记，验原完整抓放／释放／脱离／回位。
+2. `cancel_while_waiting`：同样观察后写原取消标记，保留原Cancelled物理失败和清理。
+3. `original_timeout_without_resume`：不写继续标记，验证原encoder_stage_timeout，不能改为成功或无限等待。
+
+操作fixture只根据gate状态及仿真时钟决定何时发输入，不依赖对象真值、不改控制器／评分器。等待事件前是否已Grasp成功由根独立回放原monitor验证；不是把物理裁判喂给控制策略。保持原1mm、244点、限位、全部回退及90sim／120wall。每例单独UUID、过程wall/CPU、完整周期、录像和清理回执。
+
+## 剩余
+
+源码固定后原三例物理、运行服务resume_carry上线与实际接口回查。完整六技能RUNNING/halt、同世界安全恢复、连续卸货及20＋20仍按原主计划推进。Carry不是完整M2的替代验收。

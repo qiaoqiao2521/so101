@@ -45,6 +45,62 @@ class VisualControllerTests(unittest.TestCase):
         self.addCleanup(p.stop)
         return module.VisualGraspController(rig, target_xy, [.24, .14, .06, 0, 0, .5], **options)
 
+    def test_carry_wait_keeps_hold_target_and_original_stage_timeout(self):
+        gate = Mock(return_value=False)
+        controller = self.controller(transport_gate=gate)
+        controller.target_frozen = True
+        controller._set_dwell('hold', controller.lift, .015, 10., 1.5)
+        controller._payload_valid = Mock(return_value=True)
+        controller._start_transport = Mock()
+        controller._poll_transport = Mock()
+        measured = np.r_[controller.lift, .015]
+        points = controller.points.copy()
+        before_checks = controller.checker.evaluate.call_count
+        with patch.object(controller, '_configuration_sweep', wraps=controller._configuration_sweep) as sweep:
+            for elapsed in (12.11, 12.13, 14.):
+                with self.subTest(elapsed=elapsed):
+                    result = controller.update(measured, np.zeros(6), elapsed)
+                    self.assertEqual(result['status'], 'running')
+                    self.assertEqual(result['stage'], 'hold')
+                    self.assertEqual(controller.stage_started, 10.)
+                    self.assertEqual(controller.duration, 1.5)
+                    np.testing.assert_array_equal(controller.points, points)
+                    np.testing.assert_array_equal(result['command'], measured)
+            self.assertEqual(sweep.call_count, 3)
+        self.assertEqual(gate.call_count, 3)
+        self.assertGreater(controller.checker.evaluate.call_count-before_checks, 3)
+        self.assertGreaterEqual(controller._payload_valid.call_count, 3)
+        result = controller.update(measured, np.zeros(6), 19.51)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['failure_reason'], 'encoder_stage_timeout')
+        self.assertEqual(controller.stage_started, 10.)
+        self.assertEqual(gate.call_count, 3)
+        controller._start_transport.assert_not_called()
+        controller._poll_transport.assert_not_called()
+
+    def test_carry_gate_is_not_called_before_measured_sweep_or_payload_guards_pass(self):
+        for failed_guard in ('measured', 'sweep', 'payload'):
+            with self.subTest(guard=failed_guard):
+                gate = Mock(return_value=True)
+                controller = self.controller(transport_gate=gate)
+                controller.target_frozen = True
+                controller._set_dwell('hold', controller.lift, .015, 10., 1.5)
+                controller._payload_valid = Mock(return_value=failed_guard != 'payload')
+                controller._start_transport = Mock()
+                controller._poll_transport = Mock()
+                if failed_guard == 'measured':
+                    controller.checker.evaluate.return_value = {'valid': False}
+                with patch.object(controller, '_configuration_sweep',
+                                  return_value={'valid': failed_guard != 'sweep'}):
+                    result = controller.update(np.r_[controller.lift, .015], np.zeros(6), 12.11)
+                self.assertEqual(result['status'], 'failed')
+                self.assertEqual(result['failure_reason'],
+                    'measured_arm_configuration_invalid' if failed_guard == 'measured'
+                    else 'current_pose_command_chord_invalid')
+                gate.assert_not_called()
+                controller._start_transport.assert_not_called()
+                controller._poll_transport.assert_not_called()
+
     def test_default_pickup_hover_keeps_original_high_and_down_targets(self):
         controller = self.controller()
         self.assertEqual(controller.pickup_hover_z_m, .06)

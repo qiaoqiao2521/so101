@@ -42,6 +42,18 @@ def workspace_station(side):
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_carry_control_is_explicit_and_unsupported_modes_are_not_silently_automatic(self):
+        self.assertNotIn('skill_control', validate_station(station()))
+        value = station()
+        value['skillControl'] = {'mode': 'hold-before-carry'}
+        self.assertEqual(validate_station(value)['skill_control'], value['skillControl'])
+        self.assertFalse(describe()['skill_control_modes']['hold-before-carry']['default'])
+        self.assertTrue(describe()['skill_control_modes']['hold-before-carry']['original_deadlines_unchanged'])
+        for declaration in (None, {}, 'hold-before-carry', {'mode': 'automatic'}, []):
+            value['skillControl'] = declaration
+            with self.subTest(declaration=declaration), self.assertRaisesRegex(UnsupportedStation, 'skillControl'):
+                validate_station(value)
+
     def test_workspace_execution_is_explicit_and_keeps_default_admission(self):
         default = validate_station(station())
         for key in ('execution', 'development_only', 'not_admitted'):
@@ -129,10 +141,14 @@ class AdmissionTests(unittest.TestCase):
             ('cancel_with_safety_stop', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
                 'failure_reason': cancel_error, 'safety_stop': True}, True, 1, 'failed'),
         )
-        cases = [(side, outcomes[0]) for side in (None, 'right', 'left')]
-        cases.extend((None, outcome) for outcome in outcomes[1:])
-        for side, (label, report, request_cancel, expected_code, expected_state) in cases:
+        cases = [(side, outcomes[0], False) for side in (None, 'right', 'left')]
+        cases.extend((None, outcome, False) for outcome in outcomes[1:])
+        cases.extend((None, outcome, True) for outcome in outcomes)
+        for side, (label, report, request_cancel, expected_code, expected_state), carry in cases:
             value = station() if side is None else workspace_station(side)
+            if carry:
+                value['skillControl'] = {'mode': 'hold-before-carry'}
+                report = dict(report, simulation_s=20.)
             seen = {}
 
             def build_contact(source, folder, **kwargs):
@@ -147,6 +163,13 @@ class AdmissionTests(unittest.TestCase):
                 kwargs['scene_builder'](source, output/'scene')
                 kwargs['evidence_callback']({'schema': 'so101.physical-skill-evidence.v1',
                     'scope': 'observation_only', 'grasp': {'postcondition_met': True}})
+                if carry:
+                    gate = kwargs['controller_options']['transport_gate']
+                    seen['carry_gate'] = gate
+                    self.assertFalse(gate([0.]*6, 10.))
+                    if not request_cancel:
+                        (root/'carry-resume.request').touch()
+                        self.assertTrue(gate([0.]*6, 11.))
                 if request_cancel:
                     cancel.touch()
                 return report
@@ -161,7 +184,7 @@ class AdmissionTests(unittest.TestCase):
                        'run_visual_grasp': SimpleNamespace(SOURCE=Path('/unused-source.xml'),
                                                           run_physical_episode=physical),
                        'mujoco': SimpleNamespace(MjModel=SimpleNamespace(from_xml_path=lambda path: object()))}
-            with self.subTest(side=side, outcome=label), tempfile.TemporaryDirectory() as folder, \
+            with self.subTest(side=side, outcome=label, carry=carry), tempfile.TemporaryDirectory() as folder, \
                     patch.dict(sys.modules, modules):
                 root = Path(folder)
                 cancel = root/'cancel.request'
@@ -178,6 +201,21 @@ class AdmissionTests(unittest.TestCase):
                 self.assertEqual(status['cancelled'], expected_state == 'cancelled')
                 self.assertEqual(seen['budget'], {'max_episode_wall_s': 120, 'max_sim_s': 90})
                 self.assertEqual(seen['case']['initial_xy_m'], validate_station(value)['cube_xyz_m'][:2])
+                if carry:
+                    snapshot = status['carry_gate']
+                    self.assertEqual(snapshot['state'], 'ended')
+                    self.assertEqual(snapshot['attempt_id'], root.name)
+                    self.assertEqual(snapshot['attempt']['passed'], report['passed'])
+                    self.assertEqual(snapshot['attempt']['failure_reason'], report['failure_reason'])
+                    self.assertEqual(snapshot['attempt']['planner_cleanup_errors'],
+                                     report.get('planner_cleanup_errors'))
+                    self.assertEqual(snapshot['attempt']['error_type'], report.get('error_type'))
+                    self.assertEqual(snapshot['resume_file'], str(root/'carry-resume.request'))
+                    self.assertEqual(snapshot['released_at_s'], None if request_cancel else 11.)
+                    self.assertEqual(seen['carry_gate'].report()['state'], 'ended')
+                else:
+                    self.assertNotIn('transport_gate', seen['controller'])
+                    self.assertNotIn('carry_gate', status)
                 if side is None:
                     self.assertNotIn('pick_xy', seen['builder'])
                     self.assertNotIn('pickup_hover_z_m', seen['controller'])
