@@ -357,10 +357,12 @@ def arithmetic_environment() -> dict:
 
 
 class NativeSupport:
-    def __init__(self, points: list[np.ndarray], kinds: list[str]):
+    def __init__(self, points: list[np.ndarray], kinds: list[str], *, capture_geometry=False):
         self._lock = RLock()
         self._handle = None
         self._witness_hints = None
+        self._construction_geometry = None
+        self._construction_handle = None
         if len(points) == 0 or len(points) != len(kinds):
             raise ValueError("Geometry and kind counts must match and be nonempty")
         arrays = [np.array(p, dtype=np.float64, order="C", copy=True) for p in points]
@@ -374,6 +376,14 @@ class NativeSupport:
         offsets = np.asarray([0, *np.cumsum([len(a) for a in arrays])], dtype=np.int64)
         flat = np.ascontiguousarray(np.concatenate(arrays, axis=0))
         kind_ids = np.asarray([1 if k == "mesh" else 0 for k in kinds], dtype=np.int32)
+        # Optional immutable evidence of the exact arrays passed to ns_create.
+        construction_geometry = None
+        if capture_geometry is True:
+            try:
+                construction_geometry = (offsets.tobytes(), flat.tobytes(), kind_ids.tobytes())
+            except MemoryError:
+                import warnings
+                warnings.warn("Native geometry evidence unavailable; optional reuse must fall back", RuntimeWarning)
         hints = np.full((len(arrays), 3, 2), -1, dtype=np.int64)
         hints.setflags(write=False)
         with self._lock:
@@ -382,6 +392,8 @@ class NativeSupport:
             if not handle:
                 raise RuntimeError("Native geometry preprocessing failed closed")
             self._handle = handle
+            self._construction_geometry = construction_geometry
+            self._construction_handle = handle if construction_geometry is not None else None
             self.geometry_count = len(arrays)
             self._witness_hints = hints
 
@@ -391,6 +403,8 @@ class NativeSupport:
                 self._lib.ns_destroy(self._handle)
                 self._handle = None
             self._witness_hints = None
+            self._construction_geometry = None
+            self._construction_handle = None
 
     def __del__(self):
         try:

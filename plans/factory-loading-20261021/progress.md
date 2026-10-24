@@ -1612,3 +1612,12 @@ physical-ab v1（200/200 B→C，pair e2e131fb，74518ba1/6d895877）及v2（220
 Next F2by：先补实际native构造点/offsets/kinds的可选不可变见证，绑定实际bound owner；缺见证仍原完整回退。当前ns_create只留handle，无法从当前model补推构造几何，不能靠声明“静态”掩盖反证。先让该反例走原回退，再将构造/内存/匹配成本完整计入原三对组件；没有新的整程收益证据不重复发物理。原默认仍loaded_jaw_preload，原全部安全/裁判与回退保持，不恢复定时器、不发其他对话消息、不触碰Mint/实体设备。
 
 Knowledge=pending：当前native构造快照缺口是新发现，待修复与局部反例验收后补原Wiki/ROS2 与 FishBot.md第20节；owner根Codex。实验事实先留本计划，不把已知不完整key写成成熟通用结论。
+
+
+## F2by 构造期见证已修复局部反例，尚无新物理结论
+
+NativeSupport新增默认关闭capture_geometry，只在显式启用时保存实际传给ns_create的offsets/flat/kind_ids不可变bytes和对应handle；close清除。ConservativeCollisionChecker以默认关闭capture_native_geometry薄转发，默认仍原NativeSupport(points,kinds)。不改C++查询、评分、244或阈值，不把句柄地址相等当跨worker语义等价。
+
+新增5项native证据行为测试及原58项相关回归共63项通过。private round92修正版绑定实际bound owner及原类型、对应构造handle和完整构造bytes；原模型全部依赖仍保留，缺证据/失配回原。根侧反例现可被检测，新增构造历史、owner、handle、缺证据及可选复制MemoryError回退后，32项局部回归通过。内部只读审查指出大模型bytes分配MemoryError原先会使候选失败，已补绑定异常回退及注入回归；默认关闭路径不受影响。
+
+下一Kaggle组件会显式让baseline不采集、candidate采集，并将两边完整fixture/native构造、worker原验证、证据构造与main检查全部计入；先共同预热一次原native编译，不计这次预热为候选收益。与F2bx旧计时范围分开记录，不把仅修复正确性说成已有整程收益，不凭静态回归启动重复物理。当前尚未提交云组件；默认仍loaded_jaw_preload。Knowledge=pending，待该修复证据和组件存齐后补原第20节，owner根Codex。

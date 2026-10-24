@@ -688,3 +688,6 @@ v1公开数组和v2官方完整MJB内存两种表示都在同原f9be97b4 fixture
 [ConservativeCollisionChecker](../../experiments/colab-twin/conservative_collision.py)在构造时复制完整mesh/box顶点，[NativeSupport](../../experiments/colab-twin/support_native.py)又通过ns_create持有独立C++副本。原型绑定当前model及选项，没有覆盖这份构造期内容。内部审查与根侧各自静态复算：gid63 collision_moving_jaw_so101_v1_0的mesh4构造前缩至1e-4并移到中途wall13局部中心，stock构造后还原model；不注入私有native字段，key仍相同，起点/home原谓词通过但中点失败。原型仍复用，返回路径原.005复验第36状态失败，q=[-.7636854922499817,.5264215938680693,-.5756476679928118,1.6204221904900316,8.515308681294955e-13]。精确脚本private round91/reproduce_native_counterexample.py，结果native-construction-counterexample.json。
 
 反证证明key支持域声明不足，并非声称当前4次静态物理已碰撞。hfield暂不构成同类已证遗漏：原native checker拒绝查询集合中非MESH/BOX，released guard也限定BOX/MESH；未参与查询的hfield不能仅凭名称就判成漏项。下一项优先补实际native输入见证，缺证据回原算法，不引入hash锁、额外裁判或私有调度。
+
+
+F2by局部修复：原native构造数组在ns_create前仍由Python拥有，因此只在显式启用时保存三份不可变bytes即可覆盖已证隐藏状态，无需hash、从handle反读或重写碰撞器。实际bound._owner必须就是受审的原NativeSupport，构造handle仅核对本对象是否仍有效，跨worker比较的是内容。缺构造信息或可选取证MemoryError回原。32个局部回归包含真实构造历史反例；63个仓库相关测试通过。新组件必须计入原本在setup里的复制成本，baseline保持默认不采集；无新物理或默认晋级结论。

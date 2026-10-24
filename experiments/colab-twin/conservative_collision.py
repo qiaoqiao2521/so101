@@ -19,7 +19,7 @@ from support_native import NativeSupport
 class ConservativeCollisionChecker(CollisionChecker):
     """Reuse the original pair policy, limits and independent planning data."""
 
-    def __init__(self, model, *, gripper=.35, margin_m=.002):
+    def __init__(self, model, *, gripper=.35, margin_m=.002, capture_native_geometry=False):
         super().__init__(model, gripper=gripper, margin_m=margin_m)
         if margin_m <= 0:
             raise ValueError('A separation certificate requires a positive margin')
@@ -42,7 +42,8 @@ class ConservativeCollisionChecker(CollisionChecker):
                 kinds.append('box')
             else:
                 raise ValueError('Separation certificates support only finite mesh/box geometry')
-        self.native = NativeSupport(points, kinds)
+        self.native = (NativeSupport(points, kinds, capture_geometry=True)
+                       if capture_native_geometry is True else NativeSupport(points, kinds))
         self._native_query = self.native.bind_pairs(self.pair_indices)
         self.distance_kind = 'certified_lower_bound'
 
