@@ -578,3 +578,6 @@ F2by本地：已加默认关闭的实际native构造见证，63项仓库相关�
 
 
 F2by云组件已终态并独立通过原等价/原screen，完整构造成本CPU三对减少76–149ms；首对大wall差有冷初始化混杂，不算算法收益。新key20.16MB，main22–25ms，尚无新整程或默认晋级依据，不重复物理追绿。Next F2bz只读分项计时已由原Kaggle CLI提交v1，保持原谓词，先取得binding/比较/fresh/临时key释放事实；带观察器时间不作性能对照。知识库两页519行已有未审改动保留，构造几何新认识暂存本计划待根Codex定向回写。
+
+
+F2bz已取回并独立通过原序列/全几何和观察器恢复：主要成本是两份模型快照，binding含模型快照约13–16ms。Next F2ca只做一次精确uint8视图比较候选，against安全copying-parent验证自身增量；不改原碰撞/244/阈值/90sim120wall。原型由内部GPT在private round94准备，尚无新实测，根Codex负责独立验收及Kaggle。原默认不变。

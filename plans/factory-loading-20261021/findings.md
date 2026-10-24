@@ -694,3 +694,6 @@ F2by局部修复：原native构造数组在ns_create前仍由Python拥有，因�
 
 
 F2by实际补齐构造见证后，原scope的组合worker/proof/main仍三对少85–94ms，完整构造范围CPU少76–149ms；原screen准入仅局部。首对2.18s总wall差主要位于setup，CPU并未等幅变化，不能归因复用。原件output/native-return-evidence-factory-20261024/component-v1。20.16MB key和22–25ms主取证仍值得拆分；下一步只读归因，不先假定NumPy视图一定更快：字节比较同样可能分配临时数组，需按真实原输入证伪。
+
+
+F2bz只读归因独立通过：两份7.69MB模型快照合计10.7–14.2ms，binding总12.9–16.4ms；内容比较约2.7ms、bridge约3.6–4.3ms/home约1.7–1.9ms、临时key释放约.7ms。此为inclusive归因，不加总嵌套区间，不外推物理实时性。下一只检验精确byte视图是否减少主线程复制；本地NumPy array_equal实现仍有布尔临时分配，因此必须对安全copying-parent单独三对证伪，不能只拿原重复全路径版本作很弱的对手。

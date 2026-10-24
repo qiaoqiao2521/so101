@@ -1634,3 +1634,12 @@ source0b5a8a3经REST和ls-remote读回，Kaggle private so101-native-return-comp
 不因为修复正确性和组件准入而重复旧的整程追绿：F2bx原静态两站整程一好一坏仍是有效反证。当前不发新物理、不切默认；完整50Hz未过。Next F2bz已通过原CLI提交只读main取证归因so101-return-evidence-attribution-20261024 v1/source0b5a8a3，private round93：拆binding/public model快照、内容比较、fresh桥接/home、临时key释放；全部原谓词/几何保持，inclusive父子不相加，带观察器时间不作性能基准。尚无归因结论。
 
 Knowledge=pending：原Wiki/ROS2 与 FishBot.md第20节与开发知识入口已有合计519行未审未提交改动；本轮未覆盖或夹带发布该独立知识库。新增构造期隐藏几何教训先存本findings，后续由根Codex串行审查这两页相关diff并补原段/入口；最短入口git diff --这两页及本计划F2bx/F2by。主项目工作与云任务继续，不以知识维护阻塞实验。
+
+
+## F2bz 主取证只读归因终态：模型快照是主要可查成本
+
+source0b5a8a3，Kaggle private so101-return-evidence-attribution-20261024 v1终态；入口/source/private独立一致，independent-return-evidence-attribution.json的protocol_valid=true。真实原f9be97b4 fixture，三次main分项均同model/native绑定，手工调用序列与原修正版helper输出一致，原.005完整路径复验均valid，公共模型观察器恢复。无新物理任务、策略或默认变更。
+
+每份模型快照约7.69MB，两份合计10.7–14.2ms；包含它们的binding总12.9–16.4ms。内容比较2.66–2.85ms、fresh bridge3.56–4.28ms、home1.74–1.92ms、临时key释放.64–.72ms。native构造见证4,776,260bytes，完整证据20,162,791bytes。完整原helper另测19.8–20.7ms；这些是带观察器及不同调用点的inclusive时长，不将父子相加或当性能A/B、完整50Hz结果。
+
+原件output/return-evidence-attribution-20261024/v1，private round93保存精确profile_probe/read_attribution、云源码/metadata。证据支持下一项只检验模型数组复制成本，而非继续改原碰撞谓词。Next F2ca：内部GPT只在独占private round94准备主线程精确uint8视图比较；worker bytes、binding默认格式、actual native证据、dtype/shape和原fresh检查保持。NumPy array_equal本身仍可能分配布尔临时数组，不能先称更快；非支持数组仍旧copy/回退，MemoryError先旧copy、再原return。须过真实反例/边界回归，再与安全copying-parent同输入、三对反序比增量；无收益即淘汰，不用原始重复全路径成本掩盖该候选自身无效。尚未有新候选实测或物理准入结论，默认不变。
