@@ -2,7 +2,7 @@
 
 ## X 方向工位开发参数（2026-10-24）
 
-`run_workspace_case.py --profile scenarios/workspace-x-m1a.json` 可复跑指定红盘布局的 X 方向试验。`pick_xy_m` 仅平移完整红盘，`pickup_hover_z_m` 只修改取料接近／抬升高位；默认仍是原盘位和 .06m。下探 .019m、原 IK、1mm、244 点扫掠及物理裁判不变。新布局不改变网页 ±10mm 准入，也不算原固定盘位包络扩大。当前原物理待验；诊断、配置和阶段结果见 [X 方向记录](../../plans/workcell-productization-20261024/m1a-x-results.md)。
+`run_workspace_case.py --profile scenarios/workspace-x-m1a.json` 可复跑指定红盘布局的 X 方向试验。`pick_xy_m` 仅平移完整红盘，`pickup_hover_z_m` 只修改取料接近／抬升高位；默认仍是原盘位和 .06m。下探 .019m、原 IK、1mm、244 点扫掠及物理裁判不变。新布局不改变网页 ±10mm 准入，也不算原固定盘位包络扩大。两个X新布局及两个原中心开发原物理4/4通过；完整50Hz、连续包络及扰动验收仍未通过。诊断、配置和阶段结果见 [X 方向记录](../../plans/workcell-productization-20261024/m1a-x-results.md)。
 
 ## 已采用持物夹爪目标（2026-10-24）
 
