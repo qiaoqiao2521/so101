@@ -169,3 +169,9 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 真实网页输入经新Station源码084cc7f，原物理左右2/2通过；不是重用开发CLI成功标签。证据与未采计时边界见m1a-station-entry.md。并行工作台Drone源码由原owner后续提交de94a6d；本轮未改其模块或主FishBot工作树。
 
 旧X四回合timing的exclusive parts只读归因：15641完整周期，281拍>20ms；controller主导218、perception51、physics_and_guards12。最大140.476ms/135.697ms位于separate→retreat同步_return_path(q6[:5])，主线程CPU接近wall；尚未细分函数内部，不能归因于特定碰撞算子。worker的planned_return目前用于预算/报告，不可直接代替实测q回位。私有可复跑审计round102/m1b-slow-cycle-audit.json保留全部原index、stage和top10。下一步限于这一有证据的交接点，全部安全责任不丢。
+
+## X向新位置的渲染拒绝取证
+
+原P0负例固定于中心，不能用其通过声称X±11mm遮挡已验。现兼容显式位置声明，遮挡片／干扰物与目标同量平移，保留真实PNG供原定位器独立重算。固定890616a的Kaggle原17/17通过，五正例最大误差.616511mm，12负例均无坐标输出；17原始PNG的完整estimate重算一致。8500次原reset积分、P0与进程时钟单列，详见[m1a-x-perception-results.md](m1a-x-perception-results.md)。
+
+该面板只补位置相关的观测拒绝证据。轴齐／高度仍为先验，不替代IK／盘壁证书、物理抓放或连续域准入。把目标移到新位置时，负例遮挡物也须移动；否则只是在新位置重复无效遮挡。Knowledge=already_covered：动作、观测与晋级分层仍沿用Wiki§20，未修改共享知识页。

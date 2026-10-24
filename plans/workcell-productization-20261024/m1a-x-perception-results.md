@@ -26,7 +26,29 @@
 
 Qoder经agent-link一次120s只读审查超时，没有有效结论；内部GPT实施，根独立审查。根58项P0接线／原定位器／runner相关检查通过，覆盖正反序复原、坏声明继续、无姿态拒绝、重复ID保留旧图、中文ID和目录失败不创建renderer。仅run_p0发生语义改动；物理入口、reset_scene、render_rgb与原bf50087函数结构一致，定位文件未改。
 
-局部检查只证明接线、复原、错误隔离与拒绝合同；实际渲染和原始PNG复算待固定源码后在原Kaggle环境执行。本机后台Blender不被抢占，不新建调度平台。
+局部检查只证明接线、复原、错误隔离与拒绝合同；以下为固定源码后的真实渲染结果。本机共享仿真不被抢占，不新建调度平台。
+
+## 原渲染结果与独立读回
+
+固定源码 `890616aebd68d018c1e94ab9ee6d2d241ca240eb`，Kaggle `muqiaoqiao/so101-x-perception-20261024/1` 已 COMPLETE。原 P0 的 planned/attempted 均为17，complete/pass均为true；这是渲染定位面板，不是新增抓放回合。
+
+| 原正例 | XY误差 mm | 原1mm门槛 |
+| --- | ---: | --- |
+| center | 0.616511 | pass |
+| X−20mm | 0.512192 | pass |
+| X＋20mm | 0.616511 | pass |
+| X−11mm | 0.508394 | pass |
+| X＋11mm | 0.544720 | pass |
+
+中心及X±11mm共12个负例全部拒绝，且xy_m、pixel_xy、uncertainty_m均为null。缺失／全遮挡返回target_missing，半遮挡返回size_or_occlusion，双候选返回ambiguous_components。17份原始PNG及17份overlay完整，案例ID不重复，没有fixture_error。
+
+原reset_scene实际执行8500次mj_step；P0墙钟4.726051s，原进程wall/CPU为5.544141/7.334838s。云端环境为Python3.13.15、MuJoCo3.15.0、NumPy2.4.6、T4。本机独立PNG读回环境与云运行分列，不将两者的耗时或库版本混为同环境结果。
+
+根直接回读原report、进程记录和源码来源，并查看正例、半遮挡和双目标原始PNG。独立reader用固定版本定位器重算全部17份PNG，完整estimate字典17/17与原输出逐字段相同；同时核遮挡片／干扰物的平移、尺寸和透明度。定位器全文及reset_scene、render_rgb、物理入口函数与前版结构保持，未改IK、碰撞或原裁判。
+
+原件：`experiments/colab-twin/output/x-perception-20261024/kaggle-v1/`，batch UUID为`aee44fb4-9b31-4891-a76d-d41b93977612`。根与独立读回分别为`root-readback.json`、`independent-readback.json`；完整原件在`unpacked/so101-evidence/`。产物保持Git忽略。
+
+已知高度、轴齐方块、绿色和固定相机仍是先验；未保存每例运行时四元数／旋转矩阵，不声称已拒绝任意朝向或高度异常。离散17例也不证明连续区域、所有遮挡、实体标定、持续视觉跟踪或物理抓放。X向IK与盘壁结论仍取[原物理报告](m1a-x-interior-results.md)及[固定盘端点报告](m1a-x-fixed-certificates.md)。
 
 复跑面板的原Python入口：
 

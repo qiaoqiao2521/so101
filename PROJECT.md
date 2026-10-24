@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-24 [X向新请求](plans/workcell-productization-20261024/m1a-x-interior-results.md)新增固定红盘X±11mm原物理2/2通过，均用原60mm高位／.5rad开度及完整244扫掠。[位置相关RGB面板](plans/workcell-productization-20261024/m1a-x-perception-results.md)17/17通过，五正例最大误差.616511mm、12负例无坐标，17份原PNG独立重算一致。定位与物理分别验收，默认／网页±10mm不变；轴齐／已知高度、连续域、20＋20与完整50Hz边界保留。原5186已恢复并服务Carry入口，实际ready／终态拒绝已验，活动网页接续整链仍待做。
+
 2026-10-24 [固定红盘X方向](plans/workcell-productization-20261024/m1a-x-fixed-certificates.md)新增实测能力：右X+20mm使用54mm高位和显式0.35rad高位预收爪，原主放置工位与(.20,.20)工位均完成真实抓放／释放／脱离／回位；原中心回归通过，原大开度失败保留。红盘、原1mm、限位、裁判和回退未改，关键夹爪扫掠各246点。左X−20mm的显式完整几何补证与方向提示候选也已在两放置工位完成原物理；planned／measured各244点、原19轴／全部285对／1mm保持，首轮超时保留。左右固定点均可复跑，默认／网页±10mm不变；连续包络、20＋20和完整50Hz未过。
 
 2026-10-24 [Grasp物理证据到网页](plans/workcell-productization-20261024/m2-grasp-evidence-results.md)已验：只在原monitor持续持物确认后记录事件，网页单列该证据，不以close／hold阶段推断抓取成功。新原完整抓放1/1与运行中取消通过对应验收；后续取消／失物保留原失败，六技能恢复仍未实现。完整周期159拍>20ms，50Hz仍未通过。

@@ -9,7 +9,7 @@ CarryGate只读q6、当前时钟和同attempt输入文件。False保留原hold�
 ## 已实现与局部验证
 
 - 原SO101四文件在途实现已审阅；补回调告警隔离，防止PYTHONWARNINGS=error使展示失败变成控制故障。
-- 前端／API原八文件补取消竞态：已请求取消拒绝resume；迟到resume响应不覆盖较新取消或失败终态。原server尚未重启，局部新API与正在运行的旧API分列。
+- 前端／API原八文件补取消竞态：已请求取消拒绝resume；迟到resume响应不覆盖较新取消或失败终态。原server随后恢复，实际接口读回见下文，局部测试与真实API检查分列。
 - 根202项相关Python检查通过（含取消、超时、扫掠与transport/separation/return worker）。前端5项runtime、56项Jest、最终生产构建与13项无运动浏览器检查通过；真实控制POST=0、pageerror=0，4次测试POST由HTTP fixture接收。waiting＋未抓住原件仍显示未确认；390px无溢出。
 - 网页导出的 `carry-recipe.json` 原文保存为 `experiments/colab-twin/scenarios/station-carry-m2.json`，普通中心工位，不移动盘或放宽±10mm。
 
@@ -39,4 +39,8 @@ CarryGate只读q6、当前时钟和同attempt输入文件。False保留原hold�
 
 ## 剩余
 
-运行服务resume_carry上线与实际接口回查仍待根接续；工作台原八文件保留，不混入本轮X向提交。完整六技能RUNNING/halt、同世界安全恢复、连续卸货及20＋20仍按原主计划推进。Carry不是完整M2的替代验收。
+5186已沿原workbench-preview.cjs恢复，保持原SO101_ROOT与隔离Python。实际GET显示SO101 ready=true、resume_carry=true，Drone ready=true、resume_carry=false；13个SO101与25个Drone历史任务ID全部保留。已结束SO101任务resume返回409，Drone返回405，均未写继续标记或创建任务。首页、原主包和包含Carry入口的chunk实际被服务，11项读回通过。
+
+原runtime五项检查本轮重跑通过；Jest56项、原最终构建和13项浏览器检查对应源码未变，沿用已验结果，不声称本轮重跑浏览器。实际API证据在FishBot原工作树`apps/fishbot-control-station/workbench-review-tests/output/carry-handoff/live-api-readback.json`。
+
+工作台9个有效文件（含原进度）已在`codex/workbench-code-rebuild-20261018`提交并推送`5a30c26f985efc614dcaf2e6f4f9efcbdfffa449`；远端独立回读相同。Drone在途修改保持，不混入SO101交付。尚缺真实HTTP活动任务进入waiting后继续／取消与原物理的整条验证；本次历史终态拒绝不能代替它。完整六技能RUNNING/halt、同世界安全恢复、连续卸货及20＋20仍按原主计划推进。Carry不是完整M2的替代验收。

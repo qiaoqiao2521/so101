@@ -1,14 +1,16 @@
 # SO101 产品化进度
 
-## 2026-10-24 — X向RGB拒绝面板实施
+## 2026-10-24 — X向RGB拒绝17/17，原工作台Carry入口收口
 
 Current：上一目标轮次=progress，X±11mm原物理2/2已完成并推送bf50087；本轮接原计划的目标缺失／遮挡／歧义拒绝，不重复抓放或扩大网页范围。
 
-In progress：原run_p0负例仅支持中心字符串，扩展兼容{id,kind,initial_xy_m}声明；遮挡片／干扰物随目标平移，每例与异常恢复，原定位器／阈值不改。原始RGB另存供独立重算，拒绝必须无xy/pixel/uncertainty。新面板保留原中心四负例和中心／±20正例，加入±11正例及八负例，共17项。
+Done：原run_p0兼容{id,kind,initial_xy_m}负例声明；遮挡片／干扰物随目标平移，每例与异常恢复，原定位器／阈值不改。根58项相关检查通过。固定890616a，原Kaggle面板17/17通过：五正例最大误差.616511mm，12负例均拒绝且无xy/pixel/uncertainty。17原始PNG和overlay齐全，独立reader完整estimate重算17/17逐字段相同。原P0墙钟4.726051s，process wall/CPU=5.544141/7.334838s；详见[m1a-x-perception-results.md](m1a-x-perception-results.md)。
 
-Preserved：原reset_scene每例含500步静置，不把本切片称零积分或抓放评测；不反馈物体真值给定位函数。本机后台Blender仍在运行，渲染验收沿原Kaggle隔离环境。qoder只读调用120s超时，仅一次，无有效结果，内置GPT接续，不修认证或新建调度器。
+Preserved：原reset_scene实际8500步静置，不把本切片称零积分或抓放评测；不反馈物体真值给定位函数。云端原生COMPLETE，本机无拥有的抓放评测在跑，不与FishBot在途仿真争资源。qoder只读调用120s超时，仅一次，无有效结果，内置GPT接续，不修认证或新建调度器。高度／轴齐仍为先验，不声称异常姿态／高度已拒绝。
 
-Next：局部边界测试、独立审查并固定源码后，实际渲染17项，核每例几何与原始PNG／定位输出；失败保留，不放宽阈值。Knowledge=already_covered，沿用Wiki§20分开定位拒绝、物理动作与晋级；owner根Codex。Carry网页在途成果与Mint／Drone边界保持。
+Done：5186原服务退出后沿原入口恢复，实际GET回读SO101 ready/resume_carry=true、Drone不支持Carry；两个历史终态resume分别409/405，无新任务或继续标记。13/25历史任务ID不变，首页与Carry产物实际被服务。工作台9个有效Carry文件已提交并推送5a30c26，远端SHA独立回读相同；Drone在途文件保持。详见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。本轮未做真实网页POST→等待→继续抓放。
+
+Next：按用户指定继续X向逐请求IK／下降／全夹爪扫掠与盘壁证书准入，不将端点和内点插值为矩形可用域。原物理与定位面板分别保留；完整50Hz／20＋20仍未过。Knowledge=already_covered，沿用Wiki§20分开定位拒绝、物理动作与晋级；owner根Codex。Mint与Drone边界保持。
 
 ## 2026-10-24 — X向逐请求检查接续
 
