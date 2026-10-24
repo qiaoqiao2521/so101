@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 同owner组件通过，运输受益／闭爪全慢
+
+Current：round125固定f922da9，原Kaggle v1终态。5功能检查通过，7组原完整报告／hint／q6同值，云内有效数组比较回执相同。根179项／独立414项读回0失败；不是Station物理或生产资格。详见[m1b结果](m1b-refinement-details-results.md)。
+
+Done：原生78字段实测77为NULL，102个有效NumPy数组＋77个NULL标记组成179条目；11争议getter确为独立临时数组。未删除有效字段，原round123失败保留。私有候选逐字不变，更正观察方法后同owner普通及一次性异常状态／首次失败语义成立。原始数组bytes未归档，独立核代码和回执不冒充离线字节复算。
+
+Done：完整snapshot成本计入三对，运输wall中位比主.734709／次.720192，CPU同向，六组lift／hold／transport均三对快；close三对wall／CPU全部慢、中位1.005947／1.005963，571scalar与完整244保持。因此只保留transport-only接入候选，不全阶段开启，不切默认。
+
+Done：round123／124重复展开实际释放983,040B；round125完成42原件核对和独立报告压缩后释放9,834,496B。原TGZ／root／gzip reader／小输入保留，恢复命令见结果文档。累计已记录清理132,513,792B；无拥有的评测仍运行，不动Mint及他人资源。
+
+Next：根Codex做默认关闭的薄transport-only生产选项，补native错误／invalid-q／observer／binding／close／reentry与generation边界，后续保存压缩原数组；通过组件后再原Station两工位反序物理。私有动态源码派生和诊断观察器不进入控制热路径。完整50Hz、连续域、20＋20未过。Knowledge=pending：Wiki§20及入口已有在途修改，根下一接续先核diff，再写NULL getter经验并读回；本轮未宣称已写。
+
 ## 2026-10-25 — 11个arena字段差异已定位，先核原生NULL
 
 Current：round124字段诊断终态，5项原比较仍false；具体差异仅efm／island映射11字段，四个异常case仅7个efm浮点字段。其它179字段中的观测、错误和历史事实见[m1b结果](m1b-refinement-details-results.md)。无计时或新物理。

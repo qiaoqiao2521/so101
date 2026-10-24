@@ -202,3 +202,43 @@ round122独立reader另从原件核161项，0失败，共2744个screen状态；�
 同版官方源码提供了可核实假设：[Python getters](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.cc#L856)按模型尺寸暴露arena字段，[InitPyArray](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.h#L981)只对空shape特殊处理，原[resetData](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_io.c#L1231)将arena指针清为NULL；[字段宏](https://github.com/google-deepmind/mujoco/blob/3.15.0/include/mujoco/mjxmacro.h#L940)中的部分shape仍为nv／nactuator。NULL传给Python数组构造可能得到独立未初始化内容，不能以getter的shape判定原生数据有效。这是源码解释，当前云件尚未读取指针，未证明本次就是NULL。与nflex是否为0不能混为一谈。
 
 下一步保持私有候选不变，用同包原生头文件生成只读arena指针观察器。逐字段记录NULL／非NULL及原计数，NULL显式作为NULL比较；有原生数据的全部NumPy数组继续逐字节比较，不能按efm或map名称整体排除。先验证初始／setup前后、5项functional和后续查询，再决定是否跑原7组计时；仍不接生产。原件`experiments/colab-twin/output/data-field-diagnostic-20261025/kaggle-v1/so101-evidence.tgz`；私有round124包含原probe、builder与提交回执，round125准备中。Knowledge=no_reusable_delta：因实际NULL尚未确认，暂留项目假设，不写共享知识；owner根Codex。
+
+## 2026-10-25：原生NULL确认，同owner组件有收益但不晋级
+
+固定 `f922da9c5147fbe6963cfb766c7409d4bd0377bd`，Kaggle `muqiaoqiao/so101-native-data-observation-20261025/1` 终态。UUID `b0f8df6b-5802-49e8-b8b7-8b74456b8e6b`，组件process wall30.162657s／CPU31.377228s；无Station verdict／无物理积分。原bootstrap、preflight、运行依赖和command／save保持，原preflight渲染单列。
+
+只读原生观察器由同包 `MJDATA_ARENA_POINTERS` 生成78字段，未猜结构偏移、未解引用字段内容；header／runtime均3015000，原编译收据成功。76份观测的77字段为原生NULL，另有102个真实NumPy数组，共179个比较条目；contact唯一非NULL arena字段为_MjContactList，ncon=0。不能写成“179个有效数组”。efm_active、全部nefm*、nisland／nidof／nefc均0。
+
+前轮11个争议字段在baseline／candidate均实测NULL。对每个字段额外调用两次Python getter，只记录所有权与shape，不读取内容：OWDATA=true、base=None、不同对象、不共址且不共享内存。它们确是独立临时数组，不能用其未初始化字节代表原生MjData。与[同版getter](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.cc#L856)、[InitPyArray](https://github.com/google-deepmind/mujoco/blob/3.15.0/python/mujoco/structs.h#L981)、[resetData](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_io.c#L1231)机制相符。新版观察将每个NULL显式保留为NULL；其余102有效数组仍全量字节比较，未按字段名删比较。原round123失败与round124差异原件不改写。
+
+私有候选same_owner_prefix.py与round123逐字相同；更正的是观察方法。功能5/5通过：初始状态、make_prefix前后、路径报告、历史、有效数据／NULL状态及后续查询相同。一次性RuntimeError／ValueError在第2次FK保留原invalid；LookupError／KeyboardInterrupt按原类型传播、FK同为2次，没有被重试洗掉。原native-status／invalid-q／close／reentry注入仍未覆盖，generation仅为单调失效令牌，不宣称与scalar次数相同。
+
+### 同VM原三对组件计时
+
+完整MjData复制、回退、hint复制和前缀计数在计时内；模型、编译、checker／snapshot分配为setup，原生指针／数组观察在计时外。每组warmup后AB／BA／AB。表内wall、CPU均为候选／原版比，小于1更快。
+
+| 工位／段 | wall三对原版→候选 s | wall中位比 | CPU中位比 |
+| --- | --- | ---: | ---: |
+| left_baseline／lift | 0.402492→0.356467；0.403173→0.351728；0.398769→0.356361 | 0.885649 | 0.885634 |
+| left_baseline／hold | 0.132086→0.095441；0.132519→0.094383；0.131655→0.103357 | 0.722565 | 0.722573 |
+| left_baseline／transport | 0.104418→0.076717；0.103794→0.075667；0.104495→0.083997 | 0.734709 | 0.734598 |
+| left_second_baseline／lift | 0.438450→0.384557；0.417795→0.362422；0.421038→0.362845 | 0.867465 | 0.867455 |
+| left_second_baseline／hold | 0.129205→0.096167；0.133769→0.094864；0.129989→0.100415 | 0.744300 | 0.744363 |
+| left_second_baseline／transport | 0.113935→0.077116；0.107827→0.077656；0.109005→0.080868 | 0.720192 | 0.720156 |
+| original_close_negative_control／close | 1.077678→1.082724；1.054478→1.120950；1.073826→1.080212 | 1.005947 | 1.005963 |
+
+六组lift／hold／transport三对wall／CPU均更快；7组完整原路径报告、历史和q6相同，云内102有效数组＋77个NULL标记的比较回执也全部相同。screen仍覆盖原2744状态、285对、1mm；close244报告8次均与原件exact。两个lift仍8条raw-clear／1条完整回退；hold／transport9条全clear；close9条全回退，额外9次raw查询、原571scalar不减，三对全慢。这支持继续做仅运输段的默认关闭候选，不支持全阶段启用。
+
+根179项和独立reader414项读回0失败。独立核原报告、全部hint／q6／时间／native状态、计时算术、编译C源和getter所有权。**原始数组bytes没有归档**：数组字节等价来自云内比较代码与各对回执，不能称下载后独立字节复算。下一生产验证应将所需原数组压缩保存，避免把这层缺证带入正式晋级。
+
+**仍不生产采用。** 私有适配动态派生原batch循环，没有进入生产API、RoutePolicy或控制器。无新的原Station抓放、完整50Hz、连续工作区或20＋20结果。默认仍loaded_jaw_preload；原1mm、285对／244、原裁判和90sim/120wall未改。下一步做薄的显式transport-only前缀，保留默认refinement回退；补真实错误、观察器／binding、close／重入及generation边界，再按原同输入组件和两工位反序物理验收。不能直接复制私有源码变换或NULL观察器到控制器热路径。
+
+原件：`experiments/colab-twin/output/native-data-observation-20261025/kaggle-v1/so101-evidence.tgz`；root-readback.json及independent-readback.json.gz保留。私有源码、来源、builder和提交回执在`/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round125-native-data-observation/`；原C源码／编译收据在TGZ内。
+
+### 本轮追加清理与知识接续
+
+round123／124各37个归档regular文件已逐字节核对，无缺失／额外文件后删除重复unpacked，保留原失败TGZ与root字段报告；分别释放471,040／512,000B。round125独立读回结束后42个归档regular文件同样核对，再删除展开、gzip独立reader，释放9,834,496B；目标已分配10,555,392→720,896B，独有TGZ／root／压缩reader和小fixture保留。对应私有cleanup-readback.json、cleanup-current-readback.json记录前后量及恢复命令。
+
+本接续已记录的清理累计132,513,792已分配字节（约126.4MiB），不将共享磁盘其它任务的空闲变化算为收益。任一原件恢复：`python3 -m tarfile -e <该目录/so101-evidence.tgz> <该目录/unpacked>`；独立报告恢复用`gzip -dk <independent-readback.json.gz>`。当前没有拥有的本地FK／评测进程或在途云任务；未停他人Blender／FishBot／Drone，未动Mint。
+
+Knowledge=pending：候选经验为“MuJoCo同版NULL arena getter不等于有效数据，按原生分配状态比较，保留原错误”。原Wiki《ROS2 与 FishBot》§20与开发知识入口均已有在途修改，本轮未并发写入或整仓提交。Owner根Codex；最短接续是读两文件现有diff，在原分层验收节补同版源码和本轮native NULL证据，并同步入口触发词，再独立读回。不得将本段pending当已回写知识。

@@ -199,3 +199,9 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 ## X侧完整弦批量前缀：组件与owner交接分开
 
 round122原全弦筛选与三对已终态，结果见[m1b记录](m1b-refinement-details-results.md#2026-10-25完整派生弦的批量前缀组件)。54条保存姿态派生弦的hold／transport全部raw clear，按原分辨率批量查询可降低Python组件成本；但独立shadow原型没有更新主checker的MjData和witness历史，六组全部不一致，不能生产采用。close571点全需补证，完整回退不减原查询。原报告exact仅证明路径布尔结果相同，不证明控制器副作用与交接成立。下一候选须同owner且原generation失效仍成立；不删refinement拒绝就直接上线。
+
+## 同owner的实际状态比较与分阶段收益
+
+round125已实测77个arena指针为NULL，102真实NumPy数组＋77 NULL标记组成179比较条目；前轮11个争议getter在native NULL时另行分配临时NumPy数组。不能把临时内容当MjData状态，也不能整体略过efm字段。保持私有候选不变后5functional和7组云内状态比较通过，详细证据与同版源码见[m1b结果](m1b-refinement-details-results.md)。根179项、独立414项读回通过；原数组bytes未归档，不称下载后独立字节验证。
+
+同VM三对wall／CPU中，运输两工位中位wall比分别.734709／.720192；close三对全慢。snapshot／rollback成本已计入，支持继续显式transport-only生产适配，不支持全阶段开启或默认晋级。原1mm、285对／244、90sim120wall和原物理裁判保留；未新增Station物理、连续域、20＋20或完整50Hz成绩。外部CLI后续仅AGY／Zcode，已知耗尽的Qoder／CodeBuddy及停用dsh不试探；本轮Zcode超时不计审核成功。
