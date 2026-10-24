@@ -3,9 +3,63 @@ from pathlib import Path
 import tempfile
 import unittest
 import hashlib
+from unittest.mock import patch
 import mujoco
 import numpy as np
-from grasp_workcell import build_workcell
+from grasp_workcell import build_workcell, PICK_CENTER
+from grasp_episode import build_contact_scene, OBSTACLE
+
+
+class PickTrayPlacementTests(unittest.TestCase):
+    """Only compile geometry; these layout checks never advance physics."""
+    @classmethod
+    def setUpClass(cls):
+        cls.directory = tempfile.TemporaryDirectory()
+        cls.source = Path(__file__).resolve().parents[2]/'workspaces/so101_ws/src/so101_mujoco/models/so101.xml'
+        with patch.object(mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            cls.default, cls.default_rig, _ = build_contact_scene(
+                cls.source, Path(cls.directory.name)/'default')
+            cls.shifted, cls.shifted_rig, _ = build_contact_scene(
+                cls.source, Path(cls.directory.name)/'shifted', pick_xy=(.26, -.12))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.directory.cleanup()
+
+    def test_default_pick_geometry_and_target_remain_at_original_positions(self):
+        x, y = PICK_CENTER
+        expected = {'pick_floor': (x, y, .001), 'pick_plaque': (x, y-.075, .001)}
+        for side in (-1, 1):
+            expected[f'pick_wall_x_{side}'] = (x+side*.059, y, .009)
+            expected[f'pick_wall_y_{side}'] = (x, y+side*.059, .009)
+        for name, position in expected.items():
+            np.testing.assert_allclose(self.default.geom(name).pos, position, rtol=0, atol=1e-12)
+        np.testing.assert_allclose(self.default.body('grasp_target').pos, (*PICK_CENTER, .012), rtol=0, atol=1e-12)
+        np.testing.assert_allclose(self.default.geom('approach_obstacle').pos, OBSTACLE['pos'], rtol=0, atol=1e-12)
+
+    def test_explicit_pick_center_moves_all_tray_geometry_in_both_models_only(self):
+        delta = np.array([.02, .01, 0.])
+        for original, shifted in ((self.default, self.shifted), (self.default_rig, self.shifted_rig)):
+            pick_count = 0
+            for index in range(original.ngeom):
+                name = original.geom(index).name
+                before, after = original.geom(index), shifted.geom(index)
+                self.assertEqual(after.name, before.name)
+                is_pick = name.startswith('pick_')
+                pick_count += is_pick
+                np.testing.assert_allclose(after.pos, before.pos+(delta if is_pick else 0.), rtol=0, atol=1e-12)
+                for field in ('size', 'quat', 'contype', 'conaffinity', 'friction'):
+                    np.testing.assert_array_equal(getattr(after, field), getattr(before, field))
+            self.assertEqual(pick_count, 6)
+            np.testing.assert_array_equal(shifted.body_pos, original.body_pos)
+            np.testing.assert_array_equal(shifted.jnt_range, original.jnt_range)
+            np.testing.assert_array_equal(shifted.qpos0, original.qpos0)
+
+    def test_invalid_pick_centers_are_rejected(self):
+        for center in ((True, -.13), (.24, False), (float('nan'), -.13),
+                       (.24, float('inf')), ('0.24', -.13), (.24,), (.24, -.13, 0.), (2., -.13)):
+            with self.subTest(center=center), self.assertRaises(ValueError):
+                build_workcell(self.source, Path(self.directory.name)/'invalid', pick_xy=center)
 
 
 class GraspWorkcellTests(unittest.TestCase):

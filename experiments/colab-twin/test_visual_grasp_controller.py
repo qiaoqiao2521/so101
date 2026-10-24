@@ -45,6 +45,31 @@ class VisualControllerTests(unittest.TestCase):
         self.addCleanup(p.stop)
         return module.VisualGraspController(rig, target_xy, [.24, .14, .06, 0, 0, .5], **options)
 
+    def test_default_pickup_hover_keeps_original_high_and_down_targets(self):
+        controller = self.controller()
+        self.assertEqual(controller.pickup_hover_z_m, .06)
+        np.testing.assert_array_equal(controller.approach[:3], [.24, -.13, .06])
+        np.testing.assert_array_equal(controller.down[:3], [.24, -.13, .019])
+        np.testing.assert_array_equal(controller.lift[:3], [.24, -.13, .06])
+
+    def test_development_pickup_hover_changes_high_targets_only(self):
+        controller = self.controller(pickup_hover_z_m=.054)
+        self.assertEqual(controller.pickup_hover_z_m, .054)
+        np.testing.assert_array_equal(controller.approach[:3], [.24, -.13, .054])
+        np.testing.assert_array_equal(controller.down[:3], [.24, -.13, .019])
+        np.testing.assert_array_equal(controller.lift[:3], [.24, -.13, .054])
+        np.testing.assert_array_equal(controller.initial_q, [.24, .14, .06, 0, 0, .5])
+        self.assertEqual(controller.sweep_reports[0]['stage'], 'planned_closure')
+
+    def test_invalid_pickup_hover_heights_are_rejected_before_planning(self):
+        for height in (True, np.bool_(False), None, '.054', .054+0j,
+                       np.nan, np.inf, -.001, .0539999, .0600001):
+            with self.subTest(height=height), \
+                    patch.object(module.VisualGraspController, '_plan_approach') as plan, \
+                    self.assertRaisesRegex(ValueError, 'pickup_hover_z_m'):
+                self.controller(pickup_hover_z_m=height)
+            plan.assert_not_called()
+
     def test_default_target_region_keeps_legacy_bounds_and_static_call(self):
         for xy in ([.23000001, -.13999999], [.25000009, -.11999991]):
             with self.subTest(xy=xy):

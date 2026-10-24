@@ -51,9 +51,10 @@ def load_policy_prefix(path, cycles, period_s, initial):
 
 
 def build_contact_scene(source: Path, output: Path, *, jaw_force_cap_nm=.15, noslip_iterations=0,
-                        place_xy=None, place_height_m=0.):
+                        place_xy=None, place_height_m=0., pick_xy=None):
     """Refine only finger/target contact; keep hulls for all arm/world checks."""
-    _, path = build_workcell(source, output, place_xy=place_xy, place_height_m=place_height_m)
+    _, path = build_workcell(source, output, place_xy=place_xy, place_height_m=place_height_m,
+                             pick_xy=pick_xy)
     tree = ET.parse(path)
     root = tree.getroot()
     world = root.find('worldbody')

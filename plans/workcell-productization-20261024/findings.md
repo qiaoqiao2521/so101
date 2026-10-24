@@ -104,3 +104,9 @@
 - 来源：[Wiki《ROS2 与 FishBot》第20节:451–468](</home/muqiao/桌面/obsidian/my-programming-world/Wiki/ROS2 与 FishBot.md:451>)。
   本轮采用“动作、物理、交接、晋级分开”及“组件收益须回到原完整任务核实”的既有原则。
 - Knowledge=already_covered，仅指本轮原则已被原页覆盖；本轮未修改知识页，不代表其他待审内容已收尾。
+
+## X 方向：限位与证书分离（2026-10-24）
+
+原 X+20mm、60mm高位已到腕俯仰95°边界，去掉roll偏好不解决；54mm高位可解但原盘位的低位仍不认证。X−20mm低位的0.880489mm为证书下界；全编译网格投影有16.773623mm分离轴证据，因此不能把它直接叫实际撞壁。详见[m1a-x-results.md](m1a-x-results.md)。
+
+本次选择显式工位布局薄适配，保持原检查器、阈值、夹持／释放裁判。新参数与测试分别在grasp_workcell.py、grasp_episode.py、visual_grasp_controller.py及run_workspace_case.py。原网页与±10mm不变；局部筛选仅是原物理的前置。右侧最薄证书仅比1mm多约4μm，动态跟踪风险必须由原物理核验。

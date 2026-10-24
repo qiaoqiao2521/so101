@@ -16,12 +16,17 @@ def numbers(values):
     return ' '.join(format(float(x), '.9g') for x in values)
 
 
-def build_workcell(source, output, *, place_xy=None, place_height_m=0.):
+def build_workcell(source, output, *, place_xy=None, place_height_m=0., pick_xy=None):
     """Reuse original arm geometry; add a freely moving 10g target and open trays.
 
     Dimensions/friction are simulation fixtures, not measured hardware values.
     No weld, adhesion, mocap parenting or scripted object movement is used.
+    ``pick_xy`` translates the red tray only; the free target keeps its default pose.
     """
+    pick_center = PICK_CENTER if pick_xy is None else tuple(pick_xy)
+    if (len(pick_center) != 2 or any(isinstance(x, bool) or not isinstance(x, (int, float))
+                                   or not math.isfinite(x) for x in pick_center)):
+        raise ValueError('Red tray XY must contain two finite numbers')
     place_center = PLACE_CENTER if place_xy is None else tuple(place_xy)
     if (len(place_center) != 2 or any(isinstance(x, bool) or not isinstance(x, (int, float))
                                     or not math.isfinite(x) for x in place_center)):
@@ -89,7 +94,9 @@ def build_workcell(source, output, *, place_xy=None, place_height_m=0.):
     table_half = list(map(float, table.get('size').split()))
     if any(abs(place_center[i]-table_center[i])+.06 > table_half[i]+1e-9 for i in (0, 1)):
         raise ValueError('蓝盘必须完整放在当前工作台面上；目标不会回退到旧位置')
-    for prefix, center, color in [('pick', PICK_CENTER, '.64 .30 .23 1'),
+    if any(abs(pick_center[i]-table_center[i])+.06 > table_half[i]+1e-9 for i in (0, 1)):
+        raise ValueError('红盘必须完整放在当前工作台面上；目标不会回退到旧位置')
+    for prefix, center, color in [('pick', pick_center, '.64 .30 .23 1'),
                                    ('place', place_center, '.20 .39 .58 1')]:
         x,y = center
         height = place_height_m if prefix == 'place' else 0.

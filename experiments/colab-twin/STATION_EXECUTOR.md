@@ -1,5 +1,9 @@
 # 工作站草稿执行适配
 
+## X 方向工位开发参数（2026-10-24）
+
+`run_workspace_case.py --profile scenarios/workspace-x-m1a.json` 可复跑指定红盘布局的 X 方向试验。`pick_xy_m` 仅平移完整红盘，`pickup_hover_z_m` 只修改取料接近／抬升高位；默认仍是原盘位和 .06m。下探 .019m、原 IK、1mm、244 点扫掠及物理裁判不变。新布局不改变网页 ±10mm 准入，也不算原固定盘位包络扩大。当前原物理待验；诊断、配置和阶段结果见 [X 方向记录](../../plans/workcell-productization-20261024/m1a-x-results.md)。
+
 ## 已采用持物夹爪目标（2026-10-24）
 
 工厂默认选择`route_strategies/loaded_jaw_preload.py`，仅在抬起后用编码器/旧命令锁定一次半残差目标，沿原1.5s hold连续接入，并同步原运输准入端点。原始两类244点闭合预检、全部在线碰撞、模型、90sim/120wall及释放/脱离/回位判据保持。底层`RoutePolicy()`仍为原版，`float_first_context.py`可显式复跑。

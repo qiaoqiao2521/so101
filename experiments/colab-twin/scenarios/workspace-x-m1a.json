@@ -1,0 +1,39 @@
+{
+  "schema": "so101.workspace-development.v1",
+  "id": "workspace-x-m1a",
+  "development_only": true,
+  "not_admitted": true,
+  "target_region_xy_m": [[0.21, 0.27], [-0.16, -0.10]],
+  "target_region_source": "Declared fixed workstation prior; never execution object truth",
+  "scope": "X layout adaptations, not an expansion of the original fixed tray workspace",
+  "protocol": {"max_sim_s": 90, "max_episode_wall_s": 120},
+  "cases": [
+    {
+      "id": "center_primary",
+      "initial_xy_m": [0.24, -0.13],
+      "place_xy_m": [0.24, 0.14],
+      "target_region_mode": "controller_default"
+    },
+    {
+      "id": "outside_x_plus20_layout",
+      "initial_xy_m": [0.26, -0.13],
+      "pick_xy_m": [0.26, -0.13],
+      "pickup_hover_z_m": 0.054,
+      "place_xy_m": [0.24, 0.14],
+      "target_region_mode": "declared_region"
+    },
+    {
+      "id": "outside_x_minus20_layout_secondary",
+      "initial_xy_m": [0.22, -0.13],
+      "pick_xy_m": [0.235, -0.13],
+      "place_xy_m": [0.20, 0.20],
+      "target_region_mode": "declared_region"
+    },
+    {
+      "id": "center_secondary",
+      "initial_xy_m": [0.24, -0.13],
+      "place_xy_m": [0.20, 0.20],
+      "target_region_mode": "controller_default"
+    }
+  ]
+}

@@ -199,7 +199,7 @@ class VisualGraspController:
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
                  place_xy=None, place_height_m=0., route_policy=None,
-                 target_region_xy_m=None):
+                 target_region_xy_m=None, pickup_hover_z_m=.06):
         self.route_policy = DEFAULT_ROUTE_POLICY if route_policy is None else route_policy
         if not isinstance(self.route_policy, RoutePolicy):
             raise ValueError('Use immutable route preferences')
@@ -209,6 +209,11 @@ class VisualGraspController:
                 or not np.isfinite(payload_uncertainty_m) or not .002 <= payload_uncertainty_m <= .005
                 or not np.isfinite(target_timestamp_s) or target_timestamp_s < 0):
             raise ValueError('Invalid observation lifetime or payload uncertainty')
+        if (isinstance(pickup_hover_z_m, (bool, np.bool_)) or
+                not isinstance(pickup_hover_z_m, Real) or
+                not np.isfinite(pickup_hover_z_m) or not .054 <= pickup_hover_z_m <= .06):
+            raise ValueError('pickup_hover_z_m requires a finite height in .054..06 m')
+        self.pickup_hover_z_m = float(pickup_hover_z_m)
         # Optional development prior, declared independently of object truth.
         self.target_region_xy_m = self._target_region(target_region_xy_m)
         self.rig = rig
@@ -357,9 +362,9 @@ class VisualGraspController:
                     and minimum >= .002)
 
     def _plan_approach(self, current):
-        self.approach = solve_pinch_ik(self.rig, np.r_[self.target_xy, .06], current)
+        self.approach = solve_pinch_ik(self.rig, np.r_[self.target_xy, self.pickup_hover_z_m], current)
         self.down = solve_pinch_ik(self.rig, np.r_[self.target_xy, .019], self.approach)
-        self.lift = solve_pinch_ik(self.rig, np.r_[self.target_xy, .06], self.down)
+        self.lift = solve_pinch_ik(self.rig, np.r_[self.target_xy, self.pickup_hover_z_m], self.down)
         plan = plan_joint_path(current, self.approach, self.checker.bounds,
                                lambda q: self._arm_valid(q, .5), seed=self.seed,
                                timeout_s=10, resolution_rad=.015)

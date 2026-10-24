@@ -61,8 +61,17 @@ def select_case(profile_path, case_id):
     if outside and any(not lo <= value <= hi
                        for value, (lo, hi) in zip(xy, TARGET_REGION_XY_M)):
         raise ValueError('requested case lies outside the declared workstation region')
-    return {'id': case_id, 'initial_xy_m': xy, 'place_xy_m': place,
-            'target_region_mode': expected_mode}
+    selected = {'id': case_id, 'initial_xy_m': xy, 'place_xy_m': place,
+                'target_region_mode': expected_mode}
+    if 'pick_xy_m' in row:
+        selected['pick_xy_m'] = _xy(row['pick_xy_m'], 'pick_xy_m')
+    if 'pickup_hover_z_m' in row:
+        height = row['pickup_hover_z_m']
+        if (isinstance(height, bool) or not isinstance(height, (int, float)) or
+                not math.isfinite(height) or not .054 <= height <= .06):
+            raise ValueError('pickup_hover_z_m must be finite within [.054, .06] metres')
+        selected['pickup_hover_z_m'] = float(height)
+    return selected
 
 
 def controller_options(case, route_policy):
@@ -71,6 +80,8 @@ def controller_options(case, route_policy):
                'route_policy': route_policy}
     if case['target_region_mode'] == 'declared_region':
         options['target_region_xy_m'] = TARGET_REGION_XY_M
+    if 'pickup_hover_z_m' in case:
+        options['pickup_hover_z_m'] = case['pickup_hover_z_m']
     return options
 
 
@@ -96,8 +107,10 @@ def _run_original(output, case, options, timer):
     from run_visual_grasp import SOURCE, run_physical_episode
 
     def build_scene(source, folder, **kwargs):
-        return build_contact_scene(source, folder, place_xy=options['place_xy'],
-                                   place_height_m=options['place_height_m'], **kwargs)
+        layout = {'place_xy': options['place_xy'], 'place_height_m': options['place_height_m']}
+        if 'pick_xy_m' in case:
+            layout['pick_xy'] = case['pick_xy_m']
+        return build_contact_scene(source, folder, **layout, **kwargs)
 
     # The original reset fixture consumes case XY. The controller still receives
     # RGB-derived XY; neither this builder nor this wrapper edits execution state.
@@ -129,14 +142,18 @@ def run_case(profile_path, case_id, output_root):
         policy, loaded = load_route_policy()
         candidate.update(loaded)
         options = controller_options(requested, policy)
-        status.update(phase='running', layout={'place_xy_m': requested['place_xy_m'],
-                                             'place_height_m': 0.})
+        status.update(phase='running', layout={
+            'place_xy_m': requested['place_xy_m'], 'place_height_m': 0.,
+            'pick_xy_m': requested.get('pick_xy_m', [.24, -.13]),
+            'pickup_hover_z_m': requested.get('pickup_hover_z_m', .06)})
         atomic_json(output/'status.json', status)
         from episode_timing import EpisodeTiming
         timer = EpisodeTiming()
         physical_case = {'id': requested['id'], 'initial_xy_m': requested['initial_xy_m'],
                          'perturbed': False, 'offset_rad': [0.]*5,
                          'obstacle_geom_names': ['approach_obstacle']}
+        if 'pick_xy_m' in requested:
+            physical_case['pick_xy_m'] = requested['pick_xy_m']
         report = _run_original(output, physical_case, options, timer)
         status.update(report=report,
                       status='succeeded' if report.get('passed') is True else 'failed',

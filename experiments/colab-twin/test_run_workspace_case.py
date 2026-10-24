@@ -34,6 +34,51 @@ class WorkspaceCaseTests(unittest.TestCase):
             self.assertNotIn('target_region_xy_m', options)
             self.assertEqual(options['release_rotation_mode'], 'floor_yaw')
             self.assertEqual(options['release_pinch_height_m'], .028)
+            self.assertNotIn('pickup_hover_z_m', options)
+            self.assertNotIn('pick_xy', options)
+
+    def test_x_layout_and_hover_are_explicit_and_do_not_retarget_the_object(self):
+        profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-m1a.json')
+        case = workspace.select_case(profile, 'outside_x_plus20_layout')
+        self.assertEqual(case['initial_xy_m'], [.26, -.13])
+        self.assertEqual(case['pick_xy_m'], [.26, -.13])
+        self.assertEqual(workspace.controller_options(case, None)['pickup_hover_z_m'], .054)
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.object(workspace, '_run_original', return_value={'passed': False}) as original:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(workspace.run_case(profile, case['id'], folder), 1)
+            _, physical_case, options, _ = original.call_args.args
+            self.assertEqual(physical_case['pick_xy_m'], case['pick_xy_m'])
+            self.assertEqual(physical_case['initial_xy_m'], case['initial_xy_m'])
+            self.assertNotIn('pick_xy', options)  # Scene layout never enters controller inputs.
+
+    def test_x_layout_reaches_original_scene_builder(self):
+        profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-m1a.json')
+        case = workspace.select_case(profile, 'outside_x_plus20_layout')
+        def physical(*args, **kwargs):
+            return kwargs['scene_builder']('source', 'folder', noslip_iterations=10)
+        with patch.object(workspace, '_configure_native'), \
+                patch('grasp_episode.build_contact_scene', return_value='built') as builder, \
+                patch('run_visual_grasp.run_physical_episode', side_effect=physical):
+            self.assertEqual(workspace._run_original(Path('/tmp/unused'), case,
+                              workspace.controller_options(case, None), None), 'built')
+        self.assertEqual(builder.call_args.kwargs,
+                         {'place_xy': [.24, .14], 'place_height_m': 0.,
+                          'pick_xy': [.26, -.13], 'noslip_iterations': 10})
+
+    def test_invalid_optional_layout_and_hover_are_case_local(self):
+        profile = json.loads(workspace.DEFAULT_PROFILE.read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'profile.json'
+            for key, values in [('pick_xy_m', [[True, 0], [0, float('nan')]]),
+                                ('pickup_hover_z_m', [True, .0539, .0601, float('nan')])]:
+                for value in values:
+                    profile['cases'][1][key] = value
+                    path.write_text(json.dumps(profile))
+                    with self.subTest(key=key, value=value), self.assertRaisesRegex(ValueError, key):
+                        workspace.select_case(path, 'outside_y_plus20')
+                    self.assertEqual(workspace.select_case(path, 'center_primary')['id'], 'center_primary')
+                del profile['cases'][1][key]
 
     def test_selected_case_identity_and_static_region_reach_original_call(self):
         with tempfile.TemporaryDirectory() as folder:
