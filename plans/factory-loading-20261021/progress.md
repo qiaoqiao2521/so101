@@ -1662,3 +1662,16 @@ source7ce7c7f，Kaggle private so101-return-array-view-20261024不可变v1终态
 独立审查与根侧复算原F2bx第二站baseline的3875拍。排除index3637回位切换后113拍超20ms；97拍controller主导、13拍perception主导、3拍physics/guards主导。接近段sim0.5..6.5s每.5s一次的13次原感知，各20.018–21.774ms，CPU与wall近同，完整拍29.348–35.263ms。复算留independent-next-cycle-bottleneck.json；这只是对既有证据的重新统计，不是新物理或新原因。
 
 查回旧F2bj/F2bk/F2bn后，感知已定位到mjr_readPixels，异步相机两站4/4原pass但整程不稳定；不重造相同observer、不据此改频率或线程。下一项先只读拆分本次view构造/逐字节比较/临时key释放成本，避免继续猜实现。private round95-array-comparison-attribution由内部GPT定向本地取证，根Codex独立验收；尚无新候选。原默认仍loaded_jaw_preload，完整50Hz未过。Knowledge=pending，原两页519行未审改动不覆盖，构造期几何教训留本计划，owner根Codex。
+
+
+## F2cb 本地比较归因；F2cc 元组分派云组件仍淘汰
+
+private round95仅对原f9be97b4冻结fixture做CPU分项。copy构造/比较/释放中位10.223/1.449/.916ms，view2.979/9.579/.155ms。view中372次原array_equal子时间2.747–3.463ms，包含在8.033–10.323ms父比较中；余量包含Python递归、视图/frombuffer及观察器，不能全部称纯递归。完整匹配结构6616节点，其中2584个tuple；逻辑bool结果累计15,376,771bytes，不是实测峰值。另做的top-level重放显示，纯geometry metadata无新视图仍从.011–.033增至.851–1.479ms。证据支持检验分派成本，不支持新性能准入。六次匹配、模型key/worker证书不变、观察器恢复均通过；根侧独立复跑只作语义佐证，因同时有CPU回归不报为新性能基准。原件output/array-comparison-attribution-20261024。
+
+F2cc v1（private round96）只把普通tuple交回内置比较，数组leaf保持原uint8逐字节。79项根侧与云端回归通过。Kaggle private so101-return-tuple-dispatch-20261024不可变v1/source714b810已终态，exact source/private及同原输入/路径/fresh/pad/q独立读回通过。对安全copying-parent的三对main wall/CPU(ms)：24.845/24.849→16.772/16.775，15.075/15.078→16.443/16.446，14.860/14.866→17.144/17.134。原screen仍reject/no_median_local_effect，中位反慢1.369ms。不与F2ca其他VM秒数作前后加速，不发物理、不晋级。
+
+独立审查还抓到v1边界回归：嵌套(1,)与np.array([1])可被内置比较视为相等，共享数组/view的identity快路也可绕过旧通用比较器拒绝。实际受控worker-byte域的三对同值成绩保留，但v1不得以79项绿测宣称完整输入边界保持。具体反例与拒绝物理决定留candidate-boundary-review.json。
+
+private round97已修复：worker构证时仅接收exact tuple/bytes/str/int/bool/None的不可变树，冻结byte_tree_valid与同一树绑定；验证MemoryError/RecursionError则无证据并回原算法。通用binding_equal恢复旧严格递归，快路只对已验worker证书开放。新增单元素、共享数组/view、真实畸形证书和验证OOM回原返回identity，根侧81项通过，独立只读审查未发现新缺口。该修复不改变v1合法hotpath，故不再送云追绿；没有所谓Kaggle v2成绩。生产默认、所有原244/碰撞/阈值/90sim120wall与回退不变。
+
+当前字节比较方向收口。下一项只读核对worker工作窗口controller慢拍的剩余粒度，先查旧GIL/暂停/归因记录，避免重复；不得从窗口集中直接断言调度或native原因。根Codex接续，尚无新候选或物理。Knowledge=pending沿用原两页未审改动原因，项目负例只留本计划，不增通用宣称。定时器未恢复，不发其他对话消息，不触碰Mint或实体设备。

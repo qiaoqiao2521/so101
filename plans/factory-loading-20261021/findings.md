@@ -702,3 +702,8 @@ F2bz只读归因独立通过：两份7.69MB模型快照合计10.7–14.2ms，bin
 F2ca证伪完成：精确byte-view与安全copying-parent的路径、fresh谓词顺序及末端数据全部同值，原32回归双模加12边界共76项在本地/云端通过；性能仍无益。实际main wall29.364→25.212、20.557→25.738、18.944→26.532ms，CPU同向，原screen拒绝。视图减少复制不等于降低总成本；不以correctness green替代性能准入，不送新物理。原件output/return-array-view-factory-20261024/component-v1，private round94保存完整原型/云源码/独立读回，原默认不变。
 
 重新统计F2bx第二站baseline：3875完整拍，除回位切换仍113拍>20ms；13个接近感知拍perception自身20.018–21.774ms，CPU近同wall。但旧F2bj/F2bk已定位mjr_readPixels，F2bn异步相机全物理通过却整程不稳定。此轮不把重统计冒称新瓶颈，不重复相同observer；旧反证继续有效。下一步只读查本次view为什么更慢，再决定下一候选，不先引入新比较ABI或近似判据。
+
+
+F2cb只读局部事实：view构造省约7ms，但Python逐层比较中位9.579ms，copy tuple比较仅1.449ms；np.array_equal本体子时间约2.7–3.5ms，不能把全部余量归为纯递归。6616个节点、2584tuple、372个数组；逻辑临时bool总尺寸不等于实测峰值。原fixture key与证书不变、观察器恢复，归因并非性能准入。
+
+F2cc把tuple分派交内置实现后，Kaggle同VM对安全copying-parent三对仍两对变慢，中位+1.369ms，原screen拒绝。v1在合法原worker-byte域同值，但独立审查发现单元素ndarray与identity畸形比较可通过；79项绿测没有覆盖此边界。round97修复为worker一次性验证不可变bytes树，主线程只凭该冻结证据开快路，通用比较保留旧行为；81项根侧回归及独立审查通过。不因正确性修复重复无收益云组件，不发物理或默认晋级。反例、精确源与结果分别在output/return-tuple-dispatch-factory-20261024/component-v1、private round96/97；没有v2云成绩。该方向收口，下一证据回到原controller慢拍内部，不继续比较实现追绿。
