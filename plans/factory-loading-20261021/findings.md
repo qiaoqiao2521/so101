@@ -666,3 +666,16 @@ Kaggle so101-return-cost-attribution-20261024 v1/sourceec99737，独立检查有
 原默认观察f9be97b4/source367b9c4原pass，复制与导出使其不属于性能对照。worker/main三类模型各480公开数组及标量/options同值，pair与冻结估计/偏好/FP控制/NumPy策略相同；各75个原查询只有home一条精确重复。起点差.000106079rad，故全程近似缓存不成立。原.005采样连接2点均能查到同上下文的真实原谓词，motion_duration只预测多.001234s，仍须实际策略复验。
 
 原件output/return-context-observation-20261024/v1包含六模型、完整原回合和runtime/source/context三个独立读回。单份MJB约67MB，全模型绑定不能当免费操作。新F2bw原型保留worker认证路线，额外验证桥接并fresh刷新home数据；15项局部检查过，包括模型/估计/FP策略变化、观察器/缺证书/失效桥接回原函数，尚未有云组件收益或候选任务结果。所有绑定只作可选复用条件，失配仍运行原算法，不新增内容hash锁、任务前序或人工总配额。
+
+
+## F2bw 全模型复制不是便宜证书
+
+v1公开数组和v2官方完整MJB内存两种表示都在同原f9be97b4 fixture上原几何/home/末pad通过，路径顶点有意改变；构造、匹配及fresh bridge/home全计。v1三对组合各增122–132ms，main125–126→146–152ms；v2组合各增203–209ms，main118–128→181–185ms。各自原screen均reject/no_median_local_effect，独立protocol有效不代表收益。134MB证据本身比重复算更贵，不发物理，不晋级默认。原件output/certified-return-bridge-factory-20261024，private round90保存两版完整源与16测试；旧字段byte只是归一化判据，不指原路径。
+
+单模型的BVH节点数组约31MB，故不能把负收益笼统归于纹理。下一项F2bx先按官方同版本代码限定查询依赖：
+
+- [MuJoCo3.15 kinematics1/2](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_core_smooth.c#L36-L229)：body/joint及局部geom位置构成位姿；Sleep会使用Data状态，候选不支持该模式。
+- [显式geomDistance](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_support.c#L470-L566)与[CCD支持数据](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_collision_convex.c#L673-L766)：保留完整顶点、图、extrema和多边形拓扑及CCD选项，不削减任何实际查询。
+- [forward调用链](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_forward.c#L1799-L1858)：forward不积分，但回调可能修改Data；故仅当前纯刚性/无回调工位可复用，插件/flex/mocap/sensor/Sleep/未知版本均旧路径回退。
+
+新key预计每模型7.69MB数组，仅是体积估计，不是性能成绩。22局部回归含体素/网格/位姿变动失配、有效BVH扩大与像素改动后原几何通过、低层/ABI观察器及回调回退。源码与private round91是接续依据；未实施候选物理，未改生产默认。

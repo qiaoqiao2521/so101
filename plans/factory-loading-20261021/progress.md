@@ -1579,3 +1579,14 @@ worker/main各75次原arm和距离调用，全部原谓词valid；回位函数�
 原件output/return-context-observation-20261024/v1，capture/167dae5e内independent-runtime-readback.json、independent-return-context-readback.json，外层source读回齐全；private round89保存模型、观察器与确切云源码。单份MJB约67.25MB，二进制与内存序列化一致；完整绑定的复制成本不能忽略。Knowledge=already_covered，本轮静态模型与观察值留项目，不新增通用断言。
 
 Next F2bw：private round90已写可选原型及15项实际冻结模型局部回归。只在原worker认证完成后保存原路线及完整模型/几何/浮点环境绑定；失配、缺证书、接口/ABI观察器或不支持条件回原完整_return_path，无新hash/门禁。新连接按原.005采样fresh检查，再用原谓词刷新home末状态，故当前fixture为3次新检查；原路线所有原认证点保留。组件必须把worker原计算、证书构造、主线程匹配和fresh检查一并计入，不能只报调用数。正式路径顶点有意不同；局部输出等价仅指原完整几何判定/home目标/末pad，不称路径逐位同值。尚未跑Kaggle组件或物理，不改默认。
+
+
+## F2bw 两个完整模型绑定版本均淘汰，接F2bx几何依赖键
+
+sourcecb59366，Kaggle so101-certified-return-component-20261024不可变v1/v2全部终态，无候选物理。v1逐公开字段完整绑定，15局部回归后组件protocol_valid=true，原几何/home/末pad相同，原路径顶点有意2→3。含原worker、构造绑定、主线程匹配与3次新检查，三对组合wall增132.289/122.218/125.709ms；main125.700→151.997、126.358→148.539、124.794→146.399ms。证书约134,495,801字节，构造106.7–108.3ms，原screen=reject/no_median_local_effect。不能只用75→3调用数称提速。
+
+v2只换MuJoCo官方mj_sizeModel/mj_saveModel完整内存MJB表示，不删字段；16局部回归通过。三对组合wall增208.989/202.789/205.574ms，main126.532→181.340、117.902→184.840、127.905→182.215ms。约134,503,386字节，构造144.0–153.9ms；原screen同样reject，独立protocol_valid=true。两个版本不送物理、不切默认，不继续试同一全模型复制方向。原件output/certified-return-bridge-factory-20261024/component-v1/v2；private round90保留candidate_v1/probe_v1、两版实际云源码/metadata及读回。旧screen的byte措辞仅对应归一化原安全/home目标及末pad，不能冒称原路径逐位相同。
+
+只读数体积发现单rig的bvh_aabb约30.97MB、bvh_child5.16MB，纹理4.72MB；不是单纯纹理占满，不盲删BVH。已核对MuJoCo官方3.15源码：kinematics1/2决定geom pose；geomDistance走显式geom分派/convex CCD，initCCDObjSupport列出顶点/凸包图/多边形支持数据。mj_forward并不积分，但可触发Sleep/插件/回调等其他状态，因此下一候选只支持无这些特性的当前6-joint固定工位，其他条件回原算法。
+
+Next F2bx：private round91仅改变可选绑定键为这些已核数据依赖；完整mesh支持buffer、body/joint/geom及名称、所有求解options与标量保留。模型本身/查询算法/所有原碰撞不改，未搬运的BVH/像素仍留在实际模型中。固定3.15.0、无mocap/flex/plugin/sensor/Sleep、无自定义callback，未知情形全部原函数回退。22局部回归已过，含几何改变失配、BVH有效扩大/像素变化后的原几何全路径复验、callback/版本/ABI观察器回退。当前静态估算每模型依赖数组7.69MB，尚未测组件收益或新物理，不改默认。下一步同原fixture三对完整成本，原screen后再决定原物理。Knowledge=already_covered，来源和实验状态只存本项目，未新增全局记忆/调度器/他人对话消息。

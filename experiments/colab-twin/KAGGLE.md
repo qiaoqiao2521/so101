@@ -154,3 +154,8 @@ v1错误地以distances实例槽不存在观察worker恢复，原失败记录保
 [回位上下文取证](https://www.kaggle.com/code/muqiaoqiao/so101-return-context-observation-20261024) v1/source367b9c4，原默认f9be97b4原pass，原244/全部物理/释放回位及录像/清理独立通过。worker/main三类模型各480公开数组同值，FP/估计/几何覆盖一致；各75点只有home重合。原采样连接2点可用该归档真实谓词证明，但未执行新策略，不称提速。原件output/return-context-observation-20261024/v1，private round89可恢复。
 
 下一F2bw可选证书桥接原型在private round90，15局部回归过。单模型67MB，先完整计入证书构造/模型匹配/原连接与home刷新，不能只报3次新检查。原路径顶点有意改变，组件等价只指原完整几何判定/home与末pad；不得将旧screen字段外推为路径byte同。尚无云组件或候选物理成绩，默认不改。
+
+
+[证书桥接组件](https://www.kaggle.com/code/muqiaoqiao/so101-certified-return-component-20261024) v1/v2均终态/sourcecb59366。含worker原工作、134MB证据构造/匹配和3次新检查，三对v1增122–132ms、v2增203–209ms，main也慢；原screen均reject，原几何/home/末pad通过不等于路径逐位相同或收益。保留两版源/失败证据，不发物理。原件output/certified-return-bridge-factory-20261024。
+
+下一项private round91按MuJoCo官方3.15源码限定纯几何依赖键，实际模型和全部查询不变；只支持当前无Sleep/插件/回调静态rig，失配回原函数。22局部回归通过；约7.69MB/模型是体积估计，组件和物理尚未运行。
