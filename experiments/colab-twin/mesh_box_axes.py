@@ -19,9 +19,35 @@ def _json_value(value):
 
 
 class MeshBoxAxes:
-    def __init__(self, model):
+    def __init__(self, model, reuse_direction_hints=False):
+        if type(reuse_direction_hints) is not bool:
+            raise ValueError('reuse_direction_hints must be a bool')
         self.model = model
         self._mesh_axes = {}
+        self.reuse_direction_hints = reuse_direction_hints
+        self._hint_owner = None
+        self._direction_hints = {}
+        self.hint_stats = {'hint_attempts': 0, 'hint_successes': 0,
+                           'hint_misses': 0, 'full_direction_searches': 0}
+
+    def _bind_hint_owner(self, checker):
+        if checker.model is not self.model:
+            raise ValueError('MeshBoxAxes is bound to its original model; rebuild after geometry changes')
+        owner = (checker, checker.native, checker.model)
+        if self._hint_owner is None or any(a is not b for a, b in zip(self._hint_owner, owner)):
+            self._direction_hints.clear()
+            self._hint_owner = owner
+
+    def _hint_pair(self, checker, index, rotations):
+        first, second = checker.pairs[index]
+        kinds = [int(self.model.geom_type[g]) for g in (first, second)]
+        mesh, box = int(mujoco.mjtGeom.mjGEOM_MESH), int(mujoco.mjtGeom.mjGEOM_BOX)
+        if sorted(kinds) != sorted((mesh, box)):
+            return None, None
+        native_pair = checker.pair_indices[index]
+        key = (int(first), int(second), *map(int, native_pair))
+        mesh_index = int(native_pair[0 if kinds[0] == mesh else 1])
+        return key, rotations[mesh_index]
 
     def _local_axes(self, gid):
         mid = int(self.model.geom_dataid[gid])
@@ -68,7 +94,7 @@ class MeshBoxAxes:
         return self.refine(checker, original, margin_m=margin)
 
     @staticmethod
-    def _detail_arrays(details, count, margin):
+    def _detail_arrays(details, count, margin, *, hint_miss=False):
         """Reject malformed/error ABI rows before considering any new axes."""
         shapes = {'certified': (), 'support_mode': (), 'direction_index': (),
                   'evaluations': (), 'reason': (), 'orientation': (), 'n': (3,),
@@ -85,14 +111,19 @@ class MeshBoxAxes:
                 raise ValueError('Native certificate indices must be integral')
         if np.any(arrays['evaluations'] < 0):
             raise ValueError('Native certificate evaluation counts must be nonnegative')
-        for key in ('n', 'projection_a', 'projection_b', 'gap_lower', 'norm_squared_upper',
-                    'squared_gap_lower', 'squared_threshold_upper', 'lower_bound_m'):
-            if arrays[key].dtype.kind != 'f' or not np.isfinite(arrays[key]).all():
-                raise ValueError('Native certificate numeric evidence must be finite')
         certified = arrays['certified']
         expected = np.where(certified, 'separation_certified', 'no_separation_certificate')
         if not np.array_equal(arrays['reason'], expected):
             raise ValueError('Native certificate contains an error or inconsistent reason')
+        for key in ('n', 'projection_a', 'projection_b', 'gap_lower', 'norm_squared_upper',
+                    'squared_gap_lower', 'squared_threshold_upper', 'lower_bound_m'):
+            value = arrays[key]
+            allowed_nan = (hint_miss and key in ('squared_gap_lower', 'squared_threshold_upper'))
+            finite = np.isfinite(value)
+            if allowed_nan:
+                finite = finite | (np.isnan(value) & ~certified & (arrays['gap_lower'] <= 0))
+            if value.dtype.kind != 'f' or not finite.all():
+                raise ValueError('Native certificate numeric evidence must be finite')
         if (np.any(arrays['lower_bound_m'][certified] < margin)
                 or np.any(arrays['norm_squared_upper'][certified] <= 0)
                 or np.any(np.all(arrays['n'][certified] == 0, axis=1))
@@ -104,6 +135,16 @@ class MeshBoxAxes:
                 or np.any(arrays['evaluations'][certified] <= 0)
                 or np.any(~np.isin(arrays['orientation'][certified], (-1, 1)))):
             raise ValueError('Native certificate has invalid certified bounds or axes')
+        return arrays
+
+    def _hint_detail(self, details, margin):
+        arrays = self._detail_arrays(details, 1, margin, hint_miss=True)
+        if (arrays['support_mode'][0] != 'full' or arrays['evaluations'][0] != 1
+                or arrays['norm_squared_upper'][0] <= 0 or np.all(arrays['n'][0] == 0)
+                or arrays['orientation'][0] not in (-1, 1)
+                or (arrays['certified'][0] and arrays['direction_index'][0] != 0)
+                or (not arrays['certified'][0] and arrays['direction_index'][0] != -1)):
+            raise ValueError('Hint result has invalid full-projection metadata')
         return arrays
 
     @staticmethod
@@ -148,6 +189,10 @@ class MeshBoxAxes:
             if (not math.isfinite(margin) or margin < checker.margin_m
                     or original.get('checked_pairs') != count):
                 raise ValueError('Refinement must retain the original margin and all pairs')
+            if checker.model is not self.model:
+                raise ValueError('MeshBoxAxes is bound to its original model')
+            if self.reuse_direction_hints:
+                self._bind_hint_owner(checker)
             p = checker.data.geom_xpos[checker.geometry_ids].copy()
             rotations = checker.data.geom_xmat[checker.geometry_ids].reshape(-1, 3, 3).copy()
             if not np.isfinite(p).all() or not np.isfinite(rotations).all():
@@ -164,23 +209,52 @@ class MeshBoxAxes:
             if not len(missing):
                 raise ValueError('Original rejected frame has no missing pair certificate')
             bounds = details['lower_bound_m'].copy()
+            pending_hints = {}
             for index in missing:
                 first, second = checker.pairs[index]
                 row = {'pair_index': int(index), 'pair': [checker._names[first], checker._names[second]],
                        'original_lower_bound_m': float(bounds[index]), 'certified': False}
                 result['pairs'].append(row)
-                directions = self.directions(checker.data, first, second)
-                row['direction_count'] = len(directions)
-                if len(directions):
+                key, mesh_r = self._hint_pair(checker, index, rotations) if self.reuse_direction_hints else (None, None)
+                detail = None
+                local = self._direction_hints.get(key) if key is not None else None
+                if local is not None:
+                    direction = np.asarray(mesh_r @ np.asarray(local), dtype=float).reshape(1, 3)
+                    if not np.isfinite(direction).all():
+                        raise ValueError('Hint direction must be finite')
+                    self.hint_stats['hint_attempts'] += 1
+                    row['native_queries'] = row.get('native_queries', 0) + 1
+                    hinted = self._hint_detail(checker.native.certify_directions(
+                        p, rotations, checker.pair_indices[index], direction, margin), margin)
+                    row['queried'] = True
+                    row['hint_attempted'] = True
+                    if bool(hinted['certified'][0]):
+                        self.hint_stats['hint_successes'] += 1
+                        detail = hinted
+                        row['direction_count'] = 1
+                    else:
+                        self.hint_stats['hint_misses'] += 1
+                if detail is None:
+                    directions = self.directions(checker.data, first, second)
+                    row['direction_count'] = len(directions)
+                if detail is None and len(directions):
+                    self.hint_stats['full_direction_searches'] += 1
+                    row['native_queries'] = row.get('native_queries', 0) + 1
                     row['queried'] = True
                     detail = self._detail_arrays(checker.native.certify_directions(
                         p, rotations, checker.pair_indices[index], directions, margin), 1, margin)
+                if detail is not None:
                     if bool(detail['certified'][0]) and detail['support_mode'][0] != 'full':
                         raise ValueError('Supplemental certificate must project complete vertices')
                     row.update({key: _json_value(np.asarray(value)[0].tolist())
                                 for key, value in detail.items()})
                     if row['certified'] is True:
                         bounds[index] = float(detail['lower_bound_m'][0])
+                        if key is not None:
+                            local = np.linalg.solve(mesh_r, detail['n'][0])
+                            if local.shape != (3,) or not np.isfinite(local).all():
+                                raise ValueError('Local hint direction must be finite')
+                            pending_hints[key] = tuple(map(float, local))
             result['supplemental_valid'] = all(row['certified'] is True for row in result['pairs'])
             if result['supplemental_valid']:
                 nearest = int(np.argmin(bounds))
@@ -191,6 +265,8 @@ class MeshBoxAxes:
                     certificate_reason='separation_certified',
                     pair=[checker._names[first], checker._names[second]],
                     certified_pairs=count, checked_pairs=count)
+                if self.reuse_direction_hints:
+                    self._direction_hints.update(pending_hints)
         except Exception as error:
             result['supplemental_valid'] = False
             result['error'] = str(error)

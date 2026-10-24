@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 左固定盘补证首轮真实超时，接方向建议复用
+
+Current：上一轮为progress，首批已全部终态；[原件与结果](m1a-x-fixed-certificates.md)。26a0a1d原左93d949ce…grasp_leg_collision；显式候选2c6637a9…wall_time_limit停close22.56sim/120.757wall；原中心30819b8a…pass76.72sim。没有以COMPLETE或补证通过冒称抓放成功。
+
+Done：候选planned/measured244全过、实测补证162/162 error0，但未持物／释放／回位；初始化41.025s、首close14.207s controller有实测计算成本。141捕获帧编码0，无有效录像。根235项包括不含Carry的索引源码同套235通过；根与独立reader核原物理及失败。中心480/480录像／释放／脱离／回位保持，52慢拍，完整50Hz未过。
+
+In progress：根只读切分发现46,869方向构造／去重warm28ms、native4.5ms，实际270方向即有证。内部GPT做同checker/pair局部方向提示，每帧仍原完整投影；普通miss全回退、算术／ABI错误仍拒绝，所有pairs需通过。仅缓存方向，不缓存gap／valid／stage认证，不跨worker/model。原1mm、244、90sim120wall及默认保持。
+
+Done：根原checker＋helper26a0a1d与方向提示1522姿态三对逐字段相同，14.398／14.819／14.523s→.868／.857／.873s，408次整帧重证，406hint＋2full，无跳点。早期只载旧helper的无效适配结果独立保留，不计收益。
+
+Next：新候选普通miss／错误与精确计数负例，固定源码后沿原Kaggle重跑原左拒绝／候选／中心，可靠通过才第二放置工位。Carry两仓在途继续保留，owner根。Knowledge=already_covered，沿用Wiki§20，不写新记忆。
+
 ## 2026-10-24 — 固定左X−20mm补证执行候选实施中
 
 Current：上一目标轮次=progress，右固定盘两放置工位原物理已通过且580ec56远端核实。本轮接左侧完整静态补证到显式执行候选，默认仍关闭；无在途本地或Kaggle物理评测，不重复上一轮。

@@ -10,6 +10,7 @@ import mujoco
 import numpy as np
 
 from conservative_collision import ConservativeCollisionChecker
+from configuration_sweep import validate_configuration_path
 from grasp_episode import build_contact_scene
 from mesh_box_axes import MeshBoxAxes
 from test_conservative_collision import rig_xml
@@ -224,6 +225,143 @@ class MeshBoxRefinementTests(unittest.TestCase):
             checker.evaluate(LEFT, require_fixed_gripper=False)
         self.assertEqual(certify.call_count, 2)
         self.assertIsNot(certify.call_args_list[0].args[0], certify.call_args_list[1].args[0])
+
+    def warm_hint(self):
+        checker = self.checker(True)
+        self.assertTrue(checker.evaluate(LEFT, require_fixed_gripper=False)['valid'])
+        axes = checker._mesh_box_axes
+        self.assertEqual(axes.hint_stats['full_direction_searches'], 1)
+        self.assertEqual(axes.hint_stats['hint_attempts'], 0)
+        return checker, axes
+
+    def test_real_adjacent_pose_reprojects_one_hint_after_full_cold_search(self):
+        checker = self.checker(True)
+        with patch.object(checker.native, 'certify_directions', wraps=checker.native.certify_directions) as certify, \
+                patch.object(checker.native, 'evaluate', wraps=checker.native.evaluate) as detail:
+            first = checker.evaluate(LEFT, require_fixed_gripper=False)
+            adjacent = LEFT.copy(); adjacent[0] += 1e-6
+            second = checker.evaluate(adjacent, require_fixed_gripper=False)
+        self.assertTrue(first['valid'] and second['valid'])
+        self.assertEqual(detail.call_count, 2)
+        self.assertEqual(certify.call_count, 2)
+        self.assertGreater(len(certify.call_args_list[0].args[3]), 1)
+        self.assertEqual(certify.call_args_list[1].args[3].shape, (1, 3))
+        self.assertEqual(checker.mesh_box_refinement_stats['hint_successes'], 1)
+        self.assertEqual(checker.mesh_box_refinement_stats['full_direction_searches'], 1)
+        self.assertEqual(second['checked_pairs'], 285)
+        self.assertEqual(second['certified_pairs'], 285)
+        self.assertTrue(all(len(v) == 3 for v in checker._mesh_box_axes._direction_hints.values()))
+
+    def test_real_244_point_closure_keeps_every_original_pair_query(self):
+        checker = self.checker(True)
+        results = []
+        def valid(q):
+            result = checker.evaluate(q, require_fixed_gripper=False)
+            results.append(result)
+            return result['valid']
+        end = LEFT.copy(); end[5] = .015
+        with patch.object(checker._native_query, 'summary', wraps=checker._native_query.summary) as summary, \
+                patch.object(checker.native, 'evaluate', wraps=checker.native.evaluate) as detail:
+            sweep = validate_configuration_path(LEFT, end, valid)
+        self.assertTrue(sweep['valid'])
+        self.assertEqual(sweep['checked_states'], 244)
+        self.assertEqual(summary.call_count, 244)
+        self.assertEqual(detail.call_count, checker.mesh_box_refinement_stats['attempted_frames'])
+        self.assertTrue(all(r['checked_pairs'] == 285 and r['certified_pairs'] == 285 for r in results))
+        self.assertGreater(checker.mesh_box_refinement_stats['hint_successes'], 0)
+
+    def test_hint_negative_gap_nan_gate_is_discarded_then_full_search_runs(self):
+        checker, axes = self.warm_hint()
+        key = next(iter(axes._direction_hints))
+        first, second, native_first, native_second = key
+        mesh_gid = first if int(self.model.geom_type[first]) == int(mujoco.mjtGeom.mjGEOM_MESH) else second
+        mesh_r = checker.data.geom_xmat[mesh_gid].reshape(3, 3)
+        axes._direction_hints[key] = tuple(np.linalg.solve(mesh_r, [1., 0., 0.]))
+        miss = checker.native.certify_directions(checker.data.geom_xpos[checker.geometry_ids],
+            checker.data.geom_xmat[checker.geometry_ids].reshape(-1, 3, 3),
+            [native_first, native_second], [[1., 0., 0.]], .001)
+        self.assertFalse(miss['certified'][0])
+        self.assertLessEqual(miss['gap_lower'][0], 0)
+        self.assertTrue(np.isnan(miss['squared_gap_lower'][0]))
+        before = checker.mesh_box_refinement_stats['pair_queries']
+        with patch.object(checker.native, 'certify_directions', wraps=checker.native.certify_directions) as certify:
+            result = checker.evaluate(LEFT, require_fixed_gripper=False)
+        self.assertTrue(result['valid'])
+        self.assertEqual(certify.call_count, 2)
+        self.assertEqual(checker.mesh_box_refinement_stats['pair_queries'] - before, 2)
+        self.assertEqual(axes.hint_stats['hint_misses'], 1)
+        self.assertEqual(axes.hint_stats['full_direction_searches'], 2)
+        self.assertEqual(checker.mesh_box_refinement_stats['error_frames'], 0)
+
+    def test_hint_abi_errors_are_rejected_without_full_search_rescue(self):
+        checker, axes = self.warm_hint()
+        # Capture the native one-direction answer from an ordinary successful hint.
+        original = checker.native.certify_directions
+        answers = []
+        def capture(*args):
+            value = original(*args); answers.append(deepcopy(value)); return value
+        with patch.object(checker.native, 'certify_directions', side_effect=capture):
+            self.assertTrue(checker.evaluate(LEFT, require_fixed_gripper=False)['valid'])
+        current = answers[0]
+        changes = [lambda d: d['reason'].__setitem__(0, 'invalid_arithmetic_environment'),
+                   lambda d: d['evaluations'].__setitem__(0, 2),
+                   lambda d: d['direction_index'].__setitem__(0, 7),
+                   lambda d: d['n'].__setitem__((0, 0), np.nan),
+                   lambda d: d['support_mode'].__setitem__(0, 'enclosing_local_AABB'),
+                   lambda d: d.__setitem__('certified', d['certified'].astype(int)),
+                   lambda d: d.__setitem__('reason', d['reason'][:0])]
+        for change in changes:
+            bad = deepcopy(current); change(bad)
+            with self.subTest(change=change), patch.object(checker.native, 'certify_directions', return_value=bad) as query:
+                baseline = self.original(checker)
+                self.assertEqual(checker.evaluate(LEFT, require_fixed_gripper=False), baseline)
+                self.assertEqual(query.call_count, 1)
+        with patch.object(checker.native, 'certify_directions', side_effect=RuntimeError('ABI failure')) as query:
+            self.assertFalse(checker.evaluate(LEFT, require_fixed_gripper=False)['valid'])
+            self.assertEqual(query.call_count, 1)
+        self.assertEqual(axes.hint_stats['hint_misses'], 0)
+
+    def test_direction_owner_does_not_cross_checkers_or_models_and_default_is_cold(self):
+        checker, axes = self.warm_hint()
+        other = self.checker()
+        before = axes.hint_stats['hint_attempts']
+        self.assertTrue(axes.inspect(other, LEFT)['supplemental_valid'])
+        self.assertEqual(axes.hint_stats['hint_attempts'], before)
+        self.assertIs(axes._hint_owner[0], other)
+        changed = self.checker(model=deepcopy(self.model))
+        result = axes.inspect(changed, LEFT)
+        self.assertFalse(result['supplemental_valid'])
+        self.assertIn('original model', result['error'])
+        diagnostic = MeshBoxAxes(self.model)
+        diagnostic.inspect(checker, LEFT); diagnostic.inspect(checker, LEFT)
+        self.assertEqual(diagnostic.hint_stats['hint_attempts'], 0)
+        self.assertEqual(diagnostic.hint_stats['full_direction_searches'], 2)
+        self.assertEqual(diagnostic._direction_hints, {})
+
+    def test_failed_later_pair_cannot_publish_pending_direction_hints(self):
+        checker = self.checker()
+        baseline = self.original(checker)
+        details = self.details(checker)
+        missing = int(np.flatnonzero(~details['certified'])[0])
+        mesh, box = int(mujoco.mjtGeom.mjGEOM_MESH), int(mujoco.mjtGeom.mjGEOM_BOX)
+        second = next(i for i, pair in enumerate(checker.pairs) if i != missing
+            and sorted(int(self.model.geom_type[g]) for g in pair) == sorted((mesh, box)))
+        details['certified'][second] = False
+        details['reason'][second] = 'no_separation_certificate'
+        baseline = dict(baseline, certified_pairs=283)
+        axes = MeshBoxAxes(self.model, reuse_direction_hints=True)
+        valid = checker.native.certify_directions(checker.data.geom_xpos[checker.geometry_ids],
+            checker.data.geom_xmat[checker.geometry_ids].reshape(-1, 3, 3), checker.pair_indices[missing],
+            axes.directions(checker.data, *checker.pairs[missing]), .001)
+        failed = deepcopy(valid); failed['certified'][0] = False
+        failed['reason'][0] = 'no_separation_certificate'; failed['lower_bound_m'][0] = 0.
+        with patch.object(checker.native, 'evaluate', return_value=details), \
+                patch.object(axes, 'directions', return_value=np.array([[1., 0., 0.]])), \
+                patch.object(checker.native, 'certify_directions', side_effect=[valid, failed]):
+            result = axes.refine(checker, baseline)
+        self.assertFalse(result['supplemental_valid'])
+        self.assertEqual(result['refined_result'], baseline)
+        self.assertEqual(axes._direction_hints, {})
 
 
 if __name__ == '__main__':

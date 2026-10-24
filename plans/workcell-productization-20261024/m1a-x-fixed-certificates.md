@@ -144,3 +144,31 @@ worker耗时与主回合重叠，不能相加；两个云VM和不同目标的wal
 235项相关测试通过。离线原件与复跑脚本在 `experiments/colab-twin/output/workspace-x-left-refinement-20261024/offline-screen.json` 和同目录 `offline_screen.py`。这些是采样几何检查，尚未物理积分，不代表抓放成功。
 
 候选profile：`scenarios/workspace-x-left-refinement-m1a.json`，首批依次 `left_original_axes`、`left_refined_axes`、`center_regression`；可靠通过后再已有第二放置工位 `left_refined_axes_secondary`。原盘不移动、不改取料高度／夹爪开度／评分／90sim120wall，固定源码后沿原Kaggle运行。refiner与NativeSupport属于同一编译model owner，几何尺寸／mesh／pair改变须重建checker，不跨worker共享，不新增内容锁。默认和网页准入保持。
+
+## 左侧首轮原物理：补证通过，执行超时
+
+固定源码 `26a0a1d4779ff9d5db2155c8ede840f3498bfc70`；Kaggle `muqiaoqiao/so101-x-left-refinement-20261024/1`、batch `dc1e551c-7875-4660-bfd5-bf7af792a21b`。三例串行，原runner/probe不改，全部终态后才继续源码。中心回归通过不能替左侧候选成功。
+
+| case / UUID | 原裁决 | sim s | episode wall s | process wall / CPU s |
+| --- | --- | ---: | ---: | ---: |
+| left_original_axes / 93d949ce-8479-494d-b7c9-4bc9650f2924 | fail：grasp_leg_collision | 0 | 2.995 | 3.998 / 5.505 |
+| left_refined_axes / 2c6637a9-6544-404f-9044-ec2b68bee3de | fail：wall_time_limit | 22.56 | 120.757 | 121.779 / 123.497 |
+| center_regression / 30819b8a-cac1-4cec-8ced-2199a428b9dd | pass | 76.72 | 47.980 | 49.096 / 58.732 |
+
+左候选仍在close，未抬升／Grasp／释放／回位。planned与measured闭爪均244点通过，实测补证162/162、error=0，只有几何证据，不能记抓放成功。1128完整拍＋1中断拍，P95=351.625ms、max=14267.425ms、176拍>20ms。初始化41.025wall／40.129callingCPU，首close控制器14.207s；有具体计算成本，不能笼统归因宿主等待。原90sim／120wall不放宽。捕获141帧但编码0、`video_wall_time_limit`、无有效mp4，不将捕获数当录像帧。
+
+中心真实抬升40.998mm、持物32.92s、静稳7.54s，69.364s脱离、XY漂移.211361mm、脱离后力0，home误差.102544mrad，480/480实数录像。3836完整拍P95=14.251ms、max45.140ms、52拍>20ms，50Hz仍未过。原左baseline在初始化拒绝，无轨迹／视频；空集合不作物理状态通过证明。
+
+根与独立reader从原件核原裁决与monitor/skill_evidence。原件：`experiments/colab-twin/output/workspace-x-left-refinement-20261024/kaggle-v1/`，含root-readback.json与独立读回。无碰撞、安全停机或算术错误，不等于任务完成。
+
+下一单变量依据：同固定左down姿态三开度的只读拆分显示，46,869个方向构造／去重warm约28.3–28.5ms，native约4.5ms，实际270方向即找到证书。尝试同checker/pair仅复用方向建议，每帧重新完整投影；失败回完整方向搜索，错误仍拒绝。不得复用gap／valid／阶段认证或跨worker共享；默认补证保持关闭。组件原件为同output的 `readonly-component-timing.json`，不将本机与云wall串成提速。
+
+## 左侧第二候选：只复用方向建议
+
+`MeshBoxAxes` 的 `reuse_direction_hints` 诊断默认False；只在显式补证执行器中启用。每个同checker/native/model的ordered pair仅保存局部方向；新姿态按当前mesh旋转重建世界方向，再调用原NativeSupport完整顶点区间门。提示无证回原完整搜索；算术／ABI错误仍拒绝。只有全帧全部pairs通过，才更新提示。不保存距离／valid／阶段认证，也不跨worker/model共享。
+
+根复放原参考2＋下降74＋闭爪244＋抬升74，以及v1实际1128行q6，共1522姿态。原版checker与helper均从26a0a1d读取，三对交替B/C、C/B、B/C，每对全部原返回结果逐字段完全相同；408次缺证整帧全部重新认证，候选406次单方向成功＋2次完整方向搜索，无错误或拒绝。局部wall分别14.398→.868s、14.819→.857s、14.523→.873s；CPU同向，原扫描点数不变。结果为组件复放收益，不能推算整程提速或50Hz。
+
+一次早期筛选只载入旧helper却套新checker，缺少hint_stats导致适配异常，已标无效并单独保留 `hint-local-screen-invalid-reference.json`；未用于上述三对结论。有效原件 `hint-local-screen.json`，私有复跑入口 `~/.cache/ros2-factory/codebuddy-so101-20261021/round111-x-left-refinement/local_screen.py`。固定新源码后再用同profile原物理验证；v1超时不删除、不改判，不放宽原120s。
+
+最终定点核验：hint单方向返回须evaluations=1、成功index=0，miss＋full真实计2次native调用。相关241项检查通过；提示负gap/NaN后全回退、坏ABI/FENV不救回、owner隔离与所有pairs失败不发布均覆盖。统计/ABI小修后的1522姿态再验全部返回逐字段一致，原16.289→候选1.010s、408/408整帧重新认证，原件 `hint-final-readback.json`。原默认与Carry在途代码未纳入本候选。

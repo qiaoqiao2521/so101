@@ -29,6 +29,8 @@ class ConservativeCollisionChecker(CollisionChecker):
         self.mesh_box_refinement_stats = {
             'attempted_frames': 0, 'certified_frames': 0, 'rejected_frames': 0,
             'error_frames': 0, 'pair_queries': 0, 'certified_pairs': 0,
+            'hint_attempts': 0, 'hint_successes': 0, 'hint_misses': 0,
+            'full_direction_searches': 0,
         }
         if margin_m <= 0:
             raise ValueError('A separation certificate requires a positive margin')
@@ -70,10 +72,12 @@ class ConservativeCollisionChecker(CollisionChecker):
         try:
             if self._mesh_box_axes is None:
                 from mesh_box_axes import MeshBoxAxes
-                self._mesh_box_axes = MeshBoxAxes(self.model)
+                self._mesh_box_axes = MeshBoxAxes(self.model, reuse_direction_hints=True)
             refined = self._mesh_box_axes.refine(
                 self, original, margin_m=certificate_margin_m)
-            stats['pair_queries'] += sum(row.get('queried') is True for row in refined['pairs'])
+            stats.update(self._mesh_box_axes.hint_stats)
+            stats['pair_queries'] += sum(row.get('native_queries', int(row.get('queried') is True))
+                                         for row in refined['pairs'])
             stats['certified_pairs'] += sum(row.get('certified') is True for row in refined['pairs'])
             if refined.get('error'):
                 stats['error_frames'] += 1
