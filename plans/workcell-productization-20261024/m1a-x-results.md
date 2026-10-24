@@ -14,7 +14,7 @@
 - `build_workcell/build_contact_scene` 可显式传 `pick_xy`。只平移红盘的 floor、四壁和标牌；实体与规划模型同源。默认盘位、尺寸、高度、摩擦、目标默认位置不变，红盘必须完整在原台面内。
 - `VisualGraspController` 新增 `pickup_hover_z_m=.06`。只用于原接近／抬升目标；开发取值域 .054–.06m 仍逐次经过原 IK、路径和全部碰撞认证，域本身不是通过承诺。下探仍 .019m。
 - 开发入口读取 `pick_xy_m` 和 `pickup_hover_z_m`，原中心不传新参数。布局是声明的静态场景；目标初态只交给原 reset fixture，控制器仍接收 RGB 估计，不将物体真值接入策略。
-- [workspace-x-m1a.json](../../experiments/colab-twin/scenarios/workspace-x-m1a.json) 只包含两个待验新布局与原中心对照。网页准入、默认 route、原裁判、1mm、planned/measured244、90sim/120wall 和回退不变。
+- [workspace-x-m1a.json](../../experiments/colab-twin/scenarios/workspace-x-m1a.json) 包含两个已验新布局与原中心对照。网页准入、默认 route、原裁判、1mm、planned/measured244、90sim/120wall 和回退不变。
 
 | 开发例 | 目标 XY m | 红盘 XY m | 取料高位 m |
 | --- | --- | --- | --- |

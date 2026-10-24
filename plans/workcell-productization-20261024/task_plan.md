@@ -4,7 +4,7 @@
 
 让用户在已有网页中移动工件、选择上料或卸料配方、运行并观察真实抓放；遇到可恢复偏差时能重新定位和尝试，再把工位接入 FishBot 连续配送。先增加可使用的能力，再优化节拍，不恢复同配方视觉 ACT 补训。
 
-承接 [F2 工位与算法工厂](../factory-loading-20261021/task_plan.md)。保留已验收默认 `loaded_jaw_preload.py`、原裁判和失败记录。2026-10-24 本轮仅编写计划；下述新增能力均未实现。
+承接 [F2 工位与算法工厂](../factory-loading-20261021/task_plan.md)。保留已验收默认 `loaded_jaw_preload.py`、原裁判和失败记录。2026-10-24 初建时仅完成D0计划；随后实施与实测状态以下方Milestones及进度记录为准。
 
 ## Facts / Decisions
 
