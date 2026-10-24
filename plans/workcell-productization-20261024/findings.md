@@ -226,3 +226,9 @@ round128原输入fresh-state cProfile中，488次_detail_arrays包含全285对�
 ## 预载提前的时序与驱动力边界
 
 round130真实143帧用前一trajectory状态对齐observer周期初，再把当前raw.command作为该周期输出；不可用周期末q冒充控制器观测。规划模型mj_forward静态驱动力6维同值，原分辨率理论点数减少，但原运动duration2.257558s与完整lift跨度2.86s相差原等待；在线实现使用原motion_duration，不能拿未来实际阶段跨度作策略输入。该筛查不读取物体真值，也不证明接触、2ms积分、完整抓放或提速。实际证据与默认关闭实现见[m1b结果](m1b-refinement-details-results.md#2026-10-25提前抬升预载静态筛查)。
+
+## 提前抬升预载已完成原物理，不外推动态力相同
+
+round131新源码2eea9bb，完整组件的候选端点独立通过原285对／1mm与全分辨率；不是只看理论点数。两工位反序原物理和中心5/5pass，实际process wall少1.318541／.991991s，CPU和同143拍lift成本同降。hold候选反多1／2拍，不能将收益归为少等。初态、请求、OMPL及实际接近路径同值；候选只在close结束后改变jaw。
+
+独立原Monitor／SkillEvidence／ReleaseAudit重算与原报告exact，释放、脱离、回位与全部244保持。原物理仍未保存2ms actuator_force，不能把静态必要条件扩写成动态力等同；任务通过和完整50Hz也不同，候选492／458慢拍，最大428／420ms。保留显式策略，全局默认保持。证据、失败边界与复跑见[m1b本轮结果](m1b-refinement-details-results.md#2026-10-25提前抬升预载的正式组件与原物理)。

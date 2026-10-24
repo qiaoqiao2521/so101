@@ -346,3 +346,55 @@ round130固定代码4549aca，历史输入9cca89a；不是同一来源字段。K
 原件位于`experiments/colab-twin/output/early-lift-force-20261025/kaggle-v1`，私有round130-early-lift-force-screen保留3脚本、root修正、提交回执与精确云源。25份原件逐字节验后删除重复展开，JSON压缩回读一致，实际释放2,162,688已分配字节；TGZ／log／gzip reader／cleanup-readback.json保留。恢复命令仍为`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`及`gzip -dk <目录>/independent-readback.json.gz`。
 
 下一步固定新源，先完整143弦三对正式组件，门槛通过才原Station两工位反序＋中心回归。候选目前不是物理交付，不切默认。
+
+## 2026-10-25：提前抬升预载的正式组件与原物理
+
+round131固定源码`2eea9bb40caac88c3ca24cfec5b6a30223d77afe`，Kaggle `muqiaoqiao/so101-lift-preload-physical-20261025/1`。复用原runtime、PREFLIGHT、ORIGINAL_RUNNER、PHYSICAL_PROBE、command／save，逐项与round126相同；没有时序observer包裹物理。组件准入后才运行五例；全部终态后回写／提交。外部CLI审查超时，实际实现、构建与独立核验为根GPT＋内部GPT，不计空CLI交付。
+
+### 正式组件
+
+使用round130原XML与143条周期初输入，终端lift参考来自原饱和geometric_reference（末两行相同）。直接调用生产锁存、_set_motion／_jaw_reference，运动时长2.257558030519293s；不把未来2.86s阶段跨度用作在线参数。候选只改jaw端点，原五轴端点同值。
+
+原／候选每次fresh checker，完整143条弦预热在计时外，正式143条原_configuration_sweep在计时内，AB／BA／AB。每点原285对、1mm、.005arm／.002jaw与原4096上限；原8008点、候选5664点全部通过，非跳过分辨率。baseline原保存报告exact，候选独立完整有效，未宣称不同几何状态的数组相同。固定原q／qvel静态6维actuator_force／qfrc_actuator相同。
+
+| 成对序号 | wall节省 s | thread CPU节省 s |
+| --- | ---: | ---: |
+| 1，B→C | 1.067721961 | 1.066010314 |
+| 2，C→B | .896866720 | .895830241 |
+| 3，B→C | 1.060837453 | 1.060139302 |
+
+全部通过原局部门槛，接以下原Station任务。组件是准入，不是抓放成功，也不证明改命令后2ms动态力保持相同。
+
+### 原物理五例
+
+主放置(.24,.14)，第二放置(.20,.20)，取料仍固定红盘的X−20mm(.22,−.13)，原中心请求不含新execution。原请求／初态在同组一致，OMPL rng_seed1、原及实际接近路径与最终认证同值，唯一偏好差异为loaded_jaw_lift_preload。
+
+| case／原UUID | 原裁决 | sim s | process wall s | process CPU s |
+| --- | --- | ---: | ---: | ---: |
+| left_baseline／259bfce9-3e4b-4f16-a20c-8eac01903f00 | pass | 74.10 | 77.847164 | 87.243938 |
+| left_lift_preload／11438964-6f5b-447a-97a0-27b68b2dcfb0 | pass | 74.10 | 76.528623 | 85.823958 |
+| left_second_lift_preload／9e901857-b58e-458d-8c7f-b75cc3315f6f | pass | 76.84 | 78.353571 | 88.398259 |
+| left_second_baseline／63c7cbdf-8cb2-4b43-9d5d-7f8d262c56f4 | pass | 76.76 | 79.345562 | 89.443861 |
+| center_lift_preload_regression／0b95c272-cbf2-4581-8b0d-a45cb3390731 | pass | 77.42 | 48.946963 | 59.102869 |
+
+主工位wall少1.318541437s、CPU少1.419980s；第二少.991990742／1.045602s。lift各143拍，controller分别5.055298917→3.980716669s、4.934554682→3.992697263s。非hold controller47.157133029→46.277076165s、47.844366686→47.154418161s，候选反多1／2拍hold，第二sim反多.08s；非hold拍数3544→3543／3659→3661，不声称整条轨迹逐位相同，不把等待差当算法提速，不与旧批累计相加。
+
+初次OMPL planning_seconds／含后处理elapsed_seconds：主B .136639／.316735s，C .161540／.330520；第二C .168804／.346905，B .162468／.347914；中心.126947／.271625。候选运输worker2.107868／2.694158s，baseline2.028843／2.575939；并非运输规划也更快。分离worker候选1.201230／1.468240s，baseline1.176185／1.530113。worker成本与完整进程分别报告，不把重叠时间重复相加。
+
+### 物理与时序边界
+
+1200项独立检查全通过，原Monitor／SkillEvidence／ReleaseAudit逐样本重算exact，unknown为空。五例planned／measured各244、原.002jaw分辨率保持；free_object=true、weld0／mocap0，无障碍接触／安全停机。transport／separation均consumed／joined／owned_ack，无不确定清理，回位终态成立。
+
+五例释放XY漂移依表顺序.214669／.211225／.171989／.169671／.200594mm，脱离后峰值力均0N。候选home最大误差主.102544mrad、次.101346mrad、中心.101017mrad。实际每拍jaw与原运动duration的minimum-jerk精确同值，首lift、hold及release首拍连续；只锁一次，无hold再次追encoder。中心使用自身2.340779114826694s原时长，未硬套左工位参数。物理未保存每2ms actuator_force，不宣称动态力全等。
+
+完整周期候选主P95 38.303627／max428.373128ms、492拍>20ms；第二37.562435／419.930396ms、458拍；中心15.863373／79.310997ms、119拍。完整50Hz仍未过，保留显式候选、不切全局默认。固定X点和中心开发回归不替代连续工作区或20＋20。
+
+原wrapper physical_status仍残留component_admitted_pending_original_runner，stage已terminal且五原裁决通过；原元数据缺口保留。根首次解析误索引空同步return_events已改为原实际字段读取，未改变原件。五视频ffprobe实帧按表为464／464／481／480／484，与原记录一致。
+
+### 原件与收尾
+
+原件：`experiments/colab-twin/output/lift-preload-physical-20261025/kaggle-v1/so101-evidence.tgz`；batch=`2f47cce1-b6fe-4115-b0c8-2d3e859ea3cb`。保留root-summary.json、root-video-readback.json、independent-readback.json.gz、原log和当前候选left-lift-preload.mp4。私有`round131-lift-preload-physical/`保留生产component／build_kernel／endpoint／原输入／精确云源／独立reader与提交回执。显式CLI沿用STATION_EXECUTOR的`--candidate route_strategies/loaded_jaw_lift_preload.py`，原已验父版仍可复跑。
+
+166原件逐字节核验无差、无缺或额外；移动保留一份当前候选视频后删除重复展开，独立JSON压缩解压回读一致。本批实际释放95,911,936已分配字节，不重计round130及更早清理。恢复：`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`；读回JSON恢复：`gzip -dk <目录>/independent-readback.json.gz`。无在途拥有评测；Kaggle已COMPLETE，不终止其它渲染／Colab或改Mint。
+
+下一切片仍是原244点measured闭爪同步认证与普通close持续成本，先核现场状态绑定及覆盖包络再设计交接；不删除检查或重复已淘汰hint微优化。下一批未启动。Knowledge=pending：原Wiki§20已采用，根串行处理共享在途diff，未冒称本轮写入。

@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-25 [X左侧抬升预载](plans/workcell-productization-20261024/m1b-refinement-details-results.md#2026-10-25提前抬升预载的正式组件与原物理)原Kaggle两工位反序＋中心5/5pass，原1mm／285对／244、安全与自由物体释放脱离回位保持。两站进程wall少1.319／.992s，lift同143拍且CPU同降，候选反多hold等待；保留显式loaded_jaw_lift_preload、不切全局默认。完整50Hz仍未过，原闭爪同步尖峰待处理，连续域与20＋20未宣称。
+
 2026-10-25 [X左侧运输前缀](plans/workcell-productization-20261024/m1b-refinement-details-results.md)正式实现已完成Kaggle两工位反序与中心原物理5/5pass；两工位相对detail-reuse父候选进程wall少1.373／2.376s，CPU与非hold控制耗时同降。1mm／285对／244、自由物体、释放脱离回位保持，显式候选保留、全局默认不变。完整50Hz仍未过（候选477／489慢拍，最大约405ms）；下一项核原闭爪同步认证，不宣称连续X域或20＋20。
 
 2026-10-24 [固定红盘X向原Station入口](plans/workcell-productization-20261024/m1a-x-station-fixed-results.md)已验：显式预收爪／补证接入原执行器，两端点及原中心3/3完成原抓放、释放、脱离与回位；关闭适配的两个原拒绝保留。四份可编辑Station样例保持红盘不动、cube独立定位，默认不变，不新增mode。左侧本次98.140wall，903慢拍／最大617.523ms，接近后处理与close成本待继续拆分；完整50Hz仍未过。实际新固定盘浏览器／HTTP链、连续域与20＋20另验。

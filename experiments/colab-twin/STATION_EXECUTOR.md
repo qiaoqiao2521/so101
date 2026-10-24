@@ -434,6 +434,6 @@ python evaluate_station.py --station scenarios/workspace-station/fixed-x-minus20
 
 2026-10-25 验收更新：上述显式候选完成固定X−20mm两放置工位反序与中心回归，原物理5/5pass；相对detail-reuse父候选，两工位进程wall分别少1.373／2.376s，CPU／非hold控制成本也下降。默认仍loaded_jaw_preload，闭爪244保持；完整50Hz、连续区域、20＋20尚未通过。组件与原物理详见[结果](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。
 
-### 抬升预载候选（默认关闭，原物理待验）
+### 抬升预载候选（显式保留，默认关闭）
 
-显式`route_strategies/loaded_jaw_lift_preload.py`继承transport-prefix候选，只提前一次原loaded-jaw锁存到close结束后的lift入口，并沿原运动时长平滑改变jaw。它需要父选项loaded_jaw_preload；原6s闭爪、244点、1mm／全285对、评分及回退不改。当前只有静态必要条件与协议测试，原物理／性能结果尚未完成；不可改全局默认或宣称完整50Hz。复跑仍用本文件既有`evaluate_station.py --candidate`入口，详情见[产品化记录](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。
+显式`route_strategies/loaded_jaw_lift_preload.py`继承transport-prefix候选，只提前一次原loaded-jaw锁存到close结束后的lift入口，并沿原运动时长平滑改变jaw。它需要父选项loaded_jaw_preload；原6s闭爪、244点、1mm／全285对、评分及回退不改。Kaggle两工位反序＋中心原物理5/5通过，两站进程wall少1.319／.992s、CPU同降；原安全与释放回位保持。保留显式、不改全局默认；完整50Hz仍未通过。复跑仍用本文件既有`evaluate_station.py --candidate`入口，详情见[产品化记录](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。

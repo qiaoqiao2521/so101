@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 抬升预载原物理5/5，两工位有实测收益
+
+Current：round131固定`2eea9bb40caac88c3ca24cfec5b6a30223d77afe`，Kaggle `muqiaoqiao/so101-lift-preload-physical-20261025/1`整批终态。正式143弦三对准入后，两个放置工位反序与中心原物理5/5pass；独立1200项通过，Monitor／SkillEvidence／ReleaseAudit逐样本exact、unknown为空。保留显式loaded_jaw_lift_preload候选，全局默认loaded_jaw_preload不变。
+
+Done：两个工位实际process wall77.847164→76.528623、79.345562→78.353571s；CPU87.243938→85.823958、89.443861→88.398259s。lift各143拍，controller5.055299→3.980717、4.934555→3.992697s；剔除全部hold仍少.880057／.689949s。候选hold反多1／2拍，第二仿真反多.08s，不把等待变化当提速、不与旧批相加。
+
+Done：原完整几何组件8008→5664点，每点原.005arm／.002jaw、285对与1mm；三对wall省1.067722／.896867／1.060837s、CPU均降。实际轨迹首lift／hold／release连续，一次锁存及每拍jaw与各自原motion_duration／minimum-jerk精确相同。原planned／measured各244，抓放、释放脱离回位、自由物体weld0/mocap0、无障碍接触／安全停机、双worker consumed／joined／owned_ack全部核实。五视频464／464／481／480／484实帧对应原记录。
+
+Remaining：完整50Hz未过，主候选492慢拍／P95 38.304ms／max428.373ms，第二458／37.562／419.930ms；中心119慢拍。物理未保存每2ms actuator_force，静态力相同不扩写成动态力逐拍相同。原wrapper physical_status遗留pending文本，以terminal与五原裁决确认终态，原元数据不重写。连续X域、20＋20和工作台整链不从本轮推定。
+
+Delivery／cleanup：源2eea9bb已推且REST／ls-remote一致；本结果仅整批终态后回写。166归档原件逐字节验证无差／缺／额外，保留一份当前候选视频，移除重复展开并压缩独立JSON，实际释放95,911,936已分配字节；TGZ、root摘要、视频、gzip读回与恢复入口保留。无拥有的云评测仍运行，未碰Mint／其它机器人／他人渲染。
+
+Next：原244点measured闭爪同步尖峰和普通close持续认证仍未解决；先按已保存真实时序明确现场状态绑定／覆盖包络，再决定交接方案，不继续单行hint微优化或删点。下一批未启动，不重复本轮或运行20＋20。Knowledge=pending，根保留原共享Wiki在途diff，项目结果已在本计划落盘。详见[m1b本轮结果](m1b-refinement-details-results.md#2026-10-25提前抬升预载的正式组件与原物理)。
+
 ## 2026-10-25 — 抬升预载静态筛查通过，默认关闭实现待原物理
 
 Current：round130 Kaggle `muqiaoqiao/so101-early-lift-static-force-20261025/1`终态。143个周期初冻结状态的6维驱动力／广义驱动力均与原指令同值；独立1738项通过。它是规划模型mj_forward，不是动态接触／任务／提速证据。新显式`loaded_jaw_lift_preload.py`已实现，默认关闭，尚未跑候选完整物理。
