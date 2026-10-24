@@ -170,11 +170,13 @@ class MeshBoxAxes:
             rows.append(row)
         return rows
 
-    def refine(self, checker, original_result, *, margin_m=None):
+    def refine(self, checker, original_result, *, margin_m=None, details_provider=None):
         """Refine an already queried pose; never call checker.evaluate here.
 
         Only missing mesh/box certificates are eligible. Any error in any
         original or supplemental pair retains the complete original rejection.
+        An optional same-call provider still passes the original detail checks;
+        missing or invalid ownership falls back to the original native query.
         """
         original = original_result
         result = {'original': original, 'supplemental_valid': original['valid'],
@@ -197,12 +199,25 @@ class MeshBoxAxes:
             rotations = checker.data.geom_xmat[checker.geometry_ids].reshape(-1, 3, 3).copy()
             if not np.isfinite(p).all() or not np.isfinite(rotations).all():
                 raise ValueError('Refinement needs a finite original FK frame')
-            raw_details = checker.native.evaluate(p, rotations, checker.pair_indices, margin)
-            try:
-                details = self._detail_arrays(raw_details, count, margin)
-            except Exception:
-                result['pairs'] = self._rejected_pair_details(checker, raw_details, count)
-                raise
+            raw_details = None
+            details = None
+            if details_provider is not None:
+                try:
+                    proposed = details_provider(p, rotations, checker.pair_indices, margin)
+                    if proposed is not None:
+                        proposed_arrays = self._detail_arrays(proposed, count, margin)
+                        if int(proposed_arrays['certified'].sum()) == original.get('certified_pairs'):
+                            raw_details = proposed
+                            details = proposed_arrays
+                except Exception:
+                    pass  # Optional handoff cannot replace the original query on error.
+            if details is None:
+                raw_details = checker.native.evaluate(p, rotations, checker.pair_indices, margin)
+                try:
+                    details = self._detail_arrays(raw_details, count, margin)
+                except Exception:
+                    result['pairs'] = self._rejected_pair_details(checker, raw_details, count)
+                    raise
             if int(details['certified'].sum()) != original.get('certified_pairs'):
                 raise ValueError('Original summary and detailed pair coverage disagree')
             missing = np.flatnonzero(~details['certified'])

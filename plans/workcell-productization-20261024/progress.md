@@ -1,5 +1,27 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 同次明细生产候选完成接线，待固定源码原评测
+
+Current：承接24日原物理搜索收益与组件三对，不重启项目。[本轮代码与组件](m1b-refinement-details-results.md)。原4/4抓放仍是最近物理成绩，新明细候选还不是物理通过。
+
+Done：薄summary_with_details在原owner锁内返回拥有明细，checker局部单次消费；query与checker调用世代及q/p/R/pairs/margin/owner/handle不符则回原detail。原输入转换真实重入、复制重入与关闭native均退回；原方法、返回、1mm／全点／评分／超时保持。四处checker构造已透传，RoutePolicy默认false，loaded_jaw_midpoint_details仅继承父版加一个bool，不偷开补证、不改默认。
+
+Done：owner核心133、集成73通过；恢复原direction_hints is True语义后专项11通过。根另独立47项通过，含真实bar-box端点clear／中间接触拒绝、原完整244扫掠要求、真实busy重入与owned数组。diff检查通过。初次RIGHT测试误判detail回退的期望已纠正，原未获证和错误拒绝不改。
+
+Next：固定源码后沿原Kaggle先重测生产组件三对，等价且wall／CPU均降才接原五例：左主B→C／左第二点C→B／原中心候选。私有round120已备原runner与输入，拟slug so101-refinement-details-physical-20261025；尚未运行，不记成功。整组终态前冻结源码；根独立回读并沿原计划接续。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
+
+## 2026-10-24 — 左补证重复查询已云计时，默认关闭适配实施中
+
+Current：四物理搜索对照已独立回读并推500dc47；本轮直接接左close/lift的实际瓶颈，无新本地仿真。详见[m1b-refinement-details-results.md](m1b-refinement-details-results.md)。
+
+Done：同姿态summary已计算完整285对，refine再次native.evaluate重算。私有同次拥有明细原型571态／9弦保留全部返回、报告、hint与原244闭爪exact；固定轴ABI1142→571，补方向仍571，不称全部native减半。十故障首query回原detail，pairs反转／关闭native原拒绝保持；旧汇总错误和未配置父策略版本独立保留。独立GPT只读审查通过，真实碰撞和实际并发覆盖仍待生产阶段。
+
+Done：原Kaggle so101-refinement-detail-20261024 v1已COMPLETE；固定500dc47，三对1.550167→1.148111、1.601443→1.146758、1.622729→1.154425s，wall/threadCPU中位比.716078/.715990，完整输出exact。原组件process16.678wall/17.861CPU，仅组件无Station verdict／无抓放积分，原preflight渲染单列。根及独立reader已分别核原件、完整状态、计数、五文件及故障；运行后Git状态没有单独收据，保留unknown。
+
+In progress：实施薄的同次summary拥有明细接口和默认关闭RoutePolicy候选，继承loaded-jaw midpoint，不改原默认、Station合同、碰撞阈值、全扫或评分。源变动由代码owner串行完成，根负责独立审查／原物理；不能把私有monkeypatch或组件收益当生产完成。
+
+Next：补真实拒绝／所有权／回退和透传检查，固定新源码后沿原Station做两工位反序物理。原完整50Hz仍未过，原搜索候选4/4证据和所有失败保持。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
+
 ## 2026-10-24 — X两工位搜索候选完成原物理，实际整程成本下降
 
 Current：承接05cc17c固定源码，Kaggle so101-x-midpoint-20261024 v1已COMPLETE，原四进程全部终态。详见[m1a-x-midpoint-results.md](m1a-x-midpoint-results.md)。本轮=progress，未重复上一批、未操作实机或Mint。

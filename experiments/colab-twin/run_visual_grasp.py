@@ -345,6 +345,8 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         policy = (controller_options or {}).get('route_policy')
         checker_options = ({'mesh_box_axis_refinement': True}
                            if getattr(policy, 'mesh_box_axis_refinement', False) else {})
+        if getattr(policy, 'reuse_refinement_details', False):
+            checker_options['reuse_refinement_details'] = True
         checker=CollisionChecker(rig,gripper=.5,margin_m=.001,**checker_options)
         calibration=TopDownCalibration.from_mujoco_model(model,width=640,height=480,top_plane_z_m=.018)
         renderer=mujoco.Renderer(model,height=480,width=640)

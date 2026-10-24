@@ -7,6 +7,16 @@ import visual_grasp_controller as module
 
 
 class VisualControllerTests(unittest.TestCase):
+    def test_refinement_detail_choice_reaches_main_checker_without_enabling_refinement(self):
+        from route_policy import RoutePolicy
+        for refinement in (False, True):
+            with self.subTest(refinement=refinement):
+                self.controller(route_policy=RoutePolicy(reuse_refinement_details=True,
+                                                        mesh_box_axis_refinement=refinement))
+                options = module.CollisionChecker.call_args.kwargs
+                self.assertTrue(options['reuse_refinement_details'])
+                self.assertEqual(options.get('mesh_box_axis_refinement', False), refinement)
+
     def controller(self, target_xy=(.24, -.13), **options):
         rig = SimpleNamespace(nq=6, nv=6, ngeom=0,
                               jnt_range=np.tile([-3.,3.],(6,1)),

@@ -5,6 +5,12 @@
 
 后续实施以progress和以下更新为准；上句仅描述D0初建。
 
+## 左补证：复用同次明细，不复用跨姿态安全结论
+
+原_bound.summary已在锁内算完整numeric/flags，MeshBoxAxes.refine随后对同FK再次执行285对native.evaluate。私有单调用拥有明细在571派生状态上将固定轴ABI1142→571，补方向571保持；原全部返回／报告／hint与244扫掠exact。固定500dc47的Kaggle三对wall/threadCPU均降，中位比.716078/.715990；[组件结果](m1b-refinement-details-results.md)不代表整程提速或物理通过。
+
+明细须在锁内复制、单次消费；不持有scratch view，不跨姿态／owner／模型／margin复用。关闭或错配仍走原查询并保留原拒绝。生产候选尚在实施，默认关闭；实际碰撞与并发覆盖、原Station物理另验。已淘汰的batch前缀会新增工作，与去掉同次重复detail是不同方案。
+
 ## X请求的搜索顺序：原物理收益已证实，快环问题仍在
 
 05cc17c的完整loaded-jaw midpoint候选只改变shorten_path直连弦试探顺序，不是IK或OMPL求解器。左B→C／右第二工位C→B的4/4原物理均pass；同侧raw和executed approach路径、最终认证exact相同，最终535／490点保持。左shortcut16.261→3.027s，右4.111→1.448s，实际process wall分别少14.621／2.547s且CPU均降。左hold不变、右候选多5拍，证据支持实际搜索工作减少。[原结果与复跑](m1a-x-midpoint-results.md)。

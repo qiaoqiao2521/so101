@@ -13,6 +13,23 @@ from visual_grasp_controller import VisualGraspController
 
 
 class RoutePolicyTests(unittest.TestCase):
+    def test_refinement_details_changes_only_the_complete_midpoint_parent(self):
+        parent, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint.py'))
+        candidate, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint_details.py'))
+        expected = parent.preferences()
+        expected['reuse_refinement_details'] = True
+        self.assertEqual(candidate.preferences(), expected)
+        self.assertFalse(parent.reuse_refinement_details)
+        self.assertFalse(candidate.mesh_box_axis_refinement)
+        self.assertTrue(candidate.loaded_jaw_preload)
+
+    def test_refinement_detail_reuse_is_explicit_boolean_and_default_off(self):
+        self.assertFalse(RoutePolicy().reuse_refinement_details)
+        self.assertTrue(RoutePolicy(reuse_refinement_details=True).reuse_refinement_details)
+        for value in (1, 'true', None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                RoutePolicy(reuse_refinement_details=value)
+
     def test_loaded_midpoint_changes_only_parent_search_order(self):
         parent, _ = load_route_policy(DEFAULT_SOURCE)
         candidate, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint.py'))

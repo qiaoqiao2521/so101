@@ -134,6 +134,8 @@ python experiments/colab-twin/evaluate_station.py \
 
 `route_strategies/loaded_jaw_midpoint.py` 是显式接近路径搜索候选，完整继承loaded-jaw父配方，仅开启中点顺序试探直连弦。固定盘左取料／右第二放置工位反序4/4原物理通过，本批进程wall分别少14.621／2.547s；最终接近路径与完整认证保持相同。它不改IK求解器，默认不切，完整50Hz仍未过。沿用原evaluate_station命令指定该candidate复跑；原件、全部成本和范围见[结果](../../plans/workcell-productization-20261024/m1a-x-midpoint-results.md)。
 
+`loaded_jaw_midpoint_details.py` 另只显式启用 `reuse_refinement_details`，不自动打开mesh补证。它将同次原生查询的拥有明细交给refiner；错配／重入／可选复制失败仍回原查询，原native错误保持拒绝，全部pair、244采样与阈值不变。默认关闭，当前仅完成组件／软件检查，生产路径组件与原物理仍待验，不能引用私有原型28.4%作为整程收益。进度见[明细交接](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。
+
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 
 ### 能力段与局部判定

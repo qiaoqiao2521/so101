@@ -68,6 +68,100 @@ class BoundPairQueryTests(unittest.TestCase):
         self.assertEqual(np.float64(summary['lower_bound_m']).tobytes(),
                          detail['lower_bound_m'][index].tobytes())
 
+    def test_failed_summary_details_own_all_fields_after_next_query(self):
+        native, positions, rotations, pairs = self.fixture()
+        bound = native.bind_pairs(pairs)
+        overlapping = positions.copy()
+        overlapping[1] = overlapping[0]
+        expected = native.evaluate(overlapping, rotations, pairs, .001)
+        summary, details = bound.summary_with_details(overlapping, rotations, .001)
+        self.assertFalse(summary['valid'])
+        self.assert_details_identical(expected, details)
+        self.assert_summary_matches(details, summary)
+        snapshot = {key:value.copy() for key,value in details.items()}
+        for value in details.values():
+            self.assertFalse(np.shares_memory(value, bound._summary_numeric))
+            self.assertFalse(np.shares_memory(value, bound._summary_flags))
+        clear, absent = bound.summary_with_details(positions, rotations, .001)
+        self.assertTrue(clear['valid'])
+        self.assertIsNone(absent)
+        self.assert_details_identical(snapshot, details)
+
+    def test_owned_details_copy_failure_keeps_original_summary(self):
+        native, positions, rotations, pairs = self.fixture()
+        positions[1] = positions[0]
+        bound = native.bind_pairs(pairs)
+        expected = bound.summary(positions, rotations, .001)
+        with patch.object(native, '_decode', side_effect=MemoryError('optional copy failed')):
+            actual, details = bound.summary_with_details(positions, rotations, .001)
+        self.assertEqual(actual, expected)
+        self.assertIsNone(details)
+
+    def test_real_input_conversion_reentry_never_lends_outer_details(self):
+        native, positions, rotations, pairs = self.fixture()
+        overlapping = positions.copy()
+        overlapping[1] = overlapping[0]
+        bound = native.bind_pairs(pairs)
+        other = native.bind_pairs(pairs[::-1].copy())
+        reference = bound.summary(overlapping, rotations, .001)
+        for nested in (lambda: bound.summary(positions, rotations, .001),
+                       lambda: other.summary(positions, rotations, .001),
+                       lambda: native.evaluate(positions, rotations, pairs, .001)):
+            seen_busy = []
+            class ConvertingFrame:
+                def __array__(self, dtype=None, copy=None):
+                    seen_busy.append(bound._summary_busy)
+                    nested()
+                    return np.array(overlapping, dtype=dtype, copy=True)
+            with self.subTest(nested=nested):
+                actual, details = bound.summary_with_details(ConvertingFrame(), rotations, .001)
+                self.assertEqual(seen_busy, [True])
+                self.assertEqual(actual, reference)
+                self.assertIsNone(details)
+                self.assertFalse(bound._summary_busy)
+
+    def test_margin_conversion_reentry_and_native_errors_retain_original_behavior(self):
+        native, positions, rotations, pairs = self.fixture()
+        positions[1] = positions[0]
+        bound = native.bind_pairs(pairs)
+        expected = bound.summary(positions, rotations, .001)
+        class ReentrantMargin:
+            def __float__(self):
+                self.busy = bound._summary_busy
+                native.evaluate(positions, rotations, pairs, .001)
+                return .001
+        margin = ReentrantMargin()
+        actual, details = bound.summary_with_details(positions, rotations, margin)
+        self.assertTrue(margin.busy)
+        self.assertEqual(actual, expected)
+        self.assertIsNone(details)
+        native.close()
+        for query in (bound.summary, bound.summary_with_details):
+            with self.subTest(query=query), self.assertRaisesRegex(RuntimeError, 'closed'):
+                query(positions, rotations, .001)
+
+    def test_native_query_or_close_during_detail_copy_discards_optional_handoff(self):
+        for event in ('query', 'close'):
+            native, positions, rotations, pairs = self.fixture()
+            positions[1] = positions[0]
+            bound = native.bind_pairs(pairs)
+            expected = bound.summary(positions, rotations, .001)
+            decode = native._decode
+            entered = [False]
+            def callback(numeric, flags):
+                result = decode(numeric, flags)
+                if not entered[0]:
+                    entered[0] = True
+                    if event == 'query':
+                        native.evaluate(positions, rotations, pairs, .001)
+                    else:
+                        native.close()
+                return result
+            with self.subTest(event=event), patch.object(native, '_decode', side_effect=callback):
+                actual, details = bound.summary_with_details(positions, rotations, .001)
+            self.assertEqual(actual, expected)
+            self.assertIsNone(details)
+
     def test_real_finite_boxes_preserve_all_fourteen_fields(self):
         native, positions, rotations, pairs = self.fixture()
         bound = native.bind_pairs(pairs)

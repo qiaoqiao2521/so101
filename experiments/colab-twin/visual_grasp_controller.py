@@ -236,6 +236,8 @@ class VisualGraspController:
         self.gripper_id = rig.body('gripper').id
         checker_options = ({'mesh_box_axis_refinement': True}
                            if self.route_policy.mesh_box_axis_refinement else {})
+        if self.route_policy.reuse_refinement_details:
+            checker_options['reuse_refinement_details'] = True
         self.checker = CollisionChecker(rig, gripper=.5, margin_m=.001, **checker_options)
         self.batch_sweep_validator = None
         if self.route_policy.batch_configuration_sweep:
@@ -1705,6 +1707,8 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.plan_reports = []
     checker_options = ({'mesh_box_axis_refinement': True}
                        if snapshot.route_policy.mesh_box_axis_refinement else {})
+    if snapshot.route_policy.reuse_refinement_details:
+        checker_options['reuse_refinement_details'] = True
     context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001, **checker_options)
     try:
         validity = context._payload_valid

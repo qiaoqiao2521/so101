@@ -148,4 +148,6 @@
 
 用户最新指定X向IK与盘壁净距。原诊断已补完整扫掠／显式预收口，X±11mm两个新请求均原物理pass，见[m1a-x-interior-results.md](m1a-x-interior-results.md)。原P0新位置17/17通过，见[m1a-x-perception-results.md](m1a-x-perception-results.md)。原Station现已分开盘与cube并消费显式预收口／补证：两端点加原中心新物理3/3pass，两个关闭适配负例保持原fail，见[m1a-x-station-fixed-results.md](m1a-x-station-fixed-results.md)。接近弦搜索候选已过两工位反序4/4，实际process wall与CPU均降，保留显式且不切默认，见[m1a-x-midpoint-results.md](m1a-x-midpoint-results.md)。下一步拆左close/lift内部认证；新固定盘文档浏览器导入已验，真实Carry HTTP链另验。不插值开放连续域；完整50Hz和20＋20仍未过。
 
+2026-10-25接续：左close/lift的同次重复明细已做隔离组件三对，完整返回相同且约省28.4%；生产薄接口和默认关闭候选已完成软件检查。下一步先重测实际生产组件，再用左主／第二放置工位反序及中心回归做原物理；[来源与限制](m1b-refinement-details-results.md)。私有组件数字不当生产或整程成绩，原默认保持。
+
 Carry限时等待／继续／取消三例原件已回收：完整resume原pass、cancel与原timeout保留fail，见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。新API已由5186服务并通过实际ready／历史终态拒绝读回，工作台5a30c26已远端核实；活动网页任务等待→继续→原物理整链仍待验。等待不重置原时钟，不以waiting代替Grasp证据；手动门不替代六技能生命周期或同世界恢复。

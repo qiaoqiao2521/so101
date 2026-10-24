@@ -366,6 +366,8 @@ class NativeSupport:
         self._witness_hints = None
         self._construction_geometry = None
         self._construction_handle = None
+        # Detect reentry during optional same-query detail ownership.
+        self._query_generation = 0
         if len(points) == 0 or len(points) != len(kinds):
             raise ValueError("Geometry and kind counts must match and be nonempty")
         arrays = [np.array(p, dtype=np.float64, order="C", copy=True) for p in points]
@@ -429,6 +431,7 @@ class NativeSupport:
         with self._lock:
             if not self._handle:
                 raise RuntimeError("NativeSupport is closed")
+            self._query_generation += 1
             p = np.array(positions, dtype=np.float64, order="C", copy=True)
             R = np.array(rotations, dtype=np.float64, order="C", copy=True)
             raw_pair = np.asarray(pair)
@@ -479,6 +482,7 @@ class NativeSupport:
     def _frame_locked(self, positions, rotations, pairs, margin, *, bound=False):
         if not self._handle:
             raise RuntimeError("NativeSupport is closed")
+        self._query_generation += 1
         p = np.array(positions, dtype=np.float64, order="C", copy=True)
         R = np.array(rotations, dtype=np.float64, order="C", copy=True)
         q = pairs if bound else self._copy_pairs(pairs)
@@ -567,6 +571,32 @@ class _BoundPairs:
             finally:
                 self._summary_busy = False
 
+    def summary_with_details(self, positions, rotations, margin, *, direction_hints=False):
+        """Return owned failed-frame details from this same locked query only.
+
+        Clear/error summaries and reentrant queries retain the original summary
+        and offer no details. Copy failure is optional: callers can perform the
+        original full-detail query. No mutable summary scratch escapes.
+        """
+        with self._owner._lock:
+            busy = self._summary_busy
+            generation = self._owner._query_generation
+            handle = self._owner._handle
+            summary = self.summary(positions, rotations, margin, direction_hints=direction_hints)
+            if (busy or self._owner._query_generation != generation + 1
+                    or self._owner._handle is None or self._owner._handle != handle
+                    or summary['valid']
+                    or summary['certificate_reason'] != 'no_separation_certificate'):
+                return summary, None
+            try:
+                details = self._owner._decode(self._summary_numeric.copy(), self._summary_flags.copy())
+            except Exception:
+                return summary, None
+            if (self._owner._query_generation != generation + 1
+                    or self._owner._handle is None or self._owner._handle != handle):
+                return summary, None
+            return summary, details
+
     @staticmethod
     def _copy_summary_input(value, destination):
         # Plain binary64 arrays have no conversion callback. Other inputs keep
@@ -583,6 +613,7 @@ class _BoundPairs:
 
     def _summary_frame_locked(self, positions, rotations, margin, *, direction_hints=False):
         owner = self._owner
+        owner._query_generation += 1
         p = self._copy_summary_input(positions, self._summary_positions)
         R = self._copy_summary_input(rotations, self._summary_rotations)
         q = self._pairs

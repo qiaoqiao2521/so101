@@ -313,6 +313,8 @@ def _planning_context(rig, released_model, snapshot):
         query.distances = partial(query.distances, batch_cross_axes=True)
     checker_options = ({'mesh_box_axis_refinement': True}
                        if snapshot.route_policy.mesh_box_axis_refinement else {})
+    if snapshot.route_policy.reuse_refinement_details:
+        checker_options['reuse_refinement_details'] = True
     context.checker = ConservativeCollisionChecker(rig, gripper=.5, margin_m=.001,
                                                  **checker_options)
     return context
