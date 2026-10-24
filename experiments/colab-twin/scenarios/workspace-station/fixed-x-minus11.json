@@ -1,0 +1,179 @@
+{
+  "format": "robot-station",
+  "version": 1,
+  "units": "m",
+  "frameConvention": "translation-only",
+  "station": {
+    "name": "SO101 固定红盘 Xminus11 逐请求开发样例",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101",
+        "kind": "robot",
+        "parent": "world",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "pick",
+        "name": "红盘坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "world",
+        "position": [
+          0.229,
+          -0.13,
+          0.01
+        ]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "world",
+        "position": [
+          0.229,
+          -0.13,
+          0.08
+        ]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "world",
+        "position": [
+          0.229,
+          -0.13,
+          0.02
+        ]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          0.14,
+          0
+        ]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.03
+        ]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.1
+        ]
+      }
+    ],
+    "program": [
+      {
+        "id": "s1",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s2",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s3",
+        "action": "move",
+        "target": "grasp",
+        "seconds": 1
+      },
+      {
+        "id": "s4",
+        "action": "close",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s5",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s6",
+        "action": "move",
+        "target": "release",
+        "seconds": 1
+      },
+      {
+        "id": "s7",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s8",
+        "action": "move",
+        "target": "clear",
+        "seconds": 1
+      }
+    ],
+    "notes": "红盘保持(.24,-.13)m，cube是独立取料目标；每次仍重新定位、IK、绕障和完整夹爪认证。历史通过不作为本次任务成功，当前为开发请求，不代表连续安全区域。",
+    "execution": {
+      "mode": "workspace-development-v1",
+      "pick_xy_m": [
+        0.24,
+        -0.13
+      ],
+      "pickup_hover_z_m": 0.06,
+      "target_region_xy_m": [
+        [
+          0.21,
+          0.27
+        ],
+        [
+          -0.16,
+          -0.1
+        ]
+      ]
+    }
+  }
+}

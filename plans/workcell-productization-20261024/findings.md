@@ -175,3 +175,7 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 原P0负例固定于中心，不能用其通过声称X±11mm遮挡已验。现兼容显式位置声明，遮挡片／干扰物与目标同量平移，保留真实PNG供原定位器独立重算。固定890616a的Kaggle原17/17通过，五正例最大误差.616511mm，12负例均无坐标输出；17原始PNG的完整estimate重算一致。8500次原reset积分、P0与进程时钟单列，详见[m1a-x-perception-results.md](m1a-x-perception-results.md)。
 
 该面板只补位置相关的观测拒绝证据。轴齐／高度仍为先验，不替代IK／盘壁证书、物理抓放或连续域准入。把目标移到新位置时，负例遮挡物也须移动；否则只是在新位置重复无效遮挡。Knowledge=already_covered：动作、观测与晋级分层仍沿用Wiki§20，未修改共享知识页。
+
+## 固定盘请求的Station接线缺口
+
+现有execution.pick_xy_m传给build_contact_scene，控制整只红盘；cube初始XY才由原reset设置。固定盘请求应保持前者(.24,-.13)，approach/grasp世界XY与cube一致。原模式已能表示这种分离，无需再造固定盘mode。端点还需将原开发CLI已有的pickup_open_jaw_rad和mesh_box_axis_refinement作为显式参数接入Station；默认与原模式保持。此次只补透传和可编辑样例，真实新入口物理验收另跑，不把已有开发CLI通过贴到新Station任务。

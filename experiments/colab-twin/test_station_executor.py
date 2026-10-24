@@ -1,5 +1,6 @@
 """Station admission must preserve editable intent and avoid silent substitutions."""
 import copy
+from dataclasses import replace
 import json
 from pathlib import Path
 import sys
@@ -8,6 +9,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from route_policy import RoutePolicy
 from station_executor import (FIXED_NODES, SEGMENTS, TEMPLATE, UnsupportedStation,
                               WORKSPACE_DEVELOPMENT_MODE, WORKSPACE_TARGET_REGION,
                               compile_program, describe, run, validate_station)
@@ -38,6 +40,20 @@ def workspace_station(side):
             node['position'] = [cube_x, -.13, hover+.02 if node['id'] == 'approach' else .02]
         elif node['id'] in ('place', 'release', 'clear'):
             node['position'][:2] = place_xy
+    return value
+
+
+def fixed_tray_workspace_station(cube_x, *, pickup_hover_z_m=.06, **options):
+    value = workspace_station('right')
+    value['execution'].update(pick_xy_m=[.24, -.13],
+                              pickup_hover_z_m=pickup_hover_z_m, **options)
+    for node in value['nodes']:
+        if node['id'] == 'pick':
+            node['position'] = [.24, -.13, 0.]
+        elif node['id'] == 'cube':
+            node['position'] = [cube_x, -.13, .01]
+        elif node['id'] in ('approach', 'grasp'):
+            node['position'] = [cube_x, -.13, pickup_hover_z_m+.02 if node['id'] == 'approach' else .02]
     return value
 
 
@@ -83,6 +99,18 @@ class AdmissionTests(unittest.TestCase):
                 value['execution']['pick_xy_m'][0] = 99
                 self.assertEqual(result['execution']['pick_xy_m'], [pick_x, -.13])
 
+    def test_fixed_tray_requests_keep_cube_separate_and_optional_defaults_absent(self):
+        for cube_x in (.229, .251, .22, .26):
+            value = fixed_tray_workspace_station(cube_x)
+            with self.subTest(cube_x=cube_x):
+                result = validate_station(value)
+                self.assertEqual(result['resolved_positions_m']['pick'], [.24, -.13, 0.])
+                self.assertEqual(result['cube_xyz_m'], [cube_x, -.13, .01])
+                self.assertEqual(result['resolved_positions_m']['approach'], [cube_x, -.13, .08])
+                self.assertNotIn('pickup_open_jaw_rad', result['execution'])
+                self.assertNotIn('mesh_box_axis_refinement', result['execution'])
+                self.assertTrue(result['not_admitted'])
+
     def test_workspace_rejects_node_inconsistency_and_out_of_prior_cube(self):
         for ident, coordinate, delta in (('pick', 0, .001), ('approach', 0, .001),
                                          ('approach', 2, .001), ('grasp', 1, .001),
@@ -100,6 +128,8 @@ class AdmissionTests(unittest.TestCase):
         for field, invalid_values in (
                 ('pick_xy_m', ([True, -.13], [.26], [float('nan'), -.13], ['.26', -.13])),
                 ('pickup_hover_z_m', (True, None, '.054', float('inf'), .053999, .060001)),
+                ('pickup_open_jaw_rad', (True, None, '.35', float('nan'), float('inf'), .349, .501)),
+                ('mesh_box_axis_refinement', (None, 0, 1, 'true', [], {})),
                 ('target_region_xy_m', (None, [[.20, .27], [-.16, -.10]],
                                        [[True, .27], [-.16, -.10]]))):
             for invalid in invalid_values:
@@ -141,11 +171,20 @@ class AdmissionTests(unittest.TestCase):
             ('cancel_with_safety_stop', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
                 'failure_reason': cancel_error, 'safety_stop': True}, True, 1, 'failed'),
         )
-        cases = [(side, outcomes[0], False) for side in (None, 'right', 'left')]
-        cases.extend((None, outcome, False) for outcome in outcomes[1:])
-        cases.extend((None, outcome, True) for outcome in outcomes)
-        for side, (label, report, request_cancel, expected_code, expected_state), carry in cases:
-            value = station() if side is None else workspace_station(side)
+        cases = [(side, station() if side is None else workspace_station(side), outcomes[0], False)
+                 for side in (None, 'right', 'left')]
+        cases.extend((None, station(), outcome, False) for outcome in outcomes[1:])
+        cases.extend((None, station(), outcome, True) for outcome in outcomes)
+        cases.extend((name, value, outcomes[0], False) for name, value in (
+            ('fixed_minus11', fixed_tray_workspace_station(.229)),
+            ('fixed_plus11', fixed_tray_workspace_station(.251)),
+            ('fixed_minus20', fixed_tray_workspace_station(.22, mesh_box_axis_refinement=True)),
+            ('fixed_plus20', fixed_tray_workspace_station(.26, pickup_hover_z_m=.054,
+                                                        pickup_open_jaw_rad=.35)),
+            ('explicit_original', fixed_tray_workspace_station(.26, pickup_open_jaw_rad=.5,
+                                                               mesh_box_axis_refinement=False)),
+        ))
+        for side, value, (label, report, request_cancel, expected_code, expected_state), carry in cases:
             if carry:
                 value['skillControl'] = {'mode': 'hold-before-carry'}
                 report = dict(report, simulation_s=20.)
@@ -177,7 +216,7 @@ class AdmissionTests(unittest.TestCase):
             names = ('quad_vertices', 'small_direction_cache', 'tree_leaf8', 'leaf_packed',
                      'packed_inline', 'seed_bound_direct', 'summary_fast')
             native = SimpleNamespace(**{'configure_'+name: lambda value: None for name in names})
-            policy = SimpleNamespace(**{name: False for name in (*names, 'compact_status_json')})
+            policy = RoutePolicy(mesh_box_axis_refinement=True)
             modules = {'support_native': native,
                        'grasp_episode': SimpleNamespace(build_contact_scene=build_contact,
                                                        numbers=lambda values: ' '.join(map(str, values))),
@@ -201,6 +240,18 @@ class AdmissionTests(unittest.TestCase):
                 self.assertEqual(status['cancelled'], expected_state == 'cancelled')
                 self.assertEqual(seen['budget'], {'max_episode_wall_s': 120, 'max_sim_s': 90})
                 self.assertEqual(seen['case']['initial_xy_m'], validate_station(value)['cube_xyz_m'][:2])
+                execution = value.get('execution', {})
+                if 'mesh_box_axis_refinement' in execution:
+                    self.assertEqual(seen['controller']['route_policy'],
+                                     replace(policy, mesh_box_axis_refinement=execution['mesh_box_axis_refinement']))
+                    self.assertIsNot(seen['controller']['route_policy'], policy)
+                else:
+                    self.assertIs(seen['controller']['route_policy'], policy)
+                self.assertTrue(policy.mesh_box_axis_refinement)
+                if 'pickup_open_jaw_rad' in execution:
+                    self.assertEqual(seen['controller']['pickup_open_jaw_rad'], execution['pickup_open_jaw_rad'])
+                else:
+                    self.assertNotIn('pickup_open_jaw_rad', seen['controller'])
                 if carry:
                     snapshot = status['carry_gate']
                     self.assertEqual(snapshot['state'], 'ended')

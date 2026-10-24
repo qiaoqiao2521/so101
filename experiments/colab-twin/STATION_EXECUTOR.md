@@ -25,6 +25,29 @@ python experiments/colab-twin/evaluate_station.py \
 
 本轮新网页入口已单独完成两布局2/2原物理；保存/刷新/复制和两屏检查通过，原开发CLI的4/4另存，不拼计。完整50Hz、20+20与连续包络未通过。见[入口实测](../../plans/workcell-productization-20261024/m1a-station-entry.md)。
 
+### 固定红盘的逐请求配置
+
+复用同一 `workspace-development-v1`，将 `execution.pick_xy_m` 与 `pick` 节点保持为原红盘中心 `[.24,-.13]`。`cube` 声明本次物体位置，`approach/grasp` 的世界XY随 `cube`，不随红盘中心。把目标位置写进 `pick_xy_m` 会移动整只红盘，属于另一种布局。
+
+该模式新增两个可选字段：`pickup_open_jaw_rad` 仅接受原 `.5` 或显式 `.35`；省略时沿用控制器原 `.5`。`mesh_box_axis_refinement` 仅接受显式布尔值，使用本任务的路线策略副本；省略时继承已加载策略，显式 `false` 可关闭该策略原有的补证。两项均不会按目标坐标自动选择，也不修改全局默认。
+
+| 固定红盘请求 | cube 世界XY（m） | pickup_hover_z_m | 显式可选字段 |
+| --- | --- | --- | --- |
+| X−11mm | `[.229,-.13]` | `.06` | 省略 |
+| X＋11mm | `[.251,-.13]` | `.06` | 省略 |
+| X−20mm | `[.22,-.13]` | `.06` | `mesh_box_axis_refinement: true` |
+| X＋20mm | `[.26,-.13]` | `.054` | `pickup_open_jaw_rad: .35` |
+
+以上四行来自已有开发CLI的固定盘结果，不代表新增 Station 接线已经完成物理验收。Station 仍标记 `development_only/not_admitted`；每个请求消费本次RGB定位，重新执行原 IK、OMPL、下降／抬升、planned/measured夹爪扫掠及原物理裁判。历史采样证书不作为放行凭证，矩形视觉先验不等于连续可抓范围。`.35` 仍沿用原高位预收口、实测到位门与完整扫掠；1mm、全部碰撞对、90sim/120wall不变。
+
+四份可编辑的原Station文档在 `scenarios/workspace-station/fixed-x-minus11.json`、`fixed-x-plus11.json`、`fixed-x-minus20.json` 和 `fixed-x-plus20.json`。导入或改参数不执行任务，仍须显式运行。CLI示例（仓库根）：
+
+```bash
+python experiments/colab-twin/evaluate_station.py \
+  --station experiments/colab-twin/scenarios/workspace-station/fixed-x-plus20.json \
+  --output-dir experiments/colab-twin/output/fixed-x-station --timing
+```
+
 ## X 方向工位开发参数（2026-10-24）
 
 `run_workspace_case.py --profile scenarios/workspace-x-m1a.json` 可复跑指定红盘布局的 X 方向试验。`pick_xy_m` 仅平移完整红盘，`pickup_hover_z_m` 只修改取料接近／抬升高位；默认仍是原盘位和 .06m。下探 .019m、原 IK、1mm、244 点扫掠及物理裁判不变。新布局不改变网页 ±10mm 准入，也不算原固定盘位包络扩大。两个X新布局及两个原中心开发原物理4/4通过；完整50Hz、连续包络及扰动验收仍未通过。诊断、配置和阶段结果见 [X 方向记录](../../plans/workcell-productization-20261024/m1a-x-results.md)。

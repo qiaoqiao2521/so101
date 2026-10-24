@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+from dataclasses import replace
 import json
 import math
 import os
@@ -62,6 +63,8 @@ def describe():
                 'development_only': True, 'not_admitted': True,
                 'target_region_xy_m': [axis.copy() for axis in WORKSPACE_TARGET_REGION],
                 'pickup_hover_z_range_m': [.054, .06],
+                'optional_pickup_open_jaw_rad': [.5, .35],
+                'optional_mesh_box_axis_refinement': 'explicit boolean task override; otherwise inherit route policy',
                 'example': {'mode': WORKSPACE_DEVELOPMENT_MODE, 'pick_xy_m': [.26, -.13],
                             'pickup_hover_z_m': .054,
                             'target_region_xy_m': [axis.copy() for axis in WORKSPACE_TARGET_REGION]},
@@ -108,7 +111,8 @@ def workspace_execution(station):
     if not isinstance(execution, dict) or execution.get('mode') != WORKSPACE_DEVELOPMENT_MODE:
         raise UnsupportedStation([f'execution 必须声明 mode={WORKSPACE_DEVELOPMENT_MODE}；省略 execution 才使用原默认工位'])
     issues = []
-    allowed = {'mode', 'pick_xy_m', 'pickup_hover_z_m', 'target_region_xy_m'}
+    allowed = {'mode', 'pick_xy_m', 'pickup_hover_z_m', 'target_region_xy_m',
+               'pickup_open_jaw_rad', 'mesh_box_axis_refinement'}
     extras = [key for key in execution if key not in allowed]
     if extras:
         warnings.warn('WARNING: execution 附加字段 '+', '.join(sorted(map(str, extras)))+
@@ -126,6 +130,14 @@ def workspace_execution(station):
     if (isinstance(hover, bool) or not isinstance(hover, (int, float)) or
             not math.isfinite(hover) or not .054 <= hover <= .06):
         issues.append('execution.pickup_hover_z_m 必须为 .054..06m 内有限非布尔数')
+    if 'pickup_open_jaw_rad' in execution:
+        opening = execution['pickup_open_jaw_rad']
+        if (isinstance(opening, bool) or not isinstance(opening, (int, float)) or
+                opening not in (.5, .35)):
+            issues.append('execution.pickup_open_jaw_rad 仅支持原 .5 或显式 .35rad')
+    if ('mesh_box_axis_refinement' in execution and
+            type(execution['mesh_box_axis_refinement']) is not bool):
+        issues.append('execution.mesh_box_axis_refinement 必须为显式布尔值')
     region = execution.get('target_region_xy_m')
     if (not isinstance(region, list) or len(region) != 2 or
             not all(finite_pair(axis) for axis in region) or region != WORKSPACE_TARGET_REGION):
@@ -364,6 +376,10 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
         if route_policy is None:
             from route_policy import load_route_policy
             route_policy = load_route_policy()[0]
+        execution = layout.get('execution', {})
+        if 'mesh_box_axis_refinement' in execution:
+            route_policy = replace(route_policy,
+                                   mesh_box_axis_refinement=execution['mesh_box_axis_refinement'])
         atomic_json(output/'resolved-station.json', layout)
         publish(phase='initializing', message='加载现有 MuJoCo / IK / OMPL 执行器',
                 station_name=station.get('name', 'SO101'), layout=layout,
@@ -456,6 +472,8 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
         if 'execution' in layout:
             controller_options.update(pickup_hover_z_m=layout['execution']['pickup_hover_z_m'],
                                       target_region_xy_m=layout['execution']['target_region_xy_m'])
+            if 'pickup_open_jaw_rad' in execution:
+                controller_options['pickup_open_jaw_rad'] = execution['pickup_open_jaw_rad']
         carry_gate = None
         if 'skill_control' in layout:
             from carry_gate import CarryGate
