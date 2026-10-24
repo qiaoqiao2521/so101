@@ -691,3 +691,6 @@ v1公开数组和v2官方完整MJB内存两种表示都在同原f9be97b4 fixture
 
 
 F2by局部修复：原native构造数组在ns_create前仍由Python拥有，因此只在显式启用时保存三份不可变bytes即可覆盖已证隐藏状态，无需hash、从handle反读或重写碰撞器。实际bound._owner必须就是受审的原NativeSupport，构造handle仅核对本对象是否仍有效，跨worker比较的是内容。缺构造信息或可选取证MemoryError回原。32个局部回归包含真实构造历史反例；63个仓库相关测试通过。新组件必须计入原本在setup里的复制成本，baseline保持默认不采集；无新物理或默认晋级结论。
+
+
+F2by实际补齐构造见证后，原scope的组合worker/proof/main仍三对少85–94ms，完整构造范围CPU少76–149ms；原screen准入仅局部。首对2.18s总wall差主要位于setup，CPU并未等幅变化，不能归因复用。原件output/native-return-evidence-factory-20261024/component-v1。20.16MB key和22–25ms主取证仍值得拆分；下一步只读归因，不先假定NumPy视图一定更快：字节比较同样可能分配临时数组，需按真实原输入证伪。

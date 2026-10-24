@@ -1621,3 +1621,16 @@ NativeSupport新增默认关闭capture_geometry，只在显式启用时保存实
 新增5项native证据行为测试及原58项相关回归共63项通过。private round92修正版绑定实际bound owner及原类型、对应构造handle和完整构造bytes；原模型全部依赖仍保留，缺证据/失配回原。根侧反例现可被检测，新增构造历史、owner、handle、缺证据及可选复制MemoryError回退后，32项局部回归通过。内部只读审查指出大模型bytes分配MemoryError原先会使候选失败，已补绑定异常回退及注入回归；默认关闭路径不受影响。
 
 下一Kaggle组件会显式让baseline不采集、candidate采集，并将两边完整fixture/native构造、worker原验证、证据构造与main检查全部计入；先共同预热一次原native编译，不计这次预热为候选收益。与F2bx旧计时范围分开记录，不把仅修复正确性说成已有整程收益，不凭静态回归启动重复物理。当前尚未提交云组件；默认仍loaded_jaw_preload。Knowledge=pending，待该修复证据和组件存齐后补原第20节，owner根Codex。
+
+
+## F2by Kaggle完整构造成本组件终态；接F2bz只读归因
+
+source0b5a8a3经REST和ls-remote读回，Kaggle private so101-native-return-component-20261024 v1终态，源码/入口/private独立一致，原screen eligible，独立protocol_valid=true。仍为原f9be97b4冻结输入，不是新物理成绩。修正版支持域下，原完整几何/home/末pad一致，main保留fresh bridge/home，worker原路径有意加连接点。
+
+新范围把两边完整fixture/native构造、candidate-only构造见证复制、原worker+构证+main都算入。三对total wall2.942174→.758054、.820054→.743686、.812579→.721398s；total CPU各少.149276/.076051/.092062s。首对baseline setup2.698071、candidate .599502s，远大于其CPU差，保留共同初始化冷项混杂，不将2.18s称算法收益；另两对wall只省76.368/91.181ms。仅旧范围组合worker/proof/main各少85.552/86.322/93.518ms；范围不同，禁止与F2bx的绝对秒数拼累计收益。
+
+修正版证据20,162,791bytes，worker构证8.49–10.02ms，main117.626–123.376→22.195–25.207ms。native构造快照确实补进key，原局部反例已由32项回归中的独立case挡住，缺证据及MemoryError仍原回退；仓库默认不采集。原件output/native-return-evidence-factory-20261024/component-v1与private round92、Kaggle不可变v1齐全。
+
+不因为修复正确性和组件准入而重复旧的整程追绿：F2bx原静态两站整程一好一坏仍是有效反证。当前不发新物理、不切默认；完整50Hz未过。Next F2bz已通过原CLI提交只读main取证归因so101-return-evidence-attribution-20261024 v1/source0b5a8a3，private round93：拆binding/public model快照、内容比较、fresh桥接/home、临时key释放；全部原谓词/几何保持，inclusive父子不相加，带观察器时间不作性能基准。尚无归因结论。
+
+Knowledge=pending：原Wiki/ROS2 与 FishBot.md第20节与开发知识入口已有合计519行未审未提交改动；本轮未覆盖或夹带发布该独立知识库。新增构造期隐藏几何教训先存本findings，后续由根Codex串行审查这两页相关diff并补原段/入口；最短入口git diff --这两页及本计划F2bx/F2by。主项目工作与云任务继续，不以知识维护阻塞实验。
