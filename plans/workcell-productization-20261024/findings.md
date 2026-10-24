@@ -1,0 +1,96 @@
+# SO101 工位产品化：事实、决定与待证项
+
+日期：2026-10-24。本文汇总本轮只读核实，作为产品化计划的证据入口。
+本轮仅编写计划，不改变控制器、默认策略、运行服务、Mint 或实体设备，不新增仿真、训练或云任务。
+
+## 已核事实
+
+### 工位范围与运动学
+
+- 当前输入合同要求工件中心 `XY=(0.24±0.01,-0.13±0.01)m`、`Z=0.01m`。
+  这是执行器的显式检查，不能直接解释为机械臂只能移动 ±10mm；见 [station_executor.py:170–172](../../experiments/colab-twin/station_executor.py)。
+- 实际 IK 接收 `xyz`，残差为位置误差乘 10、夹爪局部 Z 轴对齐世界竖直轴，以及 `q[4]*0.1`。
+  它没有输入世界 yaw 或完整目标旋转矩阵；见 [grasp_episode.py:114–128](../../experiments/colab-twin/grasp_episode.py)。
+- 求解器要求上述总残差范数 `<1e-5`，不能把 wrist-roll 项仅当作不影响接纳的软排序。
+  该组合是否缩小可用工作空间尚未对照证明；见 [grasp_episode.py:130–137](../../experiments/colab-twin/grasp_episode.py)。
+- 接近、下降、抬升及运输实际调用此 IK；见 [visual_grasp_controller.py:334–339、877–879](../../experiments/colab-twin/visual_grasp_controller.py)。
+- 径向 yaw 需要工具轴、零位、父体变换和夹爪偏移映射，不能直接等同某个关节角。
+  模型存在肩部偏移及局部关节轴；见 [so101.xml:49–102](../../workspaces/so101_ws/src/so101_mujoco/models/so101.xml)。
+- 对象对称性决定可放宽的朝向。圆柱、方块和有朝向要求的零件不能采用同一 yaw 自由度假设。
+
+### 性能与现有快慢环
+
+- OMPL 已设置进程首次规划 seed：仅 `_INITIAL_SEED` 为空时调用 `setSeed(max(1,requested))`。
+  报告明确记录 `rng_seed_scope=process_first_plan`；见 [joint_planner.py:105–112、162–164、190](../../experiments/colab-twin/joint_planner.py)。
+- 这不等于每次规划重置 RNG。调用顺序、实例创建和输入仍需记录；官方区分全局 seed 与实例 seed。
+  来源：[OMPL RNG 官方文档](https://ompl.kavrakilab.org/classompl_1_1RNG.html)。
+- F2ce 在同一次 ratchet 中复用完全相同参数的纯 SAT 结果，保留原距离、forward、native 和 pad 查询。
+  176 输入组件三对均省计算，中位 wall 省 119.533ms；见 [原进度:1697–1703](../factory-loading-20261021/progress.md)。
+
+| F2ce 工位 | 原版→候选 process wall | 完整慢拍 >20ms | 原物理裁判 |
+| --- | --- | --- | --- |
+| 200/200，B→C | 54.044251→52.726573s | 139→123 | 2/2 通过 |
+| 220/170，C→B | 49.478408→50.707895s | 80→106 | 2/2 通过 |
+
+- 两站共 4/4 物理通过，但整程性能一好一坏，候选未晋级；见 [原进度:1705–1716](../factory-loading-20261021/progress.md)。
+- 初始化和 transport worker 在候选介入前已有差异；固定非 hold/release 拍数的 CPU 也不一致。
+  不能把约 ±1.3s 的整程差异归因于 SAT 或 OMPL 随机路长；需分别核原路径、阶段拍数和运行开销。
+- F2cf 是原控制器的叶段观察：3867 完整拍，P50 10.229ms、P95 17.293ms、max 83.863ms，148 拍 >20ms。
+  原任务通过，完整 50Hz 未通过；插桩秒数不能与其他 VM 拼成加速 A/B；见 [原进度:1725–1729](../factory-loading-20261021/progress.md)。
+- 同回合 measured checker、configuration sweep、validate_joint_path 的 max 分别为 2.718、40.538、64.135ms。
+  它们是 inclusive 时长，不能相加为总成本；见 [原进度:1733–1740](../factory-loading-20261021/progress.md)。
+- 已观察到同步 244 闭爪认证和回位完整认证；一次 sweep 内发生 35.426ms gen2 GC。
+  该事件只证明该插桩回合，不能据此解释全部历史尖峰或直接命名为 GIL 等待；见 [原进度:1742](../factory-loading-20261021/progress.md)。
+- transport 和 separation 已有异步 worker。主线程继续轮询、检查上下文、认证现场桥接和首指令。
+  见 [visual_grasp_controller.py:759–815、1031–1156](../../experiments/colab-twin/visual_grasp_controller.py)。
+- 回位直接路径复验及必要时 OMPL 仍有同步入口；每次 update 仍检查实测状态。
+  见 [visual_grasp_controller.py:991–1000、1372–1375](../../experiments/colab-twin/visual_grasp_controller.py)。
+
+### 共享工位与连续世界
+
+- 5186 `/so101-station` 由 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用 SO101 执行器。
+  这证明已有跨仓入口，不能按端口认定两套独立前端；见 [STATION_EXECUTOR.md:81](../../experiments/colab-twin/STATION_EXECUTOR.md)。
+- 当前执行器接收 Station 或任务信封，每个输出目录是独立 episode；不能直接当作同世界连续卸货。
+  见 [STATION_EXECUTOR.md:18–38](../../experiments/colab-twin/STATION_EXECUTOR.md)。
+- FishBot 连续计划规定 Physics 是活动世界唯一 writer，bridge 持有任务与原生 Goal，Oracle 只读。
+  继续扩展原 factory/workflow，不新建调度服务；见 [连续计划:42–45](/home/muqiao/dev/ros2/projects/fishbot/plans/continuous-twin-regression-20261024/task_plan.md:42)。
+- 已验收运输使用 ideal 观测及显式 reset，不能据此宣称视觉或无 reset 连续任务已通过。
+  见 [COOPERATION_WORKFLOW.md:141–151](/home/muqiao/dev/ros2/projects/fishbot/docs/COOPERATION_WORKFLOW.md:141)。
+- 连续计划要求两个独立自由货物、同一 world/episode/源时钟/编码器/车体位姿，第一件送达后原位继续。
+  禁止 reset、传送或改名替代连续性；见 [连续计划:125–129](/home/muqiao/dev/ros2/projects/fishbot/plans/continuous-twin-regression-20261024/task_plan.md:125)。
+
+## 本轮决定
+
+- 继续复用 MuJoCo、现有 IK/OMPL、控制器、评分器、FishBot 工作台和原 Workflow/bridge；本轮不选新引擎。
+- 将径向 yaw 作为待比较候选；保留对象朝向与对称性合同，先验证 IK、碰撞、连续路径及真实接触。
+- 将 ±150mm 作为待测产品目标，先定义它是 XY 方形范围还是半径，再发布实际测得的有效区域。
+- 将 3–5ms 与 P99<20ms 作为架构目标，明确统计对象；不把它们写成锁 seed 后必然得到的结果。
+- servo-only 与原完整周期分开报告；完整周期保留安全检查、感知、worker 准入、244 闭爪和回位切换。
+  两者均报告样本数、P50/P95/P99/max 和 >20ms 数量；P99<20ms 不等同全部周期满足 50Hz。
+- 快环只执行已获认证范围内的命令；迁出在线认证前，先证明慢环证据覆盖实际状态、上下文和执行区间。
+  复用冻结快照、context binding、现场 achieved-q 桥接、首指令守卫、取消和原回退，不以删除检查提速。
+- 原 planned/measured 244、trajectory guards、碰撞阈值、自由物体 weld0/mocap0、抓放释放脱离回位继续验收。
+  双 worker consumed/joined/owned_ack、90sim/120wall 也保持；见 [原进度:1714、1729](../factory-loading-20261021/progress.md)。
+- `station_recipe_v1` 定位为共享工位配置合同，先静态导入与预览，派发仍走原任务入口。
+  待实现字段包括配方/资源身份、单位与 frame、模型/碰撞来源、能力段、显式观测模式及稳定 cargo/slot 绑定。
+- recipe revision 用于来源与兼容描述，不设内容哈希锁；未知可选元数据警告并保留，不支持的执行语义只拒绝该配方。
+- 任务运行绑定另存原 bridge UUID 与 station task ID；取消、超时先查询原任务，不因回执不明重复派发。
+- 卸货与库存需绑定同一实际物理 body；货架落稳、卸载臂归位和托盘空闲成立后，按 cargo ID 更新一次。
+- 行为树如后续采用，异步节点只负责启动、监控、结果与取消；耗时动作不能阻塞 tick。
+  依据 [BT.CPP 异步节点官方文档](https://www.behaviortree.dev/docs/guides/asynchronous_nodes/)，该模式不保证自动并行或实时性能。
+
+## 未知与验收入口
+
+- 径向 yaw 是否改善工作空间、严格 wrist-roll 残差实际拒绝了哪些点、±150mm 可用区域：均待测。
+- 本轮没有重新逐点复核原 A/B 路径；已有原进度不能支持“随机路长造成约 ±1.3s”结论。实施时继续保存原路径与规划事件，不能仅看总 wall。
+- servo-only 3–5ms、完整周期 P99<20ms、所有切换拍 50Hz：均未取得新架构验收证据。
+- `station_recipe_v1` 导出/导入、终点卸货、同世界无 reset 多货物及双 owner 取消汇合：均待实现或验收。
+- 当前源码默认观测模式、任意动作编排、Mint teleop 接口：本轮未核实；Mint 不改。
+- 性能采用同输入、同工位和反序成对比较；组件收益、原物理成功、整程性能及默认晋级分别裁决。
+- 连续世界沿 FishBot 原计划进入实施；新卸货阶段单列预算，不能把扩展任务记成旧 360 秒任务通过。
+
+## 已采用知识
+
+- 来源：[Wiki《ROS2 与 FishBot》第20节:451–468](</home/muqiao/桌面/obsidian/my-programming-world/Wiki/ROS2 与 FishBot.md:451>)。
+  本轮采用“动作、物理、交接、晋级分开”及“组件收益须回到原完整任务核实”的既有原则。
+- Knowledge=already_covered，仅指本轮原则已被原页覆盖；本轮未修改知识页，不代表其他待审内容已收尾。
