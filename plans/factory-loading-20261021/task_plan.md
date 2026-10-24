@@ -596,3 +596,10 @@ F2cb本地归因确认视图省复制但增加比较成本；6616节点的Python
 F2cd原默认Kaggle真实单回合fc416915已原pass；244、全部碰撞、自由物体、释放脱离回位、完整视频和worker清理独立通过。3873完整拍/P9517.675ms/109late，完整50Hz仍未过。新的controller子段协议独立通过；context check成本小，ratchet全176次约651ms、慢窗口36次约205ms，非新的性能A/B。
 
 Next F2ce：private round99单次ratchet内复用原谓词已算的同q实际distance/pad sample，禁止跨拍近似缓存或改判定。用本轮trace的176实际pre-q和69.18s真实guard初始化；旧200/200 MJB不可充作220/170。先同fresh场景局部验证全guard与可查MjData效果、三对测实际总组件；历史Data未归档须保留边界，未经准入不发候选物理。Root GPT整合与Kaggle，内部两Agent分写候选/fixture，尚无本项实测。Knowledge仍pending。
+
+
+F2ce已完成Kaggle组件与两工位反序原物理。最终候选只在单次ratchet内复用纯SAT浮点结果；保留两次原distance函数体、全部mj_forward/nonpad native距离和pad查询。v1安装前OOM缺口已修复，修正版15项回归与云v2的176点/179数组/guard逐点同值通过，三对完整组件各省107.718–126.806ms。该成绩只代表组件准入。
+
+原物理200/200 B→C和220/170 C→B均原pass，共4/4，244 planned/measured、自由物体、全部原阈值/90sim120wall/碰撞及释放脱离回位保持。第一站process wall54.044→52.727s，第二站49.478→50.708s；CPU同样一好一坏。原完整慢拍139→123、80→106，完整50Hz未过。局部收益保留，整程不晋级，不切loaded_jaw_preload默认，不追加择绿工位。
+
+Next F2cf：只读复算F2cd的109慢拍后，已知ratchet/context之外仍有1.370s controller残量，不能归因GIL或GC。旧F2bp只覆盖sweep，旧F2bc已有准入/GC取证，当前缺同回合measured checker、在线sweep、后续chord validation的成本分配。private round100准备透明叶段观察器，不改算法；先确认函数身份保护不触发回退，再用原Kaggle入口跑一次原默认完整观察。尚无该观察的云成绩或新候选。Knowledge=pending，原两页519行未审改动继续保留，owner根Codex。

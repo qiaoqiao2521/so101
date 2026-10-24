@@ -712,3 +712,14 @@ F2cc把tuple分派交内置实现后，Kaggle同VM对安全copying-parent三对�
 F2cd新观察确实补了旧F2bp之外的粒度。原默认fc416915完整原pass，原244/安全/释放脱离回位/视频/清理独立通过；3873拍仍109late，不能以P9517.675ms称完整50Hz。main context check慢窗口每次<.913ms，全量max1.123ms，不是当前主要单次长尾。ratchet全176次约651ms，其中慢worker窗口36次205ms、max10.363ms。各段inclusive，不相加；worker状态只是诊断窗口，不等于线程CPU/GIL或poll等待原因。
 
 源码_separation_valid与_ratchet之间有确定同q重复distance/pad查询，且query无现成缓存。下一项只限单次调用内实际sample，不能从同q几何断言第二mj_forward的全部Data效果已等价。原176输入与69.18s guard初始化已由trace定位；68.58s worker snapshot不是这次guard初态。当前220/170 planning XML可复用，旧200/200 MJB及释放估计不同，不能混用。历史Data缺失只能明确为fresh同场景局部复现，再由原物理验证，不允许把目标truth注入策略。当前尚无该候选收益或物理结论。
+
+
+F2ce最终缩为纯SAT复用，而非distance/pad结果复用。官方MuJoCo3.15的mj_geomDistance接收可写mjData，CCD路径使用mj_markStack/stackAlloc/freeStack；保留第二forward却省native查询仍不能直接证明内部效果相同。原源：https://raw.githubusercontent.com/google-deepmind/mujoco/3.15.0/src/engine/engine_support.c 。最终原型复制原distance函数的同一code/defaults/closure，仅私有globals替换两种纯SAT；完整原函数体执行两次。key包含五个真实参数的dtype/shape/strides/完整bytes及函数种类，缓存仅活一个ratchet，不跨拍或模型。未改模块globals，非支持类型/回调/插件/Sleep走原链，其他线程仍原方法。
+
+v1组件虽准入，独立审查发现可选MethodType/patch enter在原调用前OOM会跳过原链。v1原样保留，不发v1物理；修正版将安装失败恢复与原执行异常隔开，失败先恢复再原调用一次，原MemoryError identity透传且不重试。15项局部/云回归覆盖该边界及同query的worker透传。云v2说明字段local_contract_tests遗留11，真实local-regression.json及日志均15；独立reader保留warning，不替换原记录或伪称v3。
+
+实际fixture来自fc416915/220-170当前XML与估计释放姿态，非目标真值。初始化69.18s，历史接收guard是69.92s；首次probe误把二者比较，已留原失败probe/结果，再按同一时刻修正验收。176个seq3461..3636（release37/separate139）逐点guard/选定状态及全部179公开Data数组同值；这只证明fresh场景组件，非未归档历史MjData全字节证明。每个支持调用2distance/4SAT请求/2实算/2命中，所有native/forward/pad保留。
+
+source ef75ee0的Kaggle private so101-ratchet-sat-reuse-20261024 v1/v2均独立取回精确源码及metadata。v2三对176调用wall547.127→427.594、563.579→436.773、548.002→440.285ms；CPU中位少119.546ms。包含每次guard/函数复制/精确key/恢复及候选统计，模型setup与独立语义回放另列，原screen5ms及一致性标准不变。两版independent-ratchet-component协议均true，不把组件省时外推到整程。
+
+两站物理原pass却整程一快一慢再次说明：约.12s确定组件收益远小于初始化/worker竞争的回合波动。第一站初始化wall7.466→7.171s、transport worker3.282→2.992s，这些均在SAT候选介入之前；第二站初始化7.003→7.465s，transport worker2.198→2.436s。不能把第一站总省1.318s都归因于候选，也不能把第二站sim少两拍当提速。保留该纯计算候选为未晋级证据，不改默认、不靠重复工位追绿。下一步先取得当前同回合未分配的controller叶段成本，禁止从残量直接猜具体原因。

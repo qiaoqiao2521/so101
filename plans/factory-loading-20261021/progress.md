@@ -1690,3 +1690,33 @@ source0a7fded，Kaggle private so101-controller-window-20261024不可变v1终态
 F2ce源码确认确定重复：原_separation_valid先算distances+pad_vertices，成功后同一_ratchet又在更新floor/high_z前对同q6重复两项。ReleasedObjectQuery没有同q缓存，每次都mj_forward。下一私有round99只试单次调用内首次实际sample复用，仍运行原完整谓词，exact q失配/自定义接口/回调等走原链，不跨拍缓存。176个实际输入从trace精确定位seq3461..3636（release37/separate139），pre-q为trajectory[seq-2].q6；原guard初始化是seq3460/69.18s的pre-q，不能用68.58s worker snapshot替代。
 
 当前scene归档含完整planning XML，资产只作环境路径映射；round89旧MJB的200/200工位与本220/170不同，不能直接借用。完整历史query MjData未归档，下一组件仅可在相同fresh复现场景中mj_copyData初始化，必须明确此范围，先检验原guard/最终状态及全可查Data效果，尚未证明省第二forward等价。原truth只供裁判，不作为候选输入。尚无候选组件或物理成绩，不切默认。Knowledge=pending沿用原知识库未审改动原因，owner根Codex。
+
+
+## F2ce Kaggle纯SAT组件有益，两站整程不晋级
+
+source ef75ee02a9ce2f8d510178c9465baf76791f5423，private round99-ratchet-sample-reuse。最终候选只复用同一次ratchet内、五参数字节完全相同的纯SAT float；两次原distance body、全部forward/nonpad native距离/pad查询照原执行。官方3.15 engine_support.c确认native距离会使用MjData栈，旧skip-forward/forward-refresh两版原型留作unproven，不冒称已验证。没有新CodeBuddy生成，内部GPT候选/独立审查，根GPT实际fixture、云接入和独立验收。
+
+v1安装前MethodType/patch enter OOM被独立审查抓到，修正版增加4项fake回归：可选安装失败先恢复再原链一次，原执行中MemoryError identity不改、不重跑，同query worker仍原距离。共15项根侧与云端通过。v1合法域组件三对仍保留，但未发v1物理；云v2绑定修正版。v2 origin说明残留11tests，实际JSON/log均15，独立报告保留warning；未篡改原件。原sitecustomize缺wrapt警告留存，未造成测试/组件失败。
+
+fixture真实176输入seq3461..3636（release37/separate139），使用220/170现归档planning XML/释放估计。原69.18s初始化与69.92s接收guard必须在各自时刻比较；首次probe误比二者导致fail的源码/产物留first-probe-initialization-admission-mismatch，再按同一时刻核准。修正版逐点guard/状态及179公开Data数组均同值，三对终态含guard_bits逐字节同值。每对176候选calls均2distance/4SAT/2actual/2hits，方法恢复、同一原code/defaults保持。仅fresh组件，完整历史Data未归档，不能声称恢复了历史所有scratch。
+
+Kaggle private so101-ratchet-sat-reuse-20261024不可变v1/v2完整终态；exact entry/private/source各自独立读回。v2三对176call总wall/CPU(ms)：547.127/547.067→427.594/427.521；563.579/563.476→436.773/436.688；548.002/547.908→440.285/440.091。原screen eligible，中位wall省119.533ms、CPU省119.546ms。所有每次guard/复制函数/key/恢复统计成本计入，setup与独立语义回放不计收益；未改原5ms门槛。independent-ratchet-component和根侧原screen重算均protocol_valid。
+
+原物理so101-ratchet-sat-physical-ab-20261024 v1/v2均完整终态，source ef75ee0。原loaded_jaw策略与裁判保持，两个工位反序共4/4pass：
+
+| 工位/顺序 | 原版→候选 sim(s) | process wall/CPU(s) | 完整慢拍>20ms |
+| --- | --- | --- | --- |
+| 200/200 B→C |79.68→79.70|54.044251/64.401704→52.726573/63.115069|139→123|
+| 220/170 C→B |77.42→77.38|49.478408/59.167507→50.707895/60.031586|80→106|
+
+v1 pair029ab58c，baseline2f55c5c5-4a7e-4f5b-8384-85138883127e/candidate40c137be-79e2-40c0-937e-fce6388d84fc；v2 pair2246aed1，candidatec73d18b0-831b-4494-bba4-51071f0c02c1/baselinea68f1088-548b-45d9-a955-32518eea8847。完整cycle3984/3985、3871/3869，无缺拍。原report P95 17.194→17.305ms、15.610→15.259ms；max145.780→142.097、78.065→74.225ms。原read_search另按同raw cycles重算线性P95略异，保留两者口径，不改原报告。完整50Hz仍false。
+
+全部原planned/measured244闭爪、trajectory arm_valid/finite/零障碍接触、自由物体weld0/mocap0、抓放释放脱离回位及双worker consumed/joined/owned_ack清理通过。候选实际ratchet164/176次，均原2distance/4SAT/2actual/2hits，退出恢复。四视频498/499/484/484帧完整。两站baseline→candidate脱离72.36→72.38s、70.22→70.18s；释放XY漂移.172017→.172091mm、.200073→.199959mm，脱离后力均0N。原阈值、碰撞器、90sim120wall、原回退均未放松。
+
+第一站process wall省1.317678s，第二站反慢1.229487s；CPU亦一好一坏。初始化和transport worker在候选介入之前已各有差异，不能全归因SAT；第二站sim少2拍不是算法提速。两站排除hold/release的固定拍数3367/3285分别一致，CPU33.077578→32.725196、30.654057→31.085124s，亦不一致。保留局部真实省计算证据，整程不晋级，不切默认，不追加第三工位追绿。
+
+原件output/ratchet-sat-reuse-factory-20261024的component-v1/v2和physical-v1/v2；private round99保留候选各版、原fixture、probe、read_component、build_kernel、build_physical、云精确源码/metadata、source读回。复跑入口build_kernel.py生成组件；build_physical.py生成200/200 B→C，带--secondary生成220/170 C→B；实际执行仍原evaluate_station.py。原pair failure-aware/selection/startup/search/physics readers已独立回读两站；不以云wrapper exit0充作裁判。
+
+Next F2cf：round100-next-bottleneck-audit独立只读重统计旧F2cd109慢拍。扣除不重叠ratchet/context后controller残量1.369798s，其中仅7拍残量>20ms；回位/闭爪244/准入已有旧取证，seq1667/1668/2210的22.787/23.155/46.345ms仍缺measured checker/在线sweep/后续chord validation及GC同回合分配，不能猜原因。正在私有目录准备透明叶段observer，须保留原函数身份保护、不触发batch回退，不改算法或GC开关；尚无该observer云成绩。
+
+Knowledge=pending：原Wiki/ROS2 与 FishBot.md第20节及开发知识入口已有519行未审改动，不覆盖/夹带发布。本轮pure-SAT/native副作用边界先留findings，owner根Codex串行维护原页。定时器未恢复，不发其他聊天消息，不触碰Mint或实体设备。
