@@ -723,3 +723,12 @@ v1组件虽准入，独立审查发现可选MethodType/patch enter在原调用�
 source ef75ee0的Kaggle private so101-ratchet-sat-reuse-20261024 v1/v2均独立取回精确源码及metadata。v2三对176调用wall547.127→427.594、563.579→436.773、548.002→440.285ms；CPU中位少119.546ms。包含每次guard/函数复制/精确key/恢复及候选统计，模型setup与独立语义回放另列，原screen5ms及一致性标准不变。两版independent-ratchet-component协议均true，不把组件省时外推到整程。
 
 两站物理原pass却整程一快一慢再次说明：约.12s确定组件收益远小于初始化/worker竞争的回合波动。第一站初始化wall7.466→7.171s、transport worker3.282→2.992s，这些均在SAT候选介入之前；第二站初始化7.003→7.465s，transport worker2.198→2.436s。不能把第一站总省1.318s都归因于候选，也不能把第二站sim少两拍当提速。保留该纯计算候选为未晋级证据，不改默认、不靠重复工位追绿。下一步先取得当前同回合未分配的controller叶段成本，禁止从残量直接猜具体原因。
+
+
+F2cf透明叶段观察实际原pass，不是新性能A/B。main measured checker只临时覆盖当前实例，在原body前移除，后续batch/arm身份保护保持；未改checker类或native/predicate。全3867拍均捕获且恢复，原batch3873calls/67660states、fallback0。原默认bfaf7a17全物理、244/释放脱离回位/worker清理通过，3867拍仍148>20ms，不拿该插桩回合与旧VM绝对秒数比较。
+
+全量inclusive成本：measured checker3867次1.944795s/CPU1.914676s；sweep3872次13.862704s/13.352572s；path3872次7.175079s/7.023109s；ratchet176次.669109s/.603788s。worker-running慢窗口117拍（hold78/release39）的sweep121次1.001061s、path121次.546675s、measured117次.105635s。父子或GC时间不能再相加；wall-CPU差也不等于已证GIL等待。
+
+最大路径段seq3630/72.58s、64.135ms对应既有回位认证；seq977/19.52s的sweep34.823ms对应既有244闭爪。seq1719 transport sweep40.538ms内记录gen2 GC35.426ms，178次GC合计115.205ms；这是带观察器的新回合事件，不足以重新启用旧已否决deferGC或断言旧无插桩回合的唯一原因。原GC开关/阈值保持，全部回调移除；独立reader另验GC时长/线程/关联ID和直接子计时总和，两条畸形trace反例均被拒绝，未改原物理数据。
+
+本轮再查pure-jaw几何复用：sweep_batch.cpp没有纯jaw特判，但F2ak已核算planned恒定259/285 pair、measured仅44/285（插桩成本约3.643%）。measured扫掠含q5跟踪差，不能从planned纯jaw推断全244的恒定几何。要复用FK/几何必须先证明关节依赖和Data/hint/浮点拒绝/首次失败等价，当前没有这份证明；不据此强行写C++大改或重复失败缓存方向。下一候选所缺证据明确，当前不再启动无新假设的物理回合。

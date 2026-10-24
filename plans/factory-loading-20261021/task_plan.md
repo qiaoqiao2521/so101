@@ -603,3 +603,8 @@ F2ce已完成Kaggle组件与两工位反序原物理。最终候选只在单次r
 原物理200/200 B→C和220/170 C→B均原pass，共4/4，244 planned/measured、自由物体、全部原阈值/90sim120wall/碰撞及释放脱离回位保持。第一站process wall54.044→52.727s，第二站49.478→50.708s；CPU同样一好一坏。原完整慢拍139→123、80→106，完整50Hz未过。局部收益保留，整程不晋级，不切loaded_jaw_preload默认，不追加择绿工位。
 
 Next F2cf：只读复算F2cd的109慢拍后，已知ratchet/context之外仍有1.370s controller残量，不能归因GIL或GC。旧F2bp只覆盖sweep，旧F2bc已有准入/GC取证，当前缺同回合measured checker、在线sweep、后续chord validation的成本分配。private round100准备透明叶段观察器，不改算法；先确认函数身份保护不触发回退，再用原Kaggle入口跑一次原默认完整观察。尚无该观察的云成绩或新候选。Knowledge=pending，原两页519行未审改动继续保留，owner根Codex。
+
+
+F2cf已实际完成原默认Kaggle叶段观察，bfaf7a17原pass，3867完整拍/148late，完整50Hz仍未过。measured checker每拍捕获且原身份在body前恢复；原batch3873calls/67660samples、fallback0，3项fake透传及独立协议通过。扫掠累计13.863s、后续path7.175s、measured1.945s为各自inclusive，不相加推总耗时。此次没有算法变更或提速结论。
+
+当前无新的有证据薄候选。下一缺口是保持全部244判定、原Data/hint/浮点拒绝和首次失败行为的几何依赖复用证明。定向复核已查回F2ak：不能将planned纯jaw假设套到含q5跟踪差的measured扫掠；不重跑已经否决的恒定pair缓存或deferGC，也不为维持循环而盲扫参数/增加工位。根Codex保留source/原物理/归因与最短入口，后续先补该证明才发新候选。

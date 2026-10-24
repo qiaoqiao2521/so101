@@ -1720,3 +1720,31 @@ v1 pair029ab58c，baseline2f55c5c5-4a7e-4f5b-8384-85138883127e/candidate40c137be
 Next F2cf：round100-next-bottleneck-audit独立只读重统计旧F2cd109慢拍。扣除不重叠ratchet/context后controller残量1.369798s，其中仅7拍残量>20ms；回位/闭爪244/准入已有旧取证，seq1667/1668/2210的22.787/23.155/46.345ms仍缺measured checker/在线sweep/后续chord validation及GC同回合分配，不能猜原因。正在私有目录准备透明叶段observer，须保留原函数身份保护、不触发batch回退，不改算法或GC开关；尚无该observer云成绩。
 
 Knowledge=pending：原Wiki/ROS2 与 FishBot.md第20节及开发知识入口已有519行未审改动，不覆盖/夹带发布。本轮pure-SAT/native副作用边界先留findings，owner根Codex串行维护原页。定时器未恢复，不发其他聊天消息，不触碰Mint或实体设备。
+
+
+## F2cf 原默认叶段观察完成；当前候选队列按证据收口
+
+source36acd7c0a5d6ac5aa12dae7bd32c018f573fc636，Kaggle private so101-controller-leaf-20261024不可变v1终态，精确entry/private/source独立pull一致。单回合bfaf7a17-1c82-427a-8fb0-6ef0564bbf52原pass，77.34sim/54.235028process-wall/64.363120CPU；3867完整拍，重算P5010.229/P9517.293/max83.863ms，148>20ms，完整50Hz未过。插桩成本存在，不与F2cd或其他VM的绝对秒数作提速A/B。
+
+原runtime reader独立全部通过：原244 planned/measured、trajectory guards/零障碍碰撞、自由物体weld0/mocap0、抓放释放脱离回位、两worker consumed/joined/owned_ack及完整484帧视频保持。observer只在main计时，measured checker仅实例一次性覆盖，原body前恢复；全部3867拍captured/identity/restoration通过。原batch3873calls/67660checked/native/successful frames、fallback0，没有因插桩改变身份而禁用快速路径。未改native/predicate、物理阈值、GC开关/阈值或90sim120wall。
+
+3项fake透传/父子/worker/MemoryError identity/恢复测试根侧通过。独立审查指出reader缺GC事件自身和直接children总量检查，已补；原raw trace重读全部通过，负GC事件与两子段各占父80%的反例分别被gc_events_valid/direct_children_sum拒绝。此为读取协议修复，没有重跑云以追绿、没有改原裁判。GC时间只作为inclusive观察，不再加到method父段；update关联仅能核对实际ID，method没有独立绝对timestamp，不能宣称GC与所有叶段有完整区间证明。
+
+| 全量原method | calls | wall/CPU(s) | max wall(ms) |
+| --- | --- | --- | --- |
+| measured checker |3867|1.944795/1.914676|2.718|
+| configuration sweep |3872|13.862704/13.352572|40.538|
+| validate_joint_path |3872|7.175079/7.023109|64.135|
+| ratchet |176|.669109/.603788|11.059|
+
+这些是各自inclusive计时，不能累加当总controller成本。117个worker-running慢拍（hold78/release39）内：sweep121次1.001061s/CPU.598791s，path121次.546675s/.419046s，measured117次.105635s/.077183s。最大未分配top-level残量约9.675ms，未支持新的单一未知大函数归因；wall-CPU差不能直接叫GIL等待。
+
+seq3630/72.58s path64.135ms是既有回位完整认证，seq977/19.52s sweep34.823ms是既有244闭爪。seq1719/34.36s transport sweep40.538ms内记录gen2 GC35.426ms；178个GC事件共115.205ms，原GC配置保持。这证明本插桩回合发生了该事件，不足以把历史无插桩尖峰归为相同原因；不再重复已否决deferGC实验。
+
+原件output/controller-leaf-attribution-20261024/v1/so101-evidence/observation/73a201ef-f4ff-45c4-9263-9ee6cac0f409；独立runtime、controller-window与leaf-inventory协议true。private round100-next-bottleneck-audit保存observer/test_observer、原Kaggle复用build_kernel、精确云源码/metadata、read_observation、reader-counterexamples及physical-path指针。root实际运行/独立验收，内部GPT观察器和只读审查；无新CodeBuddy生成宣称。
+
+F2ce独立read_physical已根侧两站复跑全通过，追加核对release2ms、回home、MP4容器与前1455共同拍。reader首版把第一站164events误当通用数量，在第二站176上报protocolfalse；旧reader/失败readback保留，现只要求候选events非空且每条原code/恢复/2distance4SAT2actual2hits成立，总数作实测诊断，不宣称有独立逐调用覆盖证明。原物理数据、裁判与4/4pass未修改。
+
+当前无新有证据薄候选。定向复核sweep_batch.cpp后查回F2ak：planned纯jaw的恒定259/285pair不能套到含q5跟踪差的measured（仅44/285，旧插桩约3.643%成本），因此不重复恒定pair结果缓存。继续复用FK/几何所缺的是关节依赖和原Data/hint/浮点拒绝/首次失败的等价证明；当前没有它，不为维持循环而盲扫、追加工位或大改C++。owner根Codex；最短接续入口F2ak/findings:267、sweep_batch.cpp:65及本轮原leaf trace，先补证明后才生成新候选。原loaded_jaw_preload默认保持，所有云任务已终态，无实体设备动作。
+
+Knowledge=pending：原两页519行未审改动继续保留；新增“插桩须保原身份、父子时长和GC不能叠加”暂存本findings，根Codex后续串行审查原Wiki第20节/入口再回写。定时器未恢复，没有发其他聊天消息，未触碰Mint。
