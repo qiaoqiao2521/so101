@@ -1,5 +1,21 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 左侧成本分离，复用中点搜索候选
+
+Current：上一轮=progress。固定盘原Station真实5例已终态，本轮先定位close与shortcut，再实际验证新文档网页导入，不把状态重述当新运行。
+
+Done：原左close331拍controller19.102s，后137拍占15.612s；首close另含measured_closure244。轨迹算术推导常规chord6364点、后137拍5869点，非ABI实测。启用补证会关闭batch；原report的384补证是外部checker，不能外推controller内部频次。CBC只读实调空正文，内部GPT核调用链及原计时。
+
+Rejected：round116私有批量前缀＋标量补证重放9条派生弦共571状态，完整报告六次一致、244保持，但样本571点全部原轴无证，候选每点多一次batch而标量不减。三对1.752→2.025、1.843→2.398、1.775→2.564s，全部更慢；未接生产／未跑无意义物理。仅本机MuJoCo3.3.7的独立FK/几何，无积分／渲染。
+
+Done：round117复用原shorten_path的midpoint_order，两站各三对AB/BA/AB。左候选79→10、8110→2157状态，final535保留，wall三对12.269→2.346／11.863→2.435／11.975→2.454s；右74→10、7145→2167，final490保留，2.351→.607／1.831→.578／1.946→.592s。12次输出与原cloud executed_path逐位相同，原1mm/.005final和独立fresh checker复核通过。未将本地3.3.7成本当云3.15物理提速。
+
+In progress：新增显式loaded_jaw_midpoint.py，仅在完整loaded_jaw_preload父配方开启approach_midpoint_order；旧midpoint配方缺preload不直接复用。默认不变，100项相关检查通过。新原物理两工位反序A/B待固定源码后执行，保留原90sim120wall／全部碰撞、244、释放及回退。
+
+Done：网页发现普通Station导入继承旧成功记录，已用原detachTask修复，仅清展示关联、不删历史／取消任务。四固定X样例20项浏览器通过、原recipe QA19项、Jest56项、生产构建通过（两原告警）；真实控制写请求/pageerror均0，真实13条历史保留。工作台提交3bce2c7，根已核实际输入／服务main与历史；远端读回待本轮收口。真实新HTTP→物理链另验，不与无运动导入拼成功。
+
+Next：固定候选源后沿原Kaggle runner跑左主工位B→C、右第二已有放置工位C→B；只差搜索顺序，逐任务原裁判及完整周期。原失败和未过50Hz保留，可靠整程收益之前不切默认。Knowledge=already_covered，沿用Wiki§20；原件在round116/117私有目录，owner根Codex。
+
 ## 2026-10-24 — 固定红盘X请求原Station通过，原拒绝保留
 
 Current：承接X向IK／盘壁问题，不重复原开发CLI成绩。发现原execution.pick_xy_m表示整只红盘平移，不能把cube位置填进去继承固定盘证据。复用原workspace-development-v1，盘与物体分开；不新增mode或授权层。

@@ -13,6 +13,15 @@ from visual_grasp_controller import VisualGraspController
 
 
 class RoutePolicyTests(unittest.TestCase):
+    def test_loaded_midpoint_changes_only_parent_search_order(self):
+        parent, _ = load_route_policy(DEFAULT_SOURCE)
+        candidate, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint.py'))
+        expected = parent.preferences()
+        expected['approach_midpoint_order'] = True
+        self.assertEqual(candidate.preferences(), expected)
+        self.assertTrue(candidate.loaded_jaw_preload)
+        self.assertFalse(parent.approach_midpoint_order)
+
     def test_mesh_box_refinement_is_explicit_boolean_and_default_off(self):
         self.assertFalse(RoutePolicy().mesh_box_axis_refinement)
         self.assertTrue(RoutePolicy(mesh_box_axis_refinement=True).mesh_box_axis_refinement)
