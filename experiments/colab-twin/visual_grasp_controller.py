@@ -200,7 +200,7 @@ class VisualGraspController:
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
                  place_xy=None, place_height_m=0., route_policy=None,
-                 target_region_xy_m=None, pickup_hover_z_m=.06):
+                 target_region_xy_m=None, pickup_hover_z_m=.06, pickup_open_jaw_rad=.5):
         self.route_policy = DEFAULT_ROUTE_POLICY if route_policy is None else route_policy
         if not isinstance(self.route_policy, RoutePolicy):
             raise ValueError('Use immutable route preferences')
@@ -215,6 +215,11 @@ class VisualGraspController:
                 not np.isfinite(pickup_hover_z_m) or not .054 <= pickup_hover_z_m <= .06):
             raise ValueError('pickup_hover_z_m requires a finite height in .054..06 m')
         self.pickup_hover_z_m = float(pickup_hover_z_m)
+        if (isinstance(pickup_open_jaw_rad, (bool, np.bool_)) or
+                not isinstance(pickup_open_jaw_rad, Real) or
+                not np.isfinite(pickup_open_jaw_rad) or pickup_open_jaw_rad not in (.5, .35)):
+            raise ValueError('pickup_open_jaw_rad supports only .5 or explicit .35 rad')
+        self.pickup_open_jaw_rad = float(pickup_open_jaw_rad)
         # Optional development prior, declared independently of object truth.
         self.target_region_xy_m = self._target_region(target_region_xy_m)
         self.rig = rig
@@ -375,10 +380,11 @@ class VisualGraspController:
         self.plan_reports.append(plan)
         if plan['status'] != 'solved':
             raise ControllerFailure('approach_planning_failed')
-        for points, jaw in (([self.approach, self.down], .5), ([self.down, self.lift], .015)):
+        pickup_jaw = getattr(self, 'pickup_open_jaw_rad', .5)
+        for points, jaw in (([self.approach, self.down], pickup_jaw), ([self.down, self.lift], .015)):
             if not validate_joint_path(points, lambda q: self._arm_valid(q, jaw), .005)['valid']:
                 raise ControllerFailure('grasp_leg_collision')
-        sweep = self._configuration_sweep(np.r_[self.down, .5], np.r_[self.down, .015],
+        sweep = self._configuration_sweep(np.r_[self.down, pickup_jaw], np.r_[self.down, .015],
                                           purpose='planned_closure')
         self.sweep_reports.append({'stage': 'planned_closure', **sweep})
         if not sweep['valid']:
@@ -427,9 +433,17 @@ class VisualGraspController:
             raise ValueError('Unknown configuration sweep purpose')
         self.sweep_request_seq = vars(self).get('sweep_request_seq', 0) + 1
         binding = self._sweep_binding(start, end, purpose)
+        jaw_resolution = .002
+        if (getattr(self, 'pickup_open_jaw_rad', .5) == .35
+                and purpose in ('planned_closure', 'measured_closure')):
+            jaw_span = abs(end[5]-start[5])
+            if jaw_span > 0:
+                # Keep at least the original 244 samples on each nonzero full
+                # closure. A zero-motion chord keeps its original static check.
+                jaw_resolution = min(jaw_resolution, jaw_span/244)
         invocation = ConfigurationSweepInvocation(
             start, end, binding=binding,
-            arm_resolution_rad=.005, jaw_resolution_rad=.002, max_samples=4096)
+            arm_resolution_rad=.005, jaw_resolution_rad=jaw_resolution, max_samples=4096)
         invocation.execute(
             lambda q: self.checker.evaluate(q, require_fixed_gripper=False)['valid'],
             batch_valid=getattr(self, 'batch_sweep_validator', None))
@@ -459,6 +473,8 @@ class VisualGraspController:
                  'payload_relative', 'payload_rotation', 'world', 'separation_pinch',
                  'separation_floors', 'separation_vertices', 'separation_high_z',
                  'release_rotation_mode', 'release_pinch_height_m')
+        if getattr(self, 'pickup_open_jaw_rad', .5) != .5:
+            names += ('pickup_open_jaw_rad',)
         fused = bool(getattr(getattr(self, 'route_policy', None), 'fused_context_freeze', False))
         snapshot_value = (lambda value: value) if fused else snapshot
         context = tuple((name, snapshot_value(vars(self).get(name))) for name in names)
@@ -486,7 +502,7 @@ class VisualGraspController:
 
     def _jaw_intent(self):
         """Describe stage intent without inferring contact from encoders."""
-        if self.stage == 'close':
+        if self.stage in ('preclose', 'close'):
             return 'close'
         if self.stage in ('lift', 'hold', 'transport', 'lower'):
             return 'maintain_close'
@@ -545,7 +561,7 @@ class VisualGraspController:
         policy = getattr(self, 'route_policy', None)
         if not (policy is not None
                 and bool(getattr(policy, 'smooth_jaw_dwell', False))
-                and self.stage in ('close', 'release')):
+                and self.stage in ('preclose', 'close', 'release')):
             return self.jaw
         if age <= 0:
             return self.jaw_dwell_start
@@ -1372,8 +1388,19 @@ class VisualGraspController:
         if self.stage == 'approach':
             if not self.target_frozen:
                 raise ControllerFailure('approach_finished_without_visual_handover')
+            if getattr(self, 'pickup_open_jaw_rad', .5) == .35:
+                target = np.r_[q6[:5], self.pickup_open_jaw_rad]
+                sweep = self._configuration_sweep(q6, target, purpose='measured_closure')
+                self.sweep_reports.append({'stage': 'pickup_preclose', **sweep})
+                if not sweep['valid']:
+                    raise ControllerFailure('pickup_preclose_sweep_invalid')
+                self._set_dwell('preclose', q6[:5], self.pickup_open_jaw_rad, elapsed, .6)
+                return
             self.stage = 'descend'
             self._set_motion([q6[:5], self.down], .5, elapsed)
+        elif self.stage == 'preclose':
+            self.stage = 'descend'
+            self._set_motion([q6[:5], self.down], self.pickup_open_jaw_rad, elapsed)
         elif self.stage == 'descend':
             sweep = self._configuration_sweep(q6, np.r_[self.down, .015],
                                               purpose='measured_closure')
@@ -1516,9 +1543,11 @@ class VisualGraspController:
             if age > self.duration+8:
                 raise ControllerFailure('encoder_stage_timeout')
             arm_arrived = np.max(np.abs(q6[:5]-self.points[-1])) <= .003 and np.linalg.norm(qvel6[:5]) < .05
+            jaw_arrived = (self.stage != 'preclose'
+                           or (abs(q6[5]-self.jaw) <= .003 and abs(qvel6[5]) < .05))
             hold_ready = self.stage == 'hold' and age >= self.duration+.6 and arm_arrived
             release_ready = self.stage == 'release' and age >= self.duration+.6 and arm_arrived
-            if self.stage != 'hold' and age >= self.duration+.6 and arm_arrived:
+            if self.stage != 'hold' and age >= self.duration+.6 and arm_arrived and jaw_arrived:
                 previous_stage = self.stage
                 self._transition(q6, elapsed)
                 if bool(getattr(getattr(self, 'route_policy', None), 'refresh_leg_age', False)):

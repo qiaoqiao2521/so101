@@ -71,6 +71,12 @@ def select_case(profile_path, case_id):
                 not math.isfinite(height) or not .054 <= height <= .06):
             raise ValueError('pickup_hover_z_m must be finite within [.054, .06] metres')
         selected['pickup_hover_z_m'] = float(height)
+    if 'pickup_open_jaw_rad' in row:
+        opening = row['pickup_open_jaw_rad']
+        if (isinstance(opening, bool) or not isinstance(opening, (int, float))
+                or opening not in (.35, .5)):
+            raise ValueError('pickup_open_jaw_rad supports only explicit .35 or original .5 rad')
+        selected['pickup_open_jaw_rad'] = float(opening)
     return selected
 
 
@@ -82,6 +88,8 @@ def controller_options(case, route_policy):
         options['target_region_xy_m'] = TARGET_REGION_XY_M
     if 'pickup_hover_z_m' in case:
         options['pickup_hover_z_m'] = case['pickup_hover_z_m']
+    if 'pickup_open_jaw_rad' in case:
+        options['pickup_open_jaw_rad'] = case['pickup_open_jaw_rad']
     return options
 
 
@@ -146,6 +154,8 @@ def run_case(profile_path, case_id, output_root):
             'place_xy_m': requested['place_xy_m'], 'place_height_m': 0.,
             'pick_xy_m': requested.get('pick_xy_m', [.24, -.13]),
             'pickup_hover_z_m': requested.get('pickup_hover_z_m', .06)})
+        if 'pickup_open_jaw_rad' in requested:
+            status['layout']['pickup_open_jaw_rad'] = requested['pickup_open_jaw_rad']
         atomic_json(output/'status.json', status)
         from episode_timing import EpisodeTiming
         timer = EpisodeTiming()

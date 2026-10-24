@@ -35,7 +35,26 @@ class WorkspaceCaseTests(unittest.TestCase):
             self.assertEqual(options['release_rotation_mode'], 'floor_yaw')
             self.assertEqual(options['release_pinch_height_m'], .028)
             self.assertNotIn('pickup_hover_z_m', options)
+            self.assertNotIn('pickup_open_jaw_rad', options)
             self.assertNotIn('pick_xy', options)
+
+    def test_preclose_is_explicit_and_keeps_original_tray_and_protocol(self):
+        profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-preclose-m1a.json')
+        case = workspace.select_case(profile, 'right_preclose35')
+        self.assertNotIn('pick_xy_m', case)
+        self.assertEqual(case['initial_xy_m'], [.26, -.13])
+        self.assertEqual(workspace.controller_options(case, None)['pickup_open_jaw_rad'], .35)
+        baseline = workspace.select_case(profile, 'right_original_open50')
+        self.assertNotIn('pickup_open_jaw_rad', workspace.controller_options(baseline, None))
+        self.assertEqual(workspace.PROTOCOL, {'max_sim_s': 90, 'max_episode_wall_s': 120})
+        document = json.loads(profile.read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'profile.json'
+            for value in (True, .34, .36, 0., float('nan')):
+                document['cases'][1]['pickup_open_jaw_rad'] = value
+                path.write_text(json.dumps(document))
+                with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'pickup_open_jaw_rad'):
+                    workspace.select_case(path, 'right_preclose35')
 
     def test_x_layout_and_hover_are_explicit_and_do_not_retarget_the_object(self):
         profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-m1a.json')
