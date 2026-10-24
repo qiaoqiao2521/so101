@@ -17,7 +17,7 @@
 
 右端X=.260／54mm原.5负例仍拒绝：下降59/72、闭爪1/244；显式.35的预收口246／下降72／闭爪246／抬升72全部原证书通过。无积分或渲染，未使用物体真值作控制输入。
 
-49项probe／开发入口／扫掠相关检查通过。CBC只读调用空正文，不计有效审核；内部GPT独立复核，根验证。原件在 `output/x-request-probe-20261024/`，`full-screen-execution.json`保存实际参数与零积分记录。
+49项probe／开发入口／扫掠相关检查通过。CBC只读调用空正文，不计有效审核；内部GPT独立复核，根验证。原件在 `output/x-request-probe-20261024/`，`full-screen-execution.json`保存实际参数与零积分记录。本机静态环境为Python3.12.3／MuJoCo3.3.7；后文原云物理为Python3.13.15／MuJoCo3.15.0，不混为同版本测量。
 
 ```bash
 cd /home/muqiao/dev/ros2/_delivery/so101-colab-20261001/experiments/colab-twin
@@ -29,9 +29,30 @@ cd /home/muqiao/dev/ros2/_delivery/so101-colab-20261001/experiments/colab-twin
 
 复跑右端预收口：改为单点 `.26 -.13`，增加 `--pickup-hover-z-m .054 --pickup-open-jaw-rad .35`。该输出仍为not_physical／not_admitted。
 
-## 原物理待验
+## 几何查询与认证下界的区别
 
-沿原Kaggle串行runner和 `run_workspace_case.py`，使用 `scenarios/workspace-x-interior-m1a.json`。仅原reset fixture设置初始XY，控制仍消费RGB定位；不改控制器、评分器或物理参数。两例独立UUID，不将静态证书当作已完成抓放。
+本机对上述最低证书所对应的两个固定姿态，另调用已安装 `mj_geomDistance`：左盘壁／下臂返回156.246559mm，右盘壁／活动指返回7.011770mm；原证书下界分别1.012254／1.026594mm。左查询初始distmax=.1m时为裁剪值，扩大查询范围至1m才取得有效fromto；裁剪记录保留，不称100mm实距。
+
+这是本机3.3.7的两对原生查询，原mjDSBL_NATIVECCD配置未改，不是精确三角面、整轨迹最小距离、云端结果或跟踪余量。查询distmax与原安全margin=.001分列；不把这些诊断数喂给放行逻辑。原件为 `native-geom-distance.json`。
+
+## 原物理：两个新请求完成
+
+固定源码 `66ee5d106b8287ba5213b3049e148b4db3c453c6`，Kaggle `muqiaoqiao/so101-x-interior-requests-20261024/1` 已COMPLETE。沿原串行runner和 `run_workspace_case.py`，使用 `scenarios/workspace-x-interior-m1a.json`。仅原reset fixture设置初始XY，控制仍消费RGB定位；控制器、评分器和物理参数未改。
+
+| 原请求 / UUID | 原裁决 | sim / episode wall s | process wall / CPU s |
+| --- | --- | --- | --- |
+| left_minus11_original / 768e93c6-2cc5-46c8-92ff-e88dcf3c0510 | pass | 75.82 / 49.143 | 50.227 / 59.554 |
+| right_plus11_original / f846c307-869f-4f77-b0cf-639a7badd6ce | pass | 77.90 / 49.266 | 50.363 / 59.982 |
+
+两例真实抬升40.973／41.031mm、持物31.60／34.30s、蓝盘静稳均7.54s。planned/measured闭爪各244点，两例3791／3895条轨迹全部finite/arm_valid，碰撞与安全停机0，自由物体、weld0/mocap0保持。释放68.462／70.542s脱离，XY最大漂移.220805／.177592mm，脱离后峰值力0；回位q6最大误差均.102544mrad，停稳速度<1e−7rad/s。
+
+初次OMPL搜索／含后处理为.121331/.279792s和.127085/.277025s；transport worker为2.377516／2.208082s，separation worker为1.058765／1.052485s。两类worker均consumed、owned_ack、joined，cleanup_unconfirmed=false。录像实际474／487帧，与原report一致。
+
+完整周期3791／3895拍，P95=16.088／15.217ms、max44.763／44.042ms，仍100／63拍>20ms，完整50Hz未通过。这是两个新位置的功能验收，不是算法加速A/B，不能和端点或不同云VM的秒数相减。
+
+两例RGB交接估计为(.22899247,−.13050834)和(.25080426,−.13050834)m；均先在原遮挡预测处冻结目标，仍假设交接后工件静止，没有新增持续视觉跟踪。源及评分引用干净，原90sim／120wall保持。根原件检查在 `output/x-interior-20261024/kaggle-v1/root-readback.json`，独立reader另回放monitor／释放审计并核模型、源、视频与时钟。
+
+独立reader核原monitor/helper重放完全一致，未评分尾行0；释放7370／7360条2ms样本的detached旗标和原裁决一致。左例重算最大漂移有2.71×10⁻²⁰m末位差，原JSON的matches_original_report=false如实保留，不声称逐位相等、不覆盖原数值或放宽物理门槛。目标X不同，静置后目标Z／四元数／速度有极小差；机器人初始q6/qvel6、固定盘和模型配置一致。
 
 ```bash
 python run_workspace_case.py --profile scenarios/workspace-x-interior-m1a.json \
