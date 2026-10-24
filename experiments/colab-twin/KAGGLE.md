@@ -1,5 +1,11 @@
 # Kaggle 原物理对照
 
+## M1a 工作区功能验证（2026-10-24）
+
+[SO101 Workspace M1a](https://www.kaggle.com/code/muqiaoqiao/so101-workspace-m1a-20261024)版本1已完成，固定 source `0ef4068`。沿用原 bootstrap、Tesla T4 EGL、串行进程测量与原完整物理；两工位 center→Y+20mm、Y−20mm→center 共 4/4 pass。相机 3 正＋4 负共 7/7。新目标区域只由开发 profile 显式声明，不改变普通 Station 准入、评分、244 或原 90sim/120wall。
+
+本轮是功能验证，不能从任务耗时差报提速。完整 50Hz 仍未通过；详情与复跑见[实测结果](../../plans/workcell-productization-20261024/m1a-results.md)。回收原版本 `muqiaoqiao/so101-workspace-m1a-20261024/1` 的 `so101-evidence.tgz`；本机原件及独立读回在忽略目录 `output/workspace-m1a-20261024/kaggle-v1/unpacked/so101-evidence/`。未恢复旧定时器。
+
 复用原 `evaluate_station.py`、原串行 runner 和原安全判据。Kaggle 负责环境与计算，候选不接触实体机械臂。原每回合 90 秒仿真、120 秒墙钟限制继续包含初始化、物理循环和视频完成。
 
 ## 已验证的入口

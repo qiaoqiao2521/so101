@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-24 M1a 第一轮已有[实际结果](plans/workcell-productization-20261024/m1a-results.md)：Kaggle 两工位四例原物理 4/4，其中 Y±20mm 两个范围外点完成真实抓放、释放、脱离与回位；相机 3 正＋4 负通过，最大误差 0.617mm，碰撞与安全停机 0。未加 yaw 投影、未重训，原 IK 已能完成这两个点。网页／普通准入仍为原 ±10mm，不宣称连续区域；X 两侧失败原因和完整 50Hz 未过保留。M1a 整体仍在扩展，后续分离 X 向 IK／盘壁问题。
+
 2026-10-24 M1a 已进入实施：[坐标／空间探针](experiments/colab-twin/probe_workcell_workspace.py)实测 11 点中 9 点通过离线筛选，Y±20mm 有候选，X 两侧拒绝原因保留；不等于物理可用区域。控制器静态开发区域与[原完整物理入口](experiments/colab-twin/run_workspace_case.py)已接，默认与网页仍保持 ±10mm。四例串行 Kaggle 原物理待验，状态见[产品化进度](plans/workcell-productization-20261024/progress.md)。
 
 2026-10-24 当前产品化主线为[可复用工位计划](plans/workcell-productization-20261024/task_plan.md)：先核坐标与实测工作区，再完善安全快慢交接、原子技能恢复、冻结验收及 FishBot 配方卸货。D0 仅完成计划，M1–M5 尚未实施；径向 yaw、±150mm、3–5ms 和 20+20 不提前记成功。算法工厂保留为有证据的性能支线，默认仍为 loaded_jaw_preload.py；[原实验与失败](plans/factory-loading-20261021/progress.md)继续保留。无新瓶颈证据不追加低层微优化，Mint 工作树不改。
