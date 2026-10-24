@@ -16,6 +16,9 @@
 
 ## M2/M4 薄适配更新
 
+- 2026-10-24新配方原物理1/1与真实运行中取消已独立回读，见[m4-recipe-results.md](m4-recipe-results.md)。两项是功能／生命周期验收，不是性能A/B。完整回合最大60.075ms在transport，controller54.017wall/54.017CPU；两例close段也重复约40ms controller，不能套用前轮callbacks等待归因。下一次50Hz分析应按当前同源实测重定位。
+- M2新接点审查：原progress_callback早于monitor.update，不能以stage发布技能成功。Grasp应以原持续双指接触／抬升monitor为后置证据；ReleaseAudit在脱离后仍可能因重接触转失败，Place与Retreat证据不可按阶段硬切。真值仅作裁判／展示，不反馈恢复控制。
+
 - 原Station只根据cancel文件存在优先发布cancelled，会覆盖更早物理fail及晚到请求前已完成的pass。现已分列cancel_requested／cancelled，仅真实Cancelled且无原安全、清理和其他失败原因时取消；原report保留。22项Station CPU检查通过，不冒充运行中取消实测。
 - 六技能不能只换阶段名：原progress在monitor.update前，close结束不证明抓住，Place的释放审计可能在Retreat中才完成。生命周期应消费初始视觉、实际issued、post-monitor、finally清理四类证据；完整恢复尚未实现。
 - 配方复用原Station payload与原任务入口，不另写执行器。前端和CLI共同核米制、纯平移、独立episode、SO101执行器、固定技能声明；未知可选元数据与历史引用保留，历史pass不产生当前pass。节点rotation及SO101未执行的size/motion/enabled明确拒绝，避免旧容错导入器无声丢弃执行语义。

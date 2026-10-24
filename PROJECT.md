@@ -20,13 +20,15 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-24 [可编辑工位配方](plans/workcell-productization-20261024/m4-recipe-results.md)已接原网页与CLI：导入、编辑、保存刷新、复制导出及竞态18项通过；浏览器实际导出原件完成原物理抓放、释放、脱离与回位1/1。运行中运输worker取消另验，原fail保留、清理确认，不计抓放通过。配方当前是固定几何／米制平移／独立episode；六技能恢复、FishBot同世界卸货、20+20与完整50Hz仍未完成。
+
 2026-10-24 X方向[开发布局实测](plans/workcell-productization-20261024/m1a-x-results.md)完成：右侧X+20mm采用红盘+20mm／取料高位54mm，左侧X−20mm采用红盘−5mm／原60mm；两个新布局与两个原中心在Kaggle串行原物理4/4通过，原抓放／释放／脱离／回位、244全扫和安全判据保持。它是显式新布局能力，原固定红盘的X限位／证书拒绝仍保留，网页±10mm和默认不变；不是连续区域、20+20或完整50Hz通过。
 
 2026-10-24 M1a 第一轮已有[实际结果](plans/workcell-productization-20261024/m1a-results.md)：Kaggle 两工位四例原物理 4/4，其中 Y±20mm 两个范围外点完成真实抓放、释放、脱离与回位；相机 3 正＋4 负通过，最大误差 0.617mm，碰撞与安全停机 0。未加 yaw 投影、未重训，原 IK 已能完成这两个点。网页／普通准入仍为原 ±10mm，不宣称连续区域；X 两侧失败原因和完整 50Hz 未过保留。M1a 整体仍在扩展，后续分离 X 向 IK／盘壁问题。
 
 2026-10-24 M1a 已进入实施：[坐标／空间探针](experiments/colab-twin/probe_workcell_workspace.py)实测 11 点中 9 点通过离线筛选，Y±20mm 有候选，X 两侧拒绝原因保留；不等于物理可用区域。控制器静态开发区域与[原完整物理入口](experiments/colab-twin/run_workspace_case.py)已接，默认与网页仍保持 ±10mm。四例串行 Kaggle 原物理待验，状态见[产品化进度](plans/workcell-productization-20261024/progress.md)。
 
-2026-10-24 当前产品化主线为[可复用工位计划](plans/workcell-productization-20261024/task_plan.md)：先核坐标与实测工作区，再完善安全快慢交接、原子技能恢复、冻结验收及 FishBot 配方卸货。D0 仅完成计划，M1–M5 尚未实施；径向 yaw、±150mm、3–5ms 和 20+20 不提前记成功。算法工厂保留为有证据的性能支线，默认仍为 loaded_jaw_preload.py；[原实验与失败](plans/factory-loading-20261021/progress.md)继续保留。无新瓶颈证据不追加低层微优化，Mint 工作树不改。
+2026-10-24 当前产品化主线为[可复用工位计划](plans/workcell-productization-20261024/task_plan.md)：先核坐标与实测工作区，再完善安全快慢交接、原子技能恢复、冻结验收及 FishBot 配方卸货。初建D0仅完成计划；当前M1、M2、M4已有已验切片，整体仍在进行。径向 yaw、±150mm、3–5ms 和 20+20 不提前记成功。算法工厂保留为有证据的性能支线，默认仍为 loaded_jaw_preload.py；[原实验与失败](plans/factory-loading-20261021/progress.md)继续保留。无新瓶颈证据不追加低层微优化，Mint 工作树不改。
 
 2026-10-24 工厂默认已采用loaded_jaw_preload.py：正式两工位反序4/4原物理通过，持物阶段保持原力矩饱和与完整碰撞分辨率，缩短命令弦的认证工作；原CLI默认单回合另验通过。完整50Hz仍未过。最新同步回位批量轴F2bs与SAT布尔阈值F2bt均有两站局部收益，但整程未可靠加速，不切默认；回位上下文取证已完成；完整模型证书绑定两版都更慢，接续核验按官方3.15数据依赖缩小的可选几何键。[当前计划与原始证据](plans/factory-loading-20261021/progress.md#f2bs-两工位完整回读局部回位更快整程不晋级2026-10-24)。
 

@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-24 — M4配方交换原物理1/1，M2运行中取消清理通过
+
+Current：本轮=progress，详见[m4-recipe-results.md](m4-recipe-results.md)。可编辑配方已接原网页／Station／CLI；浏览器导出原文交固定fd20512源码，在Kaggle串行完成完整任务及真实worker取消，原生COMPLETE后独立回读。两项不是性能A/B或两次抓放成功。
+
+Done：完整任务10f9c86e…原pass，77.960sim/55.544episode-wall、56.735process-wall/67.325CPU；真实抓放、释放、脱离、回位、planned/measured244、自由物体与双worker清理保持，无碰撞／安全停机，488/488实数录像。取消0181e8f1…在30.220s原worker ack+alive后触发，30.240s原Cancelled、task cancelled，abort/join/closed确认，无活线程／清理错误；原物理fail/exit1保留，未执行放置与回位。
+
+Done：64项相关Python、74项前端检查及最终构建通过；18项无运动浏览器通过，真实任务写请求0／页面异常0。文件读取期间任务变化时保住新ID／取消入口。独立审查复现并修正负时长静默改写，原普通草稿容错未变；未知可选元数据／历史引用可往返。实际云输入与浏览器原件逐字节相同。
+
+Remaining：完整周期3898拍，P95=17.118ms、P99=33.579ms、max=60.075ms，134拍>20ms，完整50Hz仍未过。M2六技能生命周期、可认证撤退／重新定位重抓未实现；M3 20+20、M4同世界两件卸货仍未验，不用独立episode交换替代连续世界。
+
+Issues：工作台此前Drone在途成果已由原owner提交至7fc5695，未覆盖或混入本轮改动；后续按实时树核对。CodeBuddy空正文保留，内置GPT独立审查与原件读回；未动Mint或实体机械臂。本机另有Blender渲染，未与其抢物理资源。
+
+Next：M2由根将原monitor后置物理证据接到技能生命周期，取消与失败保留原因果，再实施安全恢复。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20；项目新事实只留本计划。
+
 ## 2026-10-24 — M1b准入取证完成，M2取消与M4配方实施
 
 Current：上一目标轮次=progress。新准入观察c0045f5f…原pass；14次poll（13未ready、1准入），最终14.613ms／完整拍33.843ms。job调用约.067ms，不是主要成本。最大116ms是callbacks105.803wall/3.227CPU，I/O与宿主等待尚待区分，不无据新增底层优化。
