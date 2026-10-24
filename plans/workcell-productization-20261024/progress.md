@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 抬升预载静态筛查通过，默认关闭实现待原物理
+
+Current：round130 Kaggle `muqiaoqiao/so101-early-lift-static-force-20261025/1`终态。143个周期初冻结状态的6维驱动力／广义驱动力均与原指令同值；独立1738项通过。它是规划模型mj_forward，不是动态接触／任务／提速证据。新显式`loaded_jaw_lift_preload.py`已实现，默认关闭，尚未跑候选完整物理。
+
+Done：原trajectory在周期末保存command和状态，已与前一raw状态及observer起止逐条exact对齐。云端阶段跨度2.86s诊断ramp理论8008→6065点；独立按原motion_duration=2.257558s复算5664点，静态jaw均−.15。后者仅离线算术，不冒充新云mj_forward。单帧饱和不证明2ms积分中始终等效。
+
+Done：生产选项复用一次encoder／previouscommand锁存，原close6s与planned／measured244不改，仅从lift开始按原运动duration连续ramp；hold1.5s及后续守卫保持。147项相关mock／协议测试通过，覆盖默认、连续首拍、只锁一次、释放与弦内部碰撞；不计真实FK或物理。初次私有helper缩进在写前compile拒绝、首次测试的报告stage字段假设错误均已修，不改原日志。
+
+Next：固定源后复用原Kaggle组件与Station入口，完整143条原／新弦及静态force、三对wall／CPU通过才接两工位反序＋中心五例；保存原失败、不切默认。原1mm／285对／244、90sim120wall、评分器与全部回退保持。
+
+Cleanup：round130的25个原件逐字节核对无差／缺／额外，删除展开；独立JSON压缩回读一致，实际释放2,162,688已分配字节。TGZ／日志／gzip报告／恢复命令保留。首准备的周期错位与首reader混同数据／代码revision错误保留，Kaggle按title归一slug后的错误status查询未触发重投。Knowledge=pending，原共享Wiki在途diff仍由根串行处理。
+
 ## 2026-10-25 — 左侧闭爪真实归因完成，单行提示优化淘汰
 
 Current：round127／128／129全部云任务终态；生产源码仍为9cca89a，无默认切换。原左X−20mm插桩物理1/1通过，定位到244点实测闭爪认证与持续在线弦成本。单行hint校验候选状态等值，但三对收益不一致，淘汰；不再重复跑同候选追绿。详见[m1b结果](m1b-refinement-details-results.md#2026-10-25实测闭爪归因与单行提示反证)。

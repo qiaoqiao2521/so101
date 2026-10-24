@@ -41,6 +41,7 @@ class RoutePolicy:
     approach_midpoint_order: bool = False
     prebound_float_pack: bool = False
     loaded_jaw_preload: bool = False
+    loaded_jaw_lift_preload: bool = False
     async_measured_return: bool = False
     mesh_box_axis_refinement: bool = False
     reuse_refinement_details: bool = False
@@ -115,6 +116,8 @@ class RoutePolicy:
             raise ValueError('Prebound float pack must be a boolean')
         if not isinstance(self.loaded_jaw_preload, bool):
             raise ValueError('Loaded jaw preload must be a boolean')
+        if not isinstance(self.loaded_jaw_lift_preload, bool):
+            raise ValueError('Lift loaded jaw preload must be a boolean')
         if not isinstance(self.async_measured_return, bool):
             raise ValueError('Asynchronous measured return must be a boolean')
         if not isinstance(self.mesh_box_axis_refinement, bool):

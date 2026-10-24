@@ -332,3 +332,17 @@ round127核53原件、round128核27原件、round129 v1／v2核31／46原件，�
 恢复指定目录：`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`；恢复派生读回：`gzip -dk <目录>/<对应报告>.json.gz`。只删已核可重建副本，原输入、最终证据、私有源码和失败保留。
 
 下一项只读核已有loaded-jaw preload提前至lift的执行器力矩／采样成本。原6s闭爪和全部244不改；单帧力矩饱和不能证明20ms周期中等效。没有可靠收益不切默认，不宣称连续X域、20＋20或完整50Hz。
+
+## 2026-10-25：提前抬升预载静态筛查
+
+round130固定代码4549aca，历史输入9cca89a；不是同一来源字段。Kaggle `muqiaoqiao/so101-early-lift-static-force-20261025/1`通过，143帧均来自原左侧run63bbbf0e。首输入准备因周期末日志与周期初observer错配报错；现逐条使用前一raw q6／qvel／elapsed并验证与observer起点exact、当前command与终点exact，保留原失败。入口update1339／26.76s，出口1482／29.62s；未提取物体真值。
+
+在原规划模型fresh MjData中固定每帧q／qvel，仅以mj_forward比较原command与提早锁存target=.06936453371955673rad后的平滑command，未调用mj_step。云端用2.86s观察阶段跨度诊断，143帧6维actuator_force及qfrc_actuator完全相同，jaw均−.15；原全分辨率理论8008点变6065点，callback True的计数不是几何认证。保存了原gain／bias／dyn／force／ctrlrange／transmission／gear和原raw输入；没有把广义驱动力称为夹持接触力。
+
+独立1738项全部通过，unknown为空。驱动力按原编译参数重算最大舍入差1.1324e−13，广义驱动力差0。另按原motion_duration／sample_minimum_jerk纯离线重算：原运动2.257558030519293s，完整阶段另含.602441969s，理论5664点、静态jaw delta0；该版本未另跑模型，不混入云实际结果。首reader错误要求数据／代码revision相等已修，相关运动与spacing源码另核一致。未验证改指令后的q／qvel、接触、动力学、几何认证或50Hz。
+
+生产默认关闭选项`loaded_jaw_lift_preload`只在原close结束进入lift时复用encoder／previouscommand锁存；原6s close与全部planned／measured244保持，用原lift运动duration连续ramp。hold1.5s、释放、在线全弦与其它原检查保留。显式候选`route_strategies/loaded_jaw_lift_preload.py`仅在已验transport-prefix父候选上添加该bool；全局默认不变。147项mock／协议回归通过，不作模型或任务成绩。
+
+原件位于`experiments/colab-twin/output/early-lift-force-20261025/kaggle-v1`，私有round130-early-lift-force-screen保留3脚本、root修正、提交回执与精确云源。25份原件逐字节验后删除重复展开，JSON压缩回读一致，实际释放2,162,688已分配字节；TGZ／log／gzip reader／cleanup-readback.json保留。恢复命令仍为`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`及`gzip -dk <目录>/independent-readback.json.gz`。
+
+下一步固定新源，先完整143弦三对正式组件，门槛通过才原Station两工位反序＋中心回归。候选目前不是物理交付，不切默认。

@@ -13,6 +13,17 @@ from visual_grasp_controller import VisualGraspController
 
 
 class RoutePolicyTests(unittest.TestCase):
+    def test_lift_preload_is_opt_in_and_only_changes_transport_prefix_parent(self):
+        parent, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_transport_prefix.py'))
+        candidate, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_lift_preload.py'))
+        expected = parent.preferences()
+        expected['loaded_jaw_lift_preload'] = True
+        self.assertEqual(candidate.preferences(), expected)
+        self.assertFalse(RoutePolicy().loaded_jaw_lift_preload)
+        self.assertFalse(load_route_policy()[0].loaded_jaw_lift_preload)
+        with self.assertRaises(ValueError):
+            RoutePolicy(loaded_jaw_lift_preload=1)
+
     def test_refinement_details_changes_only_the_complete_midpoint_parent(self):
         parent, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint.py'))
         candidate, _ = load_route_policy(DEFAULT_SOURCE.with_name('loaded_jaw_midpoint_details.py'))

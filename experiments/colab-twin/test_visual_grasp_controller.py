@@ -579,6 +579,56 @@ class VisualControllerTests(unittest.TestCase):
                     c._set_motion([c.lift, c.lift], request, 5.)
                     self.assertEqual(c.jaw, expected)
 
+    def test_lift_preload_preserves_close_and_latches_once_with_continuous_motion(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(
+            smooth_jaw_dwell=True, loaded_jaw_preload=True, loaded_jaw_lift_preload=True))
+        c.last_command = np.r_[c.down, .5]
+        c._set_dwell('close', c.down, .015, 0., 6.)
+        self.assertEqual(c.duration, 6.)
+        self.assertEqual(c._jaw_reference(0.), .5)
+        self.assertEqual(c._jaw_reference(6.), .015)
+        self.assertFalse(hasattr(c, '_loaded_jaw_target'))
+        self.assertEqual(c.sweep_reports[0]['checked_states'], 244)
+        c.last_command = np.r_[c.down, .015]
+        q = np.r_[c.down, .121]
+        expected_duration = module.motion_duration([q[:5], c.lift])
+        c._transition(q, 6.6)
+        self.assertEqual(c.stage, 'lift')
+        self.assertEqual(c.duration, expected_duration)
+        self.assertEqual(c._jaw_reference(0.), .015)
+        self.assertEqual(c._jaw_reference(c.duration), .068)
+        previous = .015
+        for age in np.arange(0., c.duration+.02, .02):
+            value = c._jaw_reference(age)
+            self.assertGreaterEqual(value, previous)
+            self.assertLessEqual(value-previous, 1.875*.053/c.duration*.02+1e-12)
+            previous = value
+        c.last_command[5] = c._jaw_reference(c.duration)
+        c._transition(np.r_[c.lift, .4], 10.)
+        self.assertEqual(c.duration, 1.5)
+        self.assertEqual(c._loaded_jaw_target, .068)
+        self.assertEqual(c._jaw_reference(0.), .068)
+        self.assertEqual(c._jaw_reference(1.5), .068)
+        self.assertEqual(sum(r.get('stage')=='loaded_jaw_preload' for r in c.plan_reports), 1)
+        c._set_dwell('release', c.lift, .5, 12., 6.)
+        self.assertEqual(c._jaw_reference(0.), .068)
+        self.assertEqual(c._jaw_reference(6.), .5)
+
+    def test_lift_preload_keeps_interior_collision_guard(self):
+        from route_policy import RoutePolicy
+        c = self.controller(route_policy=RoutePolicy(
+            loaded_jaw_preload=True, loaded_jaw_lift_preload=True))
+        c.stage, c.last_command, c.target_frozen = 'close', np.r_[c.down, .015], True
+        q = np.r_[c.down, .121]
+        c._transition(q, 1.)
+        c.checker.evaluate.side_effect = lambda q6, **kw: {'valid': not .09 < q6[5] < .10}
+        result = c.update(q, np.zeros(6), 1.+c.duration/2)
+        self.assertEqual(result['status'], 'failed')
+        self.assertFalse(c.last_sweep_report['valid'])
+        self.assertEqual(c.last_sweep_report['jaw_resolution_rad'], .002)
+        self.assertGreater(c.last_sweep_report['checked_states'], 1)
+
     def test_loaded_jaw_ramp_keeps_interior_collision_guard(self):
         from route_policy import RoutePolicy
         c = self.controller(route_policy=RoutePolicy(loaded_jaw_preload=True))

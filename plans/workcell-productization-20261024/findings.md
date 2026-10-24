@@ -222,3 +222,7 @@ round127新增原物理通过，最大close进入拍不是两次完整扫掠叠�
 round128原输入fresh-state cProfile中，488次_detail_arrays包含全285对与单行hint各244次；不能据函数调用量声称全明细重复两遍。round129针对单行hint避免向量校验虽12份NPZ真实状态同字节、876请求全部命中，三对wall与CPU的第二对均变慢，故按原门槛淘汰。组件正确与收益稳定是不同条件，不能以55.644ms中位掩盖反向对；不进入原物理追绿。来源、实际失败和复跑入口见[m1b结果](m1b-refinement-details-results.md#2026-10-25实测闭爪归因与单行提示反证)。
 
 已有预载只在lift→hold固定一次目标，输入为encoder和previouscommand；提前到lift可能缩短在线认证弦，但原sts3215增益、速度阻尼、力限幅及周期内变化需实测。静态同力不是接触轨迹或持物成功证明，先只读筛选。原1mm与所有点不减。
+
+## 预载提前的时序与驱动力边界
+
+round130真实143帧用前一trajectory状态对齐observer周期初，再把当前raw.command作为该周期输出；不可用周期末q冒充控制器观测。规划模型mj_forward静态驱动力6维同值，原分辨率理论点数减少，但原运动duration2.257558s与完整lift跨度2.86s相差原等待；在线实现使用原motion_duration，不能拿未来实际阶段跨度作策略输入。该筛查不读取物体真值，也不证明接触、2ms积分、完整抓放或提速。实际证据与默认关闭实现见[m1b结果](m1b-refinement-details-results.md#2026-10-25提前抬升预载静态筛查)。

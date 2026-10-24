@@ -539,7 +539,9 @@ class VisualGraspController:
 
     def _set_motion(self, points, jaw, elapsed):
         if (hasattr(self, '_loaded_jaw_target')
-                and self.stage in ('hold', 'transport', 'lower') and float(jaw) == .015):
+                and (self.stage in ('hold', 'transport', 'lower')
+                     or (self.stage == 'lift' and getattr(self.route_policy, 'loaded_jaw_lift_preload', False)))
+                and float(jaw) == .015):
             jaw = self._loaded_jaw_target
         self.points = np.asarray(points, dtype=float)
         self.jaw = float(jaw)
@@ -563,10 +565,12 @@ class VisualGraspController:
         captured command continuity value to the dwell target over the dwell
         duration, reusing sample_minimum_jerk. Terminal age returns the exact
         dwell target; nonpositive age returns the exact captured start.
-        An opt-in loaded hold uses its original dwell duration and the same
+        An opt-in loaded hold or lift uses its original duration and the same
         command continuity, without repeatedly following the encoder.
         """
-        if self.stage == 'hold' and hasattr(self, '_loaded_jaw_target'):
+        if (hasattr(self, '_loaded_jaw_target')
+                and (self.stage == 'hold' or (self.stage == 'lift'
+                     and getattr(self.route_policy, 'loaded_jaw_lift_preload', False)))):
             if age <= 0:
                 return self.jaw_dwell_start
             if age >= self.duration:
@@ -1400,6 +1404,19 @@ class VisualGraspController:
         self.stage = 'separate'
         self._set_continuous_motion(points, elapsed)
 
+    def _latch_loaded_jaw(self, q6, elapsed):
+        if (getattr(getattr(self, 'route_policy', None), 'loaded_jaw_preload', False)
+                and not hasattr(self, '_loaded_jaw_target')):
+            # Encoder/command only. Latch once; repeated following would
+            # progressively unload the grasp. Every new chord is guarded.
+            previous = float(self.last_command[5])
+            self._loaded_jaw_target = previous + .5 * max(0., float(q6[5])-previous)
+            self._loaded_jaw_latch = {
+                'elapsed_s': float(elapsed), 'encoder_rad': float(q6[5]),
+                'previous_target_rad': previous, 'target_rad': self._loaded_jaw_target,
+                'inputs': ['encoder.q6[5]', 'previous_command[5]']}
+            self.plan_reports.append({'stage': 'loaded_jaw_preload', **self._loaded_jaw_latch})
+
     def _transition(self, q6, elapsed):
         if self.stage == 'approach':
             if not self.target_frozen:
@@ -1428,20 +1445,13 @@ class VisualGraspController:
             origin, rotation, _ = self._fk(q6)
             self.payload_relative = rotation.T @ (np.r_[self.target_xy, .010]-origin)
             self.payload_rotation = rotation.T  # Known axis-aligned box hypothesis.
+            if getattr(self.route_policy, 'loaded_jaw_lift_preload', False):
+                self._latch_loaded_jaw(q6, elapsed)
+                self.jaw_dwell_start = float(self.last_command[5])
             self.stage = 'lift'
             self._set_motion([q6[:5], self.lift], .015, elapsed)
         elif self.stage == 'lift':
-            if (getattr(getattr(self, 'route_policy', None), 'loaded_jaw_preload', False)
-                    and not hasattr(self, '_loaded_jaw_target')):
-                # Encoder/command only. Latch once; repeated following would
-                # progressively unload the grasp. Every new chord is guarded.
-                previous = float(self.last_command[5])
-                self._loaded_jaw_target = previous + .5 * max(0., float(q6[5])-previous)
-                self._loaded_jaw_latch = {
-                    'elapsed_s': float(elapsed), 'encoder_rad': float(q6[5]),
-                    'previous_target_rad': previous, 'target_rad': self._loaded_jaw_target,
-                    'inputs': ['encoder.q6[5]', 'previous_command[5]']}
-                self.plan_reports.append({'stage': 'loaded_jaw_preload', **self._loaded_jaw_latch})
+            self._latch_loaded_jaw(q6, elapsed)
             self._set_dwell('hold', self.lift, .015, elapsed, 1.5)
         elif self.stage == 'hold':
             if self.transport_job is None:
