@@ -146,6 +146,6 @@
 
 固定盘X±20mm已各两放置工位原物理通过，详见[m1a-x-fixed-certificates.md](m1a-x-fixed-certificates.md)。保留原拒绝、超时、全部安全阈值与默认范围；下一步按每个新请求验证，不插值宣传连续安全域。真实RGB的姿态／高度先验另做负例取证。
 
-用户最新指定X向IK与盘壁净距。原诊断已补完整扫掠／显式预收口，X±11mm两个新请求均原物理pass，见[m1a-x-interior-results.md](m1a-x-interior-results.md)。随后原P0新位置面板17/17通过、17份原始PNG独立重算一致，见[m1a-x-perception-results.md](m1a-x-perception-results.md)。下一步接原Station的固定红盘请求，明确分开盘位置与目标位置，复用显式高位／预收口／几何补证和本次原认证；不把端点能力插值成连续域。完整50Hz和20＋20仍未过。
+用户最新指定X向IK与盘壁净距。原诊断已补完整扫掠／显式预收口，X±11mm两个新请求均原物理pass，见[m1a-x-interior-results.md](m1a-x-interior-results.md)。原P0新位置17/17通过，见[m1a-x-perception-results.md](m1a-x-perception-results.md)。原Station现已分开盘与cube并消费显式预收口／补证：两端点加原中心新物理3/3pass，两个关闭适配负例保持原fail，见[m1a-x-station-fixed-results.md](m1a-x-station-fixed-results.md)。下一步只读拆左侧实际shortcut／close成本，再验新固定盘样例的浏览器／HTTP入口；不插值开放连续域。完整50Hz和20＋20仍未过。
 
 Carry限时等待／继续／取消三例原件已回收：完整resume原pass、cancel与原timeout保留fail，见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。新API已由5186服务并通过实际ready／历史终态拒绝读回，工作台5a30c26已远端核实；活动网页任务等待→继续→原物理整链仍待验。等待不重置原时钟，不以waiting代替Grasp证据；手动门不替代六技能生命周期或同世界恢复。

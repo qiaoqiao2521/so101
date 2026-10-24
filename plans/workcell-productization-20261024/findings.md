@@ -1,7 +1,7 @@
 # SO101 工位产品化：事实、决定与待证项
 
-日期：2026-10-24。本文汇总本轮只读核实，作为产品化计划的证据入口。
-本轮仅编写计划，不改变控制器、默认策略、运行服务、Mint 或实体设备，不新增仿真、训练或云任务。
+日期：2026-10-24。本文保留初建核查及后续实施事实，作为产品化计划的证据入口。
+初建D0仅编写计划；后续源码、服务和云仿真实测见各节及progress.md，不将初建状态当作当前整体状态。Mint与实体设备始终不在实施范围。
 
 后续实施以progress和以下更新为准；上句仅描述D0初建。
 
@@ -179,3 +179,5 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 ## 固定盘请求的Station接线缺口
 
 现有execution.pick_xy_m传给build_contact_scene，控制整只红盘；cube初始XY才由原reset设置。固定盘请求应保持前者(.24,-.13)，approach/grasp世界XY与cube一致。原模式已能表示这种分离，无需再造固定盘mode。端点还需将原开发CLI已有的pickup_open_jaw_rad和mesh_box_axis_refinement作为显式参数接入Station；默认与原模式保持。此次只补透传和可编辑样例，真实新入口物理验收另跑，不把已有开发CLI通过贴到新Station任务。
+
+后续固定2d7097ef的新Station原物理已结束：两端点及原中心3/3pass，两项关闭适配的原初始化fail保留；实际XML盘位、输入差异、真实夹持释放脱离回位和完整扫掠均独立核实，见[m1a-x-station-fixed-results.md](m1a-x-station-fixed-results.md)。本次左侧98.140wall、903慢拍，主要已定位成本为初始化shortcut与close/controller；原OMPL搜索仅.134s，不借随机性解释全部差异，不从这些不同输入计算性能收益。

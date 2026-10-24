@@ -1,6 +1,6 @@
 # SO101 产品化进度
 
-## 2026-10-24 — 固定红盘X请求接原Station，物理待验
+## 2026-10-24 — 固定红盘X请求原Station通过，原拒绝保留
 
 Current：承接X向IK／盘壁问题，不重复原开发CLI成绩。发现原execution.pick_xy_m表示整只红盘平移，不能把cube位置填进去继承固定盘证据。复用原workspace-development-v1，盘与物体分开；不新增mode或授权层。
 
@@ -8,7 +8,11 @@ Done：新增显式pickup_open_jaw_rad=.5/.35及mesh_box_axis_refinement布尔�
 
 Review：agent-link CBC本次只读返回空正文，不计有效结论；内部GPT找出盘／目标混淆并实施，根核diff及原样例解析。新模式提议经源码复核后否决，现模式足够。原IK／OMPL／1mm／244／90sim120wall与原裁判未改，Mint和其他Agent在途工作保持。
 
-Next：固定源码后沿原Kaggle bootstrap和ORIGINAL_RUNNER，串行两端点原Station成功候选、各自关闭适配负例及原无execution中心回归。原verdict不因预期失败改判，独立回读实际盘位／参数消费／全扫／抓放释放脱离回位与完整周期。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
+Done：固定2d7097ef，Kaggle实际slug so101-fixed-x-station-20261024 v1已COMPLETE；两端点新Station完整抓放与原中心回归3/3原pass，右.5／左false负例两次原grasp_leg_collision、0sim保持fail。详见[m1a-x-station-fixed-results.md](m1a-x-station-fixed-results.md)。两端点sim/wall分别79.16/54.099s与74.02/98.140s；中心77.40/51.399s。五例实际红盘固定；右三扫各246、左与中心各244，原释放／脱离／回位、自由物体与清理通过。根与独立reader另读原件、Monitor与ReleaseAudit exact重放和495/463/484实帧。
+
+Remaining：完整50Hz仍未过，右117／左903／中心114慢拍；左P95 37.600ms、最大617.523ms。左初始化shortcut14.996s、close控制器累计19.102s；OMPL搜索.134s，不把主要成本猜为随机搜索。不是性能A/B，不与旧VM差秒或切默认。±11mm样例本组未跑Station，网页新固定盘样例整链也未验。
+
+Next：基于原完整计时只读拆shortcut／close的重计算，保留每次IK、原1mm与全部扫掠；新固定盘样例的浏览器导入与实际HTTP链另按原任务入口验收。不插值开放连续区域，不先跑20＋20。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
 
 ## 2026-10-24 — X向RGB拒绝17/17，原工作台Carry入口收口
 
