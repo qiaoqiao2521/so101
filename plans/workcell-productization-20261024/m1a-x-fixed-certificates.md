@@ -2,9 +2,9 @@
 
 ## 本轮结论
 
-保持原红盘位置、几何、关节限位和 1mm 门槛。左侧 X−20mm 的原拒绝来自候选分离方向不足，下降／闭爪／抬升已完成补充数值认证。右侧 X+20mm 仍不能整链认证，不送物理运动、不扩大网页准入。
+保持原红盘位置、几何、关节限位和 1mm 门槛。左侧 X−20mm 的原拒绝来自候选分离方向不足，下降／闭爪／抬升已完成补充数值认证。右侧 X+20mm 原大开度路线仍不能整链认证；显式高位收口候选已完成首轮原物理抓放，原中心回归通过。网页准入与默认不变。
 
-这不是新的抓放成功。此前移动红盘的四次物理成功仍属于新布局，不能代替本轮固定盘位。
+左侧补证仍不是抓放成功。此前移动红盘的四次物理成功仍属于新布局；本轮新增的右侧固定盘物理结果独立记录。
 
 ## 实现范围
 
@@ -55,7 +55,7 @@
 
 原 native、可选方向API、原保守检查和空间探针的46项相关测试通过。现用packed／inline／seed-bound组合下新增7项测试也通过。负例覆盖真实右侧被拒姿态、相交／不足1mm、空／非法方向、错误算术环境、strict JSON，以及首失败前缀的覆盖声明。内部GPT独立回读左右原件，确认无缺失、重复或换对；CodeBuddy本次返回空结果，不计有效参与。
 
-尚未接入生产检查器或物理执行。左侧仍需将补证作为显式候选接入全部规划／实测检查，再用原物理评分验证。右侧先核大张口活动指的路线：只检查在高位收至已有0.35rad开度后，下降、完整244点闭爪与双pad开口是否同时满足要求；不扫参数、不直接改控制器。
+补充方向API尚未接入生产检查器。左侧仍需将补证作为显式候选接入全部规划／实测检查，再用原物理评分验证。右侧已完成高位0.35rad收口路线的静态检查和首轮原物理，详见下文；不扫参数，不改默认。
 
 Carry接续改动另留在途，未混合交付。M1a整体、连续区域、20＋20、完整50Hz均未新增通过。
 
@@ -78,17 +78,40 @@ python probe_workcell_workspace.py \
 
 双pad顶点投影的最小总开口38.890855mm。轴齐20mm方块沿斜闭合轴的投影为27.679576mm，加两侧各2mm为31.679576mm，容量满足。然而同一down q5下，固定指侧名义投影余量在0.5与0.35开度下均仅0.160212mm，活动指侧由20.624598降为11.051067mm。该诊断只使用声明目标XY与pad顶点，不读取物体真值；两侧各2mm是诊断目标，不能冒充新执行硬阈值或保证稳定接触。
 
-下一步实现显式开发参数 `pickup_open_jaw_rad=.35`，默认仍.5。高位收口须通过原扫掠、实测夹爪到位后才下降，再用原90sim/120wall物理回合验收。源码及三例profile实施中，原物理尚未启动。私有原件为同目录 `preclose035_screen.py` 与 `preclose035-screen.json`。
+下一步实现显式开发参数 `pickup_open_jaw_rad=.35`，默认仍.5。高位收口须通过原扫掠、实测夹爪到位后才下降，再用原90sim/120wall物理回合验收。源码及三例profile已在82918d7固定并完成首轮原物理。私有原件为同目录 `preclose035_screen.py` 与 `preclose035-screen.json`。
 
 
 ### 显式执行候选与物理前检查
 
 `VisualGraspController` 新增 `pickup_open_jaw_rad`，只支持原.5和显式.35。原.5不新增阶段、不改原分辨率。候选在视觉交接完成后，用实测高位q认证收口，再保持原高位等待夹爪误差≤.003rad且速度<.05rad/s；未到位不下降，阶段和总时钟不重置。非零完整高位／低位扫掠收紧分辨率，实际246点；零运动沿用原静态检查。在线弦认证、原90sim/120wall、IK／碰撞／成功评分保持。
 
-根对包含Carry的工作文件独立跑91项相关测试；另直接从Git索引导出不含Carry的候选源码，83项控制器／扫掠检查再次通过。原中心回归和实际抓放尚待Kaggle原物理。开发入口：
+根对包含Carry的工作文件独立跑91项相关测试；另直接从Git索引导出不含Carry的候选源码，83项控制器／扫掠检查再次通过。原中心回归和实际抓放已由Kaggle原物理通过，详见下文。开发入口：
 
 ```bash
 python run_workspace_case.py --profile scenarios/workspace-x-preclose-m1a.json   --case right_preclose35 --output-dir output/workspace-x-preclose-dev
 ```
 
 原大开度对照为 `right_original_open50`，原中心回归为 `center_regression`。保持原红盘，不据632个静态采样宣称闭环成功；不将预期对照失败改成pass。
+
+
+## 首轮原物理：固定盘右侧通过
+
+固定源码 `82918d77b7b3d52b9f123a5d91f3997dcc122836`，Kaggle `muqiaoqiao/so101-x-preclose-20261024/1`。同VM三例串行，原runner逐字相同，整组终态后才修改源码／记录；原裁判、原19轴、1mm、90sim/120wall和回退保持，不注入补方向API。这是功能验证，不是节拍A/B。
+
+| case / UUID | 原裁决 | sim s | episode wall s | process wall / CPU s |
+| --- | --- | ---: | ---: | ---: |
+| right_original_open50 / 1d8288ea-6408-48a7-90ad-fc0a0657c795 | fail：grasp_leg_collision | 0 | 3.033 | 3.978 / 5.476 |
+| right_preclose35 / be15f72b-6f14-4d50-9c4c-8ad68020b0d3 | pass | 79.26 | 50.714 | 51.808 / 61.861 |
+| center_regression / 62a5a8c7-4b86-4089-847a-ab9582924a9a | pass | 76.62 | 48.717 | 49.819 / 59.551 |
+
+原大开度在初始化抓取腿认证时拒绝，零物理拍、无录像／planning文件符合原失败路径；不将预期失败改判通过。两成功例自由物体、weld=0/mocap=0、全部状态finite/arm_valid、障碍接触0和safety_stop=false。保存规划模型的红盘floor仍(.24,−.13,.001)m。
+
+右候选真实抬升40.989mm、持物35.02s、落盘静稳7.54s；原释放审计通过，71.902s已脱离，最大XY漂移.192482mm、脱离后峰值接触力0。原回位终态home最大q6误差.102544mrad，最大关节速度9.47e−8rad/s，transport／separation均consumed/joined/owned_ack且无未知清理。planned／高位preclose／measured闭爪各246点通过。下降前一物理记录在17.06s，夹爪距.35为1.328e−6rad、速度3.367e−7rad/s；17.08s记录进入descend，保持同一世界及单调时钟。
+
+中心原244点planned／measured检查保持，持物32.84s，释放审计、脱离与回位通过。两视频实际ffprobe为496/496与479/479帧。
+
+完整周期右3963／中心3831拍；P95为14.943／14.889ms，max50.616／48.890ms，分别72／68拍>20ms，完整50Hz仍未通过。不同输入不是性能对照，不把wall差报告为提速。
+
+原件：`experiments/colab-twin/output/workspace-x-preclose-20261024/kaggle-v1/unpacked/so101-evidence/`，batch=`workspace-preclose/85640115-726c-4a24-8433-7e93c02a6dff/`。根独立readback保存于同kaggle-v1的`root-readback.json`。
+
+接续：保留显式候选，不改默认／网页±10mm。使用已有第二放置工位(.20,.20)m对`right_preclose35_secondary`再做一次原物理；连续工作区、扰动20＋20仍未验。
