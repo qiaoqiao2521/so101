@@ -327,6 +327,7 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
     output.mkdir(parents=True, exist_ok=True)
     current = {'status': 'running', 'phase': 'validating', 'simulation_s': 0.,
                'message': '解析工作站草稿', 'simulation_only': True,
+               'cancel_requested': False, 'cancelled': False,
                'station_path': str(station_path), 'output_directory': str(output)}
 
     def publish(**changes):
@@ -338,14 +339,15 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
 
     def check_cancel():
         if cancel_file is not None and cancel_file.exists():
+            current['cancel_requested'] = True
             raise Cancelled('用户停止了当前仿真')
 
     publish()
     try:
         check_cancel()
         station = json.loads(station_path.read_text())
-        if isinstance(station, dict) and 'station' in station:
-            station = station['station']
+        from station_recipe import station_from_document
+        station = station_from_document(station)
         layout = validate_station(station)
         if route_policy is None:
             from route_policy import load_route_policy
@@ -444,7 +446,12 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                     scene_callback=scene,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options=controller_options)
-        cancelled = cancel_file is not None and cancel_file.exists()
+        cancel_requested = current['cancel_requested'] or (cancel_file is not None and cancel_file.exists())
+        # A late request cannot replace the physical result or an earlier cause.
+        cancelled = (report.get('error_type') == 'Cancelled' and not report['passed']
+                     and not report.get('safety_stop') and not report.get('planner_cleanup_error')
+                     and not report.get('planner_cleanup_errors')
+                     and (not report.get('failure_reason') or report['failure_reason'] == report.get('error')))
         artifacts = {'report': str(output/'episode/report.json'),
                      'trajectory': str(output/'episode/trajectory.json'),
                      'resolved_station': str(output/'resolved-station.json')}
@@ -455,6 +462,7 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                 artifacts[key] = str(file)
         state = 'cancelled' if cancelled else 'succeeded' if report['passed'] else 'failed'
         publish(status=state, phase='complete' if state == 'succeeded' else state,
+                cancel_requested=cancel_requested, cancelled=cancelled,
                 message=('抓起、搬运、放置、脱离与回位完成' if state == 'succeeded'
                          else '用户已停止仿真' if cancelled else report.get('failure_reason', '仿真未完成')),
                 simulation_s=report.get('simulation_s', 0), artifacts=artifacts,
@@ -465,6 +473,9 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
     except Exception as error:
         state = 'cancelled' if isinstance(error, Cancelled) else 'failed'
         publish(status=state, phase=state, message=str(error), error_type=type(error).__name__,
+                cancel_requested=(current['cancel_requested'] or isinstance(error, Cancelled)
+                                  or (cancel_file is not None and cancel_file.exists())),
+                cancelled=state == 'cancelled',
                 unsupported=getattr(error, 'issues', []))
         return 0 if state == 'cancelled' else 1
 

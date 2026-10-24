@@ -1,0 +1,214 @@
+{
+  "format": "station-recipe",
+  "version": 1,
+  "units": "m",
+  "frameConvention": "translation-only",
+  "executionScope": "independent_episode",
+  "compatibility": {
+    "platform": "so101",
+    "executor": "so101-mujoco-visual-grasp",
+    "stationVersion": 1
+  },
+  "recipe": {
+    "id": "so101-x-minus20",
+    "name": "SO101 X−20mm 布局开发样例",
+    "revision": "1"
+  },
+  "station": {
+    "name": "SO101 X−20mm 布局开发样例",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101",
+        "kind": "robot",
+        "parent": "world",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "pick",
+        "name": "取料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.235,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "pick",
+        "position": [
+          -0.015,
+          0,
+          0.01
+        ]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [
+          -0.015,
+          0,
+          0.08
+        ]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "pick",
+        "position": [
+          -0.015,
+          0,
+          0.02
+        ]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.2,
+          0.2,
+          0
+        ]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.03
+        ]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.1
+        ]
+      }
+    ],
+    "program": [
+      {
+        "id": "s1",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s2",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s3",
+        "action": "move",
+        "target": "grasp",
+        "seconds": 1
+      },
+      {
+        "id": "s4",
+        "action": "close",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s5",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s6",
+        "action": "move",
+        "target": "release",
+        "seconds": 1
+      },
+      {
+        "id": "s7",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s8",
+        "action": "move",
+        "target": "clear",
+        "seconds": 1
+      }
+    ],
+    "notes": "来源：workspace-x-m1a / outside_x_minus20_layout_secondary。仅为布局开发样例，不代表连续工作区已验证；编辑后须重新运行原物理裁判。",
+    "execution": {
+      "mode": "workspace-development-v1",
+      "pick_xy_m": [
+        0.235,
+        -0.13
+      ],
+      "pickup_hover_z_m": 0.06,
+      "target_region_xy_m": [
+        [
+          0.21,
+          0.27
+        ],
+        [
+          -0.16,
+          -0.1
+        ]
+      ]
+    }
+  },
+  "skills": [
+    "pick",
+    "transfer",
+    "place"
+  ],
+  "observation": {
+    "source": "rgb",
+    "usage": "description; original executor remains authoritative"
+  },
+  "provenance": [
+    {
+      "repository": "qiaoqiao2521/so101",
+      "revision": "084cc7f6e01b93da54a4351f3194cd26de858432",
+      "path": "experiments/colab-twin/scenarios/workspace-station/x-minus20.json"
+    }
+  ],
+  "acceptanceReferences": [
+    {
+      "taskId": "f7c265d5-5668-4643-a2f0-b7db2bc05d83",
+      "report": "plans/workcell-productization-20261024/m1a-station-entry.md",
+      "scope": "independent_episode",
+      "historicalVerdict": "pass"
+    }
+  ]
+}

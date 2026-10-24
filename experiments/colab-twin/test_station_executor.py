@@ -114,7 +114,24 @@ class AdmissionTests(unittest.TestCase):
         self.assertEqual(result['execution']['editor_note']['gripper_force'], 999)
 
     def test_workspace_run_forwards_declaration_and_keeps_original_judge_limits(self):
-        for side in (None, 'right', 'left'):
+        cancel_error = '用户停止了当前仿真'
+        outcomes = (
+            ('original_failure', {'passed': False, 'failure_reason': 'mock_only'}, False, 1, 'failed'),
+            ('late_cancel_original_failure', {'passed': False, 'failure_reason': 'original_collision'}, True, 1, 'failed'),
+            ('late_cancel_success', {'passed': True, 'failure_reason': None}, True, 0, 'succeeded'),
+            ('cancel_cleanup_failure', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
+                'failure_reason': cancel_error, 'planner_cleanup_error': 'join failed',
+                'planner_cleanup_errors': [{'planner': 'return', 'error': 'join failed'}]}, True, 1, 'failed'),
+            ('actual_cancel', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
+                'failure_reason': cancel_error}, True, 0, 'cancelled'),
+            ('cancel_with_original_cause', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
+                'failure_reason': 'original_collision'}, True, 1, 'failed'),
+            ('cancel_with_safety_stop', {'passed': False, 'error_type': 'Cancelled', 'error': cancel_error,
+                'failure_reason': cancel_error, 'safety_stop': True}, True, 1, 'failed'),
+        )
+        cases = [(side, outcomes[0]) for side in (None, 'right', 'left')]
+        cases.extend((None, outcome) for outcome in outcomes[1:])
+        for side, (label, report, request_cancel, expected_code, expected_state) in cases:
             value = station() if side is None else workspace_station(side)
             seen = {}
 
@@ -128,7 +145,9 @@ class AdmissionTests(unittest.TestCase):
             def physical(source, output, budget, case, candidate, **kwargs):
                 seen.update(budget=budget, case=case, controller=kwargs['controller_options'])
                 kwargs['scene_builder'](source, output/'scene')
-                return {'passed': False, 'failure_reason': 'mock_only', 'simulation_s': 0.}
+                if request_cancel:
+                    cancel.touch()
+                return report
 
             names = ('quad_vertices', 'small_direction_cache', 'tree_leaf8', 'leaf_packed',
                      'packed_inline', 'seed_bound_direct', 'summary_fast')
@@ -140,16 +159,19 @@ class AdmissionTests(unittest.TestCase):
                        'run_visual_grasp': SimpleNamespace(SOURCE=Path('/unused-source.xml'),
                                                           run_physical_episode=physical),
                        'mujoco': SimpleNamespace(MjModel=SimpleNamespace(from_xml_path=lambda path: object()))}
-            with self.subTest(side=side), tempfile.TemporaryDirectory() as folder, \
+            with self.subTest(side=side, outcome=label), tempfile.TemporaryDirectory() as folder, \
                     patch.dict(sys.modules, modules):
                 root = Path(folder)
+                cancel = root/'cancel.request'
                 source = root/'request.json'
                 source.write_text(json.dumps({'station': value}))
                 (root/'status.json').write_text(json.dumps({'status': 'succeeded', 'report': {'passed': True}}))
-                self.assertEqual(run(source, root, None, route_policy=policy), 1)
+                self.assertEqual(run(source, root, cancel, route_policy=policy), expected_code)
                 status = json.loads((root/'status.json').read_text())
-                self.assertEqual(status['status'], 'failed')
-                self.assertFalse(status['report']['passed'])
+                self.assertEqual(status['status'], expected_state)
+                self.assertEqual(status['report'], report)
+                self.assertEqual(status['cancel_requested'], request_cancel)
+                self.assertEqual(status['cancelled'], expected_state == 'cancelled')
                 self.assertEqual(seen['budget'], {'max_episode_wall_s': 120, 'max_sim_s': 90})
                 self.assertEqual(seen['case']['initial_xy_m'], validate_station(value)['cube_xyz_m'][:2])
                 if side is None:
@@ -301,7 +323,10 @@ class AdmissionTests(unittest.TestCase):
             cancel = root/'cancel.request'
             cancel.touch()
             self.assertEqual(run(root/'missing.json', root, cancel), 0)
-            self.assertEqual(json.loads((root/'status.json').read_text())['status'], 'cancelled')
+            status = json.loads((root/'status.json').read_text())
+            self.assertEqual(status['status'], 'cancelled')
+            self.assertTrue(status['cancel_requested'])
+            self.assertTrue(status['cancelled'])
 
     def test_validation_failure_writes_unsupported_reasons(self):
         with tempfile.TemporaryDirectory() as folder:

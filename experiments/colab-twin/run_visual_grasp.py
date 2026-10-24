@@ -296,7 +296,9 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                                               'transport_first_command_invalid',
                                               'separation_saved_samples_invalid',
                                               'separation_admission_chord_invalid',
-                                              'separation_first_command_invalid'):
+                                              'separation_first_command_invalid',
+                                              'return_admission_chord_invalid',
+                                              'return_first_command_invalid'):
                     status['safety_stop']=True
                 raise RuntimeError('controller: '+str(last['failure_reason']))
             if time.monotonic()>=deadline: raise TimeoutError('wall_time_limit_after_controller')

@@ -12,6 +12,14 @@
 - 新候选保留算法与所有判据，只迁移实测q出发的完整回位规划。复用已consumed/joined的独占模型和原异步生命周期；结果接纳前保留上下文、实测桥接、首命令与预算。预计回位路径仍不能直接当作实测回位轨迹。
 - 默认不开启候选；同输入等价、原完整物理与完整周期分别裁决。局部测试不是抓放通过；新增等待不能当作算法计算减少。
 - 已完成三对同输入等价和两X布局反序4/4原物理。左首回位完整拍143.018→33.347ms、右36.634→30.314ms；候选仍超20ms，整程wall/CPU两侧方向不一致，不晋级默认。具体原件、指标和限制见[m1b-return-results.md](m1b-return-results.md)。
+- 新只读准入回合c0045f5f…原pass。最终_poll_return14.613ms，其中job生命周期自身约.067ms；两次原validate_joint_path共6.652ms，binding约4.742ms。完整首retreat33.843ms，controller之外与poll之外仍有成本，不能称仅剩线程切换。原最大116.359ms在transport，callbacks105.803wall／3.227threadCPU；它证明主要是主线程等待，尚不能区分文件I/O与宿主调度。不能把全部归给SAT、GC或原算法计算。
+
+## M2/M4 薄适配更新
+
+- 原Station只根据cancel文件存在优先发布cancelled，会覆盖更早物理fail及晚到请求前已完成的pass。现已分列cancel_requested／cancelled，仅真实Cancelled且无原安全、清理和其他失败原因时取消；原report保留。22项Station CPU检查通过，不冒充运行中取消实测。
+- 六技能不能只换阶段名：原progress在monitor.update前，close结束不证明抓住，Place的释放审计可能在Retreat中才完成。生命周期应消费初始视觉、实际issued、post-monitor、finally清理四类证据；完整恢复尚未实现。
+- 配方复用原Station payload与原任务入口，不另写执行器。前端和CLI共同核米制、纯平移、独立episode、SO101执行器、固定技能声明；未知可选元数据与历史引用保留，历史pass不产生当前pass。节点rotation及SO101未执行的size/motion/enabled明确拒绝，避免旧容错导入器无声丢弃执行语义。
+- 配方交换不等于FishBot同世界卸货。当前pick世界Z=0、cube Z=.01；车载高度、连续货物身份和同world/episode仍待实现。
 
 ## 已核事实
 

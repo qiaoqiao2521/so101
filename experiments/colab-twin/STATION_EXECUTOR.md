@@ -1,5 +1,22 @@
 # 工作站草稿执行适配
 
+## 可编辑工位配方
+
+网页“导出工位配方”保存 `station-recipe` v1；原“导入 JSON”可重新载入。导入仅建立草稿，清除当前任务关联，保留历史记录；不自动执行。保存、刷新、复制和再次导出保留配方来源与未知可选元数据。历史验收引用不代表当前草稿通过。
+
+配方复用原 Station 和执行入口，只支持米制平移、SO101 固定尺寸静态几何及独立仿真回合。未支持的单位、旋转、动态几何或平台会给出具体原因。它还不是 FishBot 同世界连续卸货接口，也不增加任意技能脚本。
+
+[X+20mm 配方](scenarios/recipes/station_recipe_v1-x-plus20.json)与[X−20mm 配方](scenarios/recipes/station_recipe_v1-x-minus20.json)内含原开发布局，可直接二改或复跑：
+
+```bash
+python experiments/colab-twin/evaluate_station.py \
+  --station experiments/colab-twin/scenarios/recipes/station_recipe_v1-x-plus20.json \
+  --candidate experiments/colab-twin/route_strategies/loaded_jaw_preload.py \
+  --output-dir experiments/colab-twin/output/recipe-check --timing
+```
+
+`cancel_requested`记录请求，`cancelled`记录执行结果。请求晚于原物理成功或失败时，保留原终态；取消期间出现安全或 worker 清理失败时，仍显示失败。具体新配方与运行中取消验收见[产品化进度](../../plans/workcell-productization-20261024/progress.md)。
+
 ## 从 Station／网页使用开发布局
 
 原默认工位仍使用 ±10mm。显式 `execution.mode=workspace-development-v1` 可从现有 Station 任务入口传红盘中心、取料高位和固定视觉先验。两份可导入示例为 [X+20mm](scenarios/workspace-station/x-plus20.json) 与 [X−20mm](scenarios/workspace-station/x-minus20.json)，来自网页真实导出，节点与参数同源。省略 execution 才使用旧默认；坏声明不会被删掉或偷偷换成旧场景。未知可选元信息警告并保留，原物理阈值不变。
