@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-24 — X两工位搜索候选完成原物理，实际整程成本下降
+
+Current：承接05cc17c固定源码，Kaggle so101-x-midpoint-20261024 v1已COMPLETE，原四进程全部终态。详见[m1a-x-midpoint-results.md](m1a-x-midpoint-results.md)。本轮=progress，未重复上一批、未操作实机或Mint。
+
+Done：左B→C、右已有第二放置工位C→B，4/4原pass。左process wall/CPU107.803/118.025→93.181/103.274s；右59.962/71.430→57.415/68.771s。左shortcut79→10候选弦、8110→2157状态、16.261→3.027s；右74→11、7145→2366、4.111→1.448s。省的是shorten_path直连弦认证，不是IK求解；原云provenance的不准确IK措辞在结果文档纠正、原件不改。
+
+Done：同侧原始OMPL／最终接近路径与最终认证exact相同，最终535／490状态保持；loaded-jaw preload保留，唯一偏好差异为midpoint。左hold均162拍，右候选反多5拍／.16sim秒，不把等待差当收益。后续异步／释放／实测回位轨迹不是整链exact相同，不作此声明。
+
+Done：原抓取／放置／静稳／释放／脱离／回位、全部碰撞／1mm／90sim120wall保持，左244/244、右246/246/246，安全停机／障碍接触0，free/weld0/mocap0，双worker确认清理。根直接原件72项通过，独立Monitor及ReleaseAudit四例exact重放，实视频463/463/515/514帧。全部运行产物保持Git忽略。
+
+Remaining：完整50Hz仍未过；左候选3703拍P95 40.835/max673.253ms、1512慢拍；右4115拍P95 18.557/max164.089ms、170慢拍。初始化收益不能算作快环改进，左close/lift controller仍20.172/5.862s。每工位只有一对，不推全场景收益或连续工作区，不切默认。
+
+Next：保留显式loaded_jaw_midpoint入口；按原实测继续拆左close/lift内部认证，不再复试已全慢的批量前缀。网页普通导入解绑旧任务修复3bce2c7已推并独立核远端；真实Carry HTTP链仍单列未验。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
+
 ## 2026-10-24 — 左侧成本分离，复用中点搜索候选
 
 Current：上一轮=progress。固定盘原Station真实5例已终态，本轮先定位close与shortcut，再实际验证新文档网页导入，不把状态重述当新运行。

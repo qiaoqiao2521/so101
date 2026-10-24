@@ -132,6 +132,8 @@ python experiments/colab-twin/evaluate_station.py \
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
+`route_strategies/loaded_jaw_midpoint.py` 是显式接近路径搜索候选，完整继承loaded-jaw父配方，仅开启中点顺序试探直连弦。固定盘左取料／右第二放置工位反序4/4原物理通过，本批进程wall分别少14.621／2.547s；最终接近路径与完整认证保持相同。它不改IK求解器，默认不切，完整50Hz仍未过。沿用原evaluate_station命令指定该candidate复跑；原件、全部成本和范围见[结果](../../plans/workcell-productization-20261024/m1a-x-midpoint-results.md)。
+
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 
 ### 能力段与局部判定
