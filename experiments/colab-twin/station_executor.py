@@ -429,6 +429,11 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                         object_xyz_m=row['object_xyz_m'], q6=row['q6'])
                 last_publish = now
 
+        def evidence(snapshot):
+            # The next existing status/scene publish carries this observation;
+            # no extra file write or control decision is added to the loop.
+            current['skill_evidence'] = dict(snapshot, attempt_id=output.name)
+
         case = {'id': 'station', 'initial_xy_m': layout['cube_xyz_m'][:2],
                 'perturbed': False, 'offset_rad': [0.]*5,
                 'obstacle_geom_names': ['approach_obstacle']+
@@ -443,7 +448,7 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                     {'max_episode_wall_s': 120, 'max_sim_s': 90}, case, None,
                     video=True, scene_builder=build_scene, progress_callback=progress,
                     **({'timing': timing} if timing is not None else {}),
-                    scene_callback=scene,
+                    scene_callback=scene, evidence_callback=evidence,
                     cancel_check=check_cancel, video_factory=StationVideo, video_stride=8,
                     controller_options=controller_options)
         cancel_requested = current['cancel_requested'] or (cancel_file is not None and cancel_file.exists())
@@ -462,6 +467,7 @@ def run(station_path, output, cancel_file, *, route_policy=None, timing=None):
                 artifacts[key] = str(file)
         state = 'cancelled' if cancelled else 'succeeded' if report['passed'] else 'failed'
         publish(status=state, phase='complete' if state == 'succeeded' else state,
+                skill_evidence=current.get('skill_evidence'),
                 cancel_requested=cancel_requested, cancelled=cancelled,
                 message=('抓起、搬运、放置、脱离与回位完成' if state == 'succeeded'
                          else '用户已停止仿真' if cancelled else report.get('failure_reason', '仿真未完成')),

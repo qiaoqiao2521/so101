@@ -184,7 +184,7 @@ def run_p0(source, out, protocol, deadline):
 def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                          scene_builder=None, progress_callback=None, cancel_check=None,
                          video_factory=None, video_stride=2, controller_options=None,
-                         scene_callback=None, timing=None):
+                         scene_callback=None, timing=None, evidence_callback=None):
     from episode_gc import DeferredGCWindow
     gc_window = DeferredGCWindow()
     try:
@@ -192,7 +192,7 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             video=video, scene_builder=scene_builder, progress_callback=progress_callback,
             cancel_check=cancel_check, video_factory=video_factory, video_stride=video_stride,
             controller_options=controller_options, scene_callback=scene_callback,
-            timing=timing, gc_window=gc_window)
+            timing=timing, gc_window=gc_window, evidence_callback=evidence_callback)
     finally:
         gc_window.restore()
 
@@ -200,10 +200,11 @@ def run_physical_episode(source, out, protocol, case, deadline, *, video=False,
 def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                           scene_builder=None, progress_callback=None, cancel_check=None,
                           video_factory=None, video_stride=2, controller_options=None,
-                          scene_callback=None, timing=None, gc_window):
+                          scene_callback=None, timing=None, gc_window, evidence_callback=None):
     from visual_grasp_controller import VisualGraspController
     from joint_planner import validate_joint_path
     from deferred_video import DeferredVideo
+    from physical_skill_evidence import PhysicalSkillEvidence, deliver_evidence
     out.mkdir(exist_ok=False)
     start_wall=time.monotonic()
     if timing is not None: timing.start()
@@ -216,6 +217,19 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
     status={'passed':False,'safety_stop':False,'failure_reason':None}
     model=None; data=None; time0=0.; last={'stage':'initializing'}
     scene_warning=False
+    skill_evidence=PhysicalSkillEvidence()
+    evidence_warning=False
+
+    def emit_evidence(snapshot):
+        nonlocal evidence_warning
+        if evidence_callback is None:
+            return
+        try:
+            deliver_evidence(evidence_callback,snapshot)
+        except Exception as error:
+            if not evidence_warning:
+                warnings.warn('WARNING physical evidence display failed: '+str(error))
+                evidence_warning=True
 
     def emit_scene(*, final=False, row=None):
         nonlocal scene_warning
@@ -231,6 +245,7 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                 warnings.warn('WARNING station scene update failed: ' + str(error))
                 scene_warning=True
     try:
+        emit_evidence(skill_evidence.report())
         if cancel_check is not None:
             cancel_check()
         builder = build_contact_scene if scene_builder is None else scene_builder
@@ -377,6 +392,8 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             emit_scene(row=row)
             if timing is not None: timing.mark('callbacks')
             status=monitor.update(row)
+            if skill_evidence.observe(row,status,baseline_z) is not None:
+                emit_evidence(skill_evidence.report())
             if release_audit.failure_reason:
                 status['safety_stop']=True
                 raise RuntimeError(release_audit.failure_reason)
@@ -493,6 +510,8 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
         status['wall_s'] = time.monotonic()-start_wall
         if time.monotonic()>=deadline:
             status.update(passed=False,failure_reason='wall_time_limit')
+        status['skill_evidence']=skill_evidence.finalize(status)
+        emit_evidence(status['skill_evidence'])
         write_json(out/'report.json',status)
         if timing is not None: timing.mark('report_write')
     return status

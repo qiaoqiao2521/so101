@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-24 — M2原物理Grasp证据接入中
+
+Current：上一目标轮次=progress（配方原物理及实际取消交付）。本轮将原monitor首次grasp_success接为只观察证据，传到原status与网页；没有用stage替代成功，也未改变控制器／裁判／碰撞／90sim120wall。
+
+Done：helper与接点已实现，事件仅在monitor.update后产生，记录观察拍数、首事件索引、时间和原接触／抬升事实；finalize在清理及最终deadline后复制原attempt结果。Station下一次原发布携带快照，不新增控制循环文件写入。根43项相关Python、12项网页执行数据检查和最终构建通过。独立审查发现callback嵌套引用会污染证据，已深拷贝隔离并加修改＋抛错回归，原顶层裁判始终未改。
+
+Done：四份真实记录回放：成功与取消首抓取均27.68s；未抓住无事件；失物曾28.80s确认、终局仍payload_lost。旧schema与baseline来源明确；取消末拍未被原monitor处理，只回放1511/1512行，保留原Cancelled结果。输出在忽略目录output/m2-grasp-evidence-20261024；不是四次新物理。
+
+Remaining：固定源码后用原Kaggle入口跑完整回合＋运输worker取消；网页证据展示的无运动QA待终结。六技能生命周期、行为树与同世界安全恢复尚未实现，Grasp证据不冒称完整M2。
+
+Issues：已安装BT.CPP4.10.0/MIT与Nav2 BT1.3.13/Apache2.0，仅核本机包及头文件；SO101未适配，Python当前环境未见py_trees。Nav2 halt可等待取消future，不能放进50Hz循环；重新run Station会reset，不算同世界恢复。复用原资源和任务，不新造树引擎。
+
+Next：根固定源码后接原物理并独立核证据时序／结果保真，再接真正的可halt技能与恢复。Knowledge=already_covered，沿用Wiki《ROS2 与FishBot》§20，项目新时序与数值留本计划。
+
 ## 2026-10-24 — M4配方交换原物理1/1，M2运行中取消清理通过
 
 Current：本轮=progress，详见[m4-recipe-results.md](m4-recipe-results.md)。可编辑配方已接原网页／Station／CLI；浏览器导出原文交固定fd20512源码，在Kaggle串行完成完整任务及真实worker取消，原生COMPLETE后独立回读。两项不是性能A/B或两次抓放成功。

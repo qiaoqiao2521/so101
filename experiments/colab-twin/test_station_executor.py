@@ -145,6 +145,8 @@ class AdmissionTests(unittest.TestCase):
             def physical(source, output, budget, case, candidate, **kwargs):
                 seen.update(budget=budget, case=case, controller=kwargs['controller_options'])
                 kwargs['scene_builder'](source, output/'scene')
+                kwargs['evidence_callback']({'schema': 'so101.physical-skill-evidence.v1',
+                    'scope': 'observation_only', 'grasp': {'postcondition_met': True}})
                 if request_cancel:
                     cancel.touch()
                 return report
@@ -170,6 +172,8 @@ class AdmissionTests(unittest.TestCase):
                 status = json.loads((root/'status.json').read_text())
                 self.assertEqual(status['status'], expected_state)
                 self.assertEqual(status['report'], report)
+                self.assertEqual(status['skill_evidence']['attempt_id'], root.name)
+                self.assertTrue(status['skill_evidence']['grasp']['postcondition_met'])
                 self.assertEqual(status['cancel_requested'], request_cancel)
                 self.assertEqual(status['cancelled'], expected_state == 'cancelled')
                 self.assertEqual(seen['budget'], {'max_episode_wall_s': 120, 'max_sim_s': 90})
