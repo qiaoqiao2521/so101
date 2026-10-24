@@ -556,3 +556,8 @@ Next F2bt：独立SAT阈值充分轴见证，只限main回位布尔消费，数�
 F2bt完成：8局部回归及同真实75点组件通过，原screen准入；两工位反序4/4原物理通过，原全部244/安全/释放回位不变。main return126.439→74.009、56.334→33.110ms，但整程wall58.193510→58.710048、47.555413→49.377854s，匹配非等待CPU亦未减。不晋级默认、不追加追绿；完整50Hz仍未过。原件output/return-clearance-witness-factory-20261024，private round87可复跑。
 
 Next F2bu只读计时真实_return_path分项，区分arm认证、MuJoCo和nonpad几何距离/SAT，不含离线核验，不累加重叠区间、不当性能基准。private round88已准备，尚未运行；不先写新策略，不恢复定时器，由Root GPT继续Kaggle。
+
+
+F2bu只读归因终态且独立通过：同75点与全部数值/布尔/路径、方法恢复、线程和调用量核验；剩余候选arm约34ms、release约38ms为inclusive插桩时长，不是提速基准或硬下限。原件output/return-cost-attribution-20261024/v1。
+
+Next F2bv：只读原默认抓放采集worker/main回位q、arm/distances、模型与浮点环境，核对原采样与上下文可否复用；private round89已准备，尚未运行。不直接跳过main认证，不重复旧hints/FK负例，不改默认。原全部244/安全/90sim120wall保持，Root GPT继续Kaggle。

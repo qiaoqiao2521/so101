@@ -650,3 +650,12 @@ sourceade153f；Kaggle私有component v1及physical v1/v2真实源码、scope和
 两个站都没有整程成本收益，因此不晋级默认；仅保存局部及尾延迟有效的证据。主线程真实分别查75/37点，robot几何1275/629，pad见证150/74，原native arm每点照常；不是删点/放宽阈值。sim79.68→79.78、77.44→77.50s，候选反多5/3拍，不用等待差算算法提速。慢拍186→152、68→92，P95 19.380→18.432、15.098→15.675ms，最大91.393/50.547ms，完整50Hz未过。
 
 第二站前缀3047同拍CPU26.797225→27.228020s、初始化6.679→7.098s，说明总差已有作用域前变化；不作唯一原因判断，也不删除完整实测回退。原件output/return-clearance-witness-factory-20261024/independent-physical-inventory.json分列所有原指标和生命周期。private round87的首次SaveKernel400与后来缩短title/slug成功均保留，未改候选；组件/物理Kaggle确切slug及版本在progress中。下一项仅拆分剩余回位成本，避免继续只优化SAT后无依据外推总任务。
+
+
+## F2bu 剩余回位成本的有界只读拆分
+
+Kaggle so101-return-cost-attribution-20261024 v1/sourceec99737，独立检查有效。75点原arm/姿态/数值布尔/路径/pad保持，所有观察器恢复；主线程唯一、无负时间，75/1125/150实际调用量排除把后续离线75点复核计入的错误。使用inclusive timer而非跨线程cProfile，父子时长不可相加；raw与independent-return-cost-readback.json在output/return-cost-attribution-20261024/v1。
+
+插桩原arm36.0ms、原release96.4ms（SAT71.3/forward4.6/nonpad6.5）；阈值候选arm34.0ms、release38.0ms（witness12.7/forward4.3/nonpad6.6）。这里支持剩余认证工作值得调查，不支持新提速或硬性50Hz下限。arm FK仅约.7ms，不据此重开旧pose-only方向；原F2as全局scalar hints未快的反证不变。
+
+源码_poll_separation保留accepted_plan和planned_return_path；_transition在separate结束用实测q再走完整_return_path。worker与main回位输入只有终点相同不等于整条路径相同，不能用近似q命中缓存。下一F2bv只取证独立模型/浮点环境及真实原采样，暂不编写路线复用或放宽原阈值。private round89的观察器只读原默认任务并保留所有方法/槽及模型导出失败信息；必须先真实物理和独立读回，编译通过不算成果。

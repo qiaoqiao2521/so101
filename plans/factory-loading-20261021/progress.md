@@ -1555,3 +1555,14 @@ Root GPT独立候选，只在main/separate→retreat消费布尔间距时使用�
 原件output/return-clearance-witness-factory-20261024/component-v1/physical-v1/physical-v2及independent-physical-inventory.json；两对各有原评分与pair/policy/startup/search/physics/feature独立读回。private round87保存原型、8测试、源码pull/metadata和两路径；组件实际slug为so101-return-clearance-witness-component-20261024，物理so101-return-witness-physical-ab-20261024不可变v1/v2。首次51字符标题/slug提交SaveKernel400留submission-failure-v1.json；缩短后成功，不冒称额度不足或已有物理失败。物理算法与安全条件未因提交修正变化。
 
 Next F2bu：只读拆分真实_return_path的inclusive wall/thread-CPU：原arm认证、原MuJoCo更新、nonpad原生距离、SAT/布尔见证。collection仅在回位函数内开启，排除后续75点数值核验；父子区间不累加，不把插桩时长当基准。复用round87已验收输入、现有Kaggle环境与原函数，不再发新物理/新策略，先定位剩余成本。private round88已准备entry，尚未运行；Root GPT接续。Knowledge=already_covered，原Wiki第20节覆盖作用域/反证与实际输出验真，项目现象不升级为通用知识。
+
+
+## F2bu 回位只读归因已独立通过，接F2bv上下文取证
+
+sourceec99737，Kaggle private so101-return-cost-attribution-20261024 v1终态。非cProfile，只用公开函数wall/thread-time包装，collection只在_return_path内开启；原75点、arm、布尔/数值参照、pad与路径同值，退出方法全部恢复。无跨线程、无负时间；75次arm/kinematics/forward、1125次nonpad距离、150次pad表明离线数值复核未被重复计入。独立protocol_valid=true，source/entry/private另核通过。
+
+此插桩样本中，原arm evaluate36.0ms、numeric release96.4ms；后者包含SAT71.3ms、forward4.6ms、nonpad距离6.5ms。阈值候选arm34.0ms、boolean release38.0ms，后者含pad witness12.7ms/forward4.3ms/nonpad6.6ms。父子inclusive区间重叠，不累加，不以这些带观察器时长作新性能基准或50Hz下限。arm kinematics仅.65–.73ms，因此不重做已拒绝的pose-only FK；旧F2as标量方向提示原物理未快的负例继续保留。
+
+原件output/return-cost-attribution-20261024/v1，return-cost-attribution.json、independent-return-cost-readback.json和independent-source-readback.json齐全；private round88包含精确entry/base probe/独立读回/云源码。没有新物理成绩或默认变化。
+
+Next F2bv：源码已确认worker先认证planned_return_path，而main从真实到达q重新认证，起点并非相同。现有归档不足以把旧回位路径当当前证书。private round89已准备只读原默认单回合：记录两线程原q/arm/distances、模型副本、原native浮点环境与NumPy错误策略，原方法和槽恢复后导出。只用机器人q及冻结释放估计，原judge真值不入策略；不复用路线、不跳点、不比较插桩秒数。独立核对模型语义、原采样序列与实际起点差后再决定是否存在可验证的桥接方案，尚未运行。Knowledge=already_covered，原Wiki第20节覆盖来源、范围和实际输出验真；无新增跨项目知识、定时器或外界对话消息。
