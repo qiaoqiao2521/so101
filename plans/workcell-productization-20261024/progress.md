@@ -1,5 +1,25 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 固定盘 X 向数值补证已完成，右侧整链仍拒绝
+
+Current：[本轮结果](m1a-x-fixed-certificates.md)。用户最新X方向，未移动红盘、未改原19轴／默认、1mm、限位、244点或评分。原生可选方向API和可复跑诊断已实现，不接生产准入。
+
+Done：固定左X−20mm参考2／下降74／闭爪244／抬升74实际全查并数值认证；246条新增几何对完整支持／平方门成立，最小见证下界12.083509mm，原offline_screen_pass=false保持。固定右54mm路线原64拒绝点逐点回读，原生18认证／46拒绝（下降0/14、闭爪18/50）；不将不认证写成物理碰撞。
+
+Done：相关原native、保守检查和探针46项测试通过；内部GPT独立回读无缺失／换对。修复诊断覆盖表述（失败前缀complete=false）和原NaN输出（null且certified=false），真实右侧负例仍拒绝。无新物理／无性能或50Hz声明。
+
+Next：根核高位0.35rad开口的下降／244点闭爪及双pad宽度几何，再决定候选。左侧数值补证也不能代替原物理验收。Carry接续两仓12文件保留在途，owner根；本轮只显式提交X诊断与结果。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20；不写记忆或并行新知识页。
+
+## 2026-10-24 — 接续固定红盘 X 向 IK／净距
+
+Current：用户最新指定 X 方向。原盘 X+20mm／60mm 仍是腕限位；54mm 已有 IK，但下降与闭爪拒绝待查。X−20mm 原19轴证书不足，单姿态已有更强分离轴。先对原拒绝的 mesh-box 几何对补候选方向，用原完整顶点区间投影与1mm认证；不移动红盘，不改原裁判、几何或默认准入。
+
+In progress：根负责轴候选／可复跑诊断；内部GPT补可选原生方向认证及独立右侧几何核验。agent-link/CodeBuddy本次返回空结果，回退内部GPT。完整物理候选须先过原下降／244点闭爪离线检查；未测不记成功。
+
+Preserved：CarryGate 等待接续为在途工作，本轮未启动云批次；SO101四文件及工作台八文件保留，owner根Codex。其接口／前端局部检查已过，仍缺生产构建／浏览器／原物理，不作为已部署功能。最短入口为carry_gate.py、station_executor.py和工作台原runtime测试；本轮不混合提交。
+
+Next：核左侧已知分离轴与右侧全部原拒绝点，区分漏方向、间隙不足与实际相交；Knowledge=already_covered，采用Wiki《ROS2 与 FishBot》§20中“固定场景、独立评分和候选晋级分别验证”，不以新布局替代固定盘位结果。
+
 ## 2026-10-24 — M2原物理Grasp证据到网页已实测
 
 Current：本轮=progress；[完整结果](m2-grasp-evidence-results.md)。固定b21b1d9在Kaggle同VM串行新原完整抓放＋运输worker取消，整组终态后才回写源码仓。没有重训、改控制／评分／碰撞或放宽90sim120wall。

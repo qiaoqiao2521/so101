@@ -286,6 +286,9 @@ def _configure_library(lib):
     lib.ns_destroy.restype = None
     lib.ns_evaluate.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64, C.c_int64, C.c_double, _DOUBLE, _INT64]
     lib.ns_evaluate.restype = C.c_int
+    lib.ns_certify_directions.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64,
+                                         _DOUBLE, C.c_int64, C.c_double, _DOUBLE, _INT64]
+    lib.ns_certify_directions.restype = C.c_int
     lib.ns_evaluate_hinted.argtypes = [C.c_void_p, _DOUBLE, _DOUBLE, _INT64,
                                      C.c_int64, C.c_double, _DOUBLE, _INT64, _INT64, _INT64]
     lib.ns_evaluate_hinted.restype = C.c_int
@@ -415,6 +418,39 @@ class NativeSupport:
     def evaluate(self, positions, rotations, pairs, margin: float) -> dict[str, np.ndarray]:
         with self._lock:
             return self._evaluate_locked(positions, rotations, pairs, margin)
+
+    def certify_directions(self, positions, rotations, pair, directions, margin: float) -> dict[str, np.ndarray]:
+        """Certify one mesh/box pair using caller directions and full vertices.
+
+        Directions are recomputed search inputs, never cached certificates.
+        This optional call neither changes the original fixed19-axis query nor
+        publishes witness hints. Detail fields retain the original one-row API.
+        """
+        with self._lock:
+            if not self._handle:
+                raise RuntimeError("NativeSupport is closed")
+            p = np.array(positions, dtype=np.float64, order="C", copy=True)
+            R = np.array(rotations, dtype=np.float64, order="C", copy=True)
+            raw_pair = np.asarray(pair)
+            if raw_pair.shape != (2,):
+                raise ValueError("Pair must have shape (2,)")
+            q = self._copy_pairs(raw_pair.reshape(1, 2))
+            n = np.array(directions, dtype=np.float64, order="C", copy=True)
+            if n.shape == (0,):
+                n = n.reshape(0, 3)
+            if n.ndim != 2 or n.shape[1] != 3:
+                raise ValueError("Directions must have shape Kx3")
+            if p.shape != (self.geometry_count, 3) or R.shape != (self.geometry_count, 3, 3):
+                raise ValueError("Frame position/rotation shapes do not match original geometry")
+            numeric = np.empty((1, 12), dtype=np.float64)
+            flags = np.empty((1, 6), dtype=np.int64)
+            status = self._lib.ns_certify_directions(
+                self._handle, p.ctypes.data_as(_DOUBLE), R.ctypes.data_as(_DOUBLE),
+                q.ctypes.data_as(_INT64), n.ctypes.data_as(_DOUBLE), len(n), float(margin),
+                numeric.ctypes.data_as(_DOUBLE), flags.ctypes.data_as(_INT64))
+            if status:
+                raise RuntimeError("Native direction certification failed closed")
+            return self._decode(numeric, flags)
 
     def bind_pairs(self, pairs):
         """Own a validated ordered snapshot; evaluation retains this handle's lock."""

@@ -871,6 +871,66 @@ int ns_evaluate(void* raw,const double* positions,const double* rotations,
     }
 }
 
+// Optional caller-selected mesh/box directions. No fixed-axis search or
+// persistent hints are changed; each direction uses original full support.
+int ns_certify_directions(void* raw,const double* positions,const double* rotations,
+                         const std::int64_t* pair,const double* directions,
+                         std::int64_t count,double margin,double* output,std::int64_t* flags) {
+    if (!raw||!positions||!rotations||!pair||!output||!flags||count<0||
+            (count>0&&!directions)) return 1;
+    auto* context=static_cast<Context*>(raw);
+    Result failed;
+    if (!environment()) failed.reason=5;
+    else if (!std::isfinite(margin)||margin<=0.) failed.reason=4;
+    bool frame_valid=failed.reason==0;
+    for (std::size_t g=0;g<context->geoms.size()&&frame_valid;++g) {
+        for (int j=0;j<3;++j) frame_valid &= std::isfinite(positions[g*3+j]);
+        for (int j=0;j<9;++j) frame_valid &= std::isfinite(rotations[g*9+j]);
+    }
+    for (std::int64_t i=0;i<count&&frame_valid;++i)
+        for (int j=0;j<3;++j) frame_valid &= std::isfinite(directions[3*i+j]);
+    if (!frame_valid) {
+        if (!failed.reason) failed.reason=3;
+        write_result(failed,output,flags);
+        return 0;
+    }
+    const auto first=pair[0],second=pair[1];
+    if (first<0||second<0||static_cast<std::size_t>(first)>=context->geoms.size()||
+            static_cast<std::size_t>(second)>=context->geoms.size()) {
+        failed.reason=6;write_result(failed,output,flags);return 0;
+    }
+    if (context->geoms[first].kind==context->geoms[second].kind) {
+        failed.reason=3;write_result(failed,output,flags);return 0;
+    }
+    try {
+        Frame a,b;
+        a.geom=&context->geoms[first];b.geom=&context->geoms[second];
+        std::copy(positions+3*first,positions+3*first+3,a.p.begin());
+        std::copy(positions+3*second,positions+3*second+3,b.p.begin());
+        std::copy(rotations+9*first,rotations+9*first+9,a.R.begin());
+        std::copy(rotations+9*second,rotations+9*second+9,b.R.begin());
+        Result best;bool has_best=false;std::int64_t evaluated=0;
+        for (std::int64_t i=0;i<count;++i) {
+            const Vec n{directions[3*i],directions[3*i+1],directions[3*i+2]};
+            Result current;
+            if (!certificate(a,b,n,margin,true,current)) {
+                failed.reason=3;failed.evaluations=evaluated;
+                write_result(failed,output,flags);return 0;
+            }
+            ++evaluated;
+            if (!has_best||current.bound>best.bound) {best=current;has_best=true;}
+            if (current.certified) {
+                current.index=i;current.evaluations=evaluated;current.reason=1;
+                write_result(current,output,flags);return 0;
+            }
+        }
+        best.certified=false;best.index=-1;best.evaluations=evaluated;best.reason=2;
+        write_result(best,output,flags);return 0;
+    } catch (...) {
+        failed.reason=3;write_result(failed,output,flags);return 0;
+    }
+}
+
 // Caller-owned G x 3 x 2 IDs. Context retains no mutable witness state.
 // All input/output regions must be nonoverlapping and have their ABI lengths.
 // Equal hint pointers are rejected; partial overlap is outside this contract.

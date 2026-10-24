@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import numpy as np
 
 import probe_workcell_workspace as probe
 from grasp_episode import build_contact_scene, solve_pinch_ik
@@ -67,6 +68,67 @@ class WorkspaceProbeTests(unittest.TestCase):
                        [{'id': 'same', 'xy_m': [0., 0.]}]*2):
             with self.subTest(points=points), self.assertRaises(ValueError):
                 probe.normalize_points(points)
+
+    def test_optional_height_keeps_original_ik_threshold_and_bounds(self):
+        for height in (True, .05399, .06001, float('nan')):
+            with self.subTest(height=height), self.assertRaises(ValueError):
+                probe.probe_workspace(self.model, pickup_hover_z_m=height)
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            report = probe.probe_workspace(self.model, [{'id': 'center', 'xy_m': [.24, -.13]}],
+                                           pickup_hover_z_m=.054)
+        self.assertEqual(report['points'][0]['stages']['approach']['target_pinch_world_m'][2], .054)
+        self.assertEqual(report['points'][0]['stages']['down']['target_pinch_world_m'][2], .019)
+        self.assertEqual(report['contract']['collision_margin_m'], .001)
+
+    def test_optional_extra_directions_retain_original_result_and_full_closure(self):
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            report = probe.probe_workspace(self.model, [{'id': 'center', 'xy_m': [.24, -.13]}],
+                                           extra_mesh_box_axes=True)
+        point = report['points'][0]
+        self.assertTrue(point['offline_screen_pass'])
+        extra = point['extra_axis_screen']
+        self.assertTrue(extra['supplemental_valid'])
+        self.assertTrue(extra['not_admitted'])
+        self.assertTrue(extra['not_physical'])
+        closure = extra['checks']['closure']
+        self.assertEqual(closure['observed_samples'], 244)
+        self.assertTrue(closure['complete'])
+        self.assertTrue(closure['validation']['valid'])
+        self.assertLessEqual(closure['validation']['max_jaw_step_rad'], .002)
+        self.assertEqual(closure['original_rejections'], [])
+
+    def test_extra_axis_diagnostic_cannot_hide_missing_ik(self):
+        screen = probe._extra_axis_screen(self.model, None, {}, np.zeros(5))
+        self.assertFalse(screen['supplemental_valid'])
+        self.assertEqual(screen['status'], 'missing_ik_endpoint')
+
+    def test_extra_axis_first_failure_is_explicitly_incomplete(self):
+        # A diagnostic must not call a one-sample rejected prefix a full sweep.
+        rejected = {'original': {'valid': False}, 'supplemental_valid': False}
+        with patch('mesh_box_axes.MeshBoxAxes.inspect', return_value=rejected):
+            screen = probe._extra_axis_screen(self.model, None,
+                {name: np.zeros(5) for name in ('approach', 'down', 'lift')}, np.zeros(5))
+        closure = screen['checks']['closure']
+        self.assertFalse(closure['complete'])
+        self.assertEqual(closure['observed_samples'], 1)
+        self.assertEqual(closure['validation']['required_states'], 244)
+        self.assertFalse(screen['supplemental_valid'])
+
+    def test_real_right_rejected_pose_remains_rejected_and_strict_json(self):
+        from mesh_box_axes import MeshBoxAxes
+        checker = probe.CollisionChecker(self.model, gripper=.5, margin_m=.001)
+        self.addCleanup(checker.native.close)
+        # Frozen original fixed-tray X+20mm down/open failure from round102.
+        q6 = [.5295673994985538, .5989791439095056, -.4141037308946587,
+              1.3859209137800415, 1.145968274084528e-15, .5]
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            result = MeshBoxAxes(self.model).inspect(checker, q6)
+        self.assertFalse(result['original']['valid'])
+        self.assertFalse(result['supplemental_valid'])
+        self.assertTrue(result['pairs'])
+        self.assertFalse(result['pairs'][0]['certified'])
+        self.assertIsNone(result['pairs'][0]['squared_gap_lower'])
+        json.dumps(result, allow_nan=False)
 
     def test_scene_error_is_machine_readable_and_cannot_claim_success(self):
         output = io.StringIO()
