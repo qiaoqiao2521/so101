@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 生产明细组件与原物理五例完成
+
+Current：固定5badfff，Kaggle so101-refinement-details-physical-20261025 v1已COMPLETE，五原进程均终态pass；[生产结果](m1b-refinement-details-results.md)。新收益来自实际评测，没有重跑上一批。
+
+Done：生产组件三对完整返回exact，wall／CPU中位比.720152／.720157；571态／285对／原244保持，固定轴ABI1142→571、补方向571不减。原左主B→C／左第二点C→B／无execution中心回归5/5。两工位process wall少4.924007／5.002280s，CPU少4.764859／4.616346s；hold同拍163／182，nonhold controller少4.665780／4.949293s。close 18.033→12.710／19.330→12.943s，不是等待帧收益。
+
+Done：同侧原OMPL／接近路径／最终认证exact，1.002711796mm分离证书下界保持；原1mm／244／裁判／90sim120wall未改。五例抓放／释放／脱离／回位、free／weld0／mocap0及双worker清理核实，无安全停机／障碍接触。根61项通过，独立Monitor／ReleaseAudit五例exact、unknown=[]，实视频464／464／480／480／485帧。主trajectory exact，第二释放差一拍，不外推整链。原件Git忽略。
+
+Remaining：保留显式候选、不切默认。主P95 35.381→36.463ms、慢拍627→663；第二36.119→38.338ms、770→1026，完整50Hz没有改善。transport controller反增.922／1.684s；先核真实谓词与同输入调用量，不猜GC／负载或盲调参数。
+
+Issues：wrapper残留pending字符串，以五原裁判终态为准；组件缺独立loaded-library flags收据保留未知。dsh实调120s超时，内部GPT只读未发现本轮回归；既有直接bound特殊margin转换关闭handle边界另留最小修复，正常checker预转float不触发。
+
+Next：整组终态后才回写／提交本轮。根接原组件检查transport/lift/hold输出及成本。完整50Hz、连续X域、20＋20、真实Carry HTTP整链仍未过，既有失败保留。Knowledge=already_covered，沿用Wiki§20；owner根Codex。
+
 ## 2026-10-25 — 同次明细生产候选完成接线，待固定源码原评测
 
 Current：承接24日原物理搜索收益与组件三对，不重启项目。[本轮代码与组件](m1b-refinement-details-results.md)。原4/4抓放仍是最近物理成绩，新明细候选还不是物理通过。

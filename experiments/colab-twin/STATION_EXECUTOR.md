@@ -128,13 +128,13 @@ python experiments/colab-twin/evaluate_station.py \
   --output-dir experiments/colab-twin/output/route-comparison/raised-shorter
 ```
 
-省略candidate实际加载已通过两工位对照的 `route_strategies/summary_fast.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`seed_bound_direct.py`可复跑直接父版，`leaf_packed_inline.py`和`leaf_packed.py`保留此前实现；RoutePolicy()及其他显式旧候选不自动叠加任何后续开关。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
+省略candidate实际加载已验收的 `route_strategies/loaded_jaw_preload.py`；直接station_executor缺省入口复用同一选择。显式传 `--candidate experiments/colab-twin/route_strategies/baseline.py` 可复跑原版，`seed_bound_direct.py`可复跑直接父版，`leaf_packed_inline.py`和`leaf_packed.py`保留此前实现；RoutePolicy()及其他显式旧候选不自动叠加任何后续开关。`evaluation.json`的candidate记录本次加载路径、入口源码路径、Git引用和实际返回的偏好；controller另记原执行器来源。`policy_execution`从本轮planning/report提取worker实际采用的运输高度与脱离目标。无效候选明确failed/unscored，不回退基线。正常候选的偏好经不可变快照传给原worker，不向它提供裁判或执行中的物体真值。
 
 候选为本地审阅过的源码。比较时只修改候选文件，不改 `learning_env.py`、模型、场景、释放/碰撞阈值或评分。该小接口用于路线选择，不提供通用插件、代码隔离或训练框架。
 
 `route_strategies/loaded_jaw_midpoint.py` 是显式接近路径搜索候选，完整继承loaded-jaw父配方，仅开启中点顺序试探直连弦。固定盘左取料／右第二放置工位反序4/4原物理通过，本批进程wall分别少14.621／2.547s；最终接近路径与完整认证保持相同。它不改IK求解器，默认不切，完整50Hz仍未过。沿用原evaluate_station命令指定该candidate复跑；原件、全部成本和范围见[结果](../../plans/workcell-productization-20261024/m1a-x-midpoint-results.md)。
 
-`loaded_jaw_midpoint_details.py` 另只显式启用 `reuse_refinement_details`，不自动打开mesh补证。它将同次原生查询的拥有明细交给refiner；错配／重入／可选复制失败仍回原查询，原native错误保持拒绝，全部pair、244采样与阈值不变。默认关闭，当前仅完成组件／软件检查，生产路径组件与原物理仍待验，不能引用私有原型28.4%作为整程收益。进度见[明细交接](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。
+`loaded_jaw_midpoint_details.py` 另只显式启用 `reuse_refinement_details`，不自动打开mesh补证。它将同次原生查询的拥有明细交给refiner；错配／重入／可选复制失败仍回原查询，原native错误保持拒绝，全部pair、244采样与阈值不变。默认关闭。生产组件三对exact且均更省，左主／第二放置工位反序与中心原物理5/5；两工位实际process wall少4.924／5.002s且CPU均降、hold同拍。保留显式候选，不切默认；P95及慢拍计数反增，完整50Hz未过，不将组件比例当整程收益。进度见[明细交接](../../plans/workcell-productization-20261024/m1b-refinement-details-results.md)。
 
 工作台通过现有独立 FishBot 仓库的 `apps/fishbot-control-station/so101-runtime.cjs` 调用本入口，Web 依赖与机器人依赖各自安装。工作台地址 http://127.0.0.1:5186/so101-station ，右侧显示本次任务的原生实时三维，本次录像与原报告位于任务栏；原历史录像使用独立入口。
 

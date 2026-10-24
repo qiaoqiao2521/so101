@@ -9,7 +9,9 @@
 
 原_bound.summary已在锁内算完整numeric/flags，MeshBoxAxes.refine随后对同FK再次执行285对native.evaluate。私有单调用拥有明细在571派生状态上将固定轴ABI1142→571，补方向571保持；原全部返回／报告／hint与244扫掠exact。固定500dc47的Kaggle三对wall/threadCPU均降，中位比.716078/.715990；[组件结果](m1b-refinement-details-results.md)不代表整程提速或物理通过。
 
-明细须在锁内复制、单次消费；不持有scratch view，不跨姿态／owner／模型／margin复用。关闭或错配仍走原查询并保留原拒绝。生产候选尚在实施，默认关闭；实际碰撞与并发覆盖、原Station物理另验。已淘汰的batch前缀会新增工作，与去掉同次重复detail是不同方案。
+明细须在锁内复制、单次消费；不持有scratch view，不跨姿态／owner／模型／margin复用。关闭或错配仍走原查询并保留原拒绝。生产默认关闭，已补实际碰撞／所有权／重入回退测试；新生产组件中位比.720152／.720157，五例原物理5/5。两左工位实际wall分别少4.924／5.002s、CPU均降且hold同拍，保留显式候选。已淘汰的batch前缀会新增工作，与去掉同次重复detail是不同方案。
+
+整程计算减少不等于50Hz改善：本批两对P95及>20ms拍数均增加，transport controller还增.922／1.684s。不能从close收益推全阶段或跨VM累计秒数。下一证据是实际运输谓词的同输入调用与组件成本；现有分段记录不足以猜定唯一原因。
 
 ## X请求的搜索顺序：原物理收益已证实，快环问题仍在
 

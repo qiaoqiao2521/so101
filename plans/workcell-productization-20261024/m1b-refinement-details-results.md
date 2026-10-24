@@ -1,5 +1,9 @@
 # M1b：同次几何查询的完整明细交接
 
+## 当前结果
+
+固定5badfff的生产组件及原Station五例已结束，五例全部原pass。两左工位反序对照process wall分别减少4.924／5.002s，CPU均降，hold同拍。保留显式候选，不切默认。完整50Hz未过，P95和慢拍计数反增；详见下方生产结果。前文“待验”描述对应历史阶段。
+
 ## 已证实的局部收益
 
 左固定盘close尾段的私有原型在Kaggle完成三对AB/BA/AB组件计时，均完整输出exact相同，候选wall中位比.716078、threadCPU中位比.715990。减少的是同姿态固定轴285对的第二次查询；每姿态全部285对仍认证，补充方向查询也仍执行。
@@ -54,7 +58,51 @@
 
 原物理尚未验，不记新抓放通过，不切默认。原搜索候选4/4通过与完整50Hz未过的结论继续有效。
 
-## 原件与复跑
+## 2026-10-25：生产组件与原物理全部终态
+
+Kaggle `muqiaoqiao/so101-refinement-details-physical-20261025/1` 已COMPLETE，只提交一次，固定源码`5badfff07c3cfbc2afab91a654e93e68d801462f`，整组终态前源码冻结。生产组件直接比较False／True，没有安装私有handoff；原571态／9弦／285对／244报告保持，六份源码与输入逐字一致。
+
+| pair / 顺序 | wall 原版→候选 s | threadCPU 原版→候选 s |
+| --- | ---: | ---: |
+| 0 / B→C | 1.522757→1.105607 | 1.521776→1.105364 |
+| 1 / C→B | 1.590496→1.145400 | 1.590163→1.145168 |
+| 2 / B→C | 1.603944→1.127357 | 1.603599→1.126323 |
+
+中位wall／CPU比.720152／.720157。状态、完整报告、refinement stats、方向及native witness提示exact相同；固定轴ABI1142→571、pair行325470→162735，补方向571保持。原244报告exact，组件无Station verdict；进程成本单列component-process.json。七项native配置匹配保存策略，缺独立loaded-library flags收据保留未知。输入是保存状态派生弦，不是捕获的ABI输入。三对通过后才接原物理，准入布尔已独立重算。
+
+原`evaluate_station.evaluate(timing=True)`、4114字节runner、预检和依赖保持。单VM串行、原90sim120wall／1mm／全部碰撞／244／评分／回退不变。两侧实际偏好仅`reuse_refinement_details`不同，midpoint和loaded-jaw preload保持；中心无execution开发配置。
+
+| case / UUID | 原裁决 | sim / episode wall s | process wall / CPU s |
+| --- | --- | ---: | ---: |
+| left_baseline / f5f4ed94-8eb4-4851-b9e4-5233525b61e8 | pass | 74.10 / 81.596613 | 82.681711 / 91.790980 |
+| left_details / 8196cd1f-0fc6-4a7f-b9c6-84fbacab05f4 | pass | 74.10 / 76.671093 | 77.757704 / 87.026121 |
+| left_second_details / b3470756-266f-452d-9c37-4aa12b6fe894 | pass | 76.78 / 82.310480 | 83.414360 / 93.916142 |
+| left_second_baseline / 71fc0ba2-4fd6-4a09-9e73-760b80f71f9e | pass | 76.80 / 87.276136 | 88.416640 / 98.532488 |
+| center_details_regression / 07ee3c5c-983a-4896-afa4-69aeb70070ab | pass | 77.48 / 47.174269 | 48.300959 / 58.106001 |
+
+同侧request、resolved Station、初始qpos/qvel、静态场景、原OMPL／最终接近路径和最终认证exact，最小接近证书下界均1.002711796mm；它不是精确盘壁距离。主工位整条保存trajectory亦exact；第二工位释放段差一拍，不能声称全链exact。中心最小接近证书下界1.000057110mm，不据少量点宣传连续安全域。
+
+主／第二工位hold均163／182拍，nonhold controller分别少4.665780／4.949293s。close的331拍controller由18.033019→12.710361s、19.329768→12.942966s；transport反由17.712339→18.634073s、19.511175→21.195428s。总收益并非少等几帧，运输段须继续同输入计数，不猜定原因。
+
+五例planned／measured各244/244且valid；其它29／2点准入分列，不能混作闭爪。抓放／释放／脱离／回位、free=true／weld0／mocap0、双worker consumed／owned_ack／joined及cleanup_unconfirmed=false均核实；return仍同步。无安全停机或障碍接触，脱离后峰值力0N，最大XY漂移依次.214601／.214601／.169735／.169735／.200111mm。独立Monitor和ReleaseAudit五例exact、差异0、unknown=[]；实视频464／464／480／480／485帧与原记录一致。根另61项原件与算术检查通过；初读字段名和将29点准入混作244闭爪的检查错误已按实际schema修正，未改原数据或判据。
+
+| case | 完整拍数 | P50 / P95 / P99 / max ms | >20ms |
+| --- | ---: | --- | ---: |
+| left_baseline | 3705 | 16.959 / 35.381 / 144.102 / 599.022 | 627 |
+| left_details | 3705 | 16.981 / 36.463 / 103.479 / 411.613 | 663 |
+| left_second_details | 3839 | 18.371 / 38.338 / 102.546 / 422.784 | 1026 |
+| left_second_baseline | 3840 | 17.366 / 36.119 / 150.993 / 652.281 | 770 |
+| center_details_regression | 3874 | 9.600 / 16.106 / 27.964 / 77.859 | 98 |
+
+最大峰下降但P95及慢拍数增加，完整50Hz仍未过。两个候选approach index303的diagnostics_and_record另有114.908／125.142ms峰，无更细原因，不能猜成GC、磁盘或宿主争用。原wrapper的physical_status仍是旧pending字符串，candidate_origin.physical_started=false也只是开跑前声明；保留原件，以实际五个evaluation/status/report终态为准。
+
+agent-link dsh实调120s超时，无有效审查结果；内部GPT只读未发现本轮复用新增回归。另确认父500dc47已有直接bound API特殊margin.__float__关闭native后的handle生命周期边界，普通checker预转float，本批不触发；未调用真实悬空指针，另留最小修复。
+
+接续Owner=根Codex：保留候选、不切默认，先按实际transport/lift/hold谓词做同输入调用与成本证据。连续X域、20＋20、完整50Hz、真实Carry HTTP整链未完成。Knowledge=already_covered，沿用Wiki§20。
+
+生产原件在`experiments/colab-twin/output/refinement-details-physical-20261025/kaggle-v1/`，batch=`399996d5-3611-454c-9886-f3e474282647`。root-readback.json、independent-readback.json与TGZ保持Git忽略。私有复建入口`round120-refinement-details-physical/build_kernel.py --source-revision 5badfff07c3cfbc2afab91a654e93e68d801462f`；原evaluate命令显式指定`route_strategies/loaded_jaw_midpoint_details.py`复跑，对照用midpoint父版。
+
+## 私有原型原件与复跑
 
 原云件在 `experiments/colab-twin/output/refinement-detail-20261024/kaggle-v1/`，组件batch `ae67f286-8d55-4e6a-bcd7-291669ba91ab`，保持Git忽略。私有冻结五文件、版本失败和生成器在 `round119-refinement-detail/`；其 `cloud-prepare/build_kernel.py` 复用原bootstrap，逐字带入五文件，不改写测量函数。
 
