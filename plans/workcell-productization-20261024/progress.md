@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 固定右X＋20mm两放置工位完成原物理
+
+Current：右侧IK／盘壁切片已形成可复跑开发能力：[结果与入口](m1a-x-fixed-certificates.md)。原盘不动，54mm接近高位加0.35rad高位预收爪；默认.5及网页±10mm保持。非连续区域／非20＋20／非50Hz通过。
+
+Done：v1原大开度1d8288ea…保持grasp_leg_collision原fail；候选be15f72b…pass79.26sim；原中心62a5a8c7…pass76.62sim。v2固定46ab29同执行代码，已有第二放置目标(.20,.20)的5e8a109c…pass82.34sim。两次右侧任务均真实抓放／释放／脱离／回位，原红盘／robot／初态不变；候选关键全扫各246、实测jaw到位后下降、双worker原确认清理。录像496／479／515实帧与报告一致。
+
+Done：根及独立reader逐项回读，原monitor重放与skill_evidence完全一致，3个真实success不包含保留的原失败；UUID pointer不多算回合。原规划/进程wall/CPU／完整周期均已记录，不将跨VM／目标时长差当提速。代码与输入相关91检查、无Carry索引源码83检查、后续case8检查通过。
+
+Remaining：右主／中心／右第二工位分别72／68／82拍>20ms，完整50Hz仍未过；左X−20mm虽静态整链补证，未接生产或物理；连续包络／扰动验收未过。
+
+Next：根将左侧已验证分离方向作为显式候选接入原完整规划与实测检查，再跑原物理；原1mm、全点扫掠、限位／评分／90sim120wall保持。Carry两仓12文件保留在途、未混合提交，owner根Codex。Knowledge=already_covered，沿用Wiki§20；本轮只更新原计划。
+
 ## 2026-10-24 — 右X＋20mm固定盘首轮原物理通过
 
 Current：固定82918d7的Kaggle v1三例全部终态，原开度1d8288ea…仍grasp_leg_collision/0sim/原fail；高位收口be15f72b…pass79.26sim，原中心62a5a8c7…pass76.62sim。结果与复跑见m1a-x-fixed-certificates.md，默认／网页边界不变。

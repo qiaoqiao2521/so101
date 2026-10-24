@@ -114,4 +114,23 @@ python run_workspace_case.py --profile scenarios/workspace-x-preclose-m1a.json  
 
 原件：`experiments/colab-twin/output/workspace-x-preclose-20261024/kaggle-v1/unpacked/so101-evidence/`，batch=`workspace-preclose/85640115-726c-4a24-8433-7e93c02a6dff/`。根独立readback保存于同kaggle-v1的`root-readback.json`。
 
-接续：保留显式候选，不改默认／网页±10mm。使用已有第二放置工位(.20,.20)m对`right_preclose35_secondary`再做一次原物理；连续工作区、扰动20＋20仍未验。
+接续：保留显式候选，不改默认／网页±10mm。已有第二放置工位(.20,.20)m复验也通过，见下文；连续工作区、扰动20＋20仍未验。
+
+
+## 第二放置工位：原物理复验通过
+
+固定 `46ab29ee5c0939793d7716fb24d250aa9a874e34`（相对82918d7只改开发case与结果记录，执行代码相同），Kaggle同kernel v2单例。第二放置目标(.20,.20)m，右侧取料仍(.26,−.13)m、原盘不移、高位54mm、显式开度.35。UUID `5e8a109c-2db5-4460-83a9-1968a5271124` 原pass，82.34sim／49.661episode-wall／50.742process-wall／60.844CPU。
+
+独立读回确认：原红盘全部属性、robot/base/actuator/option、初始qpos/qvel与v1相同；实际place_floor与原release_plan目标为(.20,.20)m。preclose实测到位门与v1一致，三项完整夹爪扫掠各246。真实抬升34.987mm、持物37.70s、蓝盘静稳7.50s；75.020s完成脱离，最大漂移.171841mm、脱离后峰值力0；home实误差.101346mrad。无碰撞／安全停机，free=true/weld0/mocap0，双worker原owned_ack/joined/consumed且无不确定清理。录像515/515实帧。
+
+原transport候选60／57mm因IK拒绝，按既有回退走54mm并完整认证；没有删回退或放松限位。完整4117拍，P95=16.059ms、P99=26.272ms、max=135.465ms，82拍>20ms，完整50Hz仍未通过。
+
+| 成功例 | 初次OMPL / 含后处理 elapsed s | transport worker wall s | separation worker wall s |
+| --- | ---: | ---: | ---: |
+| 右侧主放置工位 | .133769 / .291910 | 2.383539 | 1.191756 |
+| 原中心回归 | .140013 / .306186 | 2.180770 | 1.094895 |
+| 右侧第二放置工位 | .164560 / .346693 | 2.863927 | 1.301937 |
+
+worker耗时与主回合重叠，不能相加；两个云VM和不同目标的wall差不作为提速。v2 batch=`349ac15b-0b7c-445e-aa45-89f6580d12fe`；原件在同output的`kaggle-v2/unpacked/so101-evidence/`。两轮各有根`root-readback.json`和独立`independent-readback.json`；原monitor逐行重放与skill_evidence全字段一致。两个指针文件对应同UUID，不多计回合。
+
+**保留为右侧固定盘的显式开发能力。** 右侧同一取料点在两个已有放置工位均完成原抓放／释放／脱离／回位；中心默认回归通过；原大开度失败保留。不是连续工作区认证、扰动20＋20、网页新准入或50Hz达标。左侧补方向仍仅静态认证，下一步需显式接入完整规划／实测检查并用原物理验证；Carry接续继续独立保留。
