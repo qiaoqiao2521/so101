@@ -697,3 +697,8 @@ F2by实际补齐构造见证后，原scope的组合worker/proof/main仍三对少
 
 
 F2bz只读归因独立通过：两份7.69MB模型快照合计10.7–14.2ms，binding总12.9–16.4ms；内容比较约2.7ms、bridge约3.6–4.3ms/home约1.7–1.9ms、临时key释放约.7ms。此为inclusive归因，不加总嵌套区间，不外推物理实时性。下一只检验精确byte视图是否减少主线程复制；本地NumPy array_equal实现仍有布尔临时分配，因此必须对安全copying-parent单独三对证伪，不能只拿原重复全路径版本作很弱的对手。
+
+
+F2ca证伪完成：精确byte-view与安全copying-parent的路径、fresh谓词顺序及末端数据全部同值，原32回归双模加12边界共76项在本地/云端通过；性能仍无益。实际main wall29.364→25.212、20.557→25.738、18.944→26.532ms，CPU同向，原screen拒绝。视图减少复制不等于降低总成本；不以correctness green替代性能准入，不送新物理。原件output/return-array-view-factory-20261024/component-v1，private round94保存完整原型/云源码/独立读回，原默认不变。
+
+重新统计F2bx第二站baseline：3875完整拍，除回位切换仍113拍>20ms；13个接近感知拍perception自身20.018–21.774ms，CPU近同wall。但旧F2bj/F2bk已定位mjr_readPixels，F2bn异步相机全物理通过却整程不稳定。此轮不把重统计冒称新瓶颈，不重复相同observer；旧反证继续有效。下一步只读查本次view为什么更慢，再决定下一候选，不先引入新比较ABI或近似判据。

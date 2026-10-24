@@ -581,3 +581,8 @@ F2by云组件已终态并独立通过原等价/原screen，完整构造成本CPU
 
 
 F2bz已取回并独立通过原序列/全几何和观察器恢复：主要成本是两份模型快照，binding含模型快照约13–16ms。Next F2ca只做一次精确uint8视图比较候选，against安全copying-parent验证自身增量；不改原碰撞/244/阈值/90sim120wall。原型由内部GPT在private round94准备，尚无新实测，根Codex负责独立验收及Kaggle。原默认不变。
+
+
+F2ca已实测淘汰：Kaggle private so101-return-array-view-20261024 v1，原32回归双模式加12边界共76项，云端与根侧通过；路径/fresh/pad/q逐字节等价、独立protocol通过。对安全copying-parent三对main wall差-4.152/+5.181/+7.588ms，原screen拒绝，中位反慢5.181ms。不发物理、不晋级，不用原重复全路径掩盖本项自身无益。
+
+原第二站baseline接近感知13次各20–22ms的重统计已留证；旧F2bj/F2bk/F2bn已归因和检验异步方向，直接复用反证，不重复观察。下一项只读拆本次view构造/比较/释放，本地CPU、原冻结fixture，尚无新候选。原默认和全部安全/裁判/244/90sim120wall保持。Knowledge仍pending，已有未审知识库改动保留。

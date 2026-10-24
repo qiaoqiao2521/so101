@@ -1643,3 +1643,22 @@ source0b5a8a3，Kaggle private so101-return-evidence-attribution-20261024 v1终�
 每份模型快照约7.69MB，两份合计10.7–14.2ms；包含它们的binding总12.9–16.4ms。内容比较2.66–2.85ms、fresh bridge3.56–4.28ms、home1.74–1.92ms、临时key释放.64–.72ms。native构造见证4,776,260bytes，完整证据20,162,791bytes。完整原helper另测19.8–20.7ms；这些是带观察器及不同调用点的inclusive时长，不将父子相加或当性能A/B、完整50Hz结果。
 
 原件output/return-evidence-attribution-20261024/v1，private round93保存精确profile_probe/read_attribution、云源码/metadata。证据支持下一项只检验模型数组复制成本，而非继续改原碰撞谓词。Next F2ca：内部GPT只在独占private round94准备主线程精确uint8视图比较；worker bytes、binding默认格式、actual native证据、dtype/shape和原fresh检查保持。NumPy array_equal本身仍可能分配布尔临时数组，不能先称更快；非支持数组仍旧copy/回退，MemoryError先旧copy、再原return。须过真实反例/边界回归，再与安全copying-parent同输入、三对反序比增量；无收益即淘汰，不用原始重复全路径成本掩盖该候选自身无效。尚未有新候选实测或物理准入结论，默认不变。
+
+
+## F2ca 精确字节视图实测淘汰
+
+source7ce7c7f，Kaggle private so101-return-array-view-20261024不可变v1终态，exact entry/private/source独立读回通过。内部GPT实现私有round94，根侧独立复跑76项回归通过；云端同76项通过，仅ROOT/POLICY两个路径常量适配挂载，测试体不变。原32项分别copy/view共64，加12项字节/生命周期/回退边界。实际native构造见证、worker不可变bytes、缺证据与MemoryError回原均保留。云端原sitecustomize有缺wrapt警告，完整保留；未造成本次测试或组件失败，未安装额外包遮盖。
+
+同原f9be97b4输入，三对反序只比较安全copying-parent与view的main helper增量。每对共用同一份worker证书，两套独立main controller。原.005全路径判定、路径逐字节、method、fresh顺序、末pad与checker q均相同；independent-array-view-component.json的protocol_valid=true。main计时含临时key构造/释放及原fresh检查；共同setup/native capture未单独计时，不计作节省。worker与构证wall单列，不能外推整程。
+
+| pair | copy main wall/CPU(ms) | view main wall/CPU(ms) | wall差(ms) |
+| --- | --- | --- | --- |
+| 1 | 29.364/29.371 | 25.212/25.200 | -4.152 |
+| 2反序 | 20.557/20.563 | 25.738/25.808 | +5.181 |
+| 3 | 18.944/18.951 | 26.532/26.538 | +7.588 |
+
+原screen=reject/no_median_local_effect，中位反慢5.181ms。少了tobytes不等于少工作；NumPy字节比较仍有临时数组与Python遍历。淘汰该候选，不追加物理、不切默认，不以更弱的原完整路径作为对手掩盖本项自身失败。原件output/return-array-view-factory-20261024/component-v1及private round94；精确复跑入口kernel/run_component.py、probe.py、read_component.py，云源码已pull保存。
+
+独立审查与根侧复算原F2bx第二站baseline的3875拍。排除index3637回位切换后113拍超20ms；97拍controller主导、13拍perception主导、3拍physics/guards主导。接近段sim0.5..6.5s每.5s一次的13次原感知，各20.018–21.774ms，CPU与wall近同，完整拍29.348–35.263ms。复算留independent-next-cycle-bottleneck.json；这只是对既有证据的重新统计，不是新物理或新原因。
+
+查回旧F2bj/F2bk/F2bn后，感知已定位到mjr_readPixels，异步相机两站4/4原pass但整程不稳定；不重造相同observer、不据此改频率或线程。下一项先只读拆分本次view构造/逐字节比较/临时key释放成本，避免继续猜实现。private round95-array-comparison-attribution由内部GPT定向本地取证，根Codex独立验收；尚无新候选。原默认仍loaded_jaw_preload，完整50Hz未过。Knowledge=pending，原两页519行未审改动不覆盖，构造期几何教训留本计划，owner根Codex。
