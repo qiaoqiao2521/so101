@@ -82,6 +82,17 @@ python experiments/colab-twin/evaluate_station.py \
 
 ### 能力段与局部判定
 
+2026-10-24 工作区开发入口独立于网页准入：
+
+```bash
+python3 experiments/colab-twin/probe_workcell_workspace.py \
+  --source workspaces/so101_ws/src/so101_mujoco/models/so101.xml --output workspace-screen.json
+python3 experiments/colab-twin/run_workspace_case.py \
+  --case outside_y_plus20 --output-dir experiments/colab-twin/output/workspace-pilot
+```
+
+第一条只做 FK/IK 与离散保守碰撞筛选；第二条按[开发 profile](scenarios/workspace-m1a.json)运行原完整物理，沿用 90sim/120wall、原裁判与录像。开发配置显式声明静态目标区域，初始／后续定位仍来自 RGB，结果带 `development_only/not_admitted`。它不放开 `validate_station`、网页范围或默认 ±10mm 目标。具体证据与阶段状态回源[产品化进度](../../plans/workcell-productization-20261024/progress.md)。
+
 工作站 `program` 可以直接保存原八步原子动作，也可以保存三段能力：
 
 ```json

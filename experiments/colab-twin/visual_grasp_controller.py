@@ -15,6 +15,7 @@ import json
 import mujoco
 import numpy as np
 import warnings
+from numbers import Real
 
 from conservative_collision import ConservativeCollisionChecker as CollisionChecker
 from configuration_sweep import ConfigurationSweepInvocation, SweepBinding, _configuration
@@ -197,7 +198,8 @@ class VisualGraspController:
     def __init__(self, rig, target_xy, initial_q6, *, seed=0, target_timestamp_s=0.,
                  estimate_ttl_s=1., payload_uncertainty_m=.002, released_query=None,
                  release_rotation_mode='axis_aligned', release_pinch_height_m=.023,
-                 place_xy=None, place_height_m=0., route_policy=None):
+                 place_xy=None, place_height_m=0., route_policy=None,
+                 target_region_xy_m=None):
         self.route_policy = DEFAULT_ROUTE_POLICY if route_policy is None else route_policy
         if not isinstance(self.route_policy, RoutePolicy):
             raise ValueError('Use immutable route preferences')
@@ -207,6 +209,8 @@ class VisualGraspController:
                 or not np.isfinite(payload_uncertainty_m) or not .002 <= payload_uncertainty_m <= .005
                 or not np.isfinite(target_timestamp_s) or target_timestamp_s < 0):
             raise ValueError('Invalid observation lifetime or payload uncertainty')
+        # Optional development prior, declared independently of object truth.
+        self.target_region_xy_m = self._target_region(target_region_xy_m)
         self.rig = rig
         self.query = mujoco.MjData(rig)  # Independent FK only, never mj_step.
         self.calibration = TopDownCalibration.from_mujoco_model(rig)
@@ -228,7 +232,7 @@ class VisualGraspController:
         self.reference = self.initial_q.copy()
         self.servo_offset = np.zeros(5)
         self.servo_transitions = []
-        self.target_xy = self._target(target_xy)
+        self.target_xy = self._target(target_xy, self.target_region_xy_m)
         self.place_xy = finite_vector(PLACE_CENTER if place_xy is None else place_xy, 2, 'place_xy')
         height = float(place_height_m)
         if isinstance(place_height_m, (bool, np.bool_)) or not np.isfinite(height) or height < 0:
@@ -295,10 +299,32 @@ class VisualGraspController:
             self._prepare_worker_models()
 
     @staticmethod
-    def _target(xy):
+    def _target_region(region):
+        if region is None:
+            return None
+        message = ('target_region_xy_m requires two [min, max] pairs of finite '
+                   'non-boolean numbers with min < max')
+        try:
+            values = np.asarray(region, dtype=object)
+            if (values.shape != (2, 2) or
+                    any(isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
+                        for value in values.flat)):
+                raise ValueError(message)
+            bounds = np.asarray(values, dtype=float)
+        except (TypeError, ValueError, OverflowError) as error:
+            raise ValueError(message) from error
+        if not np.isfinite(bounds).all() or np.any(bounds[:, 0] >= bounds[:, 1]):
+            raise ValueError(message)
+        return tuple(tuple(float(value) for value in axis) for axis in bounds)
+
+    @staticmethod
+    def _target(xy, region=None):
         xy = finite_vector(xy, 2, 'target_xy')
-        if np.any(np.abs(xy-np.array([.24, -.13])) > .0100001):
-            raise ValueError('Target outside the declared red-tray +/-10 mm region')
+        if region is None:
+            if np.any(np.abs(xy-np.array([.24, -.13])) > .0100001):
+                raise ValueError('Target outside the declared red-tray +/-10 mm region')
+        elif any(value < low or value > high for value, (low, high) in zip(xy, region)):
+            raise ValueError('Target outside the declared target_region_xy_m region')
         return xy
 
     def _fk(self, q6):
@@ -557,7 +583,7 @@ class VisualGraspController:
                 or stamp > elapsed+1e-9 or stamp < self.target_timestamp
                 or elapsed-stamp > self.estimate_ttl):
             raise ControllerFailure('stale_or_future_visual_estimate')
-        xy = self._target(estimate['xy'])
+        xy = self._target(estimate['xy'], getattr(self, 'target_region_xy_m', None))
         # Existing path may retain sub-mm measurement jitter; update its target
         # at the hand-over replan, never through a simulator object pose.
         self.latest_xy = xy

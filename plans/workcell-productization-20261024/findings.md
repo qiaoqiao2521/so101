@@ -89,6 +89,16 @@
 - 性能采用同输入、同工位和反序成对比较；组件收益、原物理成功、整程性能及默认晋级分别裁决。
 - 连续世界沿 FishBot 原计划进入实施；新卸货阶段单列预算，不能把扩展任务记成旧 360 秒任务通过。
 
+## M1a 首切片：离线实测与开发入口
+
+新 [空间探针](../../experiments/colab-twin/probe_workcell_workspace.py) 复用原 IK、保守证书、1mm 阈值和 .005rad 抓取腿检查，不推进物理、不认证完整闭爪或后半程。11 点中 9 点通过离线筛选。X−20mm 的 down 对 `pick_wall_x_-1/collision_gripper_1` 证书下界约 0.880489mm，不能认证 1mm 净距，不冒称已证明真实碰撞；X＋20mm 的 approach/lift 原 IK 失败。Y±20mm 端点与抓取腿通过，仅作为物理候选。
+
+编译模型回读：base 位于 world 原点；shoulder_pan anchor 为 `(0.0388353,-8.97657e-9,0.0624)m`，其 world 轴约 `(0,0,-1)`；顶视相机 `(0.25,0,0.95)m`、R=I、fovy45°，局部 −Z 朝下。工具 pinch 是局部 `(.006,0,-.094)m` 的变换点。该结果是仿真 frame 核对，不是实体相机标定，也不能把径向 world 角直接当 pan 角。
+
+源码另有控制器 `_target()` 的 ±10mm 限制。新增显式 `target_region_xy_m` 仅供开发配置使用，初始与后续 RGB 估计共用同一静态先验；默认表达式和消息保持。网页 validate/describe 仍为原 ±10mm。新 [开发入口](../../experiments/colab-twin/run_workspace_case.py) 按 [四案例 profile](../../experiments/colab-twin/scenarios/workspace-m1a.json) 复用原 `run_physical_episode`、评分与录像，输出 `development_only/not_admitted`；不能因开发案例成功就开放完整矩形区域。
+
+当前本地原实验环境为 `/home/muqiao/.cache/so101-colab/planning-venv/bin/python`（MuJoCo3.3.7），旧 graspgenx venv 已不存在。为运行既有控制器检查，仅在该隔离环境新增与已验云环境同版 `opencv-python-headless==5.0.0.93`；没有改系统环境、NumPy 或 SciPy。Kaggle 继续复用原 bootstrap／串行 runner，单独记录其 MuJoCo3.15 环境，不跨机器比较速度。
+
 ## 已采用知识
 
 - 来源：[Wiki《ROS2 与 FishBot》第20节:451–468](</home/muqiao/桌面/obsidian/my-programming-world/Wiki/ROS2 与 FishBot.md:451>)。

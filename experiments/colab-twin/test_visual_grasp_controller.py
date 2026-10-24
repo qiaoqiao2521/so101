@@ -7,7 +7,7 @@ import visual_grasp_controller as module
 
 
 class VisualControllerTests(unittest.TestCase):
-    def controller(self, **options):
+    def controller(self, target_xy=(.24, -.13), **options):
         rig = SimpleNamespace(nq=6, nv=6, ngeom=0,
                               jnt_range=np.tile([-3.,3.],(6,1)),
                               actuator_ctrlrange=np.tile([-3.,3.],(6,1)),
@@ -43,7 +43,74 @@ class VisualControllerTests(unittest.TestCase):
                          return_value=module.TopDownCalibration())
         p.start()
         self.addCleanup(p.stop)
-        return module.VisualGraspController(rig, [.24, -.13], [.24, .14, .06, 0, 0, .5], **options)
+        return module.VisualGraspController(rig, target_xy, [.24, .14, .06, 0, 0, .5], **options)
+
+    def test_default_target_region_keeps_legacy_bounds_and_static_call(self):
+        for xy in ([.23000001, -.13999999], [.25000009, -.11999991]):
+            with self.subTest(xy=xy):
+                controller = self.controller(target_xy=xy)
+                self.assertIsNone(controller.target_region_xy_m)
+                np.testing.assert_array_equal(controller.target_xy, xy)
+                np.testing.assert_array_equal(module.VisualGraspController._target(xy), xy)
+        for xy in ([.26, -.13], [.24, -.11], [.25000011, -.13], [.24, -.14000011]):
+            with self.subTest(xy=xy):
+                for accept in (module.VisualGraspController._target,
+                               lambda value: self.controller(target_xy=value)):
+                    with self.assertRaisesRegex(ValueError, 'declared red-tray') as failure:
+                        accept(xy)
+                    self.assertEqual(str(failure.exception),
+                                     'Target outside the declared red-tray +/-10 mm region')
+
+    def test_declared_target_region_applies_to_initial_and_later_rgb_estimates(self):
+        region = ((.22, .27), (-.15, -.11))
+        controller = self.controller(target_xy=[.26, -.13], target_region_xy_m=region)
+        np.testing.assert_array_equal(controller.target_xy, [.26, -.13])
+        q = controller.initial_q.copy()
+        result = controller.update(q, np.zeros(6), .1,
+                                   {'valid': True, 'xy': [.265, -.12], 'timestamp_s': .1})
+        self.assertEqual(result['status'], 'running')
+        np.testing.assert_array_equal(controller.latest_xy, [.265, -.12])
+        for xy in ([.22, -.15], [.27, -.11]):
+            np.testing.assert_array_equal(controller._target(xy, controller.target_region_xy_m), xy)
+        for xy in ([.219, -.13], [.271, -.13], [.26, -.151], [.26, -.109]):
+            with self.subTest(xy=xy):
+                with self.assertRaisesRegex(ValueError, 'target_region_xy_m'):
+                    self.controller(target_xy=xy, target_region_xy_m=region)
+                with self.assertRaisesRegex(ValueError, 'target_region_xy_m'):
+                    controller._ingest_estimate({'valid': True, 'xy': xy, 'timestamp_s': .2}, .2)
+        np.testing.assert_array_equal(controller.latest_xy, [.265, -.12])
+        self.assertEqual(controller.target_timestamp, .1)
+
+    def test_declared_target_region_owns_immutable_bounds(self):
+        requested = np.array([[.22, .27], [-.15, -.11]])
+        controller = self.controller(target_xy=[.26, -.13], target_region_xy_m=requested)
+        requested[:] = 99
+        self.assertEqual(controller.target_region_xy_m, ((.22, .27), (-.15, -.11)))
+        self.assertTrue(all(isinstance(axis, tuple) for axis in controller.target_region_xy_m))
+        controller._ingest_estimate({'valid': True, 'xy': [.265, -.12], 'timestamp_s': .1}, .1)
+        np.testing.assert_array_equal(controller.latest_xy, [.265, -.12])
+        with self.assertRaisesRegex(ValueError, 'target_region_xy_m'):
+            controller._ingest_estimate({'valid': True, 'xy': [99, 99], 'timestamp_s': .2}, .2)
+
+    def test_invalid_declared_target_regions_have_named_errors(self):
+        for region in (True, 'region', [], [.22, .27], [[.22, .27]],
+                       [[.22, .27], [-.15, -.13, -.11]],
+                       [[.27, .22], [-.15, -.11]], [[.22, .22], [-.15, -.11]],
+                       [[True, .27], [-.15, -.11]], [[.22, .27], [-.15, np.bool_(False)]],
+                       [[np.nan, .27], [-.15, -.11]], [[.22, np.inf], [-.15, -.11]],
+                       [['.22', .27], [-.15, -.11]], [[.22+0j, .27], [-.15, -.11]]):
+            with self.subTest(region=region), self.assertRaisesRegex(ValueError, 'target_region_xy_m'):
+                self.controller(target_region_xy_m=region)
+
+    def test_fake_controller_without_declared_region_keeps_default_estimate_check(self):
+        controller = module.VisualGraspController.__new__(module.VisualGraspController)
+        controller.target_frozen = False
+        controller.target_timestamp = 0.
+        controller.estimate_ttl = 1.
+        controller._ingest_estimate({'valid': True, 'xy': [.24, -.13], 'timestamp_s': .1}, .1)
+        np.testing.assert_array_equal(controller.latest_xy, [.24, -.13])
+        with self.assertRaisesRegex(ValueError, 'declared red-tray'):
+            controller._ingest_estimate({'valid': True, 'xy': [.26, -.13], 'timestamp_s': .2}, .2)
 
     def test_place_target_uses_original_default_and_owns_requested_xy(self):
         default = self.controller()
