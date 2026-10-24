@@ -134,3 +134,8 @@ CLI2.2.5源码pull/version有独立版本参数；kernel_sources的metadata回�
 [同步回位组件](https://www.kaggle.com/code/muqiaoqiao/so101-return-batch-axes-component-20261024) v1：同正式cross已验收输入，完整_return_path三对138→99、127→96、149→100ms，75点的距离/姿态/路径全部逐位相同，原screen准入。原件output/return-batch-axes-factory-20261024/component-v1，含实际挂载来源及必要输入副本，private round86保存接入和独立读回。
 
 下一项原200/200完整物理，线程+stage限定仅控制线程回位用batch轴，冻结worker保持scalar。旧F2k worker-only负结果仍保留；局部约100ms不算50Hz或整程收益，默认仍已采用loaded_jaw_preload。
+
+
+[同步回位原物理](https://www.kaggle.com/code/muqiaoqiao/so101-return-batch-axes-physical-ab-20261024) v1为200/200 B→C，v2为220/170 C→B，source775302c，共4/4原pass。main return145.006→103.350、62.031→50.641ms，完整回位拍166.345→123.033、79.000→72.602ms；但整程wall50.183834→49.636662、51.464911→54.096420s，CPU/同拍非等待工作亦第二站增，不晋级默认，不宣称50Hz通过。所有原244/安全/自由物体/释放脱离回位/录像/清理保持。
+
+v1错误地以distances实例槽不存在观察worker恢复，原失败记录保留；worker精确身份未插桩。v2只把观察改成原函数身份/slot，实际两侧main/worker均通过。原数学及scope不变，不将观察器缺陷当物理失败或掩去限制。原件output/return-batch-axes-factory-20261024含独立库存；private round86和云版本可恢复精确入口。下一项F2bt先做同输入布尔阈值充分轴组件，不叠加批量轴、不改变原数值距离与评分。

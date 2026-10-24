@@ -1525,3 +1525,18 @@ source62af0840，Kaggle return-batch-axes-component v1终态。实际挂载已�
 三对wall138.169→98.729、126.985→95.962、148.977→99.955ms；CPU同向省39.451/30.990/48.638ms。75点的q6/每一距离/pad位姿/最终路径均逐位一致，结果与归档直接路径同值，正常及异常退出方法恢复齐全。原screen=eligible_for_physical_ab/consistent_local_effect；独立protocol_valid=true，只代表局部准入，约100ms仍远超20ms。完整原件output/return-batch-axes-factory-20261024/component-v1，含真实输入副本、mounted-inputs和independent-return-component；云端private不可变v1可恢复来源。
 
 Next：私有round86 physical_probe.py只在控制线程separate→retreat的_return_path范围切换现成batch轴；冻结worker/其他实时查询仍scalar，用return-axes-implementation.json记录真实线程/计数/恢复。先已有200/200原版→候选完整原物理，净收益才已有220/170反序，不动默认。旧F2k worker-only完整负结果保持。原judge/全部244/90sim120wall和回退不改。Root GPT薄接入，数学原作者为F2k实际CodeBuddy/DeepSeek Pro；Knowledge=already_covered，当前组件事实留项目。无新定时器/对话消息/本地机器人占用。
+
+
+## F2bs 两工位完整回读：局部回位更快，整程不晋级（2026-10-24）
+
+Current：Kaggle physical-ab v1/v2整对均终态，source775302c；200/200原版→候选feb87d4a、220/170候选→原版115731af，共4/4原pass。原244、全碰撞/阈值/90sim120wall、自由物体、抓放/释放/脱离/回位、完整录像与两个worker清理保持。默认仍loaded_jaw_preload；无本机物理，不恢复定时器、不向其他对话发消息、不触碰Mint。
+
+同步_return_path wall/CPU：200/200为145.006/144.941→103.350/103.342ms；220/170为62.031/62.017→50.641/50.637ms。原完整回位拍166.345→123.033、79.000→72.602ms。主线程分别75/37次距离查询，只有候选main/separate范围用batch轴，冻结worker仍scalar。现成CodeBuddy F2k数学实现，Root GPT薄接入，未冒称新CLI生成。
+
+整程process wall50.183834→49.636662、51.464911→54.096420s；CPU59.805410→59.476717、61.554807→62.575940s。非hold/release CPU30.867530→30.655970（同3367拍）、31.762723→32.342046（同3285拍）；第二站前缀3047拍也已从28.768949增至29.329119s，初始化7.269→9.116s。只确认作用域局部收益，不把所有整程差异归因算法；整体收益不可靠，不晋级默认，不追加择绿实验。慢拍70→74、121→125，完整50Hz未过。
+
+v1观察器误把“distances实例属性不存在”当恢复，原worker本来有记录回调，两侧均原始false。原失败读回独立保留；main恢复已观测，worker精确身份当时未插桩，不补称全恢复。v2仅改为函数身份及属性槽保持核验，4项正常/异常回归通过；两侧main/worker的身份与槽位均原样恢复。原数学/控制策略不变。
+
+原件output/return-batch-axes-factory-20261024/physical-v1/v2及independent-physical-inventory.json；每对保留原裁决及pair/policy/startup/search/physics/return-axes读回。round86保存两个路径、v1错误观察器及修正版、确切云源码/metadata与复跑入口；两个版本均private。
+
+Next F2bt：单独验证原SAT阈值的充分分离轴见证，不叠加F2bs。回位只消费>=1mm的布尔值；若原前三个world轴的同序算式已给出>=1mm，剩余轴不能推翻原max判定，否则回退原完整scalar SAT。所有位姿/robot几何/native arm检查继续，不给ratchet/距离消费者近似数值。先正常/边界/错误策略及真实回位逐点布尔等值，再三对完整_return_path组件；原screen准入后才原物理。尚未运行，不改默认。Knowledge=already_covered，原Wiki第20节覆盖分作用域计时/反证及实际输出验真，本轮项目数据不新增跨项目结论。

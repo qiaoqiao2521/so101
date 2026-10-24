@@ -616,3 +616,21 @@ F2br私有原物理source6ef85f70：名义796670f1（6791f1d4→519e72b2）、20
 F2bs三对完整_return_path组件（source62af0840，实际挂载正式cross候选0c829902/source46031fff）：从原归档FK释放估计重建几何、初态及实际执行回位起点/目标，复算原完整函数。每例75次原native arm+释放距离查询；q6、全部距离、pad末状态和回位路径逐位相同，并与归档直接路径同值。scalar→batch wall138.169→98.729、126.985→95.962、148.977→99.955ms；CPU差−39.451/−30.990/−48.638ms。正常/异常实例方法恢复通过，原screen准入，独立读回protocol_valid=true。并非整程物理或20ms达标。
 
 原件output/return-batch-axes-factory-20261024/component-v1；actual mounted-inputs、四个必要输入副本及每个binary64距离可复查。私有round86复用原CodeBuddy F2k数学函数，Root GPT只写_return_path作用域接入；新的原物理将以线程身份+stage约束仅控制线程separate→retreat启用，冻结worker不启用，避免复跑旧worker-only方案或混变量。默认保持已采用loaded_jaw_preload，下一步200/200父→子，净收益才220/170反序。
+
+
+## F2bs 同步回位批量轴：局部收益与整程分开
+
+source775302c，Kaggle私有so101-return-batch-axes-physical-ab-20261024 v1/v2。200/200 B→C feb87d4a（0af776bc/8a11ca2b）、220/170 C→B 115731af（76530350/2ccf1ea5）共4/4原pass。只在main/separate→retreat的_return_path复用既有CodeBuddy batch数学，route均为已采用loaded_jaw_preload；actual_policy_delta=[]，因此另核真实方法/线程/阶段与实际scalar/batch计数。冻结worker保持原scalar，全部原模型/评分/native flags/244/物理/自由物体与回退保持。
+
+| 工位 | 原版→候选process wall/CPU(s) | 主return wall/CPU(ms) | 完整回位拍(ms) | 非hold/release CPU(s)/拍数 |
+| --- | --- | --- | --- | --- |
+| 200/200 | 50.183834/59.805410→49.636662/59.476717 | 145.006/144.941→103.350/103.342 | 166.345→123.033 | 30.867530→30.655970，同3367 |
+| 220/170反序 | 51.464911/61.554807→54.096420/62.575940 | 62.031/62.017→50.641/50.637 | 79.000→72.602 | 31.762723→32.342046，同3285 |
+
+第二站在尚未启用候选的3047拍前缀CPU已多.560170s，初始化wall多1.846296s；不把全程变慢归因11ms局部改动，也不据此宣称整体提速。主return两个站都少CPU，但慢拍70→74、121→125，候选最大123.033/72.602ms，完整50Hz未过；不晋级默认，不靠追加回合追绿。sim79.72→79.76、77.38→77.38s，等待采样不当加速。
+
+v1恢复观察器误用实例属性不存在；原worker已在separation_worker.py安装requested_distances，故两侧原false并非回调丢失。原failed检查存independent-return-axes-readback-v1-absence-criterion.json，v1精确worker身份未观测的限制保留。v2仅观察字段改为原函数身份/slot，四项局部普通/worker回调与异常恢复回归过，两侧完整物理身份/slot均通过。不得把原v1观察错误改写成原物理失败或冒称当时身份全验。
+
+原件output/return-batch-axes-factory-20261024/independent-physical-inventory.json分列初始化/shortcut/worker/main-return/完整周期/CPU/释放；原版及候选独立物理读回核对原阈值与全244、0碰撞、完整视频、owned/joined无abort。原件及run ID/复跑位于private round86、云端不可变v1/v2。Source/数学同源，v2只修观察器，未用不同负载绝对秒数串累计收益。
+
+下一个F2bt只比较同原返回输入的SAT布尔阈值查询：原max(gaps)>=margin可以由任一原轴的同值gap证明。必须保留几何有限值/异常行为，不跳过其他robot几何；未能证明或不支持的数值域走完整scalar，原数值距离API不改。尚未有测试或收益，先局部准入，不能称新算法已通过。

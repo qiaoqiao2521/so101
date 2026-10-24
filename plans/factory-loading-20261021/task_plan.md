@@ -546,3 +546,8 @@ Next F2bs：正式200/200最慢拍位于separate→retreat，134.155ms中control
 F2bs组件已完成：同已验收0c829902回位快照，原_return_path三对138.169→98.729、126.985→95.962、148.977→99.955ms，CPU同向。75个距离查询、q6/全部距离/pad位姿/完整路径均逐位相同，正常/异常恢复通过；原screen=eligible_for_physical_ab，仅组件准入。
 
 Next：私有round86已有原评测薄接入，只在控制线程separate→retreat的_return_path期间使用现成batch轴，冻结worker/其他实时查询保持原scalar；原244/.005和全部阈值不改。先已有200/200原版→候选整程，可靠收益才已有220/170反序。默认仍已采用loaded_jaw_preload，不把约100ms当50Hz通过。
+
+
+F2bs完整两工位反序已独立回读：4/4原pass，main return145.006→103.350ms、62.031→50.641ms，但process wall50.183834→49.636662s、51.464911→54.096420s，整程收益不可靠；不晋级默认，不追加追绿。原244/全部安全/释放回位及90sim120wall保持，完整50Hz未过。v1错误恢复观察保留，v2身份/slot核验修正且实际全过；详细边界在progress/findings，原件output/return-batch-axes-factory-20261024。
+
+Next F2bt：独立SAT阈值充分轴见证，只限main回位布尔消费，数值距离与其他阶段/worker保持。正常/边界/异常等值与同真实输入三对组件先行，原screen决定物理准入；尚未实施，不改默认。不重建平台、不恢复定时器，由Root GPT接续。
