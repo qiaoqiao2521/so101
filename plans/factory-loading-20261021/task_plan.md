@@ -561,3 +561,6 @@ Next F2bu只读计时真实_return_path分项，区分arm认证、MuJoCo和nonpa
 F2bu只读归因终态且独立通过：同75点与全部数值/布尔/路径、方法恢复、线程和调用量核验；剩余候选arm约34ms、release约38ms为inclusive插桩时长，不是提速基准或硬下限。原件output/return-cost-attribution-20261024/v1。
 
 Next F2bv：只读原默认抓放采集worker/main回位q、arm/distances、模型与浮点环境，核对原采样与上下文可否复用；private round89已准备，尚未运行。不直接跳过main认证，不重复旧hints/FK负例，不改默认。原全部244/安全/90sim120wall保持，Root GPT继续Kaggle。
+
+
+F2bv原默认取证完整pass并独立回读。worker/main模型/配置/环境同值，但75个姿态仅1个精确重合；2点连接在该归档原谓词下成立，不等于新策略通过。Next F2bw先在Kaggle比较原worker+main完整成本与可选证书构造+全模型匹配+3次新检查，private round90的15局部回归已过。路径顶点会改变，等价范围是原安全/home目标/末FK，不冒称路径逐位相同；原screen和物理裁判保持，尚未有组件/物理结果。

@@ -659,3 +659,10 @@ Kaggle so101-return-cost-attribution-20261024 v1/sourceec99737，独立检查有
 插桩原arm36.0ms、原release96.4ms（SAT71.3/forward4.6/nonpad6.5）；阈值候选arm34.0ms、release38.0ms（witness12.7/forward4.3/nonpad6.6）。这里支持剩余认证工作值得调查，不支持新提速或硬性50Hz下限。arm FK仅约.7ms，不据此重开旧pose-only方向；原F2as全局scalar hints未快的反证不变。
 
 源码_poll_separation保留accepted_plan和planned_return_path；_transition在separate结束用实测q再走完整_return_path。worker与main回位输入只有终点相同不等于整条路径相同，不能用近似q命中缓存。下一F2bv只取证独立模型/浮点环境及真实原采样，暂不编写路线复用或放宽原阈值。private round89的观察器只读原默认任务并保留所有方法/槽及模型导出失败信息；必须先真实物理和独立读回，编译通过不算成果。
+
+
+## F2bv 支持验证桥接，尚不支持跳过验证
+
+原默认观察f9be97b4/source367b9c4原pass，复制与导出使其不属于性能对照。worker/main三类模型各480公开数组及标量/options同值，pair与冻结估计/偏好/FP控制/NumPy策略相同；各75个原查询只有home一条精确重复。起点差.000106079rad，故全程近似缓存不成立。原.005采样连接2点均能查到同上下文的真实原谓词，motion_duration只预测多.001234s，仍须实际策略复验。
+
+原件output/return-context-observation-20261024/v1包含六模型、完整原回合和runtime/source/context三个独立读回。单份MJB约67MB，全模型绑定不能当免费操作。新F2bw原型保留worker认证路线，额外验证桥接并fresh刷新home数据；15项局部检查过，包括模型/估计/FP策略变化、观察器/缺证书/失效桥接回原函数，尚未有云组件收益或候选任务结果。所有绑定只作可选复用条件，失配仍运行原算法，不新增内容hash锁、任务前序或人工总配额。

@@ -149,3 +149,8 @@ v1错误地以distances实例槽不存在观察worker恢复，原失败记录保
 [回位成本归因](https://www.kaggle.com/code/muqiaoqiao/so101-return-cost-attribution-20261024) v1/sourceec99737已终态。只在_return_path内collect，原75点/路径/全部判断与方法恢复通过；75次arm/forward、1125次nonpad和150次pad，未把离线复核计入。原arm36ms、release96ms；阈值候选arm34ms、release38ms均为inclusive观察时长，父子不可相加，不作新性能基准或50Hz结论。原件output/return-cost-attribution-20261024/v1及独立source/cost读回。
 
 下一项private round89只采原默认任务的worker/main回位上下文，不开启路线复用。独立核对模型、浮点环境、起点和原采样后才讨论减少重复工作；不因路径看起来接近跳过原认证，尚未运行。
+
+
+[回位上下文取证](https://www.kaggle.com/code/muqiaoqiao/so101-return-context-observation-20261024) v1/source367b9c4，原默认f9be97b4原pass，原244/全部物理/释放回位及录像/清理独立通过。worker/main三类模型各480公开数组同值，FP/估计/几何覆盖一致；各75点只有home重合。原采样连接2点可用该归档真实谓词证明，但未执行新策略，不称提速。原件output/return-context-observation-20261024/v1，private round89可恢复。
+
+下一F2bw可选证书桥接原型在private round90，15局部回归过。单模型67MB，先完整计入证书构造/模型匹配/原连接与home刷新，不能只报3次新检查。原路径顶点有意改变，组件等价只指原完整几何判定/home与末pad；不得将旧screen字段外推为路径byte同。尚无云组件或候选物理成绩，默认不改。

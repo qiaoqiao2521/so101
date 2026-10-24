@@ -1566,3 +1566,16 @@ sourceec99737，Kaggle private so101-return-cost-attribution-20261024 v1终态�
 原件output/return-cost-attribution-20261024/v1，return-cost-attribution.json、independent-return-cost-readback.json和independent-source-readback.json齐全；private round88包含精确entry/base probe/独立读回/云源码。没有新物理成绩或默认变化。
 
 Next F2bv：源码已确认worker先认证planned_return_path，而main从真实到达q重新认证，起点并非相同。现有归档不足以把旧回位路径当当前证书。private round89已准备只读原默认单回合：记录两线程原q/arm/distances、模型副本、原native浮点环境与NumPy错误策略，原方法和槽恢复后导出。只用机器人q及冻结释放估计，原judge真值不入策略；不复用路线、不跳点、不比较插桩秒数。独立核对模型语义、原采样序列与实际起点差后再决定是否存在可验证的桥接方案，尚未运行。Knowledge=already_covered，原Wiki第20节覆盖来源、范围和实际输出验真；无新增跨项目知识、定时器或外界对话消息。
+
+
+## F2bv 原默认回位上下文：模型同值，姿态只有终点重合
+
+source367b9c4，Kaggle private so101-return-context-observation-20261024 v1终态。原默认f9be97b4完整pass，79.68sim/52.428297process-wall/62.480681CPU；复制和导出计入此观察过程，不与其他VM当性能A/B。原244/全部碰撞与物理/自由物体/释放脱离回位/完整视频/worker清理独立runtime读回均通过，原默认实际source不变，未启用F2bs/F2bt。
+
+worker/main各75次原arm和距离调用，全部原谓词valid；回位函数、arm、distance身份及槽均恢复。六份模型副本导出无错，独立比较rig/checker/released各480个公开数组、标量和options均同值；释放估计、pair覆盖、路由偏好相同。native浮点模式及NumPy错误策略同；MXCSR原始值保留，比较运算控制时排除低6位粘滞异常状态。两路径只有1个姿态精确重合，即home终点；起点最大差.0001060787566185rad，不能用近似pose命中缓存。
+
+原采样器对“实测起点→worker路线起点”的连接产生2点，最大步.000135448188842rad；两个点都在同语义模型/环境的原观测中，原谓词均通过。这里是该归档的原观测查表结论，不是未来执行准入或新候选物理通过。按原motion_duration公式，原2.305679s，保留worker路线并追加起点为2.306913s；不把这项静态预测当实际任务提速。
+
+原件output/return-context-observation-20261024/v1，capture/167dae5e内independent-runtime-readback.json、independent-return-context-readback.json，外层source读回齐全；private round89保存模型、观察器与确切云源码。单份MJB约67.25MB，二进制与内存序列化一致；完整绑定的复制成本不能忽略。Knowledge=already_covered，本轮静态模型与观察值留项目，不新增通用断言。
+
+Next F2bw：private round90已写可选原型及15项实际冻结模型局部回归。只在原worker认证完成后保存原路线及完整模型/几何/浮点环境绑定；失配、缺证书、接口/ABI观察器或不支持条件回原完整_return_path，无新hash/门禁。新连接按原.005采样fresh检查，再用原谓词刷新home末状态，故当前fixture为3次新检查；原路线所有原认证点保留。组件必须把worker原计算、证书构造、主线程匹配和fresh检查一并计入，不能只报调用数。正式路径顶点有意不同；局部输出等价仅指原完整几何判定/home目标/末pad，不称路径逐位同值。尚未跑Kaggle组件或物理，不改默认。
