@@ -678,4 +678,4 @@ v1公开数组和v2官方完整MJB内存两种表示都在同原f9be97b4 fixture
 - [显式geomDistance](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_support.c#L470-L566)与[CCD支持数据](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_collision_convex.c#L673-L766)：保留完整顶点、图、extrema和多边形拓扑及CCD选项，不削减任何实际查询。
 - [forward调用链](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_forward.c#L1799-L1858)：forward不积分，但回调可能修改Data；故仅当前纯刚性/无回调工位可复用，插件/flex/mocap/sensor/Sleep/未知版本均旧路径回退。
 
-新key预计每模型7.69MB数组，仅是体积估计，不是性能成绩。22局部回归含体素/网格/位姿变动失配、有效BVH扩大与像素改动后原几何通过、低层/ABI观察器及回调回退。源码与private round91是接续依据；未实施候选物理，未改生产默认。
+新key预计每模型7.69MB数组，仅是体积估计，不是性能成绩。22局部回归含几何尺寸/网格/位姿变动失配、有效BVH扩大与像素改动后原几何通过、低层/ABI观察器及回调回退。源码与private round91是接续依据；未实施候选物理，未改生产默认。
