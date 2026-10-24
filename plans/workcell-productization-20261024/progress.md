@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-25 — 同owner功能未过，暂停计时而非洗掉失败
+
+Current：round123源2a167c0，云v1终态。原生COMPLETE但组件exit1／complete=false，5项functional的全部数组字节比较均false，性能pairs未运行，原物理未启动。report／error／hint／followup均相同，但不能据此晋级。原失败与遗漏字段证据保留，详见[m1b记录](m1b-refinement-details-results.md)。
+
+Done：仅私有同owner适配完整mj_copyData／witness回退，原查询generation失效和严重异常传播保持；GPT只读审查两轮纠正瞬态错误被重试风险。未改生产或默认。round122独立161项回读0失败，完成archive验证后清重复展开，另释放5,648,384B，原TGZ／压缩reader／root报告保留。
+
+Next：根Codex用逐字不变的私有候选做云端字段诊断，仅补dtype／shape／数值差异，不跑性能。原数组差异原因未明，不先排除字段；close／reentry等生产边界仍待验。无新IK／物理／50Hz／连续域／20＋20通过。Knowledge=already_covered，Wiki§20。
+
 ## 2026-10-25 — X侧完整弦组件终态，shadow不晋级
 
 Current：round122源42f5a55，原Kaggle v1已COMPLETE。根122项读回通过；7组完整原报告exact，全部285对／1mm／原244和完整scalar回退保持。无新物理、无IK改动，默认不变。详见[m1b结果](m1b-refinement-details-results.md#2026-10-25完整派生弦的批量前缀组件)。

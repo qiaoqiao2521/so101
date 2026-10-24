@@ -178,3 +178,17 @@ gzip -dk experiments/colab-twin/output/transport-detail-20261025/kaggle-v1/indep
 ```
 
 Knowledge=already_covered，已读回Wiki《ROS2 与 FishBot》§20的分层验收与无收益反证；本轮新数据只留项目。Owner根Codex。
+
+## 2026-10-25：同owner私有候选被功能检查拦下
+
+round122独立reader另从原件核161项，0失败，共2744个screen状态；复核全部285对、1mm、完整244、三对算术和主data／hint差异。独立报告已压缩保留。原TGZ35个regular文件与unpacked逐字节相同且无额外文件后，删除重复展开并gzip独立报告；实际释放5,648,384已分配字节。原件位于`output/clear-chord-prefix-20261025/kaggle-v1/`（相对experiments/colab-twin），按前文相同tarfile／gzip命令可恢复。root读回、TGZ和小输入保留。清理原件为私有round123的cleanup-readback.json。
+
+随后固定源码`2a167c095eb44bebacb2bfca591c09117a7f6262`，只提交一次Kaggle `muqiaoqiao/so101-same-owner-prefix-20261025/1`。云原生COMPLETE，但组件returncode1／complete=false；**不能记成功**。UUID `4cf17f15-fa36-43f5-a7cf-d99333b00707`，进程wall2.476774s／CPU3.241770s。functional在计时之前发现差异，七组性能对照全部未运行，原物理未启动。
+
+私有候选复用原batch循环，同一checker／data／native owner，不临时切refinement标志。每次raw尝试前在原锁内复制完整MjData与witness；无分离证书才恢复并完整scalar补证。原invalid-q／native／FK错误前缀透传，非预期异常原样传播，避免重试洗掉瞬时错误。查询generation在可能覆盖scratch前递增且不回滚，只作失效令牌，不宣称与原版查询次数相同。内部GPT只读审查两轮指出并纠正两层吞错／重试问题；生产代码和RoutePolicy未改。
+
+5项真实云functional为clear及一次性FK RuntimeError、ValueError、LookupError、KeyboardInterrupt。五项的原路径报告／异常、提示历史和后续原查询均相同；五项全部可见NumPy数据数组的字节比较均false。因此候选未过功能门槛、不进入计时或物理；完整50Hz、连续域、20＋20和默认均未变化。
+
+本次诊断脚本遗漏保存具体差异字段，只留data_arrays_equal=false，无法归因。根保留原失败、不猜是初始化噪声、不先剔除字段。下一动作是保持私有候选逐字相同，在云端只补字段名、dtype、shape和数值差异；无论结果是否一致都不跑性能对照。生命周期close／重入／native-status／invalid-q注入仍未验，不能用这5项替代生产资格。
+
+原件：`experiments/colab-twin/output/same-owner-prefix-20261025/kaggle-v1/so101-evidence.tgz`，私有复建`round123-same-owner-prefix/build_kernel.py`；下一只读字段探针`round124-data-field-diagnostic/`已准备，尚未运行。Knowledge=already_covered，仍沿Wiki§20分层验收；owner根Codex。
