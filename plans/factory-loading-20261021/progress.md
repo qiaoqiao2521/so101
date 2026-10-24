@@ -1590,3 +1590,25 @@ v2只换MuJoCo官方mj_sizeModel/mj_saveModel完整内存MJB表示，不删字�
 只读数体积发现单rig的bvh_aabb约30.97MB、bvh_child5.16MB，纹理4.72MB；不是单纯纹理占满，不盲删BVH。已核对MuJoCo官方3.15源码：kinematics1/2决定geom pose；geomDistance走显式geom分派/convex CCD，initCCDObjSupport列出顶点/凸包图/多边形支持数据。mj_forward并不积分，但可触发Sleep/插件/回调等其他状态，因此下一候选只支持无这些特性的当前6-joint固定工位，其他条件回原算法。
 
 Next F2bx：private round91仅改变可选绑定键为这些已核数据依赖；完整mesh支持buffer、body/joint/geom及名称、所有求解options与标量保留。模型本身/查询算法/所有原碰撞不改，未搬运的BVH/像素仍留在实际模型中。固定3.15.0、无mocap/flex/plugin/sensor/Sleep、无自定义callback，未知情形全部原函数回退。22局部回归已过，含几何改变失配、BVH有效扩大/像素变化后的原几何全路径复验、callback/版本/ABI观察器回退。当前静态估算每模型依赖数组7.69MB，尚未测组件收益或新物理，不改默认。下一步同原fixture三对完整成本，原screen后再决定原物理。Knowledge=already_covered，来源和实验状态只存本项目，未新增全局记忆/调度器/他人对话消息。
+
+
+## F2bx 两工位原物理通过，但整程不晋级；独立发现构造期几何缺口
+
+source34697e3，Kaggle private geometry-return-component v1完成三对原screen，组合worker+证据构造+main各省100.124/100.657/106.574ms；原几何/home/末pad一致，路径有意增加连接顶点。证据15,386,531bytes，构造9.36–10.67ms，main129–138→23–27ms。这只准入原物理，不代表任务或50Hz通过。
+
+physical-ab v1（200/200 B→C，pair e2e131fb，74518ba1/6d895877）及v2（220/170 C→B，pair043edb72，56dcc31a/c1d26caf）均完整终态，共4/4原pass。原planned/measured各244、完整碰撞/原阈值/90sim120wall、自由物体、抓放释放脱离回位、完整498/485帧视频及两个worker consumed/joined清理保持。候选真实在worker构造证据，原proposal/path/sample/snapshot不改，main新验2点bridge及home，方法退出恢复；原接收生命周期保持。
+
+| 工位 | 原版→候选process wall/CPU(s) | main return(ms) | 完整切换拍(ms) | 非hold/release CPU(s) |
+| --- | --- | --- | --- | --- |
+| 200/200 | 54.355488/64.869181→53.083252/63.500647 | 126.408→17.700 | 142.991→34.569 | 32.975530→32.824713，同3367拍 |
+| 220/170反序 | 52.675224/62.764620→53.575633/63.740350 | 62.706→17.692 | 79.511→35.911 | 32.692311→32.888270，同3285拍 |
+
+第一站整程少1.272236s，但唯一切换拍只省.108422s；候选尚未介入的同1455拍CPU已少.149865s，transport worker也已少.525197s。第二站同前缀CPU反多.160890s。不得把整程差异全归因候选，也不得拿sim少1/2拍充作提速。慢拍165→116、114→137；P95 17.291→17.241、17.104→17.687ms。两候选完整回位拍仍34.6/35.9ms，完整50Hz未过。RSS峰值原1200992→1324812、1287524→1359640KiB，保留新增内存成本，不归因全部峰值差。整程不一致，不切默认、不追加择绿工位。
+
+内部只读独立审查进一步发现可复现语义缺口：NativeSupport构造时复制顶点，key却只比较当前MjModel。只在stock checker构造前改mesh4、构造后还原模型（无私有handle/bound注入）即可同key、起终点通过、中段不安全；候选仍reused，原.005复验第36状态失败。根Codex已独立复现并保存native-construction-counterexample.json及精确脚本。该反证不抹去当前未热改模型的4/4原pass，但此版本不得推广或启用默认。
+
+原件output/geometry-return-binding-factory-20261024，独立inventory分列原裁决/周期/CPU/244/释放/清理及上述反证；private round91保存确切候选、adapter、原fixture、组件及两对云源码/metadata、复跑脚本。Kaggle不可变版本分别so101-geometry-return-component-20261024/1和so101-geometry-return-physical-ab-20261024/1、/2。Root GPT候选与薄接入，未冒称新CodeBuddy生成。22几何回归、5交接回归、58原相关测试通过；交接测试最初误读poll后_result，已改用原peek，未改生命周期。
+
+Next F2by：先补实际native构造点/offsets/kinds的可选不可变见证，绑定实际bound owner；缺见证仍原完整回退。当前ns_create只留handle，无法从当前model补推构造几何，不能靠声明“静态”掩盖反证。先让该反例走原回退，再将构造/内存/匹配成本完整计入原三对组件；没有新的整程收益证据不重复发物理。原默认仍loaded_jaw_preload，原全部安全/裁判与回退保持，不恢复定时器、不发其他对话消息、不触碰Mint/实体设备。
+
+Knowledge=pending：当前native构造快照缺口是新发现，待修复与局部反例验收后补原Wiki/ROS2 与 FishBot.md第20节；owner根Codex。实验事实先留本计划，不把已知不完整key写成成熟通用结论。

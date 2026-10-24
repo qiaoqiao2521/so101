@@ -192,3 +192,6 @@ GR00T / LIBERO 扩展（2026-10-01）：`experiments/gr00t-libero/README.md` 与
 ## 2026-10-01 有限资源状态学习
 
 已实现统一raw64 HDF5、真实起点扰动/专家恢复、严格动作回放、官方ACT/裸Torch MLP资源双探针及分层止损入口。原动作3133步state/env/time误差0；两模型均通过4GB本机资源门槛。选ACT做5000step/约119秒单轨迹诊断，权重保存重载一致，首动作MAE0.01085rad；纯策略0.36秒后障碍碰撞停机，抓放未通过，20+20/视觉未启动。入口experiments/colab-twin/LEARNING.md；owner根Codex，先处理在线状态偏离/恢复覆盖。data/weight/log继续Git排除，未连接机械臂或分配云端GPU。
+
+
+2026-10-24 F2bx：Kaggle两工位反序4/4原物理通过，回位完整控制拍142.991→34.569、79.511→35.911ms；整程收益不一致，完整50Hz仍未通过，默认不变。独立反例发现可选model key漏掉native构造期几何，原型不得推广；下一项先补实际构造见证并复核反例。详情见plans/factory-loading-20261021/progress.md，原4次静态成绩与失败反证均保留。

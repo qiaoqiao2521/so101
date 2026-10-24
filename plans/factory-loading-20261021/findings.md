@@ -679,3 +679,12 @@ v1公开数组和v2官方完整MJB内存两种表示都在同原f9be97b4 fixture
 - [forward调用链](https://github.com/google-deepmind/mujoco/blob/3.15.0/src/engine/engine_forward.c#L1799-L1858)：forward不积分，但回调可能修改Data；故仅当前纯刚性/无回调工位可复用，插件/flex/mocap/sensor/Sleep/未知版本均旧路径回退。
 
 新key预计每模型7.69MB数组，仅是体积估计，不是性能成绩。22局部回归含几何尺寸/网格/位姿变动失配、有效BVH扩大与像素改动后原几何通过、低层/ABI观察器及回调回退。源码与private round91是接续依据；未实施候选物理，未改生产默认。
+
+
+## F2bx：当前模型相等不等于实际native构造几何相等
+
+组件含全部证据工作省100–107ms，静态工位两对4/4原pass；但第二站整程wall/CPU均增加，故不晋级。完整回位控制拍142.991→34.569、79.511→35.911ms；函数17.7ms不能冒充20ms完整闭环。原件和复跑入口见progress本节与output/geometry-return-binding-factory-20261024/independent-physical-inventory.json。
+
+[ConservativeCollisionChecker](../../experiments/colab-twin/conservative_collision.py)在构造时复制完整mesh/box顶点，[NativeSupport](../../experiments/colab-twin/support_native.py)又通过ns_create持有独立C++副本。原型绑定当前model及选项，没有覆盖这份构造期内容。内部审查与根侧各自静态复算：gid63 collision_moving_jaw_so101_v1_0的mesh4构造前缩至1e-4并移到中途wall13局部中心，stock构造后还原model；不注入私有native字段，key仍相同，起点/home原谓词通过但中点失败。原型仍复用，返回路径原.005复验第36状态失败，q=[-.7636854922499817,.5264215938680693,-.5756476679928118,1.6204221904900316,8.515308681294955e-13]。精确脚本private round91/reproduce_native_counterexample.py，结果native-construction-counterexample.json。
+
+反证证明key支持域声明不足，并非声称当前4次静态物理已碰撞。hfield暂不构成同类已证遗漏：原native checker拒绝查询集合中非MESH/BOX，released guard也限定BOX/MESH；未参与查询的hfield不能仅凭名称就判成漏项。下一项优先补实际native输入见证，缺证据回原算法，不引入hash锁、额外裁判或私有调度。
