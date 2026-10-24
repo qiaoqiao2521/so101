@@ -151,3 +151,7 @@
 2026-10-25接续：同次明细生产组件三对exact，左主／第二放置工位反序及中心回归原物理5/5，两工位process wall少4.924／5.002s且CPU均降、hold同拍。[来源与限制](m1b-refinement-details-results.md)。保留显式候选及原默认，完整50Hz未过。transport/lift/hold同输入18组组件也已完成；运输样本直接clear、不省native，速度噪声使秒级归因仍未成立。下一步先完整枚举保存弦中间点，再判断既有raw batch前缀；保留原scalar补证回退及旧close前缀失败，不将端点、组件比例或等待差当整程收益。
 
 Carry限时等待／继续／取消三例原件已回收：完整resume原pass、cancel与原timeout保留fail，见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。新API已由5186服务并通过实际ready／历史终态拒绝读回，工作台5a30c26已远端核实；活动网页任务等待→继续→原物理整链仍待验。等待不重置原时钟，不以waiting代替Grasp证据；手动门不替代六技能生命周期或同世界恢复。
+
+### M1b当前下一动作
+
+round122全弦组件已结束：六组lift／hold／transport三对更快，但shadow主data／hint不同，明确不晋级；原244负对照保持。根Codex下一步验证同owner私有前缀和原generation、异常／回退状态，再决定生产适配。原1mm、285对／244、90sim120wall与默认保持；组件结果不能解除原物理门槛。归档清理已实际执行并记录恢复命令。

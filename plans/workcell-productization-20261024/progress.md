@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-25 — X侧完整弦组件终态，shadow不晋级
+
+Current：round122源42f5a55，原Kaggle v1已COMPLETE。根122项读回通过；7组完整原报告exact，全部285对／1mm／原244和完整scalar回退保持。无新物理、无IK改动，默认不变。详见[m1b结果](m1b-refinement-details-results.md#2026-10-25完整派生弦的批量前缀组件)。
+
+Done：两个工位54派生弦全量筛选，lift各504点中448原轴clear，hold325／318及transport各261点全clear。六组三对wall／CPU均更快，transport中位wall比.709250／.708594。close571点全部回退且原244exact。组件不是controller或抓放，不能算整程提速。
+
+Rejected：shadow原型六组主data与witness历史均不同，production_eligible=false；不接执行器、不因报告相同跳过交接验收。Zcode只读90s超时，内部GPT接审，不改认证配置。
+
+Done：已验证归档后删除round120／121重复unpacked，压缩独立reader，保留TGZ和关键读回；实际释放116,047,872已分配字节。恢复命令和逐项证据见上文m1b结果。当前fixture与他人在途工作不动。
+
+Next：根Codex仅做同owner私有前缀，先解决原生查询世代、MjData／hint恢复及异常回退，再同7组／244等价；组件成立后才考虑生产选项与原Station反序物理。X±20mm仍是两个已验固定点，完整50Hz／连续域／20＋20未过。Knowledge=already_covered，Wiki§20已读回，无跨项目新结论。
+
 ## 2026-10-25 — 运输段同输入诊断完成，未改生产
 
 Current：上一轮=progress，原物理5/5与结果b236ff4已推。接续原运输反增问题，固定b236ff4在Kaggle so101-transport-detail-20261025 v1完成18组同输入组件；[完整诊断](m1b-refinement-details-results.md)。本轮不是新抓放或50Hz验收。

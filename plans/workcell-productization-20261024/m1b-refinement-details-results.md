@@ -139,3 +139,42 @@ env OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 SO101_ROOT=/tmp/so101-eval \
 ```
 
 命令在该五文件所在目录运行，默认warmup＋三对＋故障。`--functional`只做功能，不能给性能结论。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20分开组件、动作与晋级；owner根Codex。
+
+## 2026-10-25：完整派生弦的批量前缀组件
+
+Kaggle `muqiaoqiao/so101-clear-chord-prefix-20261025/1` 已COMPLETE，源固定 `42f5a553f28ef3c431021b92613d879456aa6073`。组件正常终态，进程wall27.977228s／CPU29.101108s；无Station verdict、无物理积分。原preflight渲染单列。根直接回读122项通过，无缺项；Zcode只读审核90s超时，未取得有效审核，不计参与成功。
+
+从上轮两baseline保存的post-step q6到reference构造54条完整派生弦，另保留9条close／571状态负对照。这些不是捕获的真实ABI输入或controller重放。原采样arm .005rad／jaw .002rad／max4096，全部285对、1mm与原完整标量补证回退保持。先逐点全弦筛选，再分组warmup和AB／BA／AB；构造与编译不含在成对计时内。
+
+| 工位／段 | 弦／状态 | 原查询直接认证 | prefix接受／回退 | wall中位比 | CPU中位比 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| left_baseline／lift | 9／504 | 448 | 8／1 | 0.824379 | 0.823889 |
+| left_baseline／hold | 9／325 | 325 | 9／0 | 0.724220 | 0.724300 |
+| left_baseline／transport | 9／261 | 261 | 9／0 | 0.709250 | 0.709258 |
+| left_second_baseline／lift | 9／504 | 448 | 8／1 | 0.882897 | 0.882792 |
+| left_second_baseline／hold | 9／318 | 318 | 9／0 | 0.687821 | 0.687819 |
+| left_second_baseline／transport | 9／261 | 261 | 9／0 | 0.708594 | 0.708670 |
+| original_close_negative_control／close | 9／571 | 0 | 0／9 | 0.983820 | 0.983948 |
+
+六组lift／hold／transport的三对wall和CPU全部更快，7组完整路径报告均exact相同。每组完整判定为true，required==checked；逐状态full检查全部285对认证。两个lift各56个姿态需要补证，候选回退完整56点，另外448点原轴直接认证。hold／transport全部raw clear，未删除几何检查，只批量执行原查询。close571点全部需补证，候选额外尝试9个原生点后仍完整标量571点；本VM观测三对略快不证明重复工作有收益，也不推翻旧round116全慢证据。
+
+**不进入生产或原物理。** 六组的主检查器final q6与witness历史三对均不同；候选raw shadow最后姿态虽与baseline相同，独立owner状态不能作为主owner交接。close因全部回退，主姿态／历史相同。原型明确production_eligible=false，不能只凭报告相同领取生产资格。副作用、generation、完整MjData与异常回退尚需同owner验证。
+
+完整原件：`experiments/colab-twin/output/clear-chord-prefix-20261025/kaggle-v1/so101-evidence.tgz`，组件UUID `e4f05702-5c50-4963-a633-b69ea92a998e`。根独立算术、原输入字节、全285对和完整244报告在同目录 `root-readback.json`；私有源码与复建入口为 `/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round122-clear-chord-prefix/{probe.py,build_kernel.py,root_readback.py}`。本轮未改生产源码／默认，无新IK、物理、连续域、20＋20或完整50Hz通过。
+
+下一步仅做同owner默认关闭的私有原型：全raw clear才能接收；其它情况完整恢复并走原scalar／refiner。先在同一7组与原244对照验证报告、数据和提示历史，含异常和重入失效。通过组件以后才考虑薄生产选项与原Station两工位反序；不直接采用本版shadow。
+
+### 已执行产物归档与清理
+
+根在round122开始前核验round120／121原TGZ全部regular文件，与unpacked逐字节相同且无额外文件，才删除两个重复展开目录。round120169文件、round12129文件已验证；原TGZ保留，独立reader JSON用原生gzip压缩并验证解压字节一致。目标已分配空间分别减少102,473,728B／13,574,144B，共 **116,047,872B（约110.7MiB）**。共享盘空闲19,010,514,944→19,126,702,080B，不将其它任务变动算作本轮清理收益。
+
+保留round120原TGZ14,897,121B、独立reader gzip1,628,781B、root读回与日志；round121原TGZ263,925B、独立reader gzip17,894B、root读回与日志。所需后续小输入已选入round122私有fixture；在途round122与其它Blender／Mint／模型目录未清理。脚本及逐项恢复命令：`round122-clear-chord-prefix/cleanup_previous.py`、`cleanup-readback.json`。
+
+恢复任一轮时，将下例中的目录替换为 `refinement-details-physical-20261025` 或 `transport-detail-20261025`：
+
+```bash
+python3 -m tarfile -e experiments/colab-twin/output/transport-detail-20261025/kaggle-v1/so101-evidence.tgz experiments/colab-twin/output/transport-detail-20261025/kaggle-v1/unpacked
+gzip -dk experiments/colab-twin/output/transport-detail-20261025/kaggle-v1/independent-readback.json.gz
+```
+
+Knowledge=already_covered，已读回Wiki《ROS2 与 FishBot》§20的分层验收与无收益反证；本轮新数据只留项目。Owner根Codex。

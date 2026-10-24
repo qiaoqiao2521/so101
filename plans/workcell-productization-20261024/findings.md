@@ -195,3 +195,7 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 现有execution.pick_xy_m传给build_contact_scene，控制整只红盘；cube初始XY才由原reset设置。固定盘请求应保持前者(.24,-.13)，approach/grasp世界XY与cube一致。原模式已能表示这种分离，无需再造固定盘mode。端点还需将原开发CLI已有的pickup_open_jaw_rad和mesh_box_axis_refinement作为显式参数接入Station；默认与原模式保持。此次只补透传和可编辑样例，真实新入口物理验收另跑，不把已有开发CLI通过贴到新Station任务。
 
 后续固定2d7097ef的新Station原物理已结束：两端点及原中心3/3pass，两项关闭适配的原初始化fail保留；实际XML盘位、输入差异、真实夹持释放脱离回位和完整扫掠均独立核实，见[m1a-x-station-fixed-results.md](m1a-x-station-fixed-results.md)。本次左侧98.140wall、903慢拍，主要已定位成本为初始化shortcut与close/controller；原OMPL搜索仅.134s，不借随机性解释全部差异，不从这些不同输入计算性能收益。
+
+## X侧完整弦批量前缀：组件与owner交接分开
+
+round122原全弦筛选与三对已终态，结果见[m1b记录](m1b-refinement-details-results.md#2026-10-25完整派生弦的批量前缀组件)。54条保存姿态派生弦的hold／transport全部raw clear，按原分辨率批量查询可降低Python组件成本；但独立shadow原型没有更新主checker的MjData和witness历史，六组全部不一致，不能生产采用。close571点全需补证，完整回退不减原查询。原报告exact仅证明路径布尔结果相同，不证明控制器副作用与交接成立。下一候选须同owner且原generation失效仍成立；不删refinement拒绝就直接上线。
