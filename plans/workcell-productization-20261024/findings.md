@@ -116,3 +116,9 @@ X开发布局随后在固定e7f921c的Kaggle v1原物理4/4通过；planned/meas
 ## Station入口接续的实际所有权
 
 5186源码实际在FishBot的独立工作树`/home/muqiao/worktrees/fishbot-workbench-code-rebuild-20261018`，分支codex/workbench-code-rebuild-20261018，入口apps/fishbot-control-station/so101-runtime.cjs与Lichtblick RobotStation；不是主FishBot dirty main。复用原task-runtime、任务UUID、取消、scene与录像。此前仅写FishBot仓库相对路径的记录不足以确定运行checkout，本轮已更正。开发参数用显式execution对象而非隐藏profileID覆盖节点；只有省略execution才用原默认，坏声明保留给原准入拒绝。
+
+## 新Station／网页结果与M1b下一证据
+
+真实网页输入经新Station源码084cc7f，原物理左右2/2通过；不是重用开发CLI成功标签。证据与未采计时边界见m1a-station-entry.md。并行工作台Drone源码由原owner后续提交de94a6d；本轮未改其模块或主FishBot工作树。
+
+旧X四回合timing的exclusive parts只读归因：15641完整周期，281拍>20ms；controller主导218、perception51、physics_and_guards12。最大140.476ms/135.697ms位于separate→retreat同步_return_path(q6[:5])，主线程CPU接近wall；尚未细分函数内部，不能归因于特定碰撞算子。worker的planned_return目前用于预算/报告，不可直接代替实测q回位。私有可复跑审计round102/m1b-slow-cycle-audit.json保留全部原index、stage和top10。下一步限于这一有证据的交接点，全部安全责任不丢。
