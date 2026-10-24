@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — M1b 实测回位候选，默认关闭
+
+Current：X两侧已验开发布局沿用，不重写IK或放松盘壁阈值。接续旧周期最大140.476ms的separate→retreat入口。新Kaggle原观察ca00cc74…原物理pass，78.34sim/48.142episode-wall、49.470process-wall/59.080process-CPU；244+244、自由物体、释放脱离回位和490帧均独立回读。插桩复制快照额外120ms，cProfile树父帧不完整，不能把341ms最大拍写成原固有成本。
+
+Done：同MuJoCo3.15、同MJB、无mj_step独立复算5次，原返回路径逐位相同；单次128.07–136.87ms，中位131.131ms。每次1条直接路径、75状态、75原arm检查及75释放物距离查询，未走OMPL。候选由根GPT实现，Qoder超时后内置GPT独立审查；新增async_measured_return.py显式开关，默认仍loaded_jaw_preload。复用原异步job、SeparationSnapshot和独占模型，从实际q快照计算原_return_path，现场再验桥接、首命令和90s预算；在线保护、244、评分、取消清理不变。审查发现issued回执缺口，已补到原data.ctrl写入后。
+
+Remaining：根相关CPU回归与新交接反例核验后固定源码；先同输入三对无物理等价，再在Kaggle同VM运行X+的B→C及X−的C→B原evaluate_station --timing。未测候选不记成功，不由等待拍数变化记提速。整组终态前不改在途源码或提交。
+
+Issues：本机Blender两段后台动画仍运行，未抢本地物理资源。原观察与复算原件在忽略目录output/m1b-return-profile-20261024；私有wrapper沿用round100/round103，候选物理沿用round104，不新建调度。当前候选原物理not_run、完整50Hz未通过。
+
+Next：Owner=根Codex，固定通过局部核验的候选源码并推送，完成三对等价与原两工位反序物理。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》第20节分层验收，新时序事实留本计划。
+
 ## 2026-10-24 — M1a Station／网页入口2/2原物理通过
 
 详见[m1a-station-entry.md](m1a-station-entry.md)。两开发布局已接原5186网页选择、保存/刷新、复制/JSON与任务入口；新任务6e86ec73…、f7c265d5…分别78.02/78.08sim、59.131/58.445episode-wall，原真实抓放、释放、脱离、回位全部通过。planned/measured244、双worker、自由物体与488帧视频均独立核实，warnings=0，无障碍接触或安全停机。项目浏览器刷新同ID、一次POST和视频读取断言通过；独立离线读回不扩大为完整网络时序重演。新入口未采完整周期或精确process CPU，不补历史值。

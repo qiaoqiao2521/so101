@@ -26,6 +26,7 @@ from visual_localization import TopDownCalibration
 from transport_worker import TransportSnapshot, TransportPlan, TransportPlanningJob, AsyncTransportPlanningJob
 from separation_worker import (SeparationSnapshot, AsyncSeparationPlanningJob,
                                run_separation_plan, validate_separation_samples)
+from return_worker import AsyncReturnPlanningJob, run_return_plan
 from released_object import ReleasedObjectQuery, floor_yaw_rotation
 from route_policy import DEFAULT_ROUTE_POLICY, RoutePolicy
 
@@ -267,6 +268,9 @@ class VisualGraspController:
         self.separation_events = []
         self.separation_live_ready = False
         self.separation_accepted_plan = None
+        self.return_job = None
+        self.return_request_binding = None
+        self.return_events = []
         self.failure_reason = None
         self.done = False
         self.transport = []
@@ -887,7 +891,8 @@ class VisualGraspController:
         errors = []
         self.planner_cleanup_errors = []
         for name, job in (('transport', self.transport_job),
-                          ('separation', getattr(self, 'separation_job', None))):
+                          ('separation', getattr(self, 'separation_job', None)),
+                          ('return', getattr(self, 'return_job', None))):
             if job is not None:
                 try:
                     job.close()
@@ -1053,6 +1058,84 @@ class VisualGraspController:
                     ('released_rotation', snapshot(released.get('rotation'))),
                     ('released_uncertainty_m', released.get('uncertainty_m')))
         return SweepBinding(self, self.checker, self.rig, self.stage, float(self.jaw), context)
+
+    def _check_return_context(self):
+        if not self.return_request_binding.matches(self._separation_binding()):
+            self.return_job.reject('return_context_changed')
+            raise ControllerFailure('return_context_changed')
+
+    def _start_return(self, q6, elapsed):
+        # Reuse the separation model owners only after their thread is joined.
+        if (self.stage != 'separate' or self.return_job is not None
+                or self.separation_job is None or self.separation_job.state != 'consumed'
+                or not self.separation_job.execution.get('joined')):
+            raise ControllerFailure('return_request_before_separation_worker_join')
+        released = self.released_query
+        snapshot = SeparationSnapshot(q6, self.initial_q, self.last_command, self.seed,
+            elapsed, released.center, released.uncertainty_m, rotation=released.rotation,
+            place_height_m=self.place_height_m, route_policy=self.route_policy)
+        self.return_request_binding = self._separation_binding()
+        self.return_job = AsyncReturnPlanningJob(self.return_request_binding)
+        rig, released_model = self._separation_worker_models()
+        self.return_events.append({'event': 'request', 'elapsed_s': float(elapsed),
+            'snapshot_q6': list(snapshot.q6), 'hold_command_q6': self.last_command.tolist()})
+        self.return_job.start(run_return_plan, rig, released_model, snapshot,
+                              self.return_job.cancel_event)
+
+    def _poll_return(self, q6, elapsed):
+        self._check_return_context()
+        if not self.return_job.poll():
+            return False
+        proposal = self.return_job.peek(self._separation_binding())
+        observation = self.observation
+        if (observation is None or observation[1] != elapsed
+                or observation[2] != tuple(q6)):
+            raise ControllerFailure('return_admission_observation_changed')
+        live_binding = self._sweep_binding(q6, q6, 'online_chord')
+        live_binding = replace(live_binding, context=tuple(
+            row for row in live_binding.context if row[0] != 'sweep_request_seq'))
+        path = np.asarray(proposal.path)
+        event = {'event': 'admission', 'elapsed_s': float(elapsed),
+            'snapshot_q6': list(proposal.snapshot.q6), 'current_q6': q6.tolist(),
+            'accepted': False, 'issued': False}
+        self.return_events.append(event)
+        endpoint = np.r_[path[0], .5]
+        sweep = self._configuration_sweep(q6, endpoint)
+        bridge = validate_joint_path([q6[:5], path[0]], self._released_valid, .005)
+        event.update(configuration_sweep=sweep, released_validation=bridge)
+        if not sweep['valid'] or not bridge['valid']:
+            raise ControllerFailure('return_admission_chord_invalid')
+        points = np.vstack((q6[:5], path))
+        first = np.r_[q6[:5], .5]
+        first_sweep = self._configuration_sweep(q6, first)
+        first_validation = validate_joint_path([q6[:5], q6[:5]], self._released_valid, .005)
+        event['first_command_guard'] = {'configuration_sweep': first_sweep,
+            'released_validation': first_validation, 'reference_q6': first.tolist(),
+            'actuator_command': self.last_command.tolist(), 'continuous': True}
+        if not first_sweep['valid'] or not first_validation['valid']:
+            raise ControllerFailure('return_first_command_invalid')
+        required = motion_duration(points)+.6+1.5+.6+.1
+        event.update(required_s=required, predicted_completion_s=float(elapsed)+required)
+        if elapsed+required > 90:
+            raise ControllerFailure('insufficient_time_for_safe_return')
+        self._check_return_context()
+        current = self._sweep_binding(q6, q6, 'online_chord')
+        current = replace(current, context=tuple(
+            row for row in current.context if row[0] != 'sweep_request_seq'))
+        if not live_binding.matches(current) or observation != self.observation or elapsed != self.last_elapsed:
+            raise ControllerFailure('return_admission_observation_changed')
+        # Offset/bounds checks are the original continuous-motion admission.
+        # Consume while still bound to the waiting stage, before changing it.
+        self.return_job.consume(self._separation_binding())
+        self.stage = 'retreat'
+        self._set_continuous_motion(points, elapsed)
+        event['accepted'] = True
+        self.plan_reports.extend(json.loads(proposal.report_json))
+        self.plan_reports.append({'stage': 'return_from_measured_pose', 'method': proposal.method,
+            'path': points.tolist(), 'duration_s': motion_duration(points),
+            'execution': 'async_measured_return', 'snapshot_elapsed_s': proposal.snapshot.elapsed,
+            'admitted_at_s': float(elapsed)})
+        return True
 
     def _check_separation_context(self):
         if not self.separation_request_binding.matches(self._separation_binding()):
@@ -1362,6 +1445,8 @@ class VisualGraspController:
             if not self.separation_live_ready:
                 self._initialize_separation(q6)
         elif self.stage == 'separate':
+            if bool(getattr(getattr(self, 'route_policy', None), 'async_measured_return', False)):
+                return  # Start/poll below only after the original live chord guard.
             points, method = self._return_path(q6[:5])
             if elapsed+motion_duration(points)+.6+1.5+.6+.1 > 90:
                 raise ControllerFailure('insufficient_time_for_safe_return')
@@ -1400,6 +1485,8 @@ class VisualGraspController:
                 self._check_transport_context()
             if self.stage == 'release' and self.separation_job is not None:
                 self._check_separation_context()
+            if self.stage == 'separate' and getattr(self, 'return_job', None) is not None:
+                self._check_return_context()
             if not self.checker.evaluate(q6, require_fixed_gripper=False)['valid']:
                 raise ControllerFailure('measured_arm_configuration_invalid')
             if self.stage in ('retreat', 'settle') and not self._released_valid(q6[:5], q6[5]):
@@ -1503,12 +1590,23 @@ class VisualGraspController:
                     self.last_sweep_report = self.separation_events[-1]['first_command_guard']['configuration_sweep']
             elif self.stage == 'release' and self.separation_job is not None:
                 self._poll_separation(q6, elapsed, admit=False)
+            if (self.stage == 'separate'
+                    and bool(getattr(getattr(self, 'route_policy', None), 'async_measured_return', False))
+                    and elapsed-self.stage_started >= self.duration+.6 and arm_arrived):
+                if self.return_job is None:
+                    self._start_return(q6, elapsed)
+                if self._poll_return(q6, elapsed):
+                    self.reference = np.r_[self.points[0], .5]
+                    command = self.servo_start_command.copy()
+                    self.last_sweep_report = self.return_events[-1]['first_command_guard']['configuration_sweep']
             return self._result(command)
         except (ControllerFailure, ValueError, RuntimeError) as error:
             if self.transport_job is not None:
                 self.transport_job.reject(str(error))
             if getattr(self, 'separation_job', None) is not None:
                 self.separation_job.reject(str(error))
+            if getattr(self, 'return_job', None) is not None:
+                self.return_job.reject(str(error))
             self.failure_reason = str(error)
             return self._result(q6)
 

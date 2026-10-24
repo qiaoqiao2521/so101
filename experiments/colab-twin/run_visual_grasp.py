@@ -331,6 +331,11 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                     and controller.separation_events[-1]['elapsed_s']==elapsed
                     and controller.separation_events[-1]['accepted']):
                 controller.separation_events[-1]['issued']=True
+            return_events = getattr(controller, 'return_events', [])
+            if (return_events and return_events[-1]['event']=='admission'
+                    and return_events[-1]['elapsed_s']==elapsed
+                    and return_events[-1]['accepted']):
+                return_events[-1]['issued']=True
             obstacle_ids = {model.geom(name).id for name in
                             case.get('obstacle_geom_names', ['approach_obstacle'])}
             release_force_peak=0.
@@ -428,6 +433,10 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                                           state=controller.transport_job.state)
                                        if controller.transport_job is not None else None)
             status['separation_events'] = controller.separation_events
+            status['return_events'] = getattr(controller, 'return_events', [])
+            return_job = getattr(controller, 'return_job', None)
+            status['return_job'] = (dict(return_job.execution, state=return_job.state)
+                                    if return_job is not None else None)
             status['separation_job'] = (dict(controller.separation_job.execution,
                                            state=controller.separation_job.state)
                                         if controller.separation_job is not None else None)
