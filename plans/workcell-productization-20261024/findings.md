@@ -16,6 +16,8 @@
 
 ## M2/M4 薄适配更新
 
+- M2原物理抓取证据已过新完整抓放与真实取消；[结果](m2-grasp-evidence-results.md)。progress回调可在物理推进后、monitor更新前取消；因此轨迹行数不等于已评分行数。新证据记录实际observe数量，取消1511/1512行，不把完整轨迹重算hold3.56s盖掉原3.54s。显示层接收深拷贝，不能污染原证据；历史Grasp后置条件与最终attempt失败分开保存。
+
 - 2026-10-24新配方原物理1/1与真实运行中取消已独立回读，见[m4-recipe-results.md](m4-recipe-results.md)。两项是功能／生命周期验收，不是性能A/B。完整回合最大60.075ms在transport，controller54.017wall/54.017CPU；两例close段也重复约40ms controller，不能套用前轮callbacks等待归因。下一次50Hz分析应按当前同源实测重定位。
 - M2新接点审查：原progress_callback早于monitor.update，不能以stage发布技能成功。Grasp应以原持续双指接触／抬升monitor为后置证据；ReleaseAudit在脱离后仍可能因重接触转失败，Place与Retreat证据不可按阶段硬切。真值仅作裁判／展示，不反馈恢复控制。
 

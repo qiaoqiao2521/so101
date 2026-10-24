@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-24 — M2原物理Grasp证据到网页已实测
+
+Current：本轮=progress；[完整结果](m2-grasp-evidence-results.md)。固定b21b1d9在Kaggle同VM串行新原完整抓放＋运输worker取消，整组终态后才回写源码仓。没有重训、改控制／评分／碰撞或放宽90sim120wall。
+
+Done：3d3cefa8…原pass，77.90sim/57.770episode-wall、59.011process-wall/69.557CPU；真实抓放／释放／脱离／回位、planned/measured244、自由物体和双worker清理保持，碰撞／安全0，487/487实数录像。49f2d252…原fail/exit1、taskcancelled，30.22s原worker ack+alive触发、30.24s终止，abort/join/closed及无活线程确认，189/189录像。
+
+Done：两例仅1个Grasp事件，index1383、27.68s；原双指接触／抬升／无支撑持续持物证据成立。根及独立reader逐行重放原monitor与helper，和原report.skill_evidence完全相同；顶层attempt UUID正确。取消只记录1511/1512行，未补算未处理末行，attempt仍false/Cancelled。历史未抓住／失物反例及后续失败保留通过。
+
+Done：43相关Python、12网页执行数据测试与生产构建通过；10项桌面／390px浏览器通过，写请求／页面异常0。网页用真实回放HTTP fixture验证“曾抓住≠整任务完成”，不是新网页物理回合。显示callback深拷贝隔离缺口已独立复验修正。
+
+Remaining：完整3895拍，P95=17.945ms、P99=31.779ms、max=51.915ms，159拍>20ms，完整50Hz仍未过；本轮非性能A/B。六技能可halt生命周期／同世界安全重抓、20+20、连续卸货仍未完成。
+
+Next：根接满足前后置条件的技能生命周期；复用已核成熟BT能力，先证RUNNING／halt／清理，不以重启Station新世界冒充恢复。Knowledge=already_covered，沿用Wiki《ROS2 与FishBot》§20；来源与新时序只留本计划。根独立提交推送两仓成果，保留其他在途工作与Mint边界。
+
 ## 2026-10-24 — M2原物理Grasp证据接入中
 
 Current：上一目标轮次=progress（配方原物理及实际取消交付）。本轮将原monitor首次grasp_success接为只观察证据，传到原status与网页；没有用stage替代成功，也未改变控制器／裁判／碰撞／90sim120wall。
