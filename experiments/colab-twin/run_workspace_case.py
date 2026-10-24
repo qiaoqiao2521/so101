@@ -7,6 +7,7 @@ from an offline workspace report.
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 import json
 import math
 import os
@@ -77,6 +78,10 @@ def select_case(profile_path, case_id):
                 or opening not in (.35, .5)):
             raise ValueError('pickup_open_jaw_rad supports only explicit .35 or original .5 rad')
         selected['pickup_open_jaw_rad'] = float(opening)
+    if 'mesh_box_axis_refinement' in row:
+        if type(row['mesh_box_axis_refinement']) is not bool:
+            raise ValueError('mesh_box_axis_refinement must be an explicit boolean')
+        selected['mesh_box_axis_refinement'] = row['mesh_box_axis_refinement']
     return selected
 
 
@@ -148,6 +153,11 @@ def run_case(profile_path, case_id, output_root):
         requested = select_case(profile_path, case_id)
         atomic_json(output/'requested-case.json', requested)
         policy, loaded = load_route_policy()
+        if 'mesh_box_axis_refinement' in requested:
+            enabled = requested['mesh_box_axis_refinement']
+            policy = replace(policy, mesh_box_axis_refinement=enabled)
+            loaded['preferences'] = policy.preferences()
+            loaded['case_overrides'] = {'mesh_box_axis_refinement': enabled}
         candidate.update(loaded)
         options = controller_options(requested, policy)
         status.update(phase='running', layout={
@@ -156,6 +166,8 @@ def run_case(profile_path, case_id, output_root):
             'pickup_hover_z_m': requested.get('pickup_hover_z_m', .06)})
         if 'pickup_open_jaw_rad' in requested:
             status['layout']['pickup_open_jaw_rad'] = requested['pickup_open_jaw_rad']
+        if 'mesh_box_axis_refinement' in requested:
+            status['layout']['mesh_box_axis_refinement'] = requested['mesh_box_axis_refinement']
         atomic_json(output/'status.json', status)
         from episode_timing import EpisodeTiming
         timer = EpisodeTiming()

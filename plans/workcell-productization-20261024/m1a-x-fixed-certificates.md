@@ -134,3 +134,13 @@ python run_workspace_case.py --profile scenarios/workspace-x-preclose-m1a.json  
 worker耗时与主回合重叠，不能相加；两个云VM和不同目标的wall差不作为提速。v2 batch=`349ac15b-0b7c-445e-aa45-89f6580d12fe`；原件在同output的`kaggle-v2/unpacked/so101-evidence/`。两轮各有根`root-readback.json`和独立`independent-readback.json`；原monitor逐行重放与skill_evidence全字段一致。两个指针文件对应同UUID，不多计回合。
 
 **保留为右侧固定盘的显式开发能力。** 右侧同一取料点在两个已有放置工位均完成原抓放／释放／脱离／回位；中心默认回归通过；原大开度失败保留。不是连续工作区认证、扰动20＋20、网页新准入或50Hz达标。左侧补方向仍仅静态认证，下一步需显式接入完整规划／实测检查并用原物理验证；Carry接续继续独立保留。
+
+## 左侧执行候选：补证接入，原物理待验
+
+显式 `RoutePolicy.mesh_box_axis_refinement=True` 才开启，默认False。原19轴先查询，仅对 `no_separation_certificate` 的原失败mesh-box补方向；完整顶点区间门、285对、原1mm均保留。实测检查器与transport/separation/return上下文贯通；候选使批量桥回原逐点检查，避免绕过补证。显式False可覆盖加载策略的True。算术／ABI／非有限值错误保持原拒绝；右侧无证NaN哨兵只保留诊断失败，不放行。
+
+根用原固定左侧IK结果复核，开启后参考2／下降74／闭爪244／抬升74点全通过，246次整帧补证、无error/rejected。闭爪全局最小下界1.409754449mm，最近对仍是 `pick_wall_y_1/collision_lower_arm_1`，不能把补证单对12mm当全场景净距。原版下降第74点拒绝、闭爪／抬升首点拒绝保留。闭爪244点本机8.682s，属于功能补证成本，不称提速。
+
+235项相关测试通过。离线原件与复跑脚本在 `experiments/colab-twin/output/workspace-x-left-refinement-20261024/offline-screen.json` 和同目录 `offline_screen.py`。这些是采样几何检查，尚未物理积分，不代表抓放成功。
+
+候选profile：`scenarios/workspace-x-left-refinement-m1a.json`，首批依次 `left_original_axes`、`left_refined_axes`、`center_regression`；可靠通过后再已有第二放置工位 `left_refined_axes_secondary`。原盘不移动、不改取料高度／夹爪开度／评分／90sim120wall，固定源码后沿原Kaggle运行。refiner与NativeSupport属于同一编译model owner，几何尺寸／mesh／pair改变须重建checker，不跨worker共享，不新增内容锁。默认和网页准入保持。

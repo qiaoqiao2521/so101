@@ -53,6 +53,9 @@ def record_collision_backend(status, checker, *, batch_sweep=False):
     status['collision_backend'] = {'method':'conservative_support_projection',
                                    'distance_kind':checker.distance_kind,
                                    'margin_m':checker.margin_m}
+    if getattr(checker, 'mesh_box_axis_refinement', False) is True:
+        status['collision_backend']['mesh_box_axis_refinement'] = dict(
+            checker.mesh_box_refinement_stats)
     try:
         status['collision_backend']['library'] = library_metadata()
     except RuntimeError as error:
@@ -263,7 +266,10 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
                       'baseline_object_z_m':baseline_z, 'free_object':True,
                       'weld_count':int(model.neq), 'mocap_count':int(model.nmocap)}
         monitor=PhysicalTaskMonitor(baseline_z)
-        checker=CollisionChecker(rig,gripper=.5,margin_m=.001)
+        policy = (controller_options or {}).get('route_policy')
+        checker_options = ({'mesh_box_axis_refinement': True}
+                           if getattr(policy, 'mesh_box_axis_refinement', False) else {})
+        checker=CollisionChecker(rig,gripper=.5,margin_m=.001,**checker_options)
         calibration=TopDownCalibration.from_mujoco_model(model,width=640,height=480,top_plane_z_m=.018)
         renderer=mujoco.Renderer(model,height=480,width=640)
         rgb=render_rgb(renderer,data)

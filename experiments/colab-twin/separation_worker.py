@@ -311,7 +311,10 @@ def _planning_context(rig, released_model, snapshot):
     context.released_query = query
     if snapshot.route_policy.batch_separation_axes:
         query.distances = partial(query.distances, batch_cross_axes=True)
-    context.checker = ConservativeCollisionChecker(rig, gripper=.5, margin_m=.001)
+    checker_options = ({'mesh_box_axis_refinement': True}
+                       if snapshot.route_policy.mesh_box_axis_refinement else {})
+    context.checker = ConservativeCollisionChecker(rig, gripper=.5, margin_m=.001,
+                                                 **checker_options)
     return context
 
 

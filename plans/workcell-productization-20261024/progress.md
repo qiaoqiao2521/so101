@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-24 — 固定左X−20mm补证执行候选实施中
+
+Current：上一目标轮次=progress，右固定盘两放置工位原物理已通过且580ec56远端核实。本轮接左侧完整静态补证到显式执行候选，默认仍关闭；无在途本地或Kaggle物理评测，不重复上一轮。
+
+In progress：现有immutable RoutePolicy传mesh_box_axis_refinement=False默认；原19轴先查询，只对no_separation_certificate的原失败mesh-box用完整顶点区间门补证，所有pairs都需认证，全局最小下界保留。root贯通主控、实测检查及transport/separation/return原worker，内部GPT实现refiner和batch逐点回退；不改payload/released守卫、原1mm、244点、限位／评分／90sim120wall。
+
+Constraint：refiner/local hull和NativeSupport属于同一编译model owner；每个当前关节／geom姿态重算世界方向与投影。尺寸、mesh顶点／索引／类型、pair集合或model更换时须重建整个checker，不能只清轴缓存；不跨worker共享可变helper，不新增hash锁。显式False应覆盖已加载的True策略，状态记录实际开关。
+
+Done：独立架构核对确认批量原生桥会绕开Python补证，候选开启时回原逐点检查，点数不减；诊断inspect递归与算术错误翻valid风险按原失败原因隔离。CodeBuddy本次两次空结果不计有效分析，回退GPT；不修认证或扩展平台。
+
+Done：根235项相关测试通过；原固定左侧2／74／244／74点全查通过，246次整帧补证，无错误。原拒绝保留；闭爪全扫本机8.682s成本偏高，物理时限仍待验。真实右负例／FENV／ABI／全部pair／显式False与batch回退已覆盖。
+
+Next：固定源码后用原Kaggle跑原左侧拒绝、显式补证、中心默认回归；仅可靠通过再第二放置工位复验。Carry四文件及工作台8文件继续保留在途，由root接续；Knowledge=already_covered，采用Wiki§20的固定原场景、独立评分和候选晋级分别验证。
+
 ## 2026-10-24 — 固定右X＋20mm两放置工位完成原物理
 
 Current：右侧IK／盘壁切片已形成可复跑开发能力：[结果与入口](m1a-x-fixed-certificates.md)。原盘不动，54mm接近高位加0.35rad高位预收爪；默认.5及网页±10mm保持。非连续区域／非20＋20／非50Hz通过。

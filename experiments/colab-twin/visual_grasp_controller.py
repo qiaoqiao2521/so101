@@ -232,7 +232,9 @@ class VisualGraspController:
             if rig.geom_bodyid[i] != 0 and 0 <= rig.geom_group[i] <= 2 and alpha > 0:
                 self.visible_robot_geoms.append(i)
         self.gripper_id = rig.body('gripper').id
-        self.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
+        checker_options = ({'mesh_box_axis_refinement': True}
+                           if self.route_policy.mesh_box_axis_refinement else {})
+        self.checker = CollisionChecker(rig, gripper=.5, margin_m=.001, **checker_options)
         self.batch_sweep_validator = None
         if self.route_policy.batch_configuration_sweep:
             from sweep_batch import make_validator
@@ -1692,7 +1694,9 @@ def _run_transport_plan(rig, snapshot, cancel_event=None):
     context.release_pinch_height_m = snapshot.release_pinch_height_m
     context.transport = []
     context.plan_reports = []
-    context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001)
+    checker_options = ({'mesh_box_axis_refinement': True}
+                       if snapshot.route_policy.mesh_box_axis_refinement else {})
+    context.checker = CollisionChecker(rig, gripper=.5, margin_m=.001, **checker_options)
     try:
         validity = context._payload_valid
         cache = None

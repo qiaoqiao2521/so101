@@ -1,5 +1,6 @@
 """Focused adapter checks; no physical simulation or rendering is started."""
 import contextlib
+from dataclasses import replace
 import io
 import json
 from pathlib import Path
@@ -56,6 +57,30 @@ class WorkspaceCaseTests(unittest.TestCase):
                 with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'pickup_open_jaw_rad'):
                     workspace.select_case(path, 'right_preclose35')
 
+    def test_refinement_flag_is_explicit_and_bound_to_policy_and_result(self):
+        profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-left-refinement-m1a.json')
+        candidate = workspace.select_case(profile, 'left_refined_axes')
+        self.assertTrue(candidate['mesh_box_axis_refinement'])
+        self.assertNotIn('pick_xy_m', candidate)
+        baseline = workspace.select_case(profile, 'left_original_axes')
+        self.assertNotIn('mesh_box_axis_refinement', baseline)
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.object(workspace, '_run_original', return_value={'passed': False}) as original:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    workspace.run_case(profile, candidate['id'], folder)
+            self.assertTrue(original.call_args.args[2]['route_policy'].mesh_box_axis_refinement)
+            result = json.loads((Path(folder)/'evaluation.json').read_text())
+            self.assertTrue(result['candidate']['preferences']['mesh_box_axis_refinement'])
+            self.assertEqual(result['candidate']['case_overrides'], {'mesh_box_axis_refinement': True})
+            self.assertFalse(result['passed'])
+            document = json.loads(profile.read_text())
+            for value in (1, 'true', None):
+                document['cases'][1]['mesh_box_axis_refinement'] = value
+                path = Path(folder)/'invalid.json'
+                path.write_text(json.dumps(document))
+                with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'explicit boolean'):
+                    workspace.select_case(path, candidate['id'])
+
     def test_x_layout_and_hover_are_explicit_and_do_not_retarget_the_object(self):
         profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-m1a.json')
         case = workspace.select_case(profile, 'outside_x_plus20_layout')
@@ -70,6 +95,25 @@ class WorkspaceCaseTests(unittest.TestCase):
             self.assertEqual(physical_case['pick_xy_m'], case['pick_xy_m'])
             self.assertEqual(physical_case['initial_xy_m'], case['initial_xy_m'])
             self.assertNotIn('pick_xy', options)  # Scene layout never enters controller inputs.
+
+    def test_explicit_false_overrides_an_enabled_loaded_policy(self):
+        profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-left-refinement-m1a.json')
+        document = json.loads(profile.read_text())
+        document['cases'][1]['mesh_box_axis_refinement'] = False
+        policy, loaded = workspace.load_route_policy()
+        policy = replace(policy, mesh_box_axis_refinement=True)
+        loaded['preferences'] = policy.preferences()
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'profile.json'
+            path.write_text(json.dumps(document))
+            with patch.object(workspace, 'load_route_policy', return_value=(policy, loaded)), \
+                    patch.object(workspace, '_run_original', return_value={'passed': False}) as original, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                workspace.run_case(path, 'left_refined_axes', folder)
+            self.assertFalse(original.call_args.args[2]['route_policy'].mesh_box_axis_refinement)
+            result = json.loads((Path(folder)/'evaluation.json').read_text())
+            self.assertFalse(result['candidate']['preferences']['mesh_box_axis_refinement'])
+            self.assertEqual(result['candidate']['case_overrides'], {'mesh_box_axis_refinement': False})
 
     def test_x_layout_reaches_original_scene_builder(self):
         profile = workspace.DEFAULT_PROFILE.with_name('workspace-x-m1a.json')

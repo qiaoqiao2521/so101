@@ -42,6 +42,7 @@ class RoutePolicy:
     prebound_float_pack: bool = False
     loaded_jaw_preload: bool = False
     async_measured_return: bool = False
+    mesh_box_axis_refinement: bool = False
 
     def __post_init__(self):
         height = self.transport_preference_m
@@ -114,6 +115,8 @@ class RoutePolicy:
             raise ValueError('Loaded jaw preload must be a boolean')
         if not isinstance(self.async_measured_return, bool):
             raise ValueError('Asynchronous measured return must be a boolean')
+        if not isinstance(self.mesh_box_axis_refinement, bool):
+            raise ValueError('Mesh-box axis refinement must be a boolean')
 
     def transport_heights(self, heights, base_height):
         """Reorder existing choices only; retain every original fallback."""

@@ -88,7 +88,8 @@ def make_validator(checker, *, direction_hints=False):
     """Return None before any query when the original scalar path is required."""
     from conservative_collision import ConservativeCollisionChecker
     if (type(checker) is not ConservativeCollisionChecker
-            or 'evaluate' in vars(checker)):
+            or 'evaluate' in vars(checker)
+            or getattr(checker, 'mesh_box_axis_refinement', False) is True):
         return None
     evaluate = getattr(checker.evaluate, '__func__', None)
     code = getattr(evaluate, '__code__', None)
@@ -131,6 +132,9 @@ def make_validator(checker, *, direction_hints=False):
 
     def validate(states):
         # Observers and custom predicates retain their original Python calls.
+        if getattr(checker, 'mesh_box_axis_refinement', False) is True:
+            _META['fallbacks'] += 1
+            return None  # Native SAT alone cannot run the optional scalar refiner.
         fn = owner._lib.ns_evaluate_hinted
         if (checker.model is not model or checker.data is not data
                 or 'evaluate' in vars(checker)

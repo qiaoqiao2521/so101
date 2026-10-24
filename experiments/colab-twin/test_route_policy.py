@@ -13,6 +13,13 @@ from visual_grasp_controller import VisualGraspController
 
 
 class RoutePolicyTests(unittest.TestCase):
+    def test_mesh_box_refinement_is_explicit_boolean_and_default_off(self):
+        self.assertFalse(RoutePolicy().mesh_box_axis_refinement)
+        self.assertTrue(RoutePolicy(mesh_box_axis_refinement=True).mesh_box_axis_refinement)
+        for value in (1, 'true', None):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                RoutePolicy(mesh_box_axis_refinement=value)
+
     def test_baseline_preserves_original_order(self):
         values = [.06, .057, .054, .051, .048, .028]
         self.assertEqual(RoutePolicy().transport_heights(values, 0), values)
