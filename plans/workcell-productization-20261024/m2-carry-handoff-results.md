@@ -13,7 +13,7 @@ CarryGate只读q6、当前时钟和同attempt输入文件。False保留原hold�
 - 根202项相关Python检查通过（含取消、超时、扫掠与transport/separation/return worker）。前端5项runtime、56项Jest、最终生产构建与13项无运动浏览器检查通过；真实控制POST=0、pageerror=0，4次测试POST由HTTP fixture接收。waiting＋未抓住原件仍显示未确认；390px无溢出。
 - 网页导出的 `carry-recipe.json` 原文保存为 `experiments/colab-twin/scenarios/station-carry-m2.json`，普通中心工位，不移动盘或放宽±10mm。
 
-## 原物理面板（待执行）
+## 原物理面板
 
 固定已推送源码，在Kaggle沿原runner串行三例：
 
@@ -23,6 +23,20 @@ CarryGate只读q6、当前时钟和同attempt输入文件。False保留原hold�
 
 操作fixture只根据gate状态及仿真时钟决定何时发输入，不依赖对象真值、不改控制器／评分器。等待事件前是否已Grasp成功由根独立回放原monitor验证；不是把物理裁判喂给控制策略。保持原1mm、244点、限位、全部回退及90sim／120wall。每例单独UUID、过程wall/CPU、完整周期、录像和清理回执。
 
+### 原件已回收：一例完整通过、两例原失败保留
+
+固定d93d60f，Kaggle `muqiaoqiao/so101-carry-handoff-20261024/1` 已COMPLETE。独立reader逐例回放原monitor与释放审计；根另直接读原report和status gate，确认原终态及同UUID的连续时钟。
+
+| case / UUID前缀 | 原物理裁决 | sim / episode wall s | process wall / CPU s |
+| --- | --- | --- | --- |
+| resume / c222f385 | pass，完整抓放／释放／脱离／回位 | 77.58 / 52.566 | 53.933 / 63.569 |
+| cancel / 1628fa1c | fail，任务cancelled | 32.30 / 22.526 | 23.578 / 27.996 |
+| no resume / f6d0af2d | fail，原encoder_stage_timeout | 38.60 / 25.718 | 26.743 / 31.840 |
+
+三例均28.48s由原monitor确认Grasp，31.22s进入waiting；resume于32.22s释放同attempt门，cancel于32.30s结束，no-resume等待7.38s后原超时。两失败未启动transport，不改判为抓放通过。三例planned/measured闭爪均244点；成功例485实帧，完整周期104拍>20ms，完整50Hz仍未通过。
+
+原件及逐项读回在 `output/carry-handoff-20261024/kaggle-v1/independent-readback.json`。这验证原物理输入标记链，尚不证明网页实际POST或新API已上线；源码中的云路径是原件来源，非本机执行路径。
+
 ## 剩余
 
-源码固定后原三例物理、运行服务resume_carry上线与实际接口回查。完整六技能RUNNING/halt、同世界安全恢复、连续卸货及20＋20仍按原主计划推进。Carry不是完整M2的替代验收。
+运行服务resume_carry上线与实际接口回查仍待根接续；工作台原八文件保留，不混入本轮X向提交。完整六技能RUNNING/halt、同世界安全恢复、连续卸货及20＋20仍按原主计划推进。Carry不是完整M2的替代验收。

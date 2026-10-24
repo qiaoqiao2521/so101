@@ -1,0 +1,15 @@
+{
+  "schema": "so101.workspace-development.v1",
+  "id": "workspace-x-fixed-interior",
+  "development_only": true,
+  "not_admitted": true,
+  "target_region_xy_m": [[0.21, 0.27], [-0.16, -0.10]],
+  "target_region_source": "Fixed workstation prior; original red tray is not moved",
+  "protocol": {"max_sim_s": 90, "max_episode_wall_s": 120},
+  "cases": [
+    {"id": "left_minus11_original", "initial_xy_m": [0.229, -0.13],
+     "place_xy_m": [0.24, 0.14], "target_region_mode": "declared_region"},
+    {"id": "right_plus11_original", "initial_xy_m": [0.251, -0.13],
+     "place_xy_m": [0.24, 0.14], "target_region_mode": "declared_region"}
+  ]
+}

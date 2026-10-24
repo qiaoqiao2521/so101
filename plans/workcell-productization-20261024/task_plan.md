@@ -142,8 +142,10 @@
 **M1a 首切片已完成，见[实测结果](m1a-results.md)。X 方向诊断与新布局开发验证见 [m1a-x-results.md](m1a-x-results.md)。** X+20mm 已定位为高位腕限位；X−20mm 为盘壁证书不足，不能认定真实碰撞。显式托盘布局与取料高位参数已完成原物理4/4，Station与原网页已接开发参数并新跑2/2，见[m1a-station-entry.md](m1a-station-entry.md)。下一步继续实测包络与M1b回位交接，不将新布局成绩算作原固定盘位包络。配方草案可并行离线开展。M1b 复用完整周期实测设计交接，不追加无证据 SAT 微优化，不直接删除 ±10mm 校验。
 
 
-### 当前接续：Carry限时接续与逐请求工作区验证
+### 当前接续：X向逐请求验证
 
 固定盘X±20mm已各两放置工位原物理通过，详见[m1a-x-fixed-certificates.md](m1a-x-fixed-certificates.md)。保留原拒绝、超时、全部安全阈值与默认范围；下一步按每个新请求验证，不插值宣传连续安全域。真实RGB的姿态／高度先验另做负例取证。
 
-本轮先收口已在途Carry限时等待／继续／取消，见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。等待不重置原时钟，不以waiting代替Grasp证据。原物理三例和新API入口完成后，继续六技能生命周期与同世界恢复；不以此手动门替代完整M2。
+用户最新指定X向IK与盘壁净距。本轮沿原诊断补完整扫掠／显式预收口，并对X±11mm两个新请求执行原物理；见[m1a-x-interior-results.md](m1a-x-interior-results.md)。下一个动作是固定源码后在Kaggle串行运行两例，保留原安全门和失败，不把端点能力插值成连续域。
+
+Carry限时等待／继续／取消三例原件已回收：完整resume原pass、cancel与原timeout保留fail，见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。新API上线和实际网页入口仍待根收口；原工作台改动保留。等待不重置原时钟，不以waiting代替Grasp证据；手动门不替代六技能生命周期或同世界恢复。

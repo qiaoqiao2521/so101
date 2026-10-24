@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-24 — X向逐请求检查接续
+
+Current：用户重新指定X向IK与盘壁净距。固定盘X±20mm两放置工位的原物理结果已核，不重复已完成实验，也不把两端点插值为连续安全域。本轮取X=.229/.251、Y=−.13两个未验请求，原盘不动、原60mm高位及.5rad开度。
+
+Done：原离线探针两点IK／下降／完整244点闭爪／抬升均通过，原285对无需补方向。全采样最小证书下界左1.012254mm、右1.026594mm，仅比1mm门槛多12–27µm；它不是精确欧氏净距或动态跟踪保证。两条直达接近诊断弦均在approach_obstacle/gripper拒绝，不能省原绕障。原件在output/x-request-probe-20261024。
+
+In progress：给现有诊断CLI补显式.35高位预收口和完整grasp扫掠选项，默认保持；补每段覆盖数与失败pair，避免靠私有脚本复跑已验证右侧路线。新增开发profile沿原run_workspace_case与原Kaggle串行验证两个新请求，不改执行器／评分器／网页边界。
+
+Preserved：前序Carry云批次已确认COMPLETE，独立reader仅回收原件；工作台八个Carry文件及Drone在途改动保持，根不混入本轮提交。CodeBuddy本次只读返回空正文，未计有效审查，内部GPT完成分工。
+
+Next：相关局部检查后固定源码，原90sim／120wall下验证两个新请求的真实抓放／释放／脱离／回位；失败保留，不据静态证书提前准入。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20的分层验收，项目实测留本计划；owner根Codex。
+
 ## 2026-10-24 — Carry限时接续收口实施
 
 Current：上一目标轮次=progress，固定盘左右两工位原物理已回读；本轮收口已在途Carry两仓12文件，不重启X项目或覆盖其他工作。见[m2-carry-handoff-results.md](m2-carry-handoff-results.md)。

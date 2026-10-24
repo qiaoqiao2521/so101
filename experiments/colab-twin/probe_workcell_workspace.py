@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from numbers import Real
 from pathlib import Path
 import sys
 import tempfile
@@ -131,21 +132,83 @@ def _path(start, goal, checker, *, diagnostic_only=False, resolution_rad=GRASP_R
         return {**report, 'status': 'check_error', 'error': f'{type(error).__name__}: {error}'}
 
 
-def _extra_axis_screen(model, checker, solutions, reference_q):
-    """Separate original rejection from extra-direction sampled certificates."""
+def _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad):
+    if reference_q is None or any(name not in solutions for name in ('approach', 'down', 'lift')):
+        return None
+    approach, down, lift = (solutions[name] for name in ('approach', 'down', 'lift'))
+    paths = [('reference', np.r_[reference_q, .5], np.r_[reference_q, .5])]
+    if pickup_open_jaw_rad != .5:
+        paths.append(('preclose', np.r_[approach, .5], np.r_[approach, pickup_open_jaw_rad]))
+    paths.extend((
+        ('descent', np.r_[approach, pickup_open_jaw_rad], np.r_[down, pickup_open_jaw_rad]),
+        ('closure', np.r_[down, pickup_open_jaw_rad], np.r_[down, .015]),
+        ('ascent', np.r_[down, .015], np.r_[lift, .015]),
+    ))
+    return paths
+
+
+def _validate_grasp_configuration(start, end, inspect, pickup_open_jaw_rad):
     from configuration_sweep import validate_configuration_path
+    jaw_resolution = .002
+    jaw_span = abs(end[5]-start[5])
+    if pickup_open_jaw_rad == .35 and jaw_span > 0:
+        # Match the original controller's planned/measured closure spacing.
+        jaw_resolution = min(jaw_resolution, jaw_span/244)
+    return validate_configuration_path(start, end, inspect,
+                                       jaw_resolution_rad=jaw_resolution)
+
+
+def _grasp_sweep_screen(checker, solutions, reference_q, pickup_open_jaw_rad):
+    """Query the original checker for every sampled q6, without extra axes."""
+    result = {'not_physical': True, 'not_admitted': True, 'checks': {}}
+    paths = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad)
+    if paths is None:
+        return dict(result, status='missing_ik_endpoint', original_valid=False)
+    for name, start, end in paths:
+        rejected, observations = [], []
+
+        def inspect(q6):
+            observation = checker.evaluate(q6, require_fixed_gripper=False)
+            row = dict(index=len(observations), q6_rad=list(q6), **observation)
+            observations.append(row)
+            if observation['valid'] is not True:
+                rejected.append(row)
+            return observation['valid']
+
+        try:
+            validation = _validate_grasp_configuration(start, end, inspect, pickup_open_jaw_rad)
+        except Exception as error:
+            validation = {'valid': False, 'reason': 'check_error', 'required_states': None,
+                          'error': f'{type(error).__name__}: {error}'}
+        bounded = [row for row in observations
+                   if row.get('valid') is True
+                   and isinstance(row.get('min_distance_m'), Real)
+                   and np.isfinite(row['min_distance_m'])]
+        result['checks'][name] = {
+            'validation': validation, 'observed_samples': len(observations),
+            'complete': len(observations) == validation.get('required_states'),
+            'original_rejections': rejected,
+            'minimum_certificate': min(bounded, key=lambda row: row['min_distance_m'])
+                                   if bounded else None,
+            'all_pairs_checked': bool(observations) and all(
+                row.get('checked_pairs') == len(checker.pairs) for row in observations),
+            'all_pairs_certified': bool(observations) and all(
+                row.get('certified_pairs') == len(checker.pairs) for row in observations),
+        }
+    result['original_valid'] = all(check['validation']['valid'] is True
+                                   for check in result['checks'].values())
+    result['status'] = 'sampled_certificates_only'
+    return result
+
+
+def _extra_axis_screen(model, checker, solutions, reference_q, pickup_open_jaw_rad=.5):
+    """Separate original rejection from extra-direction sampled certificates."""
     from mesh_box_axes import MeshBoxAxes
     axes = MeshBoxAxes(model)
     result = {'not_physical': True, 'not_admitted': True, 'checks': {}}
-    if reference_q is None or any(name not in solutions for name in ('approach', 'down', 'lift')):
+    checks = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad)
+    if checks is None:
         return dict(result, status='missing_ik_endpoint', supplemental_valid=False)
-    approach, down, lift = (solutions[name] for name in ('approach', 'down', 'lift'))
-    checks = (
-        ('reference', np.r_[reference_q, .5], np.r_[reference_q, .5]),
-        ('descent', np.r_[approach, .5], np.r_[down, .5]),
-        ('closure', np.r_[down, .5], np.r_[down, .015]),
-        ('ascent', np.r_[down, .015], np.r_[lift, .015]),
-    )
     for name, start, end in checks:
         rejected = []
         observed = 0
@@ -158,7 +221,7 @@ def _extra_axis_screen(model, checker, solutions, reference_q):
             observed += 1
             return observation['supplemental_valid']
 
-        validation = validate_configuration_path(start, end, inspect)
+        validation = _validate_grasp_configuration(start, end, inspect, pickup_open_jaw_rad)
         result['checks'][name] = {'validation': validation, 'observed_samples': observed,
                                  'complete': observed == validation.get('required_states'),
                                  'original_rejections': rejected}
@@ -168,7 +231,8 @@ def _extra_axis_screen(model, checker, solutions, reference_q):
     return result
 
 
-def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_axes=False):
+def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw_rad=.5,
+                    full_grasp_sweep=False, extra_mesh_box_axes=False):
     """Screen fixed world XY points without changing IK seeds or acceptance.
 
     Each point starts from the same original reference solution. After an IK
@@ -179,8 +243,14 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
             not isinstance(pickup_hover_z_m, (int, float)) or
             not np.isfinite(pickup_hover_z_m) or not .054 <= pickup_hover_z_m <= .06):
         raise ValueError('pickup_hover_z_m must be finite within [.054, .06] metres')
+    if (isinstance(pickup_open_jaw_rad, (bool, np.bool_)) or
+            not isinstance(pickup_open_jaw_rad, Real) or
+            not np.isfinite(pickup_open_jaw_rad) or pickup_open_jaw_rad not in (.5, .35)):
+        raise ValueError('pickup_open_jaw_rad supports only .5 or explicit .35 rad')
     points = normalize_points(default_points() if points is None else points)
     open_checker = CollisionChecker(model, gripper=.5, margin_m=MARGIN_M)
+    pickup_checker = (open_checker if pickup_open_jaw_rad == .5 else
+                      CollisionChecker(model, gripper=pickup_open_jaw_rad, margin_m=MARGIN_M))
     closed_checker = CollisionChecker(model, gripper=.015, margin_m=MARGIN_M)
     reference_q = None
     reference = {'target_pinch_world_m': list(REFERENCE_START_M)}
@@ -212,6 +282,8 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
             'direct_approach_resolution_rad': DIRECT_RESOLUTION_RAD,
             'open_gripper_rad': .5, 'closed_gripper_rad': .015,
             'pickup_hover_z_m': pickup_hover_z_m,
+            'pickup_open_jaw_rad': pickup_open_jaw_rad,
+            'full_grasp_sweep': bool(full_grasp_sweep),
             'extra_mesh_box_axes': bool(extra_mesh_box_axes),
             'admission': 'Offline results never change station acceptance or authorize execution.',
         },
@@ -222,7 +294,8 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
             'Paths are discrete joint-linear checks, not continuous collision proof.',
             'Direct start-to-approach is diagnostic; the original task needs obstacle detour planning.',
             'No mj_step, grasp, transport, release, retreat, hardware or station admission is evaluated.',
-            'The default screen omits closure; optional extra-axis diagnostics include the original 244-point closure spacing, never pad/object contacts.',
+            'The default screen omits closure; full-grasp and extra-axis screens include closure, never pad/object contacts.',
+            'Explicit .35 rad pickup includes a high-pose .5-to-.35 preclose and retains the controller jaw_span/244 closure spacing.',
             'Passing sampled points does not establish a continuous workspace or a +/-150mm envelope.',
         ],
         'reference_start': reference, 'compiled_frame_facts': _frame_facts(model, reference_q), 'points': [],
@@ -232,6 +305,8 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
         seed = reference_q
         seed_source = 'reference_start' if seed is not None else 'solver_default_after_reference_failure'
         for name, _, gripper in STAGES:
+            if name == 'down':
+                gripper = pickup_open_jaw_rad
             height = .019 if name == 'down' else pickup_hover_z_m
             xyz = np.array([*point['xy_m'], height])
             stage = {'target_pinch_world_m': xyz.tolist(), 'gripper_rad': gripper,
@@ -246,7 +321,8 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
                 stage.update(status='solved', q5_rad=q.tolist())
                 try:
                     stage.update(_pose_metrics(model, q, xyz, gripper))
-                    checker = closed_checker if name == 'lift' else open_checker
+                    checker = (closed_checker if name == 'lift' else
+                               pickup_checker if name == 'down' else open_checker)
                     stage['collision'] = checker.evaluate(q)
                 except Exception as error:
                     stage.update(status='check_error', error=f'{type(error).__name__}: {error}')
@@ -254,7 +330,7 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
         paths = {
             'start_to_approach_direct': _path(reference_q, solutions.get('approach'), open_checker,
                                               diagnostic_only=True, resolution_rad=DIRECT_RESOLUTION_RAD),
-            'approach_to_down': _path(solutions.get('approach'), solutions.get('down'), open_checker),
+            'approach_to_down': _path(solutions.get('approach'), solutions.get('down'), pickup_checker),
             'down_to_lift': _path(solutions.get('down'), solutions.get('lift'), closed_checker),
         }
         endpoints_pass = all(stage.get('collision', {}).get('valid') is True
@@ -264,9 +340,12 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, extra_mesh_box_
         point_report = {**point, 'stages': stages, 'paths': paths,
                         'offline_screen_pass': bool(endpoints_pass and legs_pass),
                         'not_physical': True, 'not_admitted': True}
+        if full_grasp_sweep:
+            point_report['grasp_sweep_screen'] = _grasp_sweep_screen(
+                open_checker, solutions, reference_q, pickup_open_jaw_rad)
         if extra_mesh_box_axes:
             point_report['extra_axis_screen'] = _extra_axis_screen(
-                model, open_checker, solutions, reference_q)
+                model, open_checker, solutions, reference_q, pickup_open_jaw_rad)
         report['points'].append(point_report)
     report['summary'] = {'points': len(points),
                          'offline_screen_pass': sum(p['offline_screen_pass'] for p in report['points']),
@@ -293,6 +372,13 @@ def print_table(report, stream=None):
         paths = ', '.join(f"{name}={path.get('valid', path['status'])}"
                           for name, path in point.get('paths', {}).items())
         print(f"  offline_screen_pass={point.get('offline_screen_pass', False)}; {paths}", file=stream)
+        if 'grasp_sweep_screen' in point:
+            screen = point['grasp_sweep_screen']
+            counts = ', '.join(f"{name}={check['observed_samples']}/"
+                               f"{check['validation'].get('required_states')}"
+                               for name, check in screen['checks'].items())
+            print(f"  grasp_sweep_original_valid={screen['original_valid']}; "
+                  f"{screen['status']}; observed/required: {counts}", file=stream)
     if 'error' in report:
         print(report['error'], file=stream)
 
@@ -303,6 +389,9 @@ def main(argv=None):
     scene.add_argument('--source', type=Path, help='Original arm MJCF; reuse build_contact_scene in a temporary directory')
     scene.add_argument('--planning-scene', type=Path, help='Existing six-joint planning MJCF from the caller')
     parser.add_argument('--pickup-hover-z-m', type=float, default=.06)
+    parser.add_argument('--pickup-open-jaw-rad', type=float, choices=(.5, .35), default=.5)
+    parser.add_argument('--full-grasp-sweep', action='store_true',
+                        help='Query original full q6 preclose/descent/closure/ascent sweeps; never admit execution')
     parser.add_argument('--extra-mesh-box-axes', action='store_true',
                         help='Diagnose original rejected pairs with extra interval-certified axes; never admit execution')
     parser.add_argument('--point', nargs=3, action='append', metavar=('ID', 'WORLD_X_M', 'WORLD_Y_M'),
@@ -319,12 +408,16 @@ def main(argv=None):
         if args.planning_scene:
             model = mujoco.MjModel.from_xml_path(str(args.planning_scene.resolve()))
             report = probe_workspace(model, points, pickup_hover_z_m=args.pickup_hover_z_m,
+                                     pickup_open_jaw_rad=args.pickup_open_jaw_rad,
+                                     full_grasp_sweep=args.full_grasp_sweep,
                                      extra_mesh_box_axes=args.extra_mesh_box_axes)
             report['scene'] = {'kind': 'existing_planning_scene', 'path': str(args.planning_scene.resolve())}
         else:
             with tempfile.TemporaryDirectory(prefix='so101-workspace-probe-') as folder:
                 _, model, _ = build_contact_scene(args.source.resolve(), Path(folder))
                 report = probe_workspace(model, points, pickup_hover_z_m=args.pickup_hover_z_m,
+                                         pickup_open_jaw_rad=args.pickup_open_jaw_rad,
+                                         full_grasp_sweep=args.full_grasp_sweep,
                                          extra_mesh_box_axes=args.extra_mesh_box_axes)
             report['scene'] = {'kind': 'existing_build_contact_scene', 'source': str(args.source.resolve()),
                                'pick_center_world_m': list(PICK_CENTER)}

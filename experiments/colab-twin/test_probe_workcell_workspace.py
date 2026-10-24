@@ -30,6 +30,10 @@ class WorkspaceProbeTests(unittest.TestCase):
             report = probe.probe_workspace(self.model, [{'id': 'center', 'xy_m': [.24, -.13]}])
         point = report['points'][0]
         self.assertTrue(point['offline_screen_pass'])
+        self.assertNotIn('grasp_sweep_screen', point)
+        self.assertNotIn('extra_axis_screen', point)
+        self.assertEqual(report['contract']['pickup_open_jaw_rad'], .5)
+        self.assertFalse(report['contract']['full_grasp_sweep'])
         self.assertTrue(report['not_physical'])
         self.assertTrue(point['not_admitted'])
         self.assertFalse(point['paths']['start_to_approach_direct']['valid'])
@@ -96,6 +100,104 @@ class WorkspaceProbeTests(unittest.TestCase):
         self.assertTrue(closure['validation']['valid'])
         self.assertLessEqual(closure['validation']['max_jaw_step_rad'], .002)
         self.assertEqual(closure['original_rejections'], [])
+
+    def test_full_grasp_sweep_keeps_original_244_and_all_pairs(self):
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            report = probe.probe_workspace(self.model, [{'id': 'center', 'xy_m': [.24, -.13]}],
+                                           full_grasp_sweep=True)
+        screen = report['points'][0]['grasp_sweep_screen']
+        self.assertTrue(screen['original_valid'])
+        self.assertTrue(screen['not_admitted'])
+        self.assertNotIn('preclose', screen['checks'])
+        self.assertEqual(screen['checks']['closure']['observed_samples'], 244)
+        for check in screen['checks'].values():
+            self.assertTrue(check['complete'])
+            self.assertTrue(check['all_pairs_checked'])
+            self.assertTrue(check['all_pairs_certified'])
+            self.assertEqual(check['minimum_certificate']['checked_pairs'], 285)
+            self.assertEqual(check['minimum_certificate']['certified_pairs'], 285)
+            self.assertGreaterEqual(check['minimum_certificate']['pair_lower_bound_m'], .001)
+        json.dumps(report, allow_nan=False)
+
+    def test_right_original_opening_is_still_rejected_by_full_sweep(self):
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')):
+            report = probe.probe_workspace(self.model, [{'id': 'right', 'xy_m': [.26, -.13]}],
+                                           pickup_hover_z_m=.054, full_grasp_sweep=True)
+        point = report['points'][0]
+        self.assertFalse(point['offline_screen_pass'])
+        screen = point['grasp_sweep_screen']
+        self.assertFalse(screen['original_valid'])
+        rejected = [check for check in screen['checks'].values() if check['original_rejections']]
+        self.assertTrue(rejected)
+        self.assertTrue(any(not check['complete'] for check in rejected))
+        observation = rejected[0]['original_rejections'][0]
+        self.assertEqual(observation['reason'], 'uncertified_geometry_clearance')
+        self.assertEqual(observation['checked_pairs'], 285)
+        self.assertIn('pair_lower_bound_m', observation)
+        json.dumps(report, allow_nan=False)
+
+    def test_right_preclose_preserves_high_open_pose_and_dense_both_closures(self):
+        with patch.object(probe.mujoco, 'mj_step', side_effect=AssertionError('physics forbidden')), \
+                patch.object(probe.mujoco, 'mj_step1', side_effect=AssertionError('physics forbidden')), \
+                patch.object(probe.mujoco, 'mj_step2', side_effect=AssertionError('physics forbidden')):
+            report = probe.probe_workspace(self.model, [{'id': 'right', 'xy_m': [.26, -.13]}],
+                                           pickup_hover_z_m=.054, pickup_open_jaw_rad=.35,
+                                           full_grasp_sweep=True, extra_mesh_box_axes=True)
+        point = report['points'][0]
+        self.assertTrue(point['offline_screen_pass'])
+        self.assertEqual(point['stages']['approach']['gripper_rad'], .5)
+        self.assertEqual(point['stages']['down']['gripper_rad'], .35)
+        self.assertEqual(point['paths']['start_to_approach_direct']['gripper_rad'], .5)
+        self.assertEqual(point['paths']['approach_to_down']['gripper_rad'], .35)
+        for name in ('grasp_sweep_screen', 'extra_axis_screen'):
+            screen = point[name]
+            self.assertTrue(screen.get('original_valid', screen.get('supplemental_valid')))
+            for closure_name, span in (('preclose', .5-.35), ('closure', .35-.015)):
+                closure = screen['checks'][closure_name]
+                self.assertTrue(closure['complete'])
+                self.assertGreaterEqual(closure['observed_samples'], 244)
+                self.assertEqual(closure['observed_samples'], closure['validation']['required_states'])
+                self.assertLessEqual(closure['validation']['max_jaw_step_rad'], span/244)
+                self.assertEqual(closure['original_rejections'], [])
+        json.dumps(report, allow_nan=False)
+
+    def test_pickup_opening_only_accepts_original_or_explicit_preclose(self):
+        for opening in (True, False, .015, .35001, 0, float('nan'), float('inf'), '.35'):
+            with self.subTest(opening=opening), self.assertRaises(ValueError):
+                probe.probe_workspace(self.model, pickup_open_jaw_rad=opening)
+
+    def test_full_sweep_missing_ik_and_rejected_prefix_are_not_complete(self):
+        missing = probe._grasp_sweep_screen(None, {}, np.zeros(5), .5)
+        self.assertFalse(missing['original_valid'])
+        self.assertEqual(missing['status'], 'missing_ik_endpoint')
+        self.assertEqual(missing['checks'], {})
+        checker = probe.CollisionChecker(self.model, gripper=.5, margin_m=.001)
+        self.addCleanup(checker.native.close)
+        rejected = {'valid': False, 'reason': 'uncertified_geometry_clearance',
+                    'certificate_reason': 'no_separation_certificate', 'pair': ['wall', 'jaw'],
+                    'pair_lower_bound_m': 0., 'checked_pairs': 285, 'certified_pairs': 284}
+        with patch.object(checker, 'evaluate', return_value=rejected):
+            screen = probe._grasp_sweep_screen(checker,
+                {name: np.zeros(5) for name in ('approach', 'down', 'lift')}, np.zeros(5), .5)
+        closure = screen['checks']['closure']
+        self.assertFalse(screen['original_valid'])
+        self.assertFalse(closure['complete'])
+        self.assertEqual(closure['observed_samples'], 1)
+        self.assertEqual(closure['validation']['required_states'], 244)
+        self.assertTrue(closure['all_pairs_checked'])
+        self.assertFalse(closure['all_pairs_certified'])
+        self.assertEqual(closure['original_rejections'][0]['pair'], ['wall', 'jaw'])
+        self.assertIsNone(closure['minimum_certificate'])
+
+    def test_cli_forwards_explicit_pickup_and_full_sweep(self):
+        minimal_report = {'not_physical': True, 'not_admitted': True, 'points': []}
+        with patch.object(probe, 'probe_workspace', return_value=minimal_report) as run:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                code = probe.main(['--planning-scene', str(Path(self.folder.name)/'grasp-planning.xml'),
+                                   '--pickup-open-jaw-rad', '.35', '--full-grasp-sweep'])
+        self.assertEqual(code, 0)
+        self.assertEqual(run.call_args.kwargs['pickup_open_jaw_rad'], .35)
+        self.assertTrue(run.call_args.kwargs['full_grasp_sweep'])
 
     def test_extra_axis_diagnostic_cannot_hide_missing_ik(self):
         screen = probe._extra_axis_screen(self.model, None, {}, np.zeros(5))
