@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-28 — X中点两层问题已分开，两个新请求原物理通过
+
+Current：按用户要求接续X方向IK与盘壁净距。新增左X=.2245m原60mm／.5配置抓放通过，右X=.2555m显式54mm／.35预收爪通过；固定盘不动。原中心两次通过；三次右60mm失败原样保留。只有离散新请求，默认／网页±10mm、连续域、20＋20与完整50Hz未改。
+
+Done：Kaggle原静态screen核1861实际采样。名义右60mm可解但下降缺证，预收口同解通过；进入真实RGB后，两开度都在原IK残差.0007626829034486256处零步拒绝。用归档RGB与原静态reference复现同拒绝；改54mm可解，仍须.35避免原盘壁／活动夹指缺证。V2同初态／RGB只改高位后完成真实抓放、释放、脱离与回位，不改IK残差／95°限位／1mm／285对／244分辨率／原90sim120wall。缺证不当实际接触或欧氏净距。
+
+Evidence：原物理source=3602f5b；Kaggle so101-x-gap-physical-20261028 v1为2pass／2fail，v2为2pass／1fail。左75.36sim／52.074process-wall，右54mm78.54／51.966；真实抬升40.968／41.024mm、脱离漂移.187192／.185207mm，脱离后力0。独立114／160项读回无失败；原monitor／skill／释放重放、自由物体、回位、worker清理和真实视频核实。新右仍77拍>20ms，完整50Hz未通过，不能把本轮当提速A/B。
+
+Delivery：新增可编辑workspace-x-gap-midpoints-m1a.json，保留成功与失败case，沿原CLI复跑；原执行器／默认无代码改动。原件、root与独立readback在output/x-gap-midpoint-20261028；静态旧scope过时字段／reader首次错误保留，未改成绩。25个重复展开逐字节核后清理，释放176,128分配字节；物理TGZ直接读取，保留491帧当前回放，没有临时帧。当前拥有的云任务均终态，不碰Mint或其他机器人。
+
+Next：先将两个已验新请求接原Station网页并单独验收；第二放置工位新中点、定位不确定性与连续域仍须独立证据。M1b/R132的FK数值界／实际grid／pending-hold覆盖证明保留待续，不冒称后台准入完成。Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20；本轮局部事实留原计划。详细结果与复跑见[m1a-x-gap-results.md](m1a-x-gap-results.md)。
+
 ## 2026-10-28 — 闭爪增强净距筛查通过，后台覆盖证明继续
 
 Current：上一目标轮=progress（round131原物理及交付）；本轮R132也是progress，新增原244点增强门槛的实际云端证据与覆盖边界。Kaggle `muqiaoqiao/so101-closure-envelope-screen-20261028/1`在75663a6终态，三组均244/244、全285对有效，121项独立检查通过。仅原几何组件，无新抓放／异步接纳／默认切换／50Hz成绩。

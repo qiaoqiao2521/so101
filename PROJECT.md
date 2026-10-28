@@ -20,6 +20,8 @@ ROS工作区含Humble语义，本机仅Jazzy；不默认宣称已移植。worksp
 
 算力与累计实验预算取消上限，不等于无目标地训练或优化。原安全判据和失败证据继续有效；完整50Hz仍未通过，但不作为所有离线模型体验的统一前置条件。改变实验主线不改写历史验收成绩。
 ## Current State
+2026-10-28 [X区间中点](plans/workcell-productization-20261024/m1a-x-gap-results.md)新增原物理通过：左X=.2245m用原60mm/.5，右X=.2555m用显式54mm/.35高位预收爪；原中心两次通过，右60mm的真实RGB/IK拒绝保留。同解盘壁缺证与实际高位IK失败分别验证，不改原1mm／285对／完整扫掠／释放回位。新增可编辑开发profile，默认／网页±10mm、连续域、20＋20和完整50Hz未改。
+
 2026-10-25 [X左侧抬升预载](plans/workcell-productization-20261024/m1b-refinement-details-results.md#2026-10-25提前抬升预载的正式组件与原物理)原Kaggle两工位反序＋中心5/5pass，原1mm／285对／244、安全与自由物体释放脱离回位保持。两站进程wall少1.319／.992s，lift同143拍且CPU同降，候选反多hold等待；保留显式loaded_jaw_lift_preload、不切全局默认。完整50Hz仍未过，原闭爪同步尖峰待处理，连续域与20＋20未宣称。
 
 2026-10-25 [X左侧运输前缀](plans/workcell-productization-20261024/m1b-refinement-details-results.md)正式实现已完成Kaggle两工位反序与中心原物理5/5pass；两工位相对detail-reuse父候选进程wall少1.373／2.376s，CPU与非hold控制耗时同降。1mm／285对／244、自由物体、释放脱离回位保持，显式候选保留、全局默认不变。完整50Hz仍未过（候选477／489慢拍，最大约405ms）；下一项核原闭爪同步认证，不宣称连续X域或20＋20。
