@@ -35,12 +35,16 @@ python experiments/colab-twin/evaluate_station.py \
 | --- | --- | --- | --- |
 | X−11mm | `[.229,-.13]` | `.06` | 省略 |
 | X＋11mm | `[.251,-.13]` | `.06` | 省略 |
+| X−15.5mm | `[.2245,-.13]` | `.06` | 省略 |
+| X＋15.5mm | `[.2555,-.13]` | `.054` | `pickup_open_jaw_rad: .35` |
 | X−20mm | `[.22,-.13]` | `.06` | `mesh_box_axis_refinement: true` |
 | X＋20mm | `[.26,-.13]` | `.054` | `pickup_open_jaw_rad: .35` |
 
-四行均有已有开发CLI固定盘结果；新Station入口已完成两端点及中心原物理3/3通过，两端点关闭适配的原fail保留，见[原Station结果](../../plans/workcell-productization-20261024/m1a-x-station-fixed-results.md)。±11mm此入口未新跑，实际浏览器导入／任务链另验。Station仍标记 `development_only/not_admitted`；每个请求消费本次RGB定位，重新执行原IK、OMPL、下降／抬升、planned/measured夹爪扫掠及原物理裁判。历史采样证书不作为放行凭证，矩形视觉先验不等于连续可抓范围。`.35`仍沿用原高位预收口、实测到位门与完整扫掠；1mm、全部碰撞对、90sim/120wall不变。
+±11mm与±20mm四行均有已有开发CLI固定盘结果；新Station入口已完成两端点及中心原物理3/3通过，两端点关闭适配的原fail保留，见[原Station结果](../../plans/workcell-productization-20261024/m1a-x-station-fixed-results.md)。±11mm此入口未新跑，实际浏览器导入／任务链另验。Station仍标记 `development_only/not_admitted`；每个请求消费本次RGB定位，重新执行原IK、OMPL、下降／抬升、planned/measured夹爪扫掠及原物理裁判。历史采样证书不作为放行凭证，矩形视觉先验不等于连续可抓范围。`.35`仍沿用原高位预收口、实测到位门与完整扫掠；1mm、全部碰撞对、90sim/120wall不变。
 
-四份可编辑的原Station文档在 `scenarios/workspace-station/fixed-x-minus11.json`、`fixed-x-plus11.json`、`fixed-x-minus20.json` 和 `fixed-x-plus20.json`。导入或改参数不执行任务，仍须显式运行。CLI示例（仓库根）：
+四份可编辑的原Station文档在 `scenarios/workspace-station/fixed-x-minus11.json`、`fixed-x-plus11.json`、`fixed-x-minus20.json` 和 `fixed-x-plus20.json`。导入或改参数不执行任务，仍须显式运行。
+
+2026-10-28 新增 [X−15.5mm](scenarios/workspace-station/fixed-x-minus15p5.json) 与 [X＋15.5mm](scenarios/workspace-station/fixed-x-plus15p5.json)。两文档经原网页导入、真实HTTP创建任务、刷新不重发，分别完成75.16／78.32sim的原抓放、释放脱离回位；左244点、右三项246点保持。原红盘不动，默认／连续域／20＋20不变，本轮无完整周期计时。见[网页实测及失败](../../plans/workcell-productization-20261024/m1a-x-web-midpoint-results.md)。上表中±11mm与±20mm仍按各自已有记录验收，不拼成整区成功率。以下CLI入口也可替换为新文档。
 
 ```bash
 python experiments/colab-twin/evaluate_station.py \

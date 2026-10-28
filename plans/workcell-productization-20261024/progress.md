@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-28 — X中点原网页与物理2/2通过
+
+Current：两个新中点已从原网页导入、HTTP创建任务、刷新原ID不重发并完成原抓放／释放／脱离／回位2/2。左9e4059a7原60mm/.5，右d2e1ca4e显式54mm/.35，红盘不动。Kaggle原v3终态；原执行器261e3e6、1mm／全部对／完整扫掠／90sim120wall及默认保持。[详情与复跑](m1a-x-web-midpoint-results.md)。
+
+Done：原35项Station／评分／recipe检查及两文档准入通过；独立91项无失败，原monitor／skill／2ms释放精确重放，左244／右三项246、自由物体、回位与470／490实帧核实。根已看实际网页截图。左75.16sim／92.82process-wall／94.48CPU，右78.32／92.91／94.94；非性能A/B，网页命令wall另列。无原EpisodeTiming，本轮完整50Hz unknown，历史未过保持。
+
+Issues：v1仅步骤UI ID重建引起测试拒绝，无POST；v2私有observer缺/usr/bin/time导致两worker exit127，物理未启动，原失败保留。v3补可选依赖／警告降级后真实通过。sitecustomize缺wrapt启动警告原文保留。普通帮助±10mm未改，显式开发文档不等于连续域放行。
+
+Resource／cleanup：本机FishBot／渲染占用时未启动本地物理，复用私有Kaggle输入与既有CLI；未复制凭据、会话或node_modules。原任务终态及worker退出后才TERM/wait自有preview，无物理worker被杀。TGZ直接读、无临时帧；reader gzip逐字节回读后释放30,601,216已分配字节，上传硬链接已删但不虚报空间收益。失败、配置、当前视频和两截图保留。
+
+Next：原网页样例已可导入；根继续同请求在已有(.20,.20)m放置工位复验，再核定位误差覆盖，不直接扩大普通±10mm／连续域或启动20＋20。M1b grid／FK／pending-hold与M2 Carry网页接续独立待办。工作台Drone在途变动由其原owner接续，本切片不混提交。Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20。
+
 ## 2026-10-28 — X中点两层问题已分开，两个新请求原物理通过
 
 Current：按用户要求接续X方向IK与盘壁净距。新增左X=.2245m原60mm／.5配置抓放通过，右X=.2555m显式54mm／.35预收爪通过；固定盘不动。原中心两次通过；三次右60mm失败原样保留。只有离散新请求，默认／网页±10mm、连续域、20＋20与完整50Hz未改。

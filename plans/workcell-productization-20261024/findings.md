@@ -5,6 +5,14 @@
 
 后续实施以progress和以下更新为准；上句仅描述D0初建。
 
+## X中点工艺已贯通原网页
+
+左.2245m原60mm/.5、右.2555m显式54mm/.35在固定红盘下，已由真实浏览器创建两个独立任务并完成原物理抓放／释放／脱离／回位。导出→POST→request严格一致；普通robot-station导入会重建program步骤UI ID，只有该字段可在fixture比较中忽略，动作顺序和execution不能忽略。原网页35项Station相关检查及新真实整链另列，不以测试数代替结果。[实测、计时与保留失败](m1a-x-web-midpoint-results.md)。
+
+私有计时observer曾因缺GNU time使worker在物理Python启动前exit127。修正为显式安装及可选缺失时警告降级；两次原失败保持。QA整命令、物理episode、实际进程和包含子进程的preview生命周期分别计时，不能相加或串成提速；无原EpisodeTiming，完整50Hz仍未知。
+
+本轮左中点实际RGB相对声明位置误差.631418mm，右.524661mm；旧P0另一位置面板最大.616511mm不能作为工作区定位误差上界。原控制仍从本次RGB规划，继续按逐请求取证。
+
 ## 左补证：复用同次明细，不复用跨姿态安全结论
 
 原_bound.summary已在锁内算完整numeric/flags，MeshBoxAxes.refine随后对同FK再次执行285对native.evaluate。私有单调用拥有明细在571派生状态上将固定轴ABI1142→571，补方向571保持；原全部返回／报告／hint与244扫掠exact。固定500dc47的Kaggle三对wall/threadCPU均降，中位比.716078/.715990；[组件结果](m1b-refinement-details-results.md)不代表整程提速或物理通过。

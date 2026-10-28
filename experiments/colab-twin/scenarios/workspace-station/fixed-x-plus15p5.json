@@ -1,0 +1,180 @@
+{
+  "format": "robot-station",
+  "version": 1,
+  "units": "m",
+  "frameConvention": "translation-only",
+  "station": {
+    "name": "SO101 固定红盘 X＋15.5mm 中点开发样例",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101",
+        "kind": "robot",
+        "parent": "world",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "pick",
+        "name": "红盘坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "world",
+        "position": [
+          0.2555,
+          -0.13,
+          0.01
+        ]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "world",
+        "position": [
+          0.2555,
+          -0.13,
+          0.074
+        ]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "world",
+        "position": [
+          0.2555,
+          -0.13,
+          0.02
+        ]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          0.14,
+          0
+        ]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.03
+        ]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.1
+        ]
+      }
+    ],
+    "program": [
+      {
+        "id": "s1",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s2",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s3",
+        "action": "move",
+        "target": "grasp",
+        "seconds": 1
+      },
+      {
+        "id": "s4",
+        "action": "close",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s5",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s6",
+        "action": "move",
+        "target": "release",
+        "seconds": 1
+      },
+      {
+        "id": "s7",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s8",
+        "action": "move",
+        "target": "clear",
+        "seconds": 1
+      }
+    ],
+    "notes": "固定红盘(.24,-.13)m，cube独立。该中点配置已在原开发CLI完成抓放；每次仍从RGB定位并重新做IK、绕障、完整夹爪扫掠、释放脱离回位。网页入口本轮单独验收；不是连续安全区域或历史证书授权。",
+    "execution": {
+      "mode": "workspace-development-v1",
+      "pick_xy_m": [
+        0.24,
+        -0.13
+      ],
+      "pickup_hover_z_m": 0.054,
+      "target_region_xy_m": [
+        [
+          0.21,
+          0.27
+        ],
+        [
+          -0.16,
+          -0.1
+        ]
+      ],
+      "pickup_open_jaw_rad": 0.35
+    }
+  }
+}
