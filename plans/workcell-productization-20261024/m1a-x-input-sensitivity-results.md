@@ -49,6 +49,8 @@ Kaggle `muqiaoqiao/so101-x-input-sensitivity-20261028/1`已COMPLETE，接收源�
 
 ## 接续
 
-R137准备把上述常量偏差加在本轮每次valid RGB估计上，invalid原样，冻结后不刷新；物体和盘位不动，原判据／90sim120wall不动。两个方向加左零偏差回归，经原evaluate_station串行真实物理验收。实际raw+offset须另核与本轮静态点之差；pixel overlay仍指raw位置，uncertainty仍是raw工程量，不冒称偏差后的真实误差界。当前新三例not_run。
+R137准备把上述常量偏差加在本轮每次valid RGB估计上，invalid原样，冻结后不刷新；物体和盘位不动，原判据／90sim120wall不动。两个方向加左零偏差回归，经原evaluate_station串行真实物理验收。实际raw+offset须另核与本轮静态点之差；pixel overlay仍指raw位置，uncertainty仍是raw工程量，不冒称偏差后的真实误差界。现已完成[R137三例原物理3/3](m1a-x-input-bias-results.md)；第二放置工位同偏差仍not_run。
 
 普通±10mm／默认不改，连续域、完整50Hz、20＋20与M1a整体仍未通过。Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20；本轮事实留本计划。
+
+补充只读IK余量：54个原端点q5用原XML关节范围复算，与各原joint_min_margin_rad逐值相同；最小均为wrist_flex，左8.292634°、右1.949415°。这是本18点端点余量，不是动态跟踪误差界。原始root-ik-margin-readback.json保留。独立报告已压缩为independent-readback.json.gz，精确恢复与本轮空间收尾见[R137](m1a-x-input-bias-results.md)。

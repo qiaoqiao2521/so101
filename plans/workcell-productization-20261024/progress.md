@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R137固定感知偏差原物理3/3通过
+
+Current：承接R136实际RGB输入18/18原几何。Kaggle x-input-bias v1固定6cf337b，左右原中点不移动物体／盘位，只对每次valid RGB加预声明常量，再左零偏差回归；原裁决1035c5d7／738b92ff／10752898三例pass。[结果与复跑](m1a-x-input-bias-results.md)。
+
+Done：真实抓取／搬运／落盘／释放／脱离／回位与自由物体全部核实；原monitor／skill／ReleaseAudit重放精确，安全／障碍接触0，planned／measured244或246，两个实际worker consumed／joined。41次raw→biased仅xy变化且不累积，两个偏差首点与R136静态点差0。398项最终独立审计通过、unknown=[]，根已看左右终态与核470／493／471实视频帧。
+
+Remaining／Issues：11462完整拍，中断0；71／80／79拍>20ms，max51.654／43.927／51.245ms，完整50Hz仍false。原wrapt非致命警告保留。首reader错误要求未启动的可选return，三失败原件与修正保留，同TGZ离线重读，未改物理或重新运行。无invalid定位，不能计作本轮遮挡负例。有限输入非连续圆域或随机恢复率，默认与普通±10mm不改。
+
+Cleanup／Next：原件TGZ、输入、源码及当前回放保留，三个已完成JSON精确gzip，分配520192→45056B，实际释放475136B，无临时帧／上传分片／展开副本。云与拥有进程均终态；不触Mint／其他机器人。下一片在第二已有放置工位复验同偏差，尚not_run。Owner=根Codex；Knowledge=already_covered，§20分层验收，不改共享在途知识页。
+
 ## 2026-10-28 — R136实际RGB输入18点原几何全通过
 
 Current：固定6cf337b，Kaggle x-input-sensitivity v1终态；左右RGB中心各9点，18/18原IK／抓取腿／完整扫掠通过。共9240全扫采样，全285对；左244／右246闭爪保持。独立审计无unknown，原q6含jaw／XML／输入逐值回读；不是原物理、OMPL、连续域或50Hz成绩。[原结果](m1a-x-input-sensitivity-results.md)。
