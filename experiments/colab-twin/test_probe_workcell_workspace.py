@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import numpy as np
 
 import probe_workcell_workspace as probe
@@ -280,6 +280,168 @@ class WorkspaceProbeTests(unittest.TestCase):
         self.assertEqual(report['reference_start']['status'], 'check_error')
         self.assertIn('q5_rad', report['reference_start'])
         self.assertEqual(report['points'][0]['stages']['approach']['status'], 'solved')
+
+
+class InitialQ6ProbeMockTests(unittest.TestCase):
+    """Exercise initial-state contracts without constructing any MuJoCo model."""
+
+    def run_probe(self, solve, *, initial_q6=None, explicit_initial=True, points=None, **options):
+        checkers = []
+
+        def checker(model, *, gripper, margin_m):
+            result = Mock(gripper=gripper, pairs=list(range(285)))
+            result.evaluate.return_value = {
+                'valid': True, 'min_distance_m': .002, 'checked_pairs': 285,
+                'certified_pairs': 285, 'distance_kind': 'certified_lower_bound',
+            }
+            checkers.append(result)
+            return result
+
+        supplied = {'initial_q6': initial_q6} if explicit_initial else {}
+        with patch.object(probe, 'CollisionChecker', side_effect=checker), \
+                patch.object(probe, 'solve_pinch_ik', side_effect=solve) as solver, \
+                patch.object(probe, '_frame_facts', return_value={'mock_frame': True}) as frame, \
+                patch.object(probe, '_pose_metrics', return_value={}), \
+                patch.object(probe, '_path', return_value={'status': 'checked', 'valid': True}), \
+                patch.object(probe.mujoco, 'MjData', side_effect=AssertionError('model data forbidden')):
+            report = probe.probe_workspace(object(), points or [{'id': 'one', 'xy_m': [.24, -.13]}],
+                                           **supplied, **options)
+        return report, checkers, solver, frame
+
+    def test_default_none_preserves_report_reference_seed_and_failure_continuation(self):
+        def solver():
+            count = 0
+            def solve(model, xyz, initial=None):
+                nonlocal count
+                count += 1
+                if xyz[2] == .019:
+                    raise RuntimeError('original down failure')
+                return np.full(5, count*.01)
+            return solve
+
+        implicit, _, old_calls, old_frame = self.run_probe(solver(), explicit_initial=False)
+        explicit, _, calls, frame = self.run_probe(solver())
+        self.assertEqual(implicit, explicit)
+        self.assertIsNone(calls.call_args_list[0].args[2] if len(calls.call_args_list[0].args) > 2 else None)
+        self.assertEqual(calls.call_count, 4)
+        self.assertEqual(old_calls.call_count, 4)
+        stages = explicit['points'][0]['stages']
+        self.assertEqual(stages['down']['status'], 'ik_error')
+        self.assertEqual(stages['lift']['status'], 'solved')
+        self.assertEqual(stages['lift']['seed_source'], 'approach')
+        self.assertNotIn('initial_q6_rad', explicit['contract'])
+        self.assertEqual(frame.call_args.kwargs, old_frame.call_args.kwargs)
+        self.assertEqual(frame.call_args.kwargs, {})
+
+    def test_supplied_state_preserves_jaw_and_runtime_seed_chain_without_mutating_input(self):
+        q6 = np.array([.1, .2, .3, .4, .5, .4999999999754389])
+        original = q6.copy()
+        q6.setflags(write=False)
+        seeds = []
+        solutions = [np.full(5, value) for value in (.11, .22, .33)]
+
+        def solve(model, xyz, initial):
+            seeds.append(initial.copy())
+            return solutions[len(seeds)-1].copy()
+
+        report, checkers, solver, frame = self.run_probe(solve, initial_q6=q6, full_grasp_sweep=True)
+        self.assertEqual(solver.call_count, 3)
+        for actual, expected in zip(seeds, [original[:5], *solutions[:2]]):
+            np.testing.assert_array_equal(actual, expected)
+        self.assertEqual([s['seed_source'] for s in report['points'][0]['stages'].values()],
+                         ['initial_q6', 'approach', 'down'])
+        np.testing.assert_array_equal(q6, original)
+        np.testing.assert_array_equal(frame.call_args.kwargs['reference_q6'], original)
+        reference_call = checkers[0].evaluate.call_args_list[0]
+        np.testing.assert_array_equal(reference_call.args[0], original)
+        self.assertEqual(reference_call.kwargs, {'require_fixed_gripper': False})
+        self.assertEqual(report['reference_start']['q6_rad'], original.tolist())
+        self.assertEqual(report['reference_start']['source'], 'initial_q6')
+        screen = report['points'][0]['grasp_sweep_screen']
+        self.assertEqual(screen['checks']['reference']['minimum_certificate']['q6_rad'], original.tolist())
+        self.assertEqual(screen['checks']['closure']['observed_samples'], 244)
+        self.assertTrue(all(row['all_pairs_checked'] for row in screen['checks'].values()))
+
+    def test_explicit_ik_failure_stops_only_that_point_and_never_changes_next_initial_seed(self):
+        q6 = np.array([.1, .2, .3, .4, .5, .4999999999754389])
+        for failure_stage, failed_index in (('approach', 0), ('down', 1), ('lift', 2)):
+            calls = []
+            def solve(model, xyz, initial):
+                index = len(calls)
+                calls.append(initial.copy())
+                if index == failed_index:
+                    initial[:] = 99.  # Caller data and the next point must stay owned.
+                    raise RuntimeError('original IK residual rejection')
+                return np.full(5, .01*(index+1))
+
+            points = [{'id': name, 'xy_m': [.24, -.13]} for name in ('first', 'second')]
+            with self.subTest(stage=failure_stage):
+                report, _, _, _ = self.run_probe(solve, initial_q6=q6, points=points,
+                                                full_grasp_sweep=True)
+                first, second = report['points']
+                self.assertEqual(first['stages'][failure_stage]['status'], 'ik_error')
+                for name in ('approach', 'down', 'lift')[failed_index+1:]:
+                    self.assertEqual(first['stages'][name]['status'], 'not_attempted')
+                    self.assertEqual(first['stages'][name]['failed_stage'], failure_stage)
+                self.assertEqual(first['grasp_sweep_screen']['status'], 'missing_ik_endpoint')
+                self.assertFalse(first['offline_screen_pass'])
+                self.assertTrue(second['offline_screen_pass'])
+                self.assertEqual(len(calls), failed_index+1+3)
+                np.testing.assert_array_equal(calls[failed_index+1], q6[:5])
+
+    def test_invalid_supplied_q6_is_rejected_before_any_checker_or_solver(self):
+        invalid = [True, 1, [], [0.]*5, [0.]*7, [[0.]]*6,
+                   [0.]*5+[True], [0.]*5+['.5'], [0.]*5+[float('nan')],
+                   [0.]*5+[float('inf')], [0.]*5+[1j]]
+        with patch.object(probe, 'CollisionChecker') as checker, patch.object(probe, 'solve_pinch_ik') as solve:
+            for q6 in invalid:
+                with self.subTest(q6=q6), self.assertRaisesRegex(ValueError, 'initial_q6'):
+                    probe.probe_workspace(object(), initial_q6=q6)
+        checker.assert_not_called()
+        solve.assert_not_called()
+
+    def test_frame_facts_preserve_supplied_q6_and_keep_default_jaw(self):
+        q6 = np.array([.1, .2, .3, .4, .5, .4999999999754389])
+        model = Mock()
+        model.body.side_effect = model.joint.side_effect = model.camera.side_effect = KeyError('unavailable')
+        data = Mock(qpos=np.zeros(6))
+        with patch.object(probe.mujoco, 'MjData', return_value=data), \
+                patch.object(probe.mujoco, 'mj_forward'):
+            actual = probe._frame_facts(model, q6[:5], reference_q6=q6)
+            default = probe._frame_facts(model, q6[:5])
+        self.assertEqual(actual['q6_rad'], q6.tolist())
+        self.assertEqual(default['q6_rad'], [*q6[:5], .5])
+
+    def test_extra_axis_helper_uses_original_q6_only_for_reference(self):
+        q6 = np.array([.1, .2, .3, .4, .5, .4999999999754389])
+        observed = []
+        def inspect(checker, q):
+            observed.append(q.copy())
+            return {'original': {'valid': True}, 'supplemental_valid': True}
+        with patch('mesh_box_axes.MeshBoxAxes') as axes:
+            axes.return_value.inspect.side_effect = inspect
+            result = probe._extra_axis_screen(object(), object(),
+                {name: np.zeros(5) for name in ('approach', 'down', 'lift')}, q6[:5], .35,
+                reference_q6=q6)
+        self.assertTrue(result['supplemental_valid'])
+        np.testing.assert_array_equal(observed[0], q6)
+        np.testing.assert_array_equal(observed[1], q6)
+        self.assertEqual(observed[2][5], .5)
+        self.assertEqual(result['checks']['preclose']['observed_samples'], 246)
+
+    def test_cli_forwards_six_values_for_both_scene_entries(self):
+        q6 = [.1, .2, .3, .4, .5, .4999999999754389]
+        for entry in ('--planning-scene', '--source'):
+            model = object()
+            with self.subTest(entry=entry), \
+                    patch.object(probe.mujoco.MjModel, 'from_xml_path', return_value=model), \
+                    patch.object(probe, 'build_contact_scene', return_value=(None, model, None)), \
+                    patch.object(probe, 'probe_workspace', return_value={'points': []}) as run, \
+                    contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                result = probe.main([entry, '/unused/scene.xml', '--initial-q6', *map(str, q6)])
+                self.assertEqual(result, 0)
+                self.assertIs(run.call_args.args[0], model)
+                self.assertEqual(run.call_args.kwargs['initial_q6'], q6)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R136 实际视觉输入离散敏感性实施中
+
+Current：上一轮R135已终态并交付。本轮继续X方向IK／盘壁净距，使用R134左右真实首个有效RGB中心、各自原工程容差半径和原initial_qpos[:6]。预声明每侧中心＋四轴向＋四45°方向共18点；左60mm/.5，右54mm/.35。该半径不是统计置信界，18点不证明连续圆域。
+
+Implementation：只给原离线probe补可选initial_q6；默认None保留原reference IK及后续诊断行为。显式初态原六值用于reference／frame／扫掠，五轴用于原IK seed链；首IK失败后不再尝试同点后续IK，下一点独立开始。原求解器、285对、1mm、244分辨率与controller／评分器不改。
+
+Checks：根使用既有planning-venv完成原模块25项检查（含新增7项），全部通过；git diff检查通过。旧graspgenx venv已不存在、系统python无mujoco，首两次导入／入口失败保留，不安装新环境或误记为测试成功。
+
+Pending：固定本轮薄适配源码到Kaggle串行原全抓取几何面板。新组件结果、整程物理及连续域均未验；不得以准备文件或静态通过代替成绩。Owner=根Codex；内置GPT分工薄实现、独立输入来源核验，外部callback不可用不阻塞。Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20；新输入与失败留本计划。
+
 ## 2026-10-28 — X中点第二放置工位原物理3/3通过
 
 Current：承接原网页中点2/2，两个新文档只把蓝盘移至(.20,.20)m。固定bef4ba4、Kaggle so101-x-second-place-20261028 v1三例原物理均pass：左右中点b76fe921／3412c142，加既有中心回归8c5ad216。原取料盘、程序、右54mm/.35工艺及1mm／全部对／完整244或246／90sim120wall保持。[结果与复跑](m1a-x-second-place-results.md)。

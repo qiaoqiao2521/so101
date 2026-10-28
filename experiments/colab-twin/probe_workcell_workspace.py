@@ -79,17 +79,19 @@ def _pose_metrics(model, q5, xyz, gripper):
     }
 
 
-def _frame_facts(model, reference_q):
+def _frame_facts(model, reference_q, *, reference_q6=None):
     if reference_q is None:
         return {'status': 'not_available', 'reason': 'reference_ik_failed'}
     data = mujoco.MjData(model)
-    data.qpos[:] = np.r_[reference_q, .5]
+    data.qpos[:] = np.r_[reference_q, .5] if reference_q6 is None else reference_q6
     mujoco.mj_forward(model, data)
     facts = {'status': 'queried', 'pose': 'reference_start solution, gripper=.5 rad',
              'q6_rad': data.qpos.tolist(), 'coordinate_units': 'world meters',
              'rotation_convention': 'local-to-world 3x3, row-major',
              'pinch_point_gripper_local_m': PINCH_POINT.tolist(),
              'radial_angle_note': 'World atan2 bearing is not the shoulder_pan joint angle.'}
+    if reference_q6 is not None:
+        facts['pose'] = 'supplied initial_q6, including its original gripper angle'
     for name in ('base', 'gripper'):
         try:
             body = model.body(name).id
@@ -132,11 +134,13 @@ def _path(start, goal, checker, *, diagnostic_only=False, resolution_rad=GRASP_R
         return {**report, 'status': 'check_error', 'error': f'{type(error).__name__}: {error}'}
 
 
-def _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad):
+def _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad, *, reference_q6=None):
     if reference_q is None or any(name not in solutions for name in ('approach', 'down', 'lift')):
         return None
     approach, down, lift = (solutions[name] for name in ('approach', 'down', 'lift'))
     paths = [('reference', np.r_[reference_q, .5], np.r_[reference_q, .5])]
+    if reference_q6 is not None:
+        paths[0] = ('reference', reference_q6.copy(), reference_q6.copy())
     if pickup_open_jaw_rad != .5:
         paths.append(('preclose', np.r_[approach, .5], np.r_[approach, pickup_open_jaw_rad]))
     paths.extend((
@@ -158,10 +162,11 @@ def _validate_grasp_configuration(start, end, inspect, pickup_open_jaw_rad):
                                        jaw_resolution_rad=jaw_resolution)
 
 
-def _grasp_sweep_screen(checker, solutions, reference_q, pickup_open_jaw_rad):
+def _grasp_sweep_screen(checker, solutions, reference_q, pickup_open_jaw_rad, *, reference_q6=None):
     """Query the original checker for every sampled q6, without extra axes."""
     result = {'not_physical': True, 'not_admitted': True, 'checks': {}}
-    paths = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad)
+    paths = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad,
+                                       reference_q6=reference_q6)
     if paths is None:
         return dict(result, status='missing_ik_endpoint', original_valid=False)
     for name, start, end in paths:
@@ -201,12 +206,13 @@ def _grasp_sweep_screen(checker, solutions, reference_q, pickup_open_jaw_rad):
     return result
 
 
-def _extra_axis_screen(model, checker, solutions, reference_q, pickup_open_jaw_rad=.5):
+def _extra_axis_screen(model, checker, solutions, reference_q, pickup_open_jaw_rad=.5, *, reference_q6=None):
     """Separate original rejection from extra-direction sampled certificates."""
     from mesh_box_axes import MeshBoxAxes
     axes = MeshBoxAxes(model)
     result = {'not_physical': True, 'not_admitted': True, 'checks': {}}
-    checks = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad)
+    checks = _grasp_configuration_paths(solutions, reference_q, pickup_open_jaw_rad,
+                                        reference_q6=reference_q6)
     if checks is None:
         return dict(result, status='missing_ik_endpoint', supplemental_valid=False)
     for name, start, end in checks:
@@ -232,12 +238,14 @@ def _extra_axis_screen(model, checker, solutions, reference_q, pickup_open_jaw_r
 
 
 def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw_rad=.5,
-                    full_grasp_sweep=False, extra_mesh_box_axes=False):
+                    full_grasp_sweep=False, extra_mesh_box_axes=False, initial_q6=None):
     """Screen fixed world XY points without changing IK seeds or acceptance.
 
     Each point starts from the same original reference solution. After an IK
     failure, later stages still run using the last successful solution. The
     report names that seed source; a failed stage is never silently passed.
+    Explicit initial_q6 preserves the caller's measured initial state instead.
+    Its first IK error stops that point's remaining IK stages, as at runtime.
     """
     if (isinstance(pickup_hover_z_m, (bool, np.bool_)) or
             not isinstance(pickup_hover_z_m, (int, float)) or
@@ -247,23 +255,40 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw
             not isinstance(pickup_open_jaw_rad, Real) or
             not np.isfinite(pickup_open_jaw_rad) or pickup_open_jaw_rad not in (.5, .35)):
         raise ValueError('pickup_open_jaw_rad supports only .5 or explicit .35 rad')
+    if initial_q6 is not None:
+        values = np.asarray(initial_q6, dtype=object)
+        if (values.shape != (6,) or any(
+                isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
+                or not np.isfinite(value) for value in values)):
+            raise ValueError('initial_q6 requires six finite non-boolean joint angles')
+        initial_q6 = np.array(values, dtype=float, copy=True)
     points = normalize_points(default_points() if points is None else points)
     open_checker = CollisionChecker(model, gripper=.5, margin_m=MARGIN_M)
     pickup_checker = (open_checker if pickup_open_jaw_rad == .5 else
                       CollisionChecker(model, gripper=pickup_open_jaw_rad, margin_m=MARGIN_M))
     closed_checker = CollisionChecker(model, gripper=.015, margin_m=MARGIN_M)
     reference_q = None
-    reference = {'target_pinch_world_m': list(REFERENCE_START_M)}
-    try:
-        reference_q = solve_pinch_ik(model, np.array(REFERENCE_START_M))
-    except Exception as error:
-        reference.update(status='ik_error', error=f'{type(error).__name__}: {error}')
-    else:
-        reference.update(status='solved', q5_rad=reference_q.tolist())
+    reference_options = {} if initial_q6 is None else {'reference_q6': initial_q6}
+    if initial_q6 is not None:
+        reference_q = initial_q6[:5].copy()
+        reference = {'source': 'initial_q6', 'status': 'provided',
+                     'q5_rad': reference_q.tolist(), 'q6_rad': initial_q6.tolist()}
         try:
-            reference['collision'] = open_checker.evaluate(reference_q)
+            reference['collision'] = open_checker.evaluate(initial_q6.copy(), require_fixed_gripper=False)
         except Exception as error:
             reference.update(status='check_error', error=f'{type(error).__name__}: {error}')
+    else:
+        reference = {'target_pinch_world_m': list(REFERENCE_START_M)}
+        try:
+            reference_q = solve_pinch_ik(model, np.array(REFERENCE_START_M))
+        except Exception as error:
+            reference.update(status='ik_error', error=f'{type(error).__name__}: {error}')
+        else:
+            reference.update(status='solved', q5_rad=reference_q.tolist())
+            try:
+                reference['collision'] = open_checker.evaluate(reference_q)
+            except Exception as error:
+                reference.update(status='check_error', error=f'{type(error).__name__}: {error}')
 
     report = {
         'schema_version': 1,
@@ -298,12 +323,18 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw
             'Explicit .35 rad pickup includes a high-pose .5-to-.35 preclose and retains the controller jaw_span/244 closure spacing.',
             'Passing sampled points does not establish a continuous workspace or a +/-150mm envelope.',
         ],
-        'reference_start': reference, 'compiled_frame_facts': _frame_facts(model, reference_q), 'points': [],
+        'reference_start': reference,
+        'compiled_frame_facts': _frame_facts(model, reference_q, **reference_options), 'points': [],
     }
+    if initial_q6 is not None:
+        report['contract']['initial_q6_rad'] = initial_q6.tolist()
+        report['contract']['initial_seed_source'] = 'initial_q6[:5]; first IK failure stops this point'
     for point in points:
         stages, solutions = {}, {}
-        seed = reference_q
-        seed_source = 'reference_start' if seed is not None else 'solver_default_after_reference_failure'
+        seed = reference_q if initial_q6 is None else reference_q.copy()
+        seed_source = ('initial_q6' if initial_q6 is not None else
+                       'reference_start' if seed is not None else 'solver_default_after_reference_failure')
+        failed_stage = None
         for name, _, gripper in STAGES:
             if name == 'down':
                 gripper = pickup_open_jaw_rad
@@ -311,10 +342,16 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw
             xyz = np.array([*point['xy_m'], height])
             stage = {'target_pinch_world_m': xyz.tolist(), 'gripper_rad': gripper,
                      'seed_source': seed_source}
+            if failed_stage is not None:
+                stages[name] = dict(stage, status='not_attempted', reason='prior_ik_failure',
+                                    failed_stage=failed_stage)
+                continue
             try:
                 q = solve_pinch_ik(model, xyz, seed)
             except Exception as error:
                 stage.update(status='ik_error', error=f'{type(error).__name__}: {error}')
+                if initial_q6 is not None:
+                    failed_stage = name
             else:
                 solutions[name] = q
                 seed, seed_source = q, name
@@ -342,10 +379,10 @@ def probe_workspace(model, points=None, *, pickup_hover_z_m=.06, pickup_open_jaw
                         'not_physical': True, 'not_admitted': True}
         if full_grasp_sweep:
             point_report['grasp_sweep_screen'] = _grasp_sweep_screen(
-                open_checker, solutions, reference_q, pickup_open_jaw_rad)
+                open_checker, solutions, reference_q, pickup_open_jaw_rad, **reference_options)
         if extra_mesh_box_axes:
             point_report['extra_axis_screen'] = _extra_axis_screen(
-                model, open_checker, solutions, reference_q, pickup_open_jaw_rad)
+                model, open_checker, solutions, reference_q, pickup_open_jaw_rad, **reference_options)
         report['points'].append(point_report)
     report['summary'] = {'points': len(points),
                          'offline_screen_pass': sum(p['offline_screen_pass'] for p in report['points']),
@@ -390,6 +427,8 @@ def main(argv=None):
     scene.add_argument('--planning-scene', type=Path, help='Existing six-joint planning MJCF from the caller')
     parser.add_argument('--pickup-hover-z-m', type=float, default=.06)
     parser.add_argument('--pickup-open-jaw-rad', type=float, choices=(.5, .35), default=.5)
+    parser.add_argument('--initial-q6', type=float, nargs=6, metavar=('Q0', 'Q1', 'Q2', 'Q3', 'Q4', 'JAW'),
+                        help='Diagnose the supplied initial arm and jaw; stop each point after its first IK error')
     parser.add_argument('--full-grasp-sweep', action='store_true',
                         help='Query original full q6 preclose/descent/closure/ascent sweeps; never admit execution')
     parser.add_argument('--extra-mesh-box-axes', action='store_true',
@@ -410,7 +449,8 @@ def main(argv=None):
             report = probe_workspace(model, points, pickup_hover_z_m=args.pickup_hover_z_m,
                                      pickup_open_jaw_rad=args.pickup_open_jaw_rad,
                                      full_grasp_sweep=args.full_grasp_sweep,
-                                     extra_mesh_box_axes=args.extra_mesh_box_axes)
+                                     extra_mesh_box_axes=args.extra_mesh_box_axes,
+                                     initial_q6=args.initial_q6)
             report['scene'] = {'kind': 'existing_planning_scene', 'path': str(args.planning_scene.resolve())}
         else:
             with tempfile.TemporaryDirectory(prefix='so101-workspace-probe-') as folder:
@@ -418,7 +458,8 @@ def main(argv=None):
                 report = probe_workspace(model, points, pickup_hover_z_m=args.pickup_hover_z_m,
                                          pickup_open_jaw_rad=args.pickup_open_jaw_rad,
                                          full_grasp_sweep=args.full_grasp_sweep,
-                                         extra_mesh_box_axes=args.extra_mesh_box_axes)
+                                         extra_mesh_box_axes=args.extra_mesh_box_axes,
+                                         initial_q6=args.initial_q6)
             report['scene'] = {'kind': 'existing_build_contact_scene', 'source': str(args.source.resolve()),
                                'pick_center_world_m': list(PICK_CENTER)}
         result = 0
