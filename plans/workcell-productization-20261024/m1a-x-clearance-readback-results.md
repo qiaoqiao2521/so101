@@ -44,4 +44,4 @@ python3 ~/.cache/ros2-factory/codebuddy-so101-20261021/round139-x-clearance/inde
 
 云／下载均终态，无本地模型／物理进程。CLI下载的展开重复件逐字核对TGZ后删除，独有kernel log精确gzip保留；本轮证据目录分配761856→69632B，写cleanup记录前释放692224B。输入、源码及原TGZ保留；恢复命令见cleanup.json。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20及既有保守下界解释。
 
-Next：需要动态净距时，用已有原物理XML与20ms实测q6另做离线重算，先区分取料段、运输段及限位。保存姿态不能替代完整轨迹，更不能替代未保存的2ms状态。Carry网页准备暂停保留，用户当前优先X方向；不据这轮结果重写IK或放宽原阈值。
+后续[R140实际取料记录](m1a-x-execution-clearance-results.md)已复算3381姿态，取得不同的阶段瓶颈。保存静态姿态不能替代完整轨迹，更不能替代未保存的2ms状态。Carry网页准备暂停保留，用户当前优先X方向；不据这轮结果重写IK或放宽原阈值。

@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R140实际取料记录净距核算完成
+
+Previous=progress：R139原见证归因与44577f1已交付。本轮从R137两个原pass回合直接读取实测q6，不启动新的抓放。预声明初态＋全部approach／preclose／descend／close／lift／hold连续前缀＋首transport边界，左1689／右1692共3381姿态；原20ms样本及来源index不筛选，初态guard缺证保持null。
+
+Done：Kaggle x-execution-clearance v1终态，接收源码逐字相同。原3.15.0／同planning XML／19方向，全部3381样本原1mm通过。全285对共同可认证下端左约1.728969mm（lift26.74s、盘壁／夹爪），右约3.058226mm（approach5.62s、障碍／夹爪）；盘壁68对子集左同量级、右约5.282782mm（descend18.58s）。全部final下端覆盖、区间及四个原1mm raw恢复均核实，根与独立reader无失败／unknown。[详情与复跑](m1a-x-execution-clearance-results.md)。
+
+Remaining：五轴最小腕余量左3.311018°、右2.046893°，右含首transport边界；全程运输约.838772°仍另列。无新抓放／IK／OMPL；原方向族、1mm及控制器不变。规划模型不含自由物块，结果不是所夹物块净距、2ms／连续轨迹、连续X域或50Hz证明。Carry与其他在途工作继续保留。
+
+Cleanup／Next：组件进程wall25.920565／CPU26.704471s，只记诊断开销。原TGZ流式回读，删除已核精确重复records与临时摘录、gzip独有log，写cleanup前释放1060864B；清理后reader通过。回到原Station输入合同／具体拒绝路径，优先将已验X能力用于新任务输入，不以继续增加静态点代替产品复用。Owner=根Codex；Knowledge=already_covered。
+
 ## 2026-10-28 — R139原X姿态净距归因完成
 
 Current：按用户最新指向继续X方向IK与盘壁净距。R138三例原物理已终态，仓HEAD de094ee4；不重跑原18点IK或六次已过抓放。两侧原最小证书1.000137／1.000354mm来自首个通过方向，未证明实际表面只剩此净距。
