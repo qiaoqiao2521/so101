@@ -46,6 +46,8 @@ python experiments/colab-twin/evaluate_station.py \
 
 2026-10-28 新增 [X−15.5mm](scenarios/workspace-station/fixed-x-minus15p5.json) 与 [X＋15.5mm](scenarios/workspace-station/fixed-x-plus15p5.json)。两文档经原网页导入、真实HTTP创建任务、刷新不重发，分别完成75.16／78.32sim的原抓放、释放脱离回位；左244点、右三项246点保持。原红盘不动，默认／连续域／20＋20不变，本轮无完整周期计时。见[网页实测及失败](../../plans/workcell-productization-20261024/m1a-x-web-midpoint-results.md)。上表中±11mm与±20mm仍按各自已有记录验收，不拼成整区成功率。以下CLI入口也可替换为新文档。
 
+同取料配置的[左第二工位](scenarios/workspace-station/fixed-x-minus15p5-place200-200.json)与[右第二工位](scenarios/workspace-station/fixed-x-plus15p5-place200-200.json)只把蓝盘移至(.20,.20)m。两新请求加原中心回归已沿原CLI完整物理3/3通过，夹爪全扫、释放／脱离／回位和原阈值保持。完整周期仍210／193／184拍超20ms；第二工位网页链未另测，不扩大默认范围。见[第二工位原件与复跑](../../plans/workcell-productization-20261024/m1a-x-second-place-results.md)。
+
 ```bash
 python experiments/colab-twin/evaluate_station.py \
   --station experiments/colab-twin/scenarios/workspace-station/fixed-x-plus20.json \

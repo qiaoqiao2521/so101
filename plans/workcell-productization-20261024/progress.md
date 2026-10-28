@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-28 — X中点第二放置工位原物理3/3通过
+
+Current：承接原网页中点2/2，两个新文档只把蓝盘移至(.20,.20)m。固定bef4ba4、Kaggle so101-x-second-place-20261028 v1三例原物理均pass：左右中点b76fe921／3412c142，加既有中心回归8c5ad216。原取料盘、程序、右54mm/.35工艺及1mm／全部对／完整244或246／90sim120wall保持。[结果与复跑](m1a-x-second-place-results.md)。
+
+Done：原输入准入／仅place变更核实；独立126项无失败，六份XML确认蓝盘全几何平移、红盘／robot／option／actuator不变。原monitor／skill一致，原抓放／释放／脱离／回位、自由物体、零安全停机／障碍接触及worker清理通过，实视频491／511／499帧；根已看左右final图。左78.44sim／60.853process-wall／71.938CPU，右81.62／61.425／73.027，中心79.74／59.587／70.730；非性能A/B。
+
+Remaining／Issues：11990完整拍、0中断，慢拍210／193／184，P95 20.388／19.687／19.175ms、最大172.635／160.545／159.744ms，完整50Hz仍false。中心释放漂移重放有2.71e-20m末位差，原值／unknown保留，判定与逐2ms旗标一致；左右精确。原非致命wrapt警告保留。新第二工位网页／连续域／20＋20未验。
+
+Read-only：R134初始真值误差左.631417483／右.524660981mm，与名义误差近似。首次漏读trajectory造成“没有同步物体序列”的诊断已撤回；原20ms物体记录与非零视觉时间／两handover精确匹配，名义冻结到接触前采样近乎静止，不推广运动目标或拍间证明。像素／高度工程容差不当统计界，也不与1mm证书直接相减。
+
+Resource／cleanup：本机Blender活动时未启本地仿真，沿原Kaggle CLI／串行runner，上传源码回读一致。三个原进程均wait回收，已启动worker joined／owned_ack。TGZ直接读、无临时帧；reader gzip核回读后释放49,152分配字节，原件／当前视频／两final图／配置和诊断保留。工作台Drone在途不动。Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20。
+
+Next：根先以两实际RGB中心、原初态q6和预声明工程扰动集做原IK／285对／全扫离散敏感性检查，按原种子保留拒绝，之后再选原物理临界输入。不插值开放普通±10mm或启动20＋20；M1b grid／FK／pending-hold与M2 Carry网页接续独立待办。
+
 ## 2026-10-28 — X中点原网页与物理2/2通过
 
 Current：两个新中点已从原网页导入、HTTP创建任务、刷新原ID不重发并完成原抓放／释放／脱离／回位2/2。左9e4059a7原60mm/.5，右d2e1ca4e显式54mm/.35，红盘不动。Kaggle原v3终态；原执行器261e3e6、1mm／全部对／完整扫掠／90sim120wall及默认保持。[详情与复跑](m1a-x-web-midpoint-results.md)。
