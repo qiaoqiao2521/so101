@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R139原X姿态净距归因完成
+
+Current：按用户最新指向继续X方向IK与盘壁净距。R138三例原物理已终态，仓HEAD de094ee4；不重跑原18点IK或六次已过抓放。两侧原最小证书1.000137／1.000354mm来自首个通过方向，未证明实际表面只剩此净距。
+
+Done：Kaggle实际接纳x-saved-pose-clearance v1终态，原3.15.0／XML／18个q6精确复现并还原。原19方向、285对、提示／补方向关闭，1074次查询表明两个原选中姿态的全场景可认证下端为1.937078476／9.371626854mm；原盘壁见证对为143.270339／37.531574mm，证书瓶颈对改变。因此约1.0001mm是早停见证，不能当最近距离。根及独立reader无失败／unknown；新[结果](m1a-x-clearance-readback-results.md)保留完整区间与反例。
+
+Remaining：无IK、mj_step、OMPL或新抓放成功；区间不是欧氏距离、输入误差半径或整条轨迹最薄处。线上1mm／默认与原裁判不改，连续域／20＋20／50Hz未新增通过。下一片可从已有原物理20ms q6离线核实际取料段，不重跑已过抓放。根Codex负责接续。
+
+Cleanup：组件进程wall4.023759／CPU4.827714s，bootstrap另列，不当任务提速。云及下载终态，无本地物理；已核TGZ后删除展开重复件并精确gzip独有log，写cleanup前释放692224B，原件／输入／源码保留。
+
+Preserved：Carry网页准备按用户转向暂停，未启动任务。工作台station-execution.cjs的119行新增／3行删除保留在原独立树，尚未真实网页验收、不提交；响应JSON异常的GET回查仍待补，根Codex接续。原Drone在途不触碰。原私有runtime字节复用核查保留，未发Carry云包或启动服务。Knowledge=already_covered，沿用§20分层验收。
+
 ## 2026-10-28 — R138第二放置工位固定偏差原物理3/3通过
 
 Previous=progress：R13618/18与R1373/3已交付8c26c19。本轮同6cf337b／同wrapper／同offset，仅已有蓝盘移至(.20,.20)m；Kaggle x-bias-second-place v1终态，ae398a37／51466bc8／133d4ac5原物理全pass、exit0。[原结果](m1a-x-input-bias-results.md#r138第二放置工位)。非性能A/B，不切默认。
