@@ -1,5 +1,19 @@
 # SO101 产品化进度
 
+## 2026-10-28 — 闭爪增强净距筛查通过，后台覆盖证明继续
+
+Current：上一目标轮=progress（round131原物理及交付）；本轮R132也是progress，新增原244点增强门槛的实际云端证据与覆盖边界。Kaggle `muqiaoqiao/so101-closure-envelope-screen-20261028/1`在75663a6终态，三组均244/244、全285对有效，121项独立检查通过。仅原几何组件，无新抓放／异步接纳／默认切换／50Hz成绩。
+
+Done：原1mm、额外1µm即1.001mm、保存原close开始后.1s的小偏移起点三个完整网格通过；baseline原报告exact、增强组网格逐位同值。分离下界最小分别1.375845688／1.375845688／1.375846257mm；对应原障碍—前臂对，不叫最短欧氏盘壁净距。冷启动／后续耗时.758／.496／.497s不是性能A/B，不当提速。strict SweepBinding仍保持，旧姿态结果不可直接消费。
+
+Done：真实compiled模型为8body单链／6单hinge、joint anchor全0、29组mesh/box、285原对。私有理想刚体预算覆盖body／geom偏置、双侧运动及原binary64插值的向外区间；拟议每轴1e−7rad箱在同244网格条件下位移界最大.677006µm，小于增强门槛的额外约1µm，原限位箱内。四项纯Python测试通过。该数字不是MuJoCo FK浮点误差证明；网格数／spacing须实际重新核验、FK误差和真实pending-hold漂移仍未覆盖，production_admission_allowed=false。
+
+Channel：外部callback URL/socket当前均未配置，按新版派发规则直接内置/root/closure_envelope_review独立审查／回读，无外部额度请求或queue修复。私有task/dispatch/handoff保留，原生结果返回；未发送其它对话。首reader把XML default geom计入，已按worldbody实际geom枚举修正，原失败日志保留，无云端重跑。
+
+Cleanup：25原件归档与展开逐字节一致，无缺／额外，删除重复展开、压缩独立及预算报告并解压回读，实际释放24,182,784已分配字节。原TGZ／log／gzip读回／恢复命令及私有源码保留；没有拥有的在途云任务，不碰Mint／其它机器人。
+
+Next：R133限定此六hinge链，先补实际采样网格／间距接纳条件、MuJoCo 3.15 FK数值误差界，再验证保持开爪等后台期间的真实偏移。全部成立才做默认关闭的worker薄适配及原物理对照；不放松binding、不删除244点、不将本组件叫异步安全通过。Knowledge=already_covered：采用Wiki《ROS2 与 FishBot》§20“组件与完整任务分别验收”；未证实的包络推导只留项目。此前NULL getter专项回写pending不冒称已完成，owner仍根Codex。详见[m1b R132](m1b-refinement-details-results.md#2026-10-28r132闭爪增强净距与覆盖预算)。
+
 ## 2026-10-25 — 抬升预载原物理5/5，两工位有实测收益
 
 Current：round131固定`2eea9bb40caac88c3ca24cfec5b6a30223d77afe`，Kaggle `muqiaoqiao/so101-lift-preload-physical-20261025/1`整批终态。正式143弦三对准入后，两个放置工位反序与中心原物理5/5pass；独立1200项通过，Monitor／SkillEvidence／ReleaseAudit逐样本exact、unknown为空。保留显式loaded_jaw_lift_preload候选，全局默认loaded_jaw_preload不变。

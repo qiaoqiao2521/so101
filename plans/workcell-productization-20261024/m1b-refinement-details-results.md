@@ -398,3 +398,45 @@ round131固定源码`2eea9bb40caac88c3ca24cfec5b6a30223d77afe`，Kaggle `muqiaoq
 166原件逐字节核验无差、无缺或额外；移动保留一份当前候选视频后删除重复展开，独立JSON压缩解压回读一致。本批实际释放95,911,936已分配字节，不重计round130及更早清理。恢复：`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`；读回JSON恢复：`gzip -dk <目录>/independent-readback.json.gz`。无在途拥有评测；Kaggle已COMPLETE，不终止其它渲染／Colab或改Mint。
 
 下一切片仍是原244点measured闭爪同步认证与普通close持续成本，先核现场状态绑定及覆盖包络再设计交接；不删除检查或重复已淘汰hint微优化。下一批未启动。Knowledge=pending：原Wiki§20已采用，根串行处理共享在途diff，未冒称本轮写入。
+
+## 2026-10-28：R132闭爪增强净距与覆盖预算
+
+基准75663a6，当前工作树干净、无在途物理后接续，不重跑round131。外部callback URL/socket当前均未配置；直接使用内置`/root/closure_envelope_review`审查并原生返回，无外部额度探测／queue恢复／其它对话消息。私有R132 task、dispatch、handoff均列实际通道和编号要求，不新建平台。
+
+### 原接口与条件
+
+原`_configuration_sweep`每次按实际q6／end、observation、request seq等构造SweepBinding，结果必须同owner/checker/model和完整上下文消费；old-q通过不等于current-q获证。现有transport／return worker可复用生命周期，但它们的现场桥接不提供闭爪覆盖证明。
+
+新的覆盖思路需要对原每个sample、每对geometry给运动上界Dg+Dh，后台在1mm+Dg+Dh认证，前台核当前姿态在预声明箱、采样grid/spacing、限位、相同场景和有效观测。不能直接放松旧binding，也不能将覆盖证明写成“当前q已重新查询244次”。目前该新证据类型尚未实现。
+
+### 实际云端组件
+
+Kaggle `muqiaoqiao/so101-closure-envelope-screen-20261028/1`一次提交终态。复用原runtime／component slot，源75663a6、数据来自round127原run63bbbf0e的measured_closure。原XML、q6、end和报告保留；没有本地模型、mj_step、实机或新Station rollout。
+
+| case | 原认证门槛 | 实际点／对 | 最小认证分离下界 mm | wall／thread CPU s |
+| --- | ---: | --- | ---: | ---: |
+| 原基准 | 1mm | 244／285 | 1.375845687939 | .758211／.758102 |
+| 同网格增强 | 1.001mm | 244／285 | 1.375845687939 | .496101／.495371 |
+| 保存原close后.1s的小漂移起点 | 1mm | 244／285 | 1.375846257312 | .496985／.496945 |
+
+三个报告均valid、checked=required=244，原.005arm／.002jaw分辨率与4096上限保持。每个state checked/certified_pairs=285；原报告exact，增强组全部q6逐位相同。最小下界对应approach_obstacle／collision_lower_arm_2，不能叫最短欧氏盘壁净距。单次冷／热顺序不是A/B，不把表中耗时差当提速。
+
+独立121项检查通过。读回从旧TGZ重建起终点与原grid，核上传源码、原compiled mesh及XML、nativeflags、三组margin与每点报告。首reader错误计入default下geom，修正为worldbody真实geom枚举；失败日志／首次JSON保留，原云件未改、未重跑。
+
+输出同时保存实际compiled几何：8body父链[0,0,1,2,3,4,5,6]，6hinge分别在body2..7、局部anchor全0；29geom中world12box、base4mesh、其余13movingmesh；原285pair IDs保持。此模型可限定单hinge串联，不应直接扩展到多joint／floating base。
+
+### 私有条件预算
+
+私有`kinematic_budget.py`对mesh编译顶点／geom offset采用L1包住欧氏半径，沿body祖先累计；偏置后代hinge贡献2×anchor，几何对双侧位移相加。插值用逐项向外区间覆盖原binary64 `a+(b-a)*alpha`，不直接套实数(1−alpha)δ。四项纯Python检查包括Fraction算术包含、采样端点、偏置hinge父半径及多joint拒绝，均通过；未再载模型。
+
+对于拟议每轴±1e−7rad起点箱，在**同原244网格条件下**244点／285对的理想刚体位移界最大.677005895507µm，额外margin的向下界约1µm，理想剩余.322994104493µm；箱内原joint/control限位满足。该余量只作理想条件，不是MuJoCo浮点FK证书。独立审查指出整个箱不保证原_segments/spacing仍是244；未来须fresh核验网格／spacing或提供箱内证明，数量变化走原fallback。没有用4测试或少数姿态取代全箱证明。
+
+仍缺：MuJoCo 3.15实际FK数值误差界、有效观测与模型变更／取消交接、pending保持开爪期间真实漂移。原close已执行的.1s姿态不是pending-hold数据。`production_admission_allowed=false`、`envelope_proof_complete=false`，原生产binding／全部244检查／默认均未改；无新抓放或50Hz成绩。
+
+### 原件与收尾
+
+原件`experiments/colab-twin/output/closure-envelope-screen-20261028/kaggle-v1/so101-evidence.tgz`；同目录保留原log、`independent-readback.json.gz`、`ideal-budget-readback.json.gz`及cleanup回执。私有`/home/muqiao/.cache/ros2-factory/codebuddy-so101-20261021/round132-close-envelope/`保留原输入、probe、build_kernel、精确云源、纯预算／测试、交接与提交回执。
+
+25原件逐字节核验，无缺失／额外／差异后删除重复展开，两个派生读回压缩并解压验证一致，实际释放24,182,784已分配字节。预算审查后补充了fresh网格未证、实际额外margin向下界及FK未证字段，压缩读回再次一致。保留原TGZ与所有必要输入；恢复`python3 -m tarfile -e <目录>/so101-evidence.tgz <目录>/unpacked`，读回`gzip -dk <目录>/<报告>.json.gz`。无在途拥有云任务，无Mint／他人渲染操作。
+
+Next：R133先补限定六hinge的网格接纳与实际FK数值误差，再观察后台等待开爪的实际状态包络；证明闭合才接既有worker和原物理两站反序。当前只完成实际认证可行性，不把它作为算法交付。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20组件、交接与完整任务分开验收；未证包络只留本计划，旧NULL getter专项pending另存owner根Codex。
