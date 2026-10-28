@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R138第二放置工位固定偏差原物理3/3通过
+
+Previous=progress：R13618/18与R1373/3已交付8c26c19。本轮同6cf337b／同wrapper／同offset，仅已有蓝盘移至(.20,.20)m；Kaggle x-bias-second-place v1终态，ae398a37／51466bc8／133d4ac5原物理全pass、exit0。[原结果](m1a-x-input-bias-results.md#r138第二放置工位)。非性能A/B，不切默认。
+
+Done：409项独立读回failed=[]／unknown=[]；六XML蓝盘全部几何仅平移，红盘／robot／option／actuator不改。原monitor／skill／释放精确重放，真实抓放、释放脱离回位、free／weld0／mocap0、全244或246、两个实际worker consumed／joined均核实；安全停机／障碍接触0。41次RGB只xy变、未累积，首偏差点与静态点差0，无invalid不算负例。根看左右终态，489／512／490实视频帧完整。
+
+Remaining：11921完整拍／中断0，131／108／106拍>20ms，max141.448／147.904／140.166ms，完整50Hz仍false。20ms实测全程最小腕余量约.838772°在运输；R135名义与本轮零对照也同量级，不归因仅RGB偏差，不推广2ms／连续域／随机恢复率。原wrapt非致命警告保留。
+
+Cleanup／Next：本批云／三进程终态，实际worker清理通过；独立JSON精确gzip，分配131072→20480B、释放110592B，原件／输入／代码／当前回放保留，无展开副本或临时帧。下一片转M2活动网页Carry接续：复用已有UI／API／CarryGate，只扩原QA的resume／cancel分支并跑真实同UUID网页整链；先重核FishBot独立树及Drone在途，不触Mint。Owner=根Codex；Knowledge=already_covered，§20分层验收。
+
 ## 2026-10-28 — R137固定感知偏差原物理3/3通过
 
 Current：承接R136实际RGB输入18/18原几何。Kaggle x-input-bias v1固定6cf337b，左右原中点不移动物体／盘位，只对每次valid RGB加预声明常量，再左零偏差回归；原裁决1035c5d7／738b92ff／10752898三例pass。[结果与复跑](m1a-x-input-bias-results.md)。

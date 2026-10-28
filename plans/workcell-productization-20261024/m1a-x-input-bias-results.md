@@ -1,4 +1,4 @@
-# X方向固定RGB偏差：原物理3/3通过
+# X方向固定RGB偏差：两放置工位各3/3通过
 
 日期：2026-10-28。R137，执行源码固定 `6cf337b6c66deb7e9c5583045f514b2f5f046b26`。承接[R136实际输入18点几何检查](m1a-x-input-sensitivity-results.md)。只增加可复跑的私有感知偏差验证，没有改生产控制器、IK、评分器、阈值或默认策略。
 
@@ -67,6 +67,60 @@ python bias_launcher.py --manifest physical-input-manifest.json --role left \
 
 ## 收尾与接续
 
-两个云任务已终态，串行runner已wait回收三进程；未动Mint／其他机器人／后台任务。完成的三个独立JSON无损gzip并逐字节回读，原分配520,192B→45,056B，实际释放475,136B。原TGZ、可编辑输入、源码、标定与当前回放保留；没有临时帧、上传分片或展开仿真副本。恢复见cleanup.json，通用命令 `gzip -dc independent-readback.json.gz > independent-readback.json`。
+R136／R137两个原云任务已终态，R137串行runner已wait回收三进程；未动Mint／其他机器人／后台任务。完成的三个独立JSON无损gzip并逐字节回读，原分配520,192B→45,056B，实际释放475,136B。原TGZ、可编辑输入、源码、标定与当前回放保留；没有临时帧、上传分片或展开仿真副本。恢复见cleanup.json，通用命令 `gzip -dc independent-readback.json.gz > independent-readback.json`。
 
-当前新增证据是两个固定感知偏差下的原抓放，不修改普通±10mm／默认，不宣称连续域或20＋20通过。下一片：在既有第二放置工位复验同两个偏差及原回归，检查跨放置路径的释放／脱离／回位；保持原裁判和原预算。M1a整体仍in_progress，M1b、恢复与冻结验收继续独立。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20；新成绩只写原计划。
+当前新增证据是两个固定感知偏差下的原抓放，不修改普通±10mm／默认，不宣称连续域或20＋20通过。第二放置工位已完成下文R138同偏差复验；后续回到M2活动网页Carry接续整链，不继续无依据增加离散坐标。M1a整体仍in_progress，M1b、恢复与冻结验收继续独立。Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20；新成绩只写原计划。
+
+## R138：第二放置工位
+
+原源码仍固定6cf337b，原R137 launcher逐字复用；Kaggle `muqiaoqiao/so101-x-bias-second-place-20261028/1`终态COMPLETE。只换已有 `fixed-x-minus15p5-place200-200.json`／`fixed-x-plus15p5-place200-200.json`，蓝盘由(.24,.14)移至(.20,.20)m。两个原偏差及左零偏差对照保持，红盘、物体初态、程序ID、取料高位／开度不改。选点metadata中的原主工位文件只是R136来源，实际新输入由manifest.cases和原argv记录。
+
+三次各独立原evaluate_station进程串行执行，原90sim／120wall及全部原安全条件保留。实际新XML重新规划和认证，未继承R136或主工位证书；没有改算法或切默认。
+
+| 指标 | 左固定偏差 | 右固定偏差 | 左零偏差回归 |
+| --- | ---: | ---: | ---: |
+| 原UUID | `ae398a37-d13c-4872-aa21-bfcad1561e2a` | `51466bc8-ea1a-4ce2-9e51-10873a4c0202` | `133d4ac5-3ed9-45e5-9d7f-e3418a40cf23` |
+| 原裁决／exit | pass／0 | pass／0 | pass／0 |
+| sim s | 78.16 | 81.90 | 78.36 |
+| episode wall s | 52.412078 | 52.383524 | 51.550714 |
+| 实际process wall／CPU s | 53.599744／63.945974 | 53.565448／64.107641 | 52.705637／62.868345 |
+| 真实抬升 mm | 40.890531 | 35.013218 | 40.881472 |
+| 持物／静稳 s | 33.46／7.50 | 37.22／7.50 | 33.68／7.50 |
+| 脱离后漂移 mm | 0.198064 | 0.170620 | 0.165191 |
+| 脱离后峰值力 N | 0 | 0 | 0 |
+| OMPL搜索／含后处理 s | 0.195400／0.418498 | 0.162454／0.340247 | 0.160132／0.341803 |
+| 接近shortcut wall s | 4.150142 | 3.822728 | 4.131585 |
+| 运输搜索／worker wall s | 3.060546／3.133154 | 2.939181／3.008770 | 2.703331／2.775570 |
+| 脱离worker wall s | 1.505573 | 1.356908 | 1.416077 |
+| 实际视频帧 | 489 | 512 | 490 |
+
+根实际重跑独立reader，409项通过，failed=[]、unknown=[]；原monitor／skill和ReleaseAudit逐样本精确重放。六份实际／planning XML中蓝盘全部floor／wall只平移(-.04,+.06,0)m，红盘、robot、option、actuator保持。原抓放／释放／脱离／回位全部通过，物体free、weld0／mocap0；安全停机／障碍接触与guard坏行均0。回位q6最大误差约.101347mrad，最大速度小于7.64e-8rad/s。两个实际transport／separation worker均consumed、owned_ack、joined；默认async return仍false，没有要求未启动的第三worker。
+
+左planned／measured各244，右preclose／planned／measured各246，全部原1mm和285对保持。41次RGB调用（14／13／14）仅valid.xy按原offset改变，不累积，首点与R136对应静态输入差0；invalid次数0，不冒充本轮遮挡拒绝验收。原pixel仍对应raw图像，原uncertainty不是biased误差界；冻结后仍停止原视觉刷新。原wrapt非致命警告保留。根已看左右final图，绿色工件在新蓝盘，当前右侧完整回放保留。
+
+### 全程腕部余量与完整周期
+
+按实际XML原关节范围，对11921条20ms实测q6记录离线复算：三例最小均为运输段wrist_flex，左偏差.838771696°、右偏差.838773494°、左零偏差.838771579°，未越限。只读核R135原名义三例，运输段也约.838771579／.838773178／.838772437°；该较窄余量并非只在新增感知偏差时出现。它不是2ms未保存状态或任意扰动的误差界，不能用R136抓取端点最小1.949415°代替整程余量。
+
+| 完整周期 | 左偏差 | 右偏差 | 零偏差 |
+| --- | ---: | ---: | ---: |
+| 拍数 | 3908 | 4095 | 3918 |
+| 中断 | 0 | 0 | 0 |
+| P95 ms | 17.165 | 16.611 | 16.973 |
+| P99 ms | 31.973 | 29.341 | 29.746 |
+| max ms | 141.448 | 147.904 | 140.166 |
+| >20ms拍数 | 131 | 108 | 106 |
+
+11921拍与三个原report.steps一致，中断0；完整50Hz仍全部false。本轮是新放置路径的功能验证，不能将其wall与R137主工位或其他批次相减当作算法提速；两盘位各3/3也不是40回合冻结门槛或随机恢复率。
+
+### R138原件、复跑和收尾
+
+原件在 `experiments/colab-twin/output/x-bias-second-place-20261028/kaggle-v1/so101-evidence.tgz`；根root-readback.json、root-prior-wrist-comparison.json、independent-readback.json.gz、两final PNG和right-second-place-bias-grasp-place.mp4保留。私有 `~/.cache/ros2-factory/codebuddy-so101-20261021/round138-x-bias-second-place/` 保存原wrapper、构建／接收源码、输入manifest、独立reader和dispatch；按上述launcher原CLI，只替换为该批manifest和已有-place200-200文档即可实际复跑，不增加调度器。
+
+本批云已COMPLETE，原runner已wait回收三进程，全部实际worker清理已核实；不触碰Mint、其他机器人和后台任务。已完成独立JSON无损gzip并逐字节回读，分配131,072B→20,480B，释放110,592B。原TGZ／可编辑输入／当前回放保留，没有临时帧、分片或展开物理副本；恢复命令见cleanup.json。
+
+### Next：接现有M2网页Carry
+
+截至独立工作树6f532492的只读核查，原UI“夹起后等待接续／接续搬运”、同ID resume-carry API和CarryGate均已实现。原标记物理resume／cancel／timeout也有证据；缺的是活动浏览器waiting→真实点击→同UUID原物理终态。下一片只扩原station-execution.cjs的显式resume／cancel QA分支，用原station-carry-m2.json中心任务，不改生产UI/API／controller或新建引擎；取消保留原fail，不计抓放成功。实施时重新核独立工作树与Drone在途边界，不沿旧HEAD盲改或混交付。
+
+M1a连续域、普通±10mm合同及默认保持，M2完整技能／恢复、20＋20与完整50Hz均未完成。Owner=根Codex；Knowledge=already_covered，Wiki《ROS2 与 FishBot》§20的分层验收已覆盖，不另写共享在途知识页。
