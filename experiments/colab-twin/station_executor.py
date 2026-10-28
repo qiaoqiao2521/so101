@@ -41,7 +41,7 @@ def describe():
         'executor': 'so101-mujoco-visual-grasp', 'simulation_only': True,
         'message': '已接入本机 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
         'capabilities': ['按 pick → transfer → place 动作段组合搬运任务', '八步原程序仍可直接运行',
-                         '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '方块 XY 各 ±10mm',
+                         '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '默认工位方块 XY 各 ±10mm',
                          '固定尺寸附加障碍', '限时等待后继续搬运', '协作停止', '新回合录像和物理报告'],
         'skill_control_modes': {
             'hold-before-carry': {
@@ -86,6 +86,7 @@ def describe():
                              'size_m': [2*x for x in OBSTACLE_HALF_SIZE]},
         'limits': {'simulation_s': 90, 'wall_s': 120, 'collision_margin_m': .001},
         'notes': [
+            '默认工位保持原范围；显式开发工位的目标坐标是定位输入，每次仍须原规划与物理检查，历史成功不继承。',
             'program可直接使用原八步原子动作，也可使用pick→transfer→place三个能力段；能力段在验证时展开为同一原子动作。',
             '当前物理执行器支持完整抓放组合；缺段、重复段或其他次序会在仿真前明确失败。',
             '八步搬运任务支持修改place坐标系XYZ，Z表示蓝盘底座相对桌面的非负高度，release/clear保持相对偏移。',

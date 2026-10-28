@@ -12,7 +12,7 @@ from unittest.mock import patch
 from route_policy import RoutePolicy
 from station_executor import (FIXED_NODES, SEGMENTS, TEMPLATE, UnsupportedStation,
                               WORKSPACE_DEVELOPMENT_MODE, WORKSPACE_TARGET_REGION,
-                              compile_program, describe, run, validate_station)
+                              atomic_json, compile_program, describe, run, validate_station)
 
 
 def station():
@@ -110,6 +110,69 @@ class AdmissionTests(unittest.TestCase):
                 self.assertNotIn('pickup_open_jaw_rad', result['execution'])
                 self.assertNotIn('mesh_box_axis_refinement', result['execution'])
                 self.assertTrue(result['not_admitted'])
+
+    def test_linked_fixed_tray_examples_preserve_original_resolved_intent(self):
+        fixtures = Path(__file__).parent/'scenarios/workspace-station'
+        for side, source in (('left', 'fixed-x-minus15p5.json'),
+                             ('right', 'fixed-x-plus15p5.json')):
+            with self.subTest(side=side):
+                original = json.loads((fixtures/source).read_text())
+                linked = json.loads((fixtures/f'fixed-tray-linked-{side}.json').read_text())
+                before = validate_station(original['station'])
+                after = validate_station(linked['station'])
+                for ident, position in before['resolved_positions_m'].items():
+                    self.assertEqual(after['resolved_positions_m'][ident], position)
+                self.assertEqual(linked['station']['execution'], original['station']['execution'])
+                self.assertEqual(linked['station']['program'], original['station']['program'])
+                self.assertTrue(after['development_only'])
+                self.assertTrue(after['not_admitted'])
+                self.assertEqual(linked['editingExample']['source'], source)
+
+    def test_linked_fixed_tray_frame_edit_moves_targets_without_moving_tray(self):
+        fixtures = Path(__file__).parent/'scenarios/workspace-station'
+        for side, x in (('left', .224), ('right', .256)):
+            with self.subTest(side=side):
+                value = json.loads((fixtures/f'fixed-tray-linked-{side}.json').read_text())['station']
+                next(node for node in value['nodes']
+                     if node['id'] == 'pickup_request')['position'][0] = x
+                result = validate_station(value)
+                for ident in ('cube', 'approach', 'grasp'):
+                    self.assertEqual(result['resolved_positions_m'][ident][0], x)
+                self.assertEqual(result['resolved_positions_m']['pick'], [.24, -.13, 0.])
+                self.assertEqual(result['execution']['pick_xy_m'], [.24, -.13])
+
+    def test_linked_fixed_tray_json_roundtrip_keeps_optional_metadata(self):
+        fixtures = Path(__file__).parent/'scenarios/workspace-station'
+        for side in ('left', 'right'):
+            with self.subTest(side=side), tempfile.TemporaryDirectory() as temporary:
+                document = json.loads((fixtures/f'fixed-tray-linked-{side}.json').read_text())
+                document['station']['execution']['editor_note'] = {'label': '本地二改', 'force': 999}
+                destination = Path(temporary)/'station.json'
+                atomic_json(destination, document)
+                restored = json.loads(destination.read_text())
+                self.assertEqual(restored, document)
+                with self.assertWarnsRegex(RuntimeWarning, 'editor_note.*不参与执行'):
+                    result = validate_station(restored['station'])
+                self.assertEqual(result['execution']['editor_note'], {'label': '本地二改', 'force': 999})
+                self.assertEqual(result['execution']['pickup_hover_z_m'],
+                                 document['station']['execution']['pickup_hover_z_m'])
+
+    def test_linked_fixed_tray_examples_keep_inconsistency_and_region_rejections(self):
+        fixtures = Path(__file__).parent/'scenarios/workspace-station'
+        for side in ('left', 'right'):
+            for invalid in ('target_offset', 'outside_region'):
+                with self.subTest(side=side, invalid=invalid):
+                    value = json.loads((fixtures/f'fixed-tray-linked-{side}.json').read_text())['station']
+                    if invalid == 'target_offset':
+                        next(node for node in value['nodes']
+                             if node['id'] == 'grasp')['position'][0] = .001
+                        error = 'grasp'
+                    else:
+                        next(node for node in value['nodes']
+                             if node['id'] == 'pickup_request')['position'][0] = .271
+                        error = 'cube.*视觉先验'
+                    with self.assertRaisesRegex(UnsupportedStation, error):
+                        validate_station(value)
 
     def test_workspace_rejects_node_inconsistency_and_out_of_prior_cube(self):
         for ident, coordinate, delta in (('pick', 0, .001), ('approach', 0, .001),

@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-28 — R141复用目标坐标系创建新取料请求
+
+Previous=progress：R140实测取料段与cf5d16c已交付。现查明workspace-development-v1本已支持视觉先验内新XY；仅改cube会让approach／grasp仍指旧坐标，被编辑一致性检查拒绝，尚未到IK。不是点位白名单，不放宽任何准入。
+
+Implementation：复用原父坐标系解析，新增左右两个固定红盘可编辑样例，将cube／approach／grasp挂到独立pickup_request框架；只改该框架X即可联动三者，pick与execution.pick_xy不变。高位／开度仍保留原左60mm/.5、右54mm/.35，不自动选参。describe只澄清±10mm属于默认工位，未改parser／控制器／模式。
+
+Pending：原JSON／局部测试后冻结源码，在既有Kaggle浏览器运行器中实际导入样例、编辑框架X到预声明左.224／右.256m、导出核对并沿原任务完成抓放。原90sim／120wall、1mm、285对、244或246／原评分保持。两新请求尚not_run，不因参数化样例静态一致就记通过。工作台生产源码／Carry QA／Drone在途保留，Owner=根Codex；Knowledge=already_covered。
+
 ## 2026-10-28 — R140实际取料记录净距核算完成
 
 Previous=progress：R139原见证归因与44577f1已交付。本轮从R137两个原pass回合直接读取实测q6，不启动新的抓放。预声明初态＋全部approach／preclose／descend／close／lift／hold连续前缀＋首transport边界，左1689／右1692共3381姿态；原20ms样本及来源index不筛选，初态guard缺证保持null。
