@@ -1,5 +1,16 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R156感知与真实246点输入诊断完成
+
+Done：同95ca4a5原paced单回合UUID1221c6d5原物理pass，75.78sim／94.908196process wall／69.997289CPU；抓放、释放脱离、回位、246×3／原全部准入及worker清理完整。3789拍中96慢拍、230deadline，完整50Hz仍未过。观察复制／压缩开销计入，不与旧VM做性能A/B。[原件、范围与结果](m1b-paced-process-results.md#r156原物理通过感知子段与实际预收爪-abi-完整)。
+
+Finding：13次approach感知中render中位14.803ms、localize5.258ms，copy仅.066ms；主要同步成本明确。实际首个measured_closure捕获对应pickup_preclose，246×285对完整，非最终descend闭爪；后者原检查仍完整通过。raw ABI和几何已保留，可做纯native回放，无需再跑整条链取同样输入。
+
+Next：复用既有R79 AsyncCamera，先在当前源码核同输入快照／RGB／定位等价、时间戳与拒绝语义，再组合R154做原物理；保持原分辨率及1s TTL，发令时钟待补。同步全扫与fresh释放准入仍为独立剩余慢拍，不靠过期证书放行。连续X入口／四点证据保持，默认不切。Owner=根Codex；Knowledge=already_covered。
+
+
+Cleanup：R156原云任务及读回终态后，清除自有bytecode，释放118784分配字节；可用空间2407157760→2407284736B。原TGZ、rawABI、失败读回与配置保留，新R157～R159在途准备不动。收据output/live-input-diagnostics-20261029/kaggle-v1/cleanup.json。
+
 ## 2026-10-29 — R154／R155真实节拍双进程两位置4/4
 
 Done：同95ca4a5，左X224原版→组合、右X256组合→原版，两Kaggle v1终态。四例原抓放／释放／脱离／回位pass，原安全、246×3及fresh准入保留。真实20ms固定epoch、不跳拍，完整拍及普通tail另核。[详细结果、成本与复跑](m1b-paced-process-results.md)。

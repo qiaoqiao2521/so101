@@ -1,4 +1,4 @@
-# R152–R155：真实节拍与双规划进程
+# R152–R156：真实节拍、双规划进程与实际输入诊断
 
 日期：2026-10-29。Owner：根 Codex。来源：根 GPT 与原生 GPT 子 Agent。
 
@@ -48,7 +48,7 @@
 
 approach 中 13 拍为 .5、1.0…6.5s 的原定时感知，perception 19.305～20.332ms，完整拍 27.832～32.229ms；另 5.36s 拍来自 controller/physics/callbacks 共同耗时，不能统称 RGB。源码每次只 render 与 localize 各一次，循环录像只存状态，不存在已证实的重复渲染。
 
-下一片 R156 只做原运行观察：拆 `update_scene/render/copy/localize`；另保存一次实际 measured closure 的原 ABI 输入／输出与构造几何，供纯 native 重放。诊断开销全计，不挪入 R154/R155 性能对照。未取得实际产物前保持 not_run。
+R156 已完成下文实际观察。诊断开销全计，不挪入 R154/R155 性能对照。首次 `purpose=measured_closure` 实际对应高位预收爪，不能称为最终下探闭爪。
 
 旧固定轴 norm、静态 pair 缓存、小方向表、`-march=native` 均有无收益或收益反转记录，不重复试验。没有实际提示输入／输出，不凭六组冷提示网格猜当前 warm hint 回退成本。
 
@@ -68,6 +68,35 @@ R152 v2 同实例的独立原控制器回合 `a4bfe5d4-9c38-47f5-acb5-9cfc17ac3b
 4. v4 只在运行前显式复制四数组，逐字段复制当时相同；整体 before/source unchanged/end 仍有辅助字段差异，完整组件继续失败，不删检查、不修结束状态、不再重复同样试验。
 
 只取 v2 完整比较通过的另外五组15对，query占插桩 wall 的92.9366%，FK占3.7100%。这是有限成本定位，不是优化收益；完整六组不记通过。不能因该诊断影响原始物理裁决，也不能以未落盘 raw buffer 的比较回执冒充读者重新逐位核算。
+
+## R156：原物理通过，感知子段与实际预收爪 ABI 完整
+
+Kaggle `muqiaoqiao/so101-live-input-diagnostics-20261029` v1 终态。接收源码逐字相同，冻结95ca4a5原输入／原评分器／90sim与120episode-wall。私有观察器只记录，原渲染和native调用各执行一次；异常不覆盖原返回或原异常。无生产默认变更。
+
+原UUID `1221c6d5-4ecd-4326-bf36-e71ea1e467e7` pass：75.78sim、86.940189episode wall、94.908196process wall、69.997289CPU。原抓放、释放脱离及回位均通过；安全停机false、障碍接触0、free=true、weld=mocap=0。原246×3／transport29／separation2完整，native checked=native=successful=66843、fallback0；205保存样本当前姿态准入及双worker consumed／owned_ack／joined均通过。释放漂移.173264mm、脱离后0N、回位误差约.000102544rad。
+
+3789完整拍、partial0；96拍>20ms、P95 17.082563ms、max58.916409ms；core与普通tail截止期违约均230。诊断复制和回调在原拍内，后置压缩6.343208s在process wall／CPU内。不能将本回合总耗时和R154／R155跨VM相减。完整50Hz仍未通过；实际执行器发令时钟仍未记录。
+
+### 感知主要耗时已定位
+
+1次初始化独立列出；13次循环感知逐份匹配0.5～6.5s的approach拍、原定位结果和完整perception时间窗，观察错误0。
+
+| 子段 | wall中位 ms | wall P95／max ms | thread CPU中位 ms |
+|---|---:|---:|---:|
+| update_scene | .057950 | .067834 | .058037 |
+| render | 14.802738 | 14.909983 | 14.803178 |
+| copy | .066404 | .075557 | .066623 |
+| localize | 5.258181 | 5.482462 | 5.259492 |
+
+实际预检为NVIDIA EGL／Tesla T4；不能将高thread CPU直接解释为软件渲染或GPU计算时间。原640×480画面的一次render与一次localize已接近20ms，copy不是主要瓶颈。已找到F2bn／R79的现成AsyncCamera线程候选，旧两工位4/4不等于当前组合验收。下一候选优先复用其快照／原worker生命周期接入当前双规划进程，保留原分辨率、RGB定位、遮挡拒绝、源时间戳与1s TTL；先同输入组件，再决定原物理。当前组合尚未实施或验收，不重造进程相机、不改为低分辨率或复用过期估计。
+
+### 实际捕获范围与下一复用入口
+
+捕到首个 `purpose=measured_closure`，实际stage=approach，与原 `pickup_preclose` 报告逐字段相同。246查询×285对、29几何／198996顶点，所有native status=0；bridge info=[246,-1,246,246,0]。保存完整构造几何、输入／输出、见证与方向提示；raw数组14834784B、压缩4287838B。独立结构读回完整，无回退／采集错误。含采集开销的扫掠48.812460ms不是纯native基准。
+
+原运行还调用了第二次同purpose，最终下探闭爪仍246全扫通过，但其ABI未捕获。不能将预收爪样本冒充最终闭爪热状态，也不为补这个范围立即重跑全物理。此份实际246点已可用于独立native组件回放，先核完整输出等价再谈改进。读者曾遇NumPy2/1模块名差异；只对自有可信pickle映射模块名后成功，首次失败JSON保留，不改变raw字节。
+
+原件：`experiments/colab-twin/output/live-input-diagnostics-20261029/kaggle-v1/so101-evidence.tgz`。根paced读回同目录；独立入口在私有 `round156-live-input-diagnostics/`：`read_physical.py`、`read_perception.py`、`readback/read_sweep_capture.py`。原物理、诊断完整性、组件复用与性能采用分别判断。Knowledge=already_covered，项目新证据留在本计划。
 
 ## 产物与复跑
 
