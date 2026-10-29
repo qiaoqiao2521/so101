@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R147／R148运输进程两位置反序4/4原物理通过
+
+Done：固定95ca4a5及同一私有launcher，左X224原版→候选、右X256候选→原版，两Kaggle v1均终态并独立回读。全部真实抓放、释放、脱离、回位通过，246×3／原1mm／285对保留，自有child exit0／joined且无回退或清理错误。[完整结果](m1b-process-isolation-results.md#r147r148两取料位置反序原物理完成保留局部长尾收益)。
+
+Result：左hold慢拍47→1、全回合99→48；右hold71→14、全回合125→57。局部长尾收益跨位置复现，保留显式候选。process wall左51.984385→51.899476s、右53.639279→55.285158s；CPU均增，不称整程提速，不切默认。四回合partial0；候选max60.193／55.054ms，完整50Hz仍未通过。计时未提供真实调度deadline时钟，不能将>20ms计算拍混称deadline miss。
+
+Next：捕获原separation完整请求及冻结估计模型再做相同输入组件；旧日志若缺Snapshot成员，不推测填充。同步244／246闭爪与切换认证、RGB周期仍保留。所有已启动云任务终态；本轮无在途源码改动、无本地物理、不触Mint或Carry。10项launcher假生命周期、7项R147及6项R148读回检查通过；实际OS异常取消仍未验证。TGZ流读，无重复展开物；原失败与证据保留。Owner=根Codex；Knowledge=already_covered。
+
 ## 2026-10-29 — R146规划隔离组件有收益，原物理待验
 
 Done：当前95ca4a5原运输planner与旧R80实际96条guard，Kaggle process-isolation-component v1三对反序完成。每对96条均在实际planner重叠区间；守卫及路径binary64全同。Thread超20ms为39／15／7，spawn为0／0／0；P95由22.703／22.270／20.096ms到17.590／15.288／10.390ms。真实模型pickle及独立地址、Snapshot／Plan往返、3个child exit0与原job清理均核实。[完整结果](m1b-process-isolation-results.md)。

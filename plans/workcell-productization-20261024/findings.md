@@ -1,5 +1,11 @@
 # SO101 工位产品化：事实、决定与待证项
 
+## 2026-10-29 补充：运输进程隔离的实测边界
+
+[R147／R148](m1b-process-isolation-results.md)同代码在X224／X256反序原物理4/4通过。hold超20ms分别47→1、71→14；全回合99→48、125→57。运输段控制长尾改善可复现，但总wall左近似持平、右增加1.646s，CPU增加；不能写成整程加速。release／闭爪／切换及RGB仍有慢拍，完整50Hz未通过。当前计时是计算预算，不是按绝对时钟调度的deadline计数。
+
+下一separation候选必须捕获实际Snapshot与冻结估计模型：原request更新geom_pos／geom_quat／geom_sameframe，原worker还核size／uncertainty；主guard逐拍更新ratchet。不用相邻轨迹帧或真值补输入，不先跳过认证再称解耦。
+
 日期：2026-10-24。本文保留初建核查及后续实施事实，作为产品化计划的证据入口。
 初建D0仅编写计划；后续源码、服务和云仿真实测见各节及progress.md，不将初建状态当作当前整体状态。Mint与实体设备始终不在实施范围。
 
