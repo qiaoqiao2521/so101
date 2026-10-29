@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R150／R151释放进程两位置反序4/4原物理通过
+
+Done：同95ca4a5、同冻结launcher，左X224原版→候选、右X256候选→原版，两个Kaggle v1终态并独立回读。原246×3、205样本fresh准入、真实抓放／释放／脱离／回位及worker回收全过。[详细结果](m1b-process-isolation-results.md#r150r151separation两位置原物理通过等待长尾改善但准入仍慢)。
+
+Result：等待separation窗口慢拍左31→9、右23→6；整体release31→9／23→7。保留局部候选。同步admission仍42.093／48.120ms，全回合最大44.453／63.368ms；右P95还升高。process wall左增.264s、右增2.697s，CPU增，不称整程提速或完整50Hz。未改hold也变快，负载差异保留。右最大拍回调53.091wall／2.157threadCPU，具体等待来源待拆。
+
+Next：R152复用原实际6组244／246网格，拆原native batch的FK／query成本；R153独立墙钟paced诊断记录release/start/deadline，并可只读计时status写入。两项仅私有准备、未运行；不改生产、原裁判、默认或90sim/120wall。旧异步闭爪数值覆盖缺口保持，不消费旧q证书。已验工作及时提交；原TGZ保留、派生JSON压缩回读及自有bytecode清理见cleanup.json。Owner=根Codex；Knowledge=already_covered。
+
 ## 2026-10-29 — R149释放原请求完整捕获，同输入六例一致
 
 Done：Kaggle separation-capture v1终态；原X224 `58bf9463…` pass，75.92sim／53.166222process wall／62.181517CPU，原246×3、抓放释放脱离回位及worker回收通过。3796完整拍仍90拍>20ms，完整50Hz未过。[R149结果](m1b-process-isolation-results.md#r149原释放请求捕获与六次同输入规划完成)。

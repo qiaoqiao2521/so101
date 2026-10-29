@@ -110,3 +110,39 @@ Kaggle `muqiaoqiao/so101-separation-capture-20261029/1` 已 COMPLETE。仍冻结
 复跑私有目录：`~/.cache/ros2-factory/codebuddy-so101-20261021/round149-separation-capture/`。`capture_launcher.py`接原source／station／output；`component_probe.py --source-dir SRC --capture-root CAPTURE --output OUT`复用同次可信捕获。实际接纳脚本逐字一致，16项纯入口／协议检查及6项独立reader反例通过，不能替代OS异常取消实测。
 
 原件 `experiments/colab-twin/output/separation-capture-20261029/kaggle-v1/so101-evidence.tgz`，独立 `method-readback.json/.md`。原TGZ保留唯一两模型捕获；没有展开帧／模型或本轮重复大文件可清理。下一R150只隔离separation，运输保留原线程，先左X224同配方baseline→candidate真实对照；有收益再右X256反序。同步246认证、当前q准入与原ratchet全保留。Owner=根Codex；来源=根GPT＋原生GPT；Knowledge=already_covered。
+
+## R150／R151：separation两位置原物理通过，等待长尾改善但准入仍慢
+
+Kaggle `muqiaoqiao/so101-separation-process-20261029/1` 与 `muqiaoqiao/so101-separation-process-right-20261029/1` 均COMPLETE。仍95ca4a5，左X224原版→候选，右X256候选→原版；右站文档与R148实际输入一致、两站launcher逐字相同。接纳脚本均逐字回读。只隔离separation，transport保持原线程；原job／当前q准入／205个saved samples／ratchet／全部扫掠不变。
+
+| 位置／实现 | UUID | 原判 | sim s | episode／process wall s | process CPU s | 完整拍／>20ms | P95／P99／max ms |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 左224／baseline | `0df77f00-04d4-4715-9610-437a2ddb87e3` | pass | 75.92 | 50.125256／51.572913 | 60.864931 | 3796／119 | 16.445／31.477／48.062 |
+| 左224／separation_process | `b2c0a5bc-79d6-4e31-8721-f265b2cd5f8b` | pass | 76.46 | 50.628605／51.837296 | 62.691290 | 3823／57 | 15.717／22.017／44.453 |
+| 右256／baseline | `c266e059-e39c-4dbc-acdd-e02efec5aca8` | pass | 78.52 | 51.028268／52.159093 | 61.935265 | 3926／90 | 16.134／28.510／43.004 |
+| 右256／separation_process | `269a2df8-12a7-4e6c-aead-278ca6bc6ee7` | pass | 79.10 | 53.669531／54.856092 | 66.015642 | 3955／68 | 16.587／22.319／63.368 |
+
+四例partial0，原三次246点、1mm／285对、真实抓放／释放／脱离／回位全通过，安全和障碍接触0，自由物体，原workers consumed/joined。候选收到实际ACK／完整Plan／FINISHED，child exit0/joined、无回退或清理错误；已核实际request参数、fresh当前q绑定和全部205样本准入。原反例检查15项、左reader5项／右reader4项另列，不当作新物理回合或原生硬取消证明。
+
+| 同位置原版→候选 | 左224 | 右256 |
+| --- | ---: | ---: |
+| 整个release段>20ms | 31→9 | 23→7 |
+| release P95 ms | 28.331→16.863 | 26.559→18.265 |
+| request至admission前等待拍数 | 49→73 | 50→77 |
+| 等待窗口>20ms | 31→9 | 23→6 |
+| 等待窗口P95 ms | 38.170→35.523 | 33.112→25.524 |
+| 实际admission完整拍 ms | 42.130→42.093 | 41.153→48.120 |
+
+admission在update内换阶段，原记录标签为separate；因此用原request／admission仿真时钟取窗口，不能只统计release标签。等待sim时间左.98→1.46s、右1.00→1.54s，不能当算法提速。**两位置共同支持等待期长尾改善；完整50Hz和整程提速均未成立。** 未改的hold慢拍左68→25、右45→38也变化，不能将全回合改善全部归因于separation。
+
+左process wall增加.264384s，右增加2.696998s，CPU也增。两候选预热2.220907／2.279263s；child原planner1.064070／1.152081s，bridge1.168963／1.266544s；右原线程worker1.069173s，未观察到规划自身提速。完整结果241468／241453B、父端解码2.736／3.397ms，shutdown/join97.936／105.527ms。全部成本在整体计时内，child生命周期34.20／36.47s包含闲置，不能叫规划耗时，也不重复叠加child自报CPU。
+
+右最大63.367808ms发生在transport38.86s，其中callbacks wall53.090641ms、主线程CPU2.156881ms。只能定位为回调区间出现off-CPU差额，尚不能断言磁盘、GIL或系统调度的唯一原因。原station publish确实同步调用atomic_json；后续paced诊断可只读记录该调用以分离来源。同步闭爪全扫及handoff仍约40ms，需要继续解决，不通过删采样点或扩大阈值凑50Hz。
+
+### 复跑、下一验证与收尾
+
+私有候选 `~/.cache/ros2-factory/codebuddy-so101-20261021/round150-separation-process/separation_process_launcher.py --source-dir SRC --station JSON --output OUT`；右反序builder在round151-separation-process-right。两者原件分别位于 `experiments/colab-twin/output/separation-process-20261029/kaggle-v1/so101-evidence.tgz` 和 `separation-process-right-20261029/kaggle-v1/so101-evidence.tgz`，独立method-readback.md与无损压缩JSON保留全部明细。来源为根GPT＋原生GPT，原CLI云执行，不声称外部模型生成。
+
+下一项复用R143六个实际244／246网格，私有native聚合计时拆FK与原query，不再重跑无新知识的抓放；同时准备独立50Hz墙钟节拍诊断，固定20ms、不丢物理步、不重置epoch隐藏迟到，原90sim/120wall保持。现有计时仍只有计算预算，真实deadline miss未知。两项尚未运行，不混称优化通过；default保持原实现。
+
+两云任务均终态后才更新本记录。原TGZ不展开；派生JSON无损压缩并逐字回读，清理可重建重复字节与自有bytecode，保留原件、失败、配置和复跑源码。具体空间数及恢复入口在各output/cleanup.json。Owner=根Codex；Knowledge=already_covered，沿用§20分层验收。

@@ -1,5 +1,9 @@
 # SO101 工位产品化：事实、决定与待证项
 
+## 2026-10-29 补充：释放等待长尾两站改善，完整50Hz仍不成立
+
+[R150／R151](m1b-process-isolation-results.md#r150r151separation两位置原物理通过等待长尾改善但准入仍慢)原物理4/4、三次246与205样本原准入全过。separation pending慢拍左31→9、右23→6，但实际admission仍42／48ms；整程wall增.264／2.697s。未改hold也变化，不能全归因进程隔离。右63.368ms最大拍中的callbacks53.091wall／2.157threadCPU仅说明回调区间等待，尚未证实具体IO或GIL原因。原batch内部仍逐点FK／query；先复用6组实际网格拆成本，再选实现变化。真正50Hz调度另需固定墙钟和deadline记录，现有unpaced计时不具备。
+
 ## 2026-10-29 补充：释放规划进程传递已同输入核实
 
 [R149](m1b-process-isolation-results.md#r149原释放请求捕获与六次同输入规划完成)补齐原生模型和实际请求。原物理pass，Thread/spawn三对六例Snapshot／两路径／205样本逐位一致，实际report_json也相同。独立进程准备约1.51～1.54s，完整Plan约241KB、父端解码2.12～4.67ms，整组件总耗时反增。不能因进程边界可行就称50Hz改善；下一步仅separation的真实释放主循环A/B，运输保持原线程，所有当前q／ratchet准入保留。
