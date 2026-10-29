@@ -1,5 +1,11 @@
 # SO101 工位产品化：事实、决定与待证项
 
+## 2026-10-29 补充：双规划进程改善真实截止期，总成本增加
+
+[R154／R155](m1b-paced-process-results.md)同源码、同输入、两位置反序原物理4/4。真实20ms调度下，超时计算拍左74→34／右78→30，普通deadline违约168→62／183→59；最大起步迟到143.168→60.178／140.646→53.719ms。原全扫、抓放、释放脱离回位不变。process wall增3.533／4.246s、CPU增，右max还反增至47.596ms。保留局部候选，不称整程加速或完整50Hz，不切默认。
+
+原R153循环status写入最大2.875ms，没有复现旧53ms callback；不能直接归因IO/GIL。R154接近段13次感知各19～20ms，源码无重复render；下一项拆update_scene/render/copy/localize，保持图像与算法。R152完整六组组件因辅助字段不等仍失败；仅另外五组完整比较通过的15对支持query约92.94%、FK3.71%的有限归因。需保存实际warm-hint ABI再选择小改动，不重复旧静态pair/norm优化。
+
 ## 2026-10-29 补充：释放等待长尾两站改善，完整50Hz仍不成立
 
 [R150／R151](m1b-process-isolation-results.md#r150r151separation两位置原物理通过等待长尾改善但准入仍慢)原物理4/4、三次246与205样本原准入全过。separation pending慢拍左31→9、右23→6，但实际admission仍42／48ms；整程wall增.264／2.697s。未改hold也变化，不能全归因进程隔离。右63.368ms最大拍中的callbacks53.091wall／2.157threadCPU仅说明回调区间等待，尚未证实具体IO或GIL原因。原batch内部仍逐点FK／query；先复用6组实际网格拆成本，再选实现变化。真正50Hz调度另需固定墙钟和deadline记录，现有unpaced计时不具备。

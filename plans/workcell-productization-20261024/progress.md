@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R154／R155真实节拍双进程两位置4/4
+
+Done：同95ca4a5，左X224原版→组合、右X256组合→原版，两Kaggle v1终态。四例原抓放／释放／脱离／回位pass，原安全、246×3及fresh准入保留。真实20ms固定epoch、不跳拍，完整拍及普通tail另核。[详细结果、成本与复跑](m1b-paced-process-results.md)。
+
+Result：计算慢拍左74→34／右78→30，deadline168→62／183→59；保留双进程显式候选。process wall反增3.533／4.246s，CPU增，max仍47.93／47.60ms。等待帧变化不计加速，完整50Hz未过、不切默认。R153原paced回合另有105慢拍／247deadline；写入最大2.875ms，未复现旧callback尖峰。R152v1环境失败、v2局部通过、v3/v4辅助数组不等均保留，不将六组全记通过。
+
+Next：R156私有观察器准备中，拆感知四子段并捕获一次实际measured closure完整ABI与构造几何，直接纯native重放；尚未运行，不计新物理或性能通过。旧norm／静态pair等反证保持。连续X开发入口已可单字段编辑，四实测位置通过不外推整域。Owner=根Codex；Knowledge=already_covered；不触Mint／FishBot在途／实体，不恢复定时任务。
+
+Cleanup：全部已启动云任务终态、右侧独立摘要通过后，清除R152～R155已完成工作中的自有Python字节码，释放225280分配字节；本机可用空间2471288832→2471526400B。原TGZ、失败版本、配置、源码与独立摘要保留，未展开帧／模型，不触R156在途准备。逐项收据在output/combined-paced-right-20261029/cleanup.json。文档链接／diff检查后串行提交推送。
+
 ## 2026-10-29 — R150／R151释放进程两位置反序4/4原物理通过
 
 Done：同95ca4a5、同冻结launcher，左X224原版→候选、右X256候选→原版，两个Kaggle v1终态并独立回读。原246×3、205样本fresh准入、真实抓放／释放／脱离／回位及worker回收全过。[详细结果](m1b-process-isolation-results.md#r150r151separation两位置原物理通过等待长尾改善但准入仍慢)。
