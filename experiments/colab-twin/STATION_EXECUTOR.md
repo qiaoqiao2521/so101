@@ -29,7 +29,7 @@ python experiments/colab-twin/evaluate_station.py \
 
 新增[左侧联动样例](scenarios/workspace-station/fixed-tray-linked-left.json)和[右侧联动样例](scenarios/workspace-station/fixed-tray-linked-right.json)。在原工作台导入后，选择对象树中的“取料目标坐标系”，修改它的X／Y；方块、接近点、抓取点随父坐标系移动，红盘保持原位。三个子节点的局部坐标不必重复修改。导出JSON可保存本次请求，运行仍使用原按钮与执行器。
 
-两样例的初始世界位置与原X±15.5mm文档相同；左保留60mm／.5rad，右保留54mm／.35rad工艺。修改高位仍需同步接近点局部Z与execution声明；本样例不自动选工艺，也不改变程序顺序。`execution.pick_xy_m`对应整只红盘，不应随目标物体坐标修改。新增样例及新的编辑请求尚待本轮网页／原物理验收，不继承来源样例的成功。
+两样例的初始世界位置与原X±15.5mm文档相同；左保留60mm／.5rad，右保留54mm／.35rad工艺。修改高位仍需同步接近点局部Z与execution声明；本样例不自动选工艺，也不改变程序顺序。`execution.pick_xy_m`对应整只红盘，不应随目标物体坐标修改。2026-10-29已回读真实网页编辑结果：左X改为.224m、右改为.256m后，两例均沿原入口完成抓放、释放脱离与回位；原红盘不动，左244／右246全扫保持。见[联动编辑实测与复跑](../../plans/workcell-productization-20261024/m1a-x-linked-request-results.md)。其他新编辑仍须逐任务检查，不继承这两例成功。
 
 复用同一 `workspace-development-v1`，将 `execution.pick_xy_m` 与 `pick` 节点保持为原红盘中心 `[.24,-.13]`。`cube` 声明本次物体位置，`approach/grasp` 的世界XY随 `cube`，不随红盘中心。把目标位置写进 `pick_xy_m` 会移动整只红盘，属于另一种布局。
 

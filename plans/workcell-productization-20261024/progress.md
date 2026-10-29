@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R141单坐标编辑与原物理2/2通过
+
+Previous=progress：承接784cd37的父坐标系数据样例与原检查，未重跑旧X面板。Kaggle实际接纳x-linked-request-browser v1已COMPLETE，接收源码逐字相同；真实网页导入后只改frame X为.224／.256m，导出、唯一POST与原request一致。
+
+Done：左c4c5eb7a／右ce9ce95d原物理均pass，75.22／78.30sim，实际进程103.13／99.34wall、105.26／100.89CPU；各自原90sim／120episode-wall满足。真实抓放、释放脱离回位、自由物体、零安全／障碍接触、244／246全扫与双worker回收均核实。原monitor／skill／释放精确重放，独立读回和身份补核无失败；根查看四张实际网页图，471／490实视频帧完整。[结果与操作入口](m1a-x-linked-request-results.md)。
+
+Boundary：本轮让已验X工艺可通过一个父坐标系二改，未增加执行模式或改IK。RGB与旧相邻中点估计恰相同，不宣称亚毫米感知；R140旧轨迹净距不挪作本轮整程最小值。原网页无逐拍EpisodeTiming，50Hz仍unknown／历史未过；连续域、默认准入、20＋20与同世界卸货不新增通过。原wrapt非致命警告保留。右编辑图仍有上一回合实时场景，只当编辑证据，原新UUID物理另核。
+
+Cleanup／Next：云及两个实际物理进程终态，后关闭自有preview；未杀physical或启本地模型。TGZ不展开，独立JSON／独有log无损压缩并回读，释放29,937,664分配字节；配置、源码、原件、四截图与当前视频保留。关闭本片重复坐标编辑缺口，连续区域证据与M1b／M2 Carry独立接续；工作台Carry和Drone在途不触碰，Owner=根Codex。Knowledge=already_covered。
+
 ## 2026-10-28 — R141复用目标坐标系创建新取料请求
 
 Previous=progress：R140实测取料段与cf5d16c已交付。现查明workspace-development-v1本已支持视觉先验内新XY；仅改cube会让approach／grasp仍指旧坐标，被编辑一致性检查拒绝，尚未到IK。不是点位白名单，不放宽任何准入。

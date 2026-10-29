@@ -7,7 +7,7 @@
 
 ## 新X请求的编辑联动缺口
 
-原workspace-development-v1已支持固定视觉先验内的新XY，不是点位白名单。单改cube或hover时，approach／grasp设计节点仍保留旧位置，validate_station先报一致性问题，尚未到IK。原父坐标系解析可直接解决重复坐标：新增pickup_request世界框架，三个节点保留局部偏移；只改框架位置即可联动，红盘pick／execution.pick_xy不动。左右新样例保留原工艺／程序，4项数据回归及相关原单元检查通过；新请求网页／物理not_run。没有新增模式、执行引擎或放宽准入。原describe的±10mm文本补“默认工位”，开发能力仍以既有execution声明和逐任务原判据为准。
+原workspace-development-v1已支持固定视觉先验内的新XY，不是点位白名单。单改cube或hover时，approach／grasp设计节点仍保留旧位置，validate_station先报一致性问题，尚未到IK。原父坐标系解析可直接解决重复坐标：新增pickup_request世界框架，三个节点保留局部偏移；只改框架位置即可联动，红盘pick／execution.pick_xy不动。左右新样例保留原工艺／程序，4项数据回归及相关原单元检查通过；[R141](m1a-x-linked-request-results.md)现已完成真实网页只改frame X至.224／.256m，导出→唯一POST→request同值，两原物理均pass。新位置RGB估计与相邻中点恰相同，不能将0.5mm编辑当作亚毫米视觉分辨证明。没有新增模式、执行引擎或放宽准入。原describe的±10mm文本补“默认工位”，开发能力仍以既有execution声明和逐任务原判据为准。
 
 ## 实测取料段的限制对与静态选点不同
 
