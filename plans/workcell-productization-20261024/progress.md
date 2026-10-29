@@ -1,5 +1,23 @@
 # SO101 产品化进度
 
+## 2026-10-29 — 接续连续X工艺覆盖与完整周期
+
+Previous=R141：原网页两新X请求2/2通过，源码及结果78a9eda已推。当前用户明确优先连续X范围与完整50Hz，按M1a／M1b并行准备、云端串行实测，不恢复定时任务。
+
+Done R142：同初态九个预声明X观测坐标，54mm/.35九点原IK与完整扫掠通过；60mm/.5八点过、X256原IK失败保留。完整8800扫掠sample／285pair读回，85项核验通过；原offline_screen_pass不包含全扫，已另核。不是新RGB／抓放或连续数学保证。
+
+Done R143：左B→P／右P→B四例原物理pass；保持开爪.6s后仍执行当前q原全扫。最大漂移左6.142e-8／右1.259e-8rad，首尾244／246数量不变、除固定终点外姿态不再逐位相同，异步旧证不放行。15435完整拍仍351拍>20ms，hold/release273拍；[实际结果](m1b-pending-and-cycle-results.md)。Qoder只读180s超时一次后原生GPT接续，没有重复请求。
+
+Done R144：左224／中心240／交界252统一54mm工艺与252原60mm对照4/4真实抓放、释放脱离回位pass；51项独立读回通过。加同源R143右256基准，统一配方有四个不同位置证据，新增中心默认编辑点的[单一开发JSON](../../experiments/colab-twin/scenarios/workspace-station/fixed-tray-x-editable.json)，执行内容exact已测中心，仅改name/notes。原解析器另核非网格X=.224123联动；没有把解析成功当物理成功。原旧venv路径已不存在，改用系统Python完成纯解析，未建环境或载模型。[X结果与入口](m1a-x-unified-recipe-results.md)。
+
+Done R145：v1原pass但新增观察器因NumPy bool序列化失败，细分记录未落盘；原失败保留。仅修JSON标量转换，13项测试通过，v2原pass／75.90sim／49.994158process-wall／59.095877CPU，246×3、双worker清理与释放脱离回位通过。556条hold/release更新全部匹配、观察错误0；3795完整拍仍91慢拍，P95 15.831228／max51.706794ms。73慢拍在进入hold/release且worker运行的窗口，binding约.5ms，poll本身非阻塞；[原始证据](m1b-pending-and-cycle-results.md)。
+
+Next M1b：完整50Hz仍未过。旧F2bo一毫秒时间片和GC反证继续保留，不重复试验。R146先复用已有真实guard／原planner做Thread与spawn进程隔离组件对照，核数据传递、取消退出及三对等价，尚未提交或接生产；不假设GIL已证，不以组件代原物理。闭爪完整扫掠的安全后台准入仍独立待证。Owner=根Codex；不触Mint／工作台Carry／Drone，不发其它聊天。
+
+Cleanup：R142核精确重复展开件后释放401408B；R142／R143／R144派生JSON无损压缩并逐字回读，分别释放245760／114688／942080B，保留原TGZ、配置、失败和R144新实视频。R145原件仅下载TGZ、无展开帧；分别保存v1缺记录和v2完整归因，派生JSON压缩后回读再释放102400B。原解析器5个有限X输入与越界／NaN拒绝通过，126个文档本地链接可定位，diff检查通过。全部已启动云任务终态，六个已验文件串行提交推送；R146仍仅私有组件准备。
+
+Knowledge=already_covered，沿用Wiki《ROS2 与 FishBot》§20分层验收及真实调用状态。原1mm／285对／244或原246／裁判不变；本轮清理与Git交付在全部已启动云任务终态后完成并记录。
+
 ## 2026-10-29 — R141单坐标编辑与原物理2/2通过
 
 Previous=progress：承接784cd37的父坐标系数据样例与原检查，未重跑旧X面板。Kaggle实际接纳x-linked-request-browser v1已COMPLETE，接收源码逐字相同；真实网页导入后只改frame X为.224／.256m，导出、唯一POST与原request一致。

@@ -5,6 +5,18 @@
 
 后续实施以progress和以下更新为准；上句仅描述D0初建。
 
+## 2026-10-29：统一X配方与完整周期的新证据
+
+R142同初态九个预声明X观测点显示，60mm/.5在X256mm仍原IK失败，54mm/.35九点原IK／完整扫掠均过。R144直接原评测完成左224、中心240、交界252的统一54mm工艺，另252原60mm对照4/4pass；右256沿同源R143无等待基准也pass。[原结果](m1a-x-unified-recipe-results.md)保留真实RGB、静态观察Y与物理reset输入的区别。
+
+复用已有父坐标系与右工艺，新增单一[连续编辑开发配方](../../experiments/colab-twin/scenarios/workspace-station/fixed-tray-x-editable.json)。建议X224～256mm，逐请求视觉与原IK／285对／1mm／244或246全扫；不是点白名单，也不声明所有连续位置必成功。没有切默认或增加新执行器。
+
+R143四个原物理pass补齐开爪等待0.6s数据，最大漂移左6.142e-8／右1.259e-8rad。首尾网格虽仍244／246，除固定终点外全部原binary64样本不同，exact-q缓存不能替代整个全扫。R132的实际FK与上下文覆盖缺口仍在，原同步认证保留。
+
+本轮完整周期P95均低于20ms但仍有慢拍，不能勾选完整50Hz。R143慢拍351，其中hold176、release97；原全扫在本VM31～37ms，旧R127441ms不是当前耗时。R145 v2补齐556条更新，原pass／3795拍／91慢拍，其中73拍位于进入hold/release且worker运行的窗口；重复binding单次约.5ms，poll没有阻塞join。不能把wall−CPU直接叫GIL。v1观察器序列化失败保留；v2只修记录落盘。完整数据见[周期与漂移报告](m1b-pending-and-cycle-results.md)。
+
+旧F2bo的1ms解释器时间片已有两站反证，本轮不重复；不再因微小绑定开销另造数组优化。下一项复用既有真实guard与原运输planner做Thread／spawn进程隔离组件验证；先核数据传递、取消退出和三对输出／路径等价，尚不接生产，也不宣称它能解决仍同步的完整闭爪认证。
+
 ## 新X请求的编辑联动缺口
 
 原workspace-development-v1已支持固定视觉先验内的新XY，不是点位白名单。单改cube或hover时，approach／grasp设计节点仍保留旧位置，validate_station先报一致性问题，尚未到IK。原父坐标系解析可直接解决重复坐标：新增pickup_request世界框架，三个节点保留局部偏移；只改框架位置即可联动，红盘pick／execution.pick_xy不动。左右新样例保留原工艺／程序，4项数据回归及相关原单元检查通过；[R141](m1a-x-linked-request-results.md)现已完成真实网页只改frame X至.224／.256m，导出→唯一POST→request同值，两原物理均pass。新位置RGB估计与相邻中点恰相同，不能将0.5mm编辑当作亚毫米视觉分辨证明。没有新增模式、执行引擎或放宽准入。原describe的±10mm文本补“默认工位”，开发能力仍以既有execution声明和逐任务原判据为准。

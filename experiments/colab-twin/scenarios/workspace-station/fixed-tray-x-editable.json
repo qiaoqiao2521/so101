@@ -1,0 +1,197 @@
+{
+  "format": "robot-station",
+  "version": 1,
+  "units": "m",
+  "frameConvention": "translation-only",
+  "station": {
+    "name": "SO101 固定红盘 X 连续编辑（54mm 开发配方）",
+    "nodes": [
+      {
+        "id": "base",
+        "name": "SO101",
+        "kind": "robot",
+        "parent": "world",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "jaw",
+        "name": "双指夹爪",
+        "kind": "tool",
+        "parent": "base",
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "pick",
+        "name": "红盘坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "pickup_request",
+        "name": "取料目标坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          -0.13,
+          0
+        ]
+      },
+      {
+        "id": "cube",
+        "name": "待抓方块",
+        "kind": "object",
+        "parent": "pickup_request",
+        "position": [
+          0,
+          0,
+          0.01
+        ]
+      },
+      {
+        "id": "approach",
+        "name": "接近点",
+        "kind": "target",
+        "parent": "pickup_request",
+        "position": [
+          0,
+          0,
+          0.074
+        ]
+      },
+      {
+        "id": "grasp",
+        "name": "抓取点",
+        "kind": "target",
+        "parent": "pickup_request",
+        "position": [
+          0,
+          0,
+          0.02
+        ]
+      },
+      {
+        "id": "place",
+        "name": "放料坐标系",
+        "kind": "frame",
+        "parent": "world",
+        "position": [
+          0.24,
+          0.14,
+          0
+        ]
+      },
+      {
+        "id": "release",
+        "name": "释放点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.03
+        ]
+      },
+      {
+        "id": "clear",
+        "name": "脱离点",
+        "kind": "target",
+        "parent": "place",
+        "position": [
+          0,
+          0,
+          0.1
+        ]
+      }
+    ],
+    "program": [
+      {
+        "id": "s1",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s2",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s3",
+        "action": "move",
+        "target": "grasp",
+        "seconds": 1
+      },
+      {
+        "id": "s4",
+        "action": "close",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s5",
+        "action": "move",
+        "target": "approach",
+        "seconds": 1
+      },
+      {
+        "id": "s6",
+        "action": "move",
+        "target": "release",
+        "seconds": 1
+      },
+      {
+        "id": "s7",
+        "action": "open",
+        "target": "",
+        "seconds": 1
+      },
+      {
+        "id": "s8",
+        "action": "move",
+        "target": "clear",
+        "seconds": 1
+      }
+    ],
+    "notes": "选择取料目标坐标系，只改其 X，方块、接近点和抓取点自动跟随；红盘保持固定。建议在 X=0.224～0.256m、Y=-0.13m 内开发。统一使用54mm取料高位和0.35rad高位预收爪，已实际抓放验证X=0.224/0.240/0.252/0.256m。每个新请求仍从RGB定位并重新执行IK、1mm碰撞与完整夹爪扫掠；输入可连续编辑，不代表区间内每点或完整50Hz已经通过。",
+    "execution": {
+      "mode": "workspace-development-v1",
+      "pick_xy_m": [
+        0.24,
+        -0.13
+      ],
+      "pickup_hover_z_m": 0.054,
+      "target_region_xy_m": [
+        [
+          0.21,
+          0.27
+        ],
+        [
+          -0.16,
+          -0.1
+        ]
+      ],
+      "pickup_open_jaw_rad": 0.35
+    }
+  },
+  "editingExample": {
+    "source": "fixed-x-plus15p5.json",
+    "editNode": "pickup_request",
+    "scope": "固定红盘的取料坐标系联动编辑样例；不是新增的历史物理通过记录。",
+    "physicalValidation": "每次请求仍须通过原IK、碰撞检查及原物理裁决。"
+  }
+}
