@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R146规划隔离组件有收益，原物理待验
+
+Done：当前95ca4a5原运输planner与旧R80实际96条guard，Kaggle process-isolation-component v1三对反序完成。每对96条均在实际planner重叠区间；守卫及路径binary64全同。Thread超20ms为39／15／7，spawn为0／0／0；P95由22.703／22.270／20.096ms到17.590／15.288／10.390ms。真实模型pickle及独立地址、Snapshot／Plan往返、3个child exit0与原job清理均核实。[完整结果](m1b-process-isolation-results.md)。
+
+Boundary：整案例spawn wall反而增加.773～4.819s，初始化／CPU成本完整保留，不称整程加速。组件未推进物理；取消未实际注入，不能当生产完整50Hz。原244／246同步认证及separation仍保留。HTTP400源包过1MB的两次拒绝存证；只选择原96条全字段后首次接纳v1，无重复运行。
+
+Next：R147私有transport-only预热进程候选准备中。先验取消／闲置回收及小快照桥，再执行同X224 baseline→candidate原物理；有可靠收益再第二工位反序。当前原物理not_run，不切默认。所有R146云进程终态，生产源码未改。Owner=根Codex；Knowledge=already_covered，原§20分层验收。本轮小TGZ流读，未展开帧或模型。 磁盘仅余约90MiB后，逐字核验四份旧SO101归档并清理重复展开件，释放847544320B；六份独有报告原位保留，逐项恢复入口见R146 cleanup.json。
+
 ## 2026-10-29 — 接续连续X工艺覆盖与完整周期
 
 Previous=R141：原网页两新X请求2/2通过，源码及结果78a9eda已推。当前用户明确优先连续X范围与完整50Hz，按M1a／M1b并行准备、云端串行实测，不恢复定时任务。
