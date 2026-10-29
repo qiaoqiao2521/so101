@@ -1,5 +1,13 @@
 # SO101 产品化进度
 
+## 2026-10-29 — R149释放原请求完整捕获，同输入六例一致
+
+Done：Kaggle separation-capture v1终态；原X224 `58bf9463…` pass，75.92sim／53.166222process wall／62.181517CPU，原246×3、抓放释放脱离回位及worker回收通过。3796完整拍仍90拍>20ms，完整50Hz未过。[R149结果](m1b-process-isolation-results.md#r149原释放请求捕获与六次同输入规划完成)。
+
+同次实际两模型／Snapshot／估计几何捕获完整，原worker一次，205样本、14＋2路径。Thread/spawn三对六例所有返回逐位等价，本次report_json亦相同。spawn总成本反增0.622～1.126s；未并发release guard，不冒充长尾收益。初始化与落盘成本全计；16项入口纯检查及6项独立读回检查通过，实际OS异常取消未测。
+
+Next：R150私有separation-only预热进程候选，原transport不动；完成窄范围审查后左X224原物理A/B，有收益再右反序。默认不切，原安全和90sim/120wall不变。全部已派云任务终态；未启动本地物理，未改生产或其它工作树。原TGZ流读保留，无重复展开件需清理。Owner=根Codex；Knowledge=already_covered，沿用§20分层验收。
+
 ## 2026-10-29 — R147／R148运输进程两位置反序4/4原物理通过
 
 Done：固定95ca4a5及同一私有launcher，左X224原版→候选、右X256候选→原版，两Kaggle v1均终态并独立回读。全部真实抓放、释放、脱离、回位通过，246×3／原1mm／285对保留，自有child exit0／joined且无回退或清理错误。[完整结果](m1b-process-isolation-results.md#r147r148两取料位置反序原物理完成保留局部长尾收益)。

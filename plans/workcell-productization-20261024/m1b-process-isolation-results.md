@@ -88,3 +88,25 @@ P95／P99统一使用nearest-rank `ceil(p*n)`。四回合partial均0，计时不
 下一项只考察separation进程隔离。其request会更新原估计模型的geom_pos／geom_quat／geom_sameframe，并严格核size；需捕获真实完整Snapshot、原冻结模型与补丁，再比较原planner全路径、样本坐标、全部距离和pad vertices。若旧原件缺失，不用邻近帧猜或物体真值补。主release守卫带逐拍ratchet状态，没有同状态证据不能用静态检查代替它的长尾。R147已保存Snapshot全部字段值的可追溯映射和205个完整样本，但缺请求时两个原生模型、实际geom四数组和Plan.report_json原字符串；需要补真实捕获而非重跑无新增知识的对照。当前下一项未运行，原244／246同步扫掠的后台准入证明仍独立缺失。
 
 Knowledge=already_covered；沿用第20节分层验收。两云任务与自有child全部终态，未启本地物理或改其它工位工作树。原件TGZ直接流读，未展开帧／模型，无本轮重复大文件需删除。
+
+## R149：原释放请求捕获与六次同输入规划完成
+
+Kaggle `muqiaoqiao/so101-separation-capture-20261029/1` 已 COMPLETE。仍冻结95ca4a5，原X224物理回合只加观察器；随后用实际捕获的两原生模型及完整Snapshot作Thread/spawn AB、BA、AB。没有改生产源码、原控制请求或默认。观察器在初始化存模型、请求时复制原估计几何补丁、原worker返回时保存Plan引用；完整文件在原cleanup确认后写出，不用物体真值或相邻帧补输入。
+
+原判 `58bf9463-6991-4e51-8d6e-e1185e659968` 为pass：75.92sim、49.610363episode wall、53.166222process wall、62.181517process CPU。原246×3扫掠、抓放、释放、脱离、回位均过，安全／障碍接触0，自由物体、两原worker consumed/joined。释放漂移0.173409mm、脱离后0N、home最大误差0.000102544rad。3796完整拍、partial0、90拍>20ms；P95／P99／max为16.344／29.139／48.541ms，其中hold44、release21慢拍。这是含观察成本的一次原物理，不能与R147／R148拼性能对照。
+
+捕获完整：两模型分别67246696／67247308B，模型／Snapshot身份正确，原worker恰好调用一次，205个样本、14＋2两段路径，错误0且原清理确认。初始化pickle0.765346s、控制内请求捕获41.275µs；原cleanup后pickle0.106618s、gzip写2.257951s。最终原捕获gzip为57980224B；这些开销已保留在进程总成本内。根及独立reader只流读归档JSON，没有在本机加载pickle或模型。
+
+| 对照 | Thread planner／总wall s | spawn planner／总wall s | Thread／spawn总CPU s |
+| --- | ---: | ---: | ---: |
+| AB 1 | 1.064912／2.033237 | 1.036581／2.655584 | 2.850942／3.872990 |
+| BA 2 | 0.646139／1.604892 | 1.055660／2.665082 | 1.632143／3.885861 |
+| AB 3 | 0.594330／1.546967 | 1.027542／2.672622 | 1.570703／3.893889 |
+
+六例均pass，三对全路径、Snapshot、205个样本的关节／距离／pad vertices逐位相同，并与本次原Plan一致；本次report_json文本也相同，允许单列的规划计时差异列表实际为空。spawn实际READY／planning ACK／FINISHED、exit0／joined全部成立，无取消或清理错误。Thread使用原job poll／peek／close但没有controller admission；组件关闭后的拒绝不误记为物理失败或取消验收。
+
+**只确认同输入进程迁移可行，没有证明释放段提速。** spawn总wall分别多0.622347／1.060190／1.125655s；READY约1.510～1.544s，小请求1950B，完整结果241468B，父端解码2.118～4.665ms，join约92～93ms。CPU使用parent＋实际reaped children，不重复加child自报。组件没有并发原release逐拍ratchet守卫；真实释放长尾与完整50Hz仍未通过。
+
+复跑私有目录：`~/.cache/ros2-factory/codebuddy-so101-20261021/round149-separation-capture/`。`capture_launcher.py`接原source／station／output；`component_probe.py --source-dir SRC --capture-root CAPTURE --output OUT`复用同次可信捕获。实际接纳脚本逐字一致，16项纯入口／协议检查及6项独立reader反例通过，不能替代OS异常取消实测。
+
+原件 `experiments/colab-twin/output/separation-capture-20261029/kaggle-v1/so101-evidence.tgz`，独立 `method-readback.json/.md`。原TGZ保留唯一两模型捕获；没有展开帧／模型或本轮重复大文件可清理。下一R150只隔离separation，运输保留原线程，先左X224同配方baseline→candidate真实对照；有收益再右X256反序。同步246认证、当前q准入与原ratchet全保留。Owner=根Codex；来源=根GPT＋原生GPT；Knowledge=already_covered。
