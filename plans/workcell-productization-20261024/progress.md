@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-30 — R162原数组组件完成，接续真实FK成本
+
+Done：Kaggle affine-transfer-component v1终态，固定95ca4a5及R156原预收爪输入。三对原native输出全部精确，转移完整产生246×285下界；全部保留1mm，最小3.130639mm。15项纯／fake检查及实际Fraction抽查通过。[报告、成本与复跑](m1b-camera-paced-results.md#r162距离转移有组件收益真实新请求尚待验证)。
+
+Result：native调用31.371–34.540ms，转移含核对7.108–8.023ms，准备另列14.943–18.103ms；三对完整组件均更快，但完整转移case24.693–27.451ms仍超20ms，不能将context创建当原快环成本。独立流读738条原比较记录、NPZ、源码与逐点结果，complete=true/errors=[]；没有未落盘数组的新重算宣称。没有fresh FK、物理推进或新50Hz成绩；完整50Hz仍未通过。新证据是保守下界，不伪造原numeric／hint。
+
+Next：R163在原云环境复现旧246点，再测试明确标注的合成新姿态；纳入fresh FK、复制、绑定与全部核对成本。未接生产、未放宽margin／全扫／原裁判，不用相邻行替代真实后来请求。连续X开发入口保持，默认不改。Owner=根Codex；Knowledge=already_covered。
+
+Cleanup：R162原云终态、TGZ与独立回读保留。核最终本地NPZ与早期NPZ所有数组字节相等后，仅删除早期重复NPZ，释放86016分配字节；可用空间2015571968→2015657984B。各次不同计时JSON、源码／配置／原证据及在途R163保留。收据output/affine-transfer-component-20261030/cleanup.json。整组终态后才更新文档与Git。
+
 ## 2026-10-30 — R161原物理子段诊断完成
 
 Done：固定95ca4a5及R159双进程／async相机，Kaggle单X224原物理pass，UUID0615808b；75.58sim／90.987089episode wall／93.129066process wall／72.297255CPU秒。原246×3、运输29／脱离2、205状态fresh准入及抓放释放回位／worker回收完整。[实际报告与复跑](m1b-camera-paced-results.md#r161释放段扫描成本明确完整50hz仍未通过)。

@@ -1,4 +1,4 @@
-# R157–R161：原生全扫、异步相机与物理子段诊断
+# R157–R162：原生全扫、异步相机与保守距离转移
 
 日期：2026-10-30。Owner：根 Codex。候选来源：复用 R79 AsyncCamera、R154 双规划进程和 R153 固定节拍；根 GPT 与原生 GPT 工作者完成组合、实际发令观察及独立回读。
 
@@ -109,6 +109,26 @@ Kaggle `muqiaoqiao/so101-physics-guard-diagnostics-20261030/1` 单X224异步回�
 
 下一片R162只验证原R156预收爪的几何距离转移：保留每个新点的实际FK输入，以compiled局部顶点包络计算几何位移上界，再从原距离下界扣除两物体位移；不足原1mm即回原全扫。当前仅组件准备，尚无新物理或性能通过。原R156最小下界3.225805mm提供首片余量，但不代表最终下探或任意新请求。它是新的保守证据类型，不能冒称原native numeric/hints逐位相同，也不能把两种下界的大小关系当真假裁判。
 
+## R162：距离转移有组件收益，真实新请求尚待验证
+
+Kaggle `muqiaoqiao/so101-affine-transfer-component-20261030/1` 已终态。原95ca4a5、原native编译配置、R156首个approach→pickup_preclose的246点／285对保持。新旧姿态取同次真实扫掠的相邻binary64 p/R；未做新请求FK、物理推进或控制器接线。15项纯数组／fake反例通过，不能代替原物理。
+
+候选用29个compiled几何的局部顶点包络，逐乘加向外舍入计算几何位移上界，再从旧距离下界扣除两物体位移。每个点和每对都保留；余量不足、输入或上下文不适用时要求原整次全扫。它产生新的`affine_distance_transfer`证据，不冒称原numeric／hint逐位相同。两个保守下界不必有相同数值或固定大小关系。
+
+三对顺序为native→transfer、transfer→native、native→transfer。原native全部70110对完整输出精确复现；三次转移完整，246个点索引对齐，全部70110对保留原1mm。旧最小下界3.225805mm，新最小下界3.130639mm。4行的348项Fraction分量包络及1140项下界减法核验通过，errors=[]。
+
+| 对 | 原native调用 ms | 原context创建 ms | 原完整case ms | 转移准备 ms | 转移计算 ms | 转移含校验／读回 ms | 转移完整case ms |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 31.371 | 40.004 | 79.269 | 18.103 | 6.414 | 7.108 | 27.451 |
+| 2 | 34.079 | 39.456 | 81.721 | 14.943 | 6.991 | 7.609 | 24.693 |
+| 3 | 34.540 | 38.424 | 81.030 | 16.807 | 7.366 | 8.023 | 27.081 |
+
+创建context不代表原快环每次的成本。当前转移仍有15–18ms准备、约7–8ms计算与核对；三次完整转移case均超过20ms，不能只拿原完整case减去转移内核声称提速。共同输入读回401.177ms、native加载15.673ms、组件入口830.051ms和进程1.023650s另列。此处没有抓放成功或完整50Hz新成绩。
+
+独立流读核实738条native比较记录、原输入未改、handle释放及四份实际执行源码与冻结包一致；NPZ逐点最小值与各次报告一致，errors=[]。档案保存了当时的字节比较结果，没有另存每次native输出和每次转移完整数组，因此本次不冒称重新计算了这些未保存数组。非致命sitecustomize缺wrapt警告保留。
+
+保留这个小候选，下一片R163补真实FK：按原MuJoCo3.15.0、原XML／资产、同geometry及pair顺序先复现旧246点p/R，再测试明确标注的合成小偏移。实际新请求、owner／取消世代／采样器／终点绑定、hint与回退生命周期仍未通过；当前IEEE最近舍入／渐进下溢假设须在接线前核实。不得用同网格相邻行充当后来请求，也不直接消费旧q证书。
+
 ## 原件与复跑
 
 原TGZ位于 `experiments/colab-twin/output/`，Git忽略，未重复展开模型或帧：
@@ -117,6 +137,7 @@ Kaggle `muqiaoqiao/so101-physics-guard-diagnostics-20261030/1` 单X224异步回�
 - `paced-camera-composition-20261030/kaggle-v1/so101-evidence.tgz`：R159左同步→异步。
 - `paced-camera-right-20261030/kaggle-v1/so101-evidence.tgz`：R160右异步→同步。
 - `physics-guard-diagnostics-20261030/kaggle-v1/so101-evidence.tgz`：R161原物理与五类调用原件；同上一级`method-readback.json/.md`为独立读回。
+- `affine-transfer-component-20261030/kaggle-v1/so101-evidence.tgz`：R162云组件、完整逐点结果、NPZ与实际执行源码；上一级`independent-readback.json`为独立读回。
 
 云入口分别为 `muqiaoqiao/so101-input-components-20261030/1`、`muqiaoqiao/so101-paced-camera-composition-20261030/1`、`muqiaoqiao/so101-paced-camera-right-20261030/1`，均已终态。包内保存实际源码、输入、原报告与进程计时。
 
@@ -128,5 +149,6 @@ Kaggle `muqiaoqiao/so101-physics-guard-diagnostics-20261030/1` 单X224异步回�
 - `round160-paced-camera-right/build_kernel.py`：复用R159原包，只换右输入和反序。
 - 两物理目录的 `read_result.py --tgz TGZ --output JSON`：标准库原件回读，同时写MD；右reader保留28点准入。对应纯反例8项／3项通过，不当物理通过。
 - `round161-physics-guard-diagnostics/build_kernel.py`：复用R159，单case诊断；`physics_guard_launcher.py --r159-launcher FILE --source-dir SRC --station FILE --output OUT`固定原async。相邻`read_result.py --tgz TGZ --output JSON`保留单case来源、原裁判、实际发令与逐tick叶段读回，7项反例通过。
+- `round162-affine-transfer/build_kernel.py`：复用R158原bootstrap，引用R156原件；`component_probe.py --tgz TGZ --source-dir SRC --output JSON --native`在云执行三对组件，不推进物理。冻结算法及假设见同目录`affine_transfer.py`与`HANDOFF.md`。
 
 本轮cleanup收据与空间变化见[progress.md](progress.md)及右侧output目录。原失败、最终证据、源码与可恢复输入保留。
