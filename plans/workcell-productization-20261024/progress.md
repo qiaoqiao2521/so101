@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-30 — R161原物理子段诊断完成
+
+Done：固定95ca4a5及R159双进程／async相机，Kaggle单X224原物理pass，UUID0615808b；75.58sim／90.987089episode wall／93.129066process wall／72.297255CPU秒。原246×3、运输29／脱离2、205状态fresh准入及抓放释放回位／worker回收完整。[实际报告与复跑](m1b-camera-paced-results.md#r161释放段扫描成本明确完整50hz仍未通过)。
+
+Finding：3779拍／37790次积分及障碍扫描全部逐tick对齐，原10×2ms、两个早退、lazy扫描、异常与cleanup未改，诊断及独立读回errors=[]。释放364拍中十次积分中位.932ms，force1.619ms、obstacle1.275ms、audit.364ms；14释放慢拍。29个整程慢拍有21个以controller为最大段；max87.787ms位于settle，physics仅4.302ms，具体controller子因未测，不归为GC或积分。
+
+Gate：P95 16.030ms仍有29拍>20ms、core／普通tail75次deadline、发令46次迟到，完整50Hz未过。观察开销全部计入；不同VM／有额外记录，不能与R159拼成性能A/B。8项观察器及7项读回反例通过仅属工具验证。
+
+Next：R162原预收爪affine距离转移组件准备中。fresh FK产生的实际p/R可避开旧理想q箱FK误差缺口，但必须逐运算保守位移上界与原1mm、不足回原全扫；同原几何/逐点上下文不可省。当前未组件实测／未接控制器／未新物理，不宣称50Hz修复。连续X单字段开发入口及四点证据保持，默认不改。Owner=根Codex；Knowledge=already_covered。
+
+Cleanup：R161已终态，完整TGZ回收并流读，39.6MB观察原JSON未展开，原失败／配置／输入／源码与报告保留。检查本轮自有bytecode无待删件，实际释放0B，可用空间前后均2053070848B；收据output/physics-guard-diagnostics-20261030/kaggle-v1/cleanup.json。R162在途准备不清理。不触Mint、FishBot、后台渲染或实体。
+
 ## 2026-10-30 — R157–R160完成：异步相机两位置4/4，完整50Hz未过
 
 Done：固定95ca4a5，左X224同步→异步、右X256异步→同步，Kaggle两组v1终态。四例原抓放、释放脱离回位、246×3／transport29或28／205样本当前姿态准入及worker清理全过。实际data.ctrl写入前后时钟逐拍对齐原周期与command，source/错误/缺件检查完整。[结果与复跑](m1b-camera-paced-results.md)。

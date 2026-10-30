@@ -1,4 +1,4 @@
-# R157–R160：原生全扫回放与异步相机实际对照
+# R157–R161：原生全扫、异步相机与物理子段诊断
 
 日期：2026-10-30。Owner：根 Codex。候选来源：复用 R79 AsyncCamera、R154 双规划进程和 R153 固定节拍；根 GPT 与原生 GPT 工作者完成组合、实际发令观察及独立回读。
 
@@ -79,11 +79,35 @@ X224 同步→异步、X256 异步→同步，两 Kaggle 实例内分别对照�
 
 ## 下一步与边界
 
-两异步回合仍有同步全扫／准入慢拍。左释放段另有9拍慢：部分physics_and_guards达9–13ms，与controller相加后超时。下一项 R161 只细分原10次物理推进、接触力、release audit、障碍扫描与末次forward，先查真实成本；当前仅私有准备，尚未运行。
+两异步回合仍有同步全扫／准入慢拍。左释放段另有9拍慢：部分physics_and_guards达9–13ms，与controller相加后超时。R161随后已完成原10次物理推进、接触力、release audit、障碍扫描与末次forward的细分，实际结果如下；不能将其观察开销与前两轮混作性能A/B。
 
 旧R132异步全扫仍欠实际binary64 FK保守误差界、当前请求网格／终点与生命周期覆盖。R143已提供小漂移实测，不用相同物理重复采集；离散差值不能替代连续偏差箱证明，也不能把原246次fresh checker调用改写为“已执行”。保持原同步认证，不降低1mm阈值。
 
 Knowledge=already_covered：沿用 Wiki《ROS2 与 FishBot》§20的分层验收。新实测和失败留本计划。
+
+## R161：释放段扫描成本明确，完整50Hz仍未通过
+
+Kaggle `muqiaoqiao/so101-physics-guard-diagnostics-20261030/1` 单X224异步回合已终态。固定95ca4a5及R159七份原执行文件，只观察主线程五类调用；原10次2ms推进、两个提前退出、lazy障碍扫描、释放记录和末forward顺序保留。没有修改全局MuJoCo函数、控制器、评分器、阈值或预算。8项观察器与7项读回纯检查通过；它们不代替原物理验收。
+
+原UUID `0615808b-d516-428b-a17e-64cdc946f803` **pass**。75.58sim／90.987089episode wall／93.129066process wall／72.297255CPU秒；真实抬升40.964419mm、持物29.96s、静稳7.54s，释放漂移.172246mm、脱离后力0N、回位误差.000102544rad。原246×3／运输准入29／脱离弦2／205保存状态fresh准入全过，无障碍接触、安全停机、焊接或mocap附着。运输、释放进程与相机均正常回收；未声称异常native硬取消保证。
+
+运输／释放规划分别1.314716／1.132903s；预热1.725501／2.250151s。成本在原进程wall/CPU内，不再重复相加。
+
+3779拍全部对齐原周期、实际command和观察器；37790次mj_step及障碍扫描、7490次force/audit、3779次末forward完整，未遇提前退出或原异常。原观察器errors=[]，读回errors=[]。**29拍>20ms，P95 16.030250ms、最大87.787303ms；core与普通tail均75次deadline违约，实际发令46次确定迟到。完整50Hz未过。**
+
+| 释放段每拍，364拍 | 中位wall ms | 最大wall ms |
+|---|---:|---:|
+| 10次mj_step合计 | .932031 | 3.710224 |
+| robot_target_force合计 | 1.619086 | 4.778138 |
+| release_audit.update合计 | .364409 | .767146 |
+| 障碍接触扫描合计 | 1.274863 | 5.130250 |
+| 末次mj_forward | .083012 | .322792 |
+
+以上为互不重叠调用，不能再与父段相加。释放14慢拍；29个整程慢拍中21拍最大原子段为controller、8拍为physics_and_guards。最大87.787ms在settle，controller80.090ms，physics仅4.302ms；本次未继续细拆controller，不能断言GC、日志或某个几何算子是该尖峰根因。
+
+释放tick3335／3336／3337外层残余wall为6.138／5.580／9.047ms，thread CPU仅.607／.594／.616ms。残余包含原分支、参数构造、记录及观察器本身，不能当纯Python计算量。全部观察成本留在原完整拍内，没有扣除或包装成提速；39.6MB原JSON仅在TGZ内保存，未展开副本。
+
+下一片R162只验证原R156预收爪的几何距离转移：保留每个新点的实际FK输入，以compiled局部顶点包络计算几何位移上界，再从原距离下界扣除两物体位移；不足原1mm即回原全扫。当前仅组件准备，尚无新物理或性能通过。原R156最小下界3.225805mm提供首片余量，但不代表最终下探或任意新请求。它是新的保守证据类型，不能冒称原native numeric/hints逐位相同，也不能把两种下界的大小关系当真假裁判。
 
 ## 原件与复跑
 
@@ -92,6 +116,7 @@ Knowledge=already_covered：沿用 Wiki《ROS2 与 FishBot》§20的分层验收
 - `input-components-20261030/kaggle-v1/so101-evidence.tgz`：R157／R158组件，包括像素失败。
 - `paced-camera-composition-20261030/kaggle-v1/so101-evidence.tgz`：R159左同步→异步。
 - `paced-camera-right-20261030/kaggle-v1/so101-evidence.tgz`：R160右异步→同步。
+- `physics-guard-diagnostics-20261030/kaggle-v1/so101-evidence.tgz`：R161原物理与五类调用原件；同上一级`method-readback.json/.md`为独立读回。
 
 云入口分别为 `muqiaoqiao/so101-input-components-20261030/1`、`muqiaoqiao/so101-paced-camera-composition-20261030/1`、`muqiaoqiao/so101-paced-camera-right-20261030/1`，均已终态。包内保存实际源码、输入、原报告与进程计时。
 
@@ -102,5 +127,6 @@ Knowledge=already_covered：沿用 Wiki《ROS2 与 FishBot》§20的分层验收
 - `round159-paced-camera-composition/launcher.py --source-dir SRC --station FILE --output OUT --camera sync|async`：原评测薄入口。相邻冻结依赖由 `build_kernel.py` 完整打包，不另造执行器。
 - `round160-paced-camera-right/build_kernel.py`：复用R159原包，只换右输入和反序。
 - 两物理目录的 `read_result.py --tgz TGZ --output JSON`：标准库原件回读，同时写MD；右reader保留28点准入。对应纯反例8项／3项通过，不当物理通过。
+- `round161-physics-guard-diagnostics/build_kernel.py`：复用R159，单case诊断；`physics_guard_launcher.py --r159-launcher FILE --source-dir SRC --station FILE --output OUT`固定原async。相邻`read_result.py --tgz TGZ --output JSON`保留单case来源、原裁判、实际发令与逐tick叶段读回，7项反例通过。
 
 本轮cleanup收据与空间变化见[progress.md](progress.md)及右侧output目录。原失败、最终证据、源码与可恢复输入保留。
