@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-10-30 — R163真实FK组件完成，准备原预收爪对照
+
+Done：Kaggle fresh-fk-transfer v1终态，原MuJoCo3.15.0／XML／compiled几何／旧246点pR及zero原native输出精确复现。11组预声明合成小偏移均有246×285完整新结果，原1mm全过，最小3.225761mm；fenv有效，native owner回收，errors=[]。[原结果与复跑](m1b-camera-paced-results.md#r163真实fk与合成小偏移组件通过)。
+
+Result：同组fresh FK＋转移12.477–16.231ms，原frame链加FK46.844–71.204ms；前者仍未计整个controller／physics，不能勾完整50Hz。一次准备24.880ms、模型建立577.534ms和进程2.671s单列。独立回读11NPZ及源／XML／flags／逐点报告，complete=true/errors=[]，原native与转移各771210对齐全。非本地物理／非真实后来漂移／非连续域保证；9项pure/mock测试不当物理成绩。
+
+Next：R164私有适配只处理approach→pickup_preclose，激活前准备nominal旧表，当前原sampler/fresh FK与全部守卫保留，replan或覆盖不足回原全扫；未启动新物理。另已定位R161最大拍仅2点普通settle，不是246闭爪；两侧共用调用位置计时。默认、最终下探与原评分不变。Owner=根Codex；Knowledge=already_covered。
+
+Cleanup：原TGZ流读、不展开模型／帧；本轮无重复数组或自有bytecode待删，实际释放0B。源码、输入、11份NPZ与原失败证据保留；R164在途文件不动。空间前后及保留项见output/fresh-fk-transfer-20261030/cleanup.json。云终态且独立回读完成后串行提交。
+
 ## 2026-10-30 — R162原数组组件完成，接续真实FK成本
 
 Done：Kaggle affine-transfer-component v1终态，固定95ca4a5及R156原预收爪输入。三对原native输出全部精确，转移完整产生246×285下界；全部保留1mm，最小3.130639mm。15项纯／fake检查及实际Fraction抽查通过。[报告、成本与复跑](m1b-camera-paced-results.md#r162距离转移有组件收益真实新请求尚待验证)。

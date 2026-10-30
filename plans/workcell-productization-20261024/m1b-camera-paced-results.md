@@ -1,4 +1,4 @@
-# R157–R162：原生全扫、异步相机与保守距离转移
+# R157–R163：原生全扫、异步相机与保守距离转移
 
 日期：2026-10-30。Owner：根 Codex。候选来源：复用 R79 AsyncCamera、R154 双规划进程和 R153 固定节拍；根 GPT 与原生 GPT 工作者完成组合、实际发令观察及独立回读。
 
@@ -129,6 +129,28 @@ Kaggle `muqiaoqiao/so101-affine-transfer-component-20261030/1` 已终态。原95
 
 保留这个小候选，下一片R163补真实FK：按原MuJoCo3.15.0、原XML／资产、同geometry及pair顺序先复现旧246点p/R，再测试明确标注的合成小偏移。实际新请求、owner／取消世代／采样器／终点绑定、hint与回退生命周期仍未通过；当前IEEE最近舍入／渐进下溢假设须在接线前核实。不得用同网格相邻行充当后来请求，也不直接消费旧q证书。
 
+## R163：真实FK与合成小偏移组件通过
+
+Kaggle `muqiaoqiao/so101-fresh-fk-transfer-20261030/1` 复用原XML、原资产路径和MuJoCo3.15.0。29个compiled几何、IDs及285对顺序逐字节一致；原246点的p/R全部精确复现。zero组通过原完整numeric／flags／hint／direction比较，随后才运行五个臂轴各±1e−7rad的十组合成偏移；夹爪与原网格保持。不是后来实测漂移、任意关节盒或连续X域证明。
+
+11组每组246×285均通过原native和转移1mm检查，转移最小下界3.225761mm；原同线程算术环境有效，RN、FTZ=false、DAZ=false、渐进下溢保留。全部Fraction抽查通过，errors=[]，native owner已关闭。9项pure/mock检查仅验证适配，原模型／native／FK实际运行均在云端。
+
+独立流读确认四份执行源／20506B原XML／native flags与冻结输入一致；11份NPZ全体有限、shape／dtype正确，逐轴偏移和jaw保持准确。每条逐点最小值与数组一致，原native与转移各771210对完整。此读回不重新加载模型；旧geometry/pR/zero输出一致来自本次云实际比较记录。
+
+| 成本 | 实测 |
+|---|---:|
+| 一次性模型＋checker建立 | 577.534ms |
+| 一次性原数组／顶点包络预备 | 24.880ms |
+| 一次性旧表绑定副本 | .131ms |
+| 每组fresh FK含限位检查／复制 | 5.869–7.673ms |
+| 每组转移含验证／结果整理 | 6.046–9.611ms |
+| 同组fresh FK＋转移相加 | 12.477–16.231ms |
+| 同组fresh FK＋原bound-frame链相加 | 46.844–71.204ms |
+
+两项同组互不重叠计时之和只是组件估算；不是一次已测的控制周期。原bound-frame链包含Python复制与记录，不能当R162纯C调用。Fraction审计／压缩落盘另在每case总wall内；组件入口2.432s、完整进程2.671s。未剔除准备成本，也不宣称完整50Hz通过。
+
+下一片仅把预收爪候选接到既有控制器：激活前用当前工位的nominal approach准备旧表，当前请求仍用原sampler和全部fresh FK，覆盖不足执行原全扫。原当前SweepBinding、异常与取消、最终下探闭爪及其它阶段保持。同步在原版／候选两侧观察普通settle调用，以定位R161的2点扫掠尖峰，不把87.8ms误记成246点闭爪阻塞。
+
 ## 原件与复跑
 
 原TGZ位于 `experiments/colab-twin/output/`，Git忽略，未重复展开模型或帧：
@@ -138,6 +160,7 @@ Kaggle `muqiaoqiao/so101-affine-transfer-component-20261030/1` 已终态。原95
 - `paced-camera-right-20261030/kaggle-v1/so101-evidence.tgz`：R160右异步→同步。
 - `physics-guard-diagnostics-20261030/kaggle-v1/so101-evidence.tgz`：R161原物理与五类调用原件；同上一级`method-readback.json/.md`为独立读回。
 - `affine-transfer-component-20261030/kaggle-v1/so101-evidence.tgz`：R162云组件、完整逐点结果、NPZ与实际执行源码；上一级`independent-readback.json`为独立读回。
+- `fresh-fk-transfer-20261030/kaggle-v1/so101-evidence.tgz`：R163原模型与11份新states／p/R／native下界／转移下界完整NPZ、报告、执行源码；上一级`independent-readback.json`为独立回读。
 
 云入口分别为 `muqiaoqiao/so101-input-components-20261030/1`、`muqiaoqiao/so101-paced-camera-composition-20261030/1`、`muqiaoqiao/so101-paced-camera-right-20261030/1`，均已终态。包内保存实际源码、输入、原报告与进程计时。
 
@@ -150,5 +173,6 @@ Kaggle `muqiaoqiao/so101-affine-transfer-component-20261030/1` 已终态。原95
 - 两物理目录的 `read_result.py --tgz TGZ --output JSON`：标准库原件回读，同时写MD；右reader保留28点准入。对应纯反例8项／3项通过，不当物理通过。
 - `round161-physics-guard-diagnostics/build_kernel.py`：复用R159，单case诊断；`physics_guard_launcher.py --r159-launcher FILE --source-dir SRC --station FILE --output OUT`固定原async。相邻`read_result.py --tgz TGZ --output JSON`保留单case来源、原裁判、实际发令与逐tick叶段读回，7项反例通过。
 - `round162-affine-transfer/build_kernel.py`：复用R158原bootstrap，引用R156原件；`component_probe.py --tgz TGZ --source-dir SRC --output JSON --native`在云执行三对组件，不推进物理。冻结算法及假设见同目录`affine_transfer.py`与`HANDOFF.md`。
+- `round163-fresh-fk-transfer/build_kernel.py`：同bootstrap及R156原件；`fresh_fk_probe.py --source-dir SRC --tgz TGZ --output JSON`仅在云执行真实FK/native组件。`--inspect-only`只读XML与数组，不建模型。
 
 本轮cleanup收据与空间变化见[progress.md](progress.md)及右侧output目录。原失败、最终证据、源码与可恢复输入保留。
