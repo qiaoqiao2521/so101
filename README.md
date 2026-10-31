@@ -2,6 +2,16 @@
 
 一个机械臂一个项目：本机最新跟随器、ROS/MoveIt/仿真、Java MES 与场景工具。
 
+## 唯一仓库入口
+
+SO101 统一在 [qiaoqiao2521/so101](https://github.com/qiaoqiao2521/so101) 开发与交付，默认入口为 `master`。已验证的仿真成果合入这里，实验分支继续保留用途与验收边界。
+
+- `experiments/colab-twin/`：MuJoCo 抓放、IK/OMPL、视觉定位和工位执行器；当前进展见 [项目状态](PROJECT.md) 与 [工位产品化计划](plans/workcell-productization-20261024/task_plan.md)。
+- `mint_follower_demo/`：轻量跟随器终端；本地尚未提交的改动需独立核验，不因仓库整理自动发布。
+- `workspaces/so101_ws/`：已收纳的 ROS/MoveIt、Java MES 与场景资产。
+
+旧仓库 `so101_ws`、`so101-ros2-arm` 已归档，仅作历史查询，不再作为开发远端。未重新导入旧快照；FishBot 和资料导航站仍各自独立。本地多个 Git 工作树共用本仓库，不是多个项目。已否决的 `codex/multilink-safety-20261001` 继续独立保留，不合入正式入口。
+
 ## 当前方向：选择大于努力
 
 先体验成熟预训练模型与可运行应用，再围绕具体场景做适配。每轮优先交付用户能亲手操作、改变输入并看到结果的演示。训练和底层优化必须解决已经确认的应用缺口，不能代替目标、期望和落地效果的选择。
