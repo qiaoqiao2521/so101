@@ -1,5 +1,5 @@
 {
-  "status": "publication_authorized_cleaned_source",
+  "status": "published_in_public_master",
   "base_repository": "qiaoqiao2521/so101",
   "base_commit": "ec3d45a34275ae099989b03c1d912a9ad95ec035",
   "requires_private_source_visibility_decision": false,
@@ -1198,5 +1198,11 @@
   "publication_authorization": {
     "date": "2026-11-01",
     "scope": "User approved publishing cleaned retained source into public qiaoqiao2521/so101; raw recordings, calibration, credentials, private operations and backup bundles remain private."
+  },
+  "publication": {
+    "date": "2026-11-01",
+    "commit": "78991ce7c4cfe1aee5936721c2c6d83354214c51",
+    "repository": "qiaoqiao2521/so101",
+    "site_release": "so101-78991ce-20261101"
   }
 }

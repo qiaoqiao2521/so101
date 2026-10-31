@@ -33,3 +33,13 @@ ROS选定两包 `colcon build --packages-select so101_bringup yolov8_detector` �
 
 ## 2026-11-01 — 发布授权与远端核对
 已核qiaoqiao2521/238822818身份及so101公开、master默认。远端master仍为ec3d45a，当前整合分支仅领先2提交，可快进，无需改写历史。本轮113路径凭据特征复核未发现Token／私钥；私有来源保留授权写入来源清单。此前构建与测试对应执行源码未改，不机械重跑物理或ROS。三个指定旧库的备份缺口和部署依赖由独立审查接续，其他仓库不在删除范围。
+
+
+## 2026-11-01 — 公开发布与资料站切换完成
+公开 `master`、原仿真分支及整合分支已原子快进至78991ce，GitHub API独立回读一致。113个整合文件已公开，保留来源，原始录制／标定／备份未进入主库。
+
+资料站从主仓 apps/resources 重建，24条内容、13页面构建及站内链接检查通过。新release为so101-78991ce-20261101，源站current已原子切换；原b12edee-20261018版本保留回滚。公网浏览器读取deployment.json确认sourceRepository=qiaoqiao2521/so101、sourcePath=apps/resources、sourceCommit=78991ce。根路径／SO101／FishBot／交付／来源／Pagefind及原独立demos/gansu-school均由源站返回200；没有覆盖现网Nginx或修改CF/DNS/Tunnel。切换前源站SSH一度超时，重查确认仍是旧版后才重试；urllib公网403不当作站点失败，隔离浏览器实际可访问。
+
+三旧库refs与bundle一致，无新提交。GitHub Issues/PR/Releases/Tags/Actions artifacts/Deployments/Milestones/runs/Hooks/workflows均为0，每库10个labels已另存。Wiki认证Git128且公网wiki重定向主页，未发现当前可访问Wiki，原始响应留存。SO-ARM100固定2ca36d9完整快照87,257,688bytes已保全，229文件逐路径／blob／大小一致，含全部CAD与图片，补齐原gitlink文件树；不冒充整个上游Git历史。
+
+剩余真实阻塞：当前gh OAuth只有repo/workflow等scope，没有delete_repo；日常Chrome未登录GitHub。已启动官方CLI设备授权等待用户授予删仓技术权限；不在源码记录设备码或凭据。三个旧仓尚未删除，授权后直接完成，不再次询问删除意图。
