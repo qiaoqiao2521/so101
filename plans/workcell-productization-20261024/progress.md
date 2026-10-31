@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-31 — 按用户决定停止R164，转阶段准入与产品收口
+
+Current：保留现有栈，R164周期内A/B取消，未发云；27项纯/mock和私有源码保留，仅为未采用候选，不当物理交付。原完整50Hz失败不改写，新增云端软实时profile另列进程CPU全部<20ms／wall P99<20ms及主线程CPU、准备和端到端成本。
+
+Done：核已有GC延期、内存日志及相机freeze语义；两位原生GPT窄审确认普通settle大CPU尖峰未定因。外部agent-link一次45s超时后降级，没有再卡额度／通道。当前无拥有的在途物理评测，不触Mint／实体／其他聊天。
+
+Next：R165复用同R159同步相机与双规划进程，仅切已有defer_cyclic_gc，并记录同hook三时钟及settle子调用；随后补17点X工程面板。阶段预收爪复用原worker前，先明确当前q/jaw与nominal证据覆盖，不能只改计时分类或用2点桥代替整段jaw。20＋20、恢复均尚未新增通过。
+
+Prepared：R165私有GC入口12项pure/mock通过，新增process计时已核原EpisodeTiming／paced继承链，原perf/thread和scorer保持。17点输入通过原normalize_points；builder保留原runner／runtime／95ca4a5／station及七份执行源。计划单VM先automatic→deferred两原物理，再离线X17组件；当前尚未提交，不计通过。私有复跑前缀round165-staged-gc-20261031；R164另留STOP状态文件。
+
+Owner=根Codex；Knowledge=already_covered，沿用Wiki§20分层验收，用户选择与证据修正在本计划和D007记录。
+
 ## 2026-10-30 — R163真实FK组件完成，准备原预收爪对照
 
 Done：Kaggle fresh-fk-transfer v1终态，原MuJoCo3.15.0／XML／compiled几何／旧246点pR及zero原native输出精确复现。11组预声明合成小偏移均有246×285完整新结果，原1mm全过，最小3.225761mm；fenv有效，native owner回收，errors=[]。[原结果与复跑](m1b-camera-paced-results.md#r163真实fk与合成小偏移组件通过)。
