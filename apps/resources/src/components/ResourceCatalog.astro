@@ -1,0 +1,153 @@
+---
+import resources from '../data/resources.json';
+
+const projects = ['SO101', 'FishBot', '通用'];
+const categories = ['入门', '硬件', '软件环境', '模型与仿真', '学习工具'];
+---
+
+<section class="resource-catalog" id="resources" aria-labelledby="resources-title" data-resource-catalog>
+  <div class="catalog-heading">
+    <div>
+      <h2 id="resources-title">资料目录</h2>
+      <p>按项目和主题找资料。搜索完整站内指南，请使用顶部搜索。</p>
+    </div>
+    <a href="/sources/" class="catalog-source-link">来源说明</a>
+  </div>
+
+  <form class="catalog-filters" role="search" aria-label="筛选资料目录" data-resource-filters hidden>
+    <div class="catalog-search">
+      <label for="resource-query">搜索资料</label>
+      <div class="catalog-search__field">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+        <input id="resource-query" name="q" type="search" placeholder="搜索名称、用途或关键词" autocomplete="off" />
+      </div>
+    </div>
+    <div class="catalog-select">
+      <label for="resource-category">资料主题</label>
+      <select id="resource-category" name="category">
+        <option value="">全部主题</option>
+        {categories.map((category) => <option value={category}>{category}</option>)}
+      </select>
+    </div>
+    <fieldset class="catalog-projects">
+      <legend>机器人项目</legend>
+      <div class="catalog-projects__choices">
+        {['', ...projects].map((project) => (
+          <label class="project-choice">
+            <input type="radio" name="project" value={project} checked={project === ''} />
+            <span>{project || '全部'}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  </form>
+
+  <noscript><p class="catalog-noscript">以下展示全部资料。启用 JavaScript 后可按关键词、项目和主题筛选。</p></noscript>
+
+  <div class="catalog-results-bar">
+    <p role="status" aria-live="polite" aria-atomic="true" data-resource-count>共 {resources.length} 项资料</p>
+    <button class="catalog-reset" type="button" data-resource-reset hidden>重置筛选</button>
+  </div>
+
+  <ul class="resource-list" aria-label="资料列表">
+    {resources.map((resource) => (
+      <li
+        class="resource-item"
+        data-resource-item
+        data-project={resource.project}
+        data-category={resource.category}
+        data-search={[resource.title, resource.description, resource.project, resource.category, resource.format, resource.level, resource.source, ...resource.tags].join(' ').toLocaleLowerCase('zh-CN')}
+      >
+        <article class="resource-row">
+          <div class="resource-row__main">
+            <h3><a href={resource.url}>{resource.title}<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 3H3v10h10v-3M8 3h5v5m0-5L7 9" /></svg><span class="sr-only">（外部资源）</span></a></h3>
+            <p>{resource.description}</p>
+            <ul class="resource-tags" aria-label="资料标签">
+              <li class:list={['resource-project', `resource-project--${resource.project.toLowerCase()}`]}>{resource.project}</li>
+              <li>{resource.category}</li>
+              <li>{resource.format}</li>
+              <li>{resource.level}</li>
+            </ul>
+          </div>
+          <div class="resource-row__source">
+            <span>{resource.source}</span>
+            <small>核对于 <time datetime={resource.checkedAt}>{resource.checkedAt}</time></small>
+          </div>
+        </article>
+      </li>
+    ))}
+  </ul>
+
+  <div class="catalog-empty" data-resource-empty hidden>
+    <p>没有找到符合条件的资料</p>
+    <span>换一个关键词，或重置筛选查看全部资料。</span>
+    <button type="button" data-resource-empty-reset>查看全部资料</button>
+  </div>
+</section>
+
+<script>
+  const catalog = document.querySelector<HTMLElement>('[data-resource-catalog]');
+  if (catalog) {
+    const form = catalog.querySelector<HTMLFormElement>('[data-resource-filters]')!;
+    const query = form.querySelector<HTMLInputElement>('[name="q"]')!;
+    const category = form.querySelector<HTMLSelectElement>('[name="category"]')!;
+    const projectChoices = Array.from(form.querySelectorAll<HTMLInputElement>('[name="project"]'));
+    const rows = Array.from(catalog.querySelectorAll<HTMLElement>('[data-resource-item]'));
+    const count = catalog.querySelector<HTMLElement>('[data-resource-count]')!;
+    const reset = catalog.querySelector<HTMLButtonElement>('[data-resource-reset]')!;
+    const empty = catalog.querySelector<HTMLElement>('[data-resource-empty]')!;
+
+    function filterResources(updateUrl = true) {
+      const keywords = query.value.trim().toLocaleLowerCase('zh-CN').split(/\s+/).filter(Boolean);
+      const project = projectChoices.find((choice) => choice.checked)?.value || '';
+      let matches = 0;
+      for (const row of rows) {
+        const visible = (!project || row.dataset.project === project)
+          && (!category.value || row.dataset.category === category.value)
+          && keywords.every((keyword) => row.dataset.search?.includes(keyword));
+        row.hidden = !visible;
+        if (visible) matches += 1;
+      }
+      const active = Boolean(query.value.trim() || project || category.value);
+      count.textContent = active ? `找到 ${matches} 项资料，共 ${rows.length} 项` : `共 ${rows.length} 项资料`;
+      reset.hidden = !active;
+      empty.hidden = matches !== 0;
+
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        for (const [key, value] of Object.entries({ q: query.value.trim(), project, category: category.value })) {
+          if (value) url.searchParams.set(key, value);
+          else url.searchParams.delete(key);
+        }
+        window.history.replaceState(null, '', url);
+      }
+    }
+
+    function restoreFilters() {
+      const params = new URLSearchParams(window.location.search);
+      query.value = params.get('q') || '';
+      const savedCategory = params.get('category') || '';
+      category.value = Array.from(category.options).some((option) => option.value === savedCategory) ? savedCategory : '';
+      const savedProject = params.get('project') || '';
+      const selectedProject = projectChoices.some((choice) => choice.value === savedProject) ? savedProject : '';
+      for (const choice of projectChoices) choice.checked = choice.value === selectedProject;
+      filterResources(false);
+    }
+
+    function resetFilters() {
+      form.reset();
+      filterResources();
+      query.focus({ preventScroll: true });
+    }
+
+    form.hidden = false;
+    restoreFilters();
+    form.addEventListener('submit', (event) => { event.preventDefault(); filterResources(); });
+    query.addEventListener('input', () => filterResources());
+    category.addEventListener('change', () => filterResources());
+    for (const choice of projectChoices) choice.addEventListener('change', () => filterResources());
+    reset.addEventListener('click', resetFilters);
+    catalog.querySelector('[data-resource-empty-reset]')?.addEventListener('click', resetFilters);
+    window.addEventListener('popstate', restoreFilters);
+  }
+</script>

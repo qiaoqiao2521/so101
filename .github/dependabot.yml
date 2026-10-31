@@ -20,7 +20,7 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "/workspaces/so101_ws/mes_frontend"
-      - "/workspaces/so101_ws/tools/robotic-arm-sequencer"
+      - "/apps/resources"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -38,7 +38,6 @@ updates:
   - package-ecosystem: "pip"
     directories:
       - "/mint_follower_demo"
-      - "/workspaces/so101_ws/tools/win7_follower_demo"
       - "/experiments/colab-twin"
     schedule:
       interval: "weekly"

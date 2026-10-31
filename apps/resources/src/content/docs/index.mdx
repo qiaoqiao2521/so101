@@ -1,0 +1,38 @@
+---
+title: 沐桥机器人资料库
+description: 从装配到仿真，为 SO101 与 FishBot 学习者整理可追溯的官方资源、学习路线和资料交付说明。
+template: splash
+hero:
+  title: 沐桥机器人资料库
+  tagline: 从装配到仿真，把下一步找清楚。
+  image:
+    html: '<img src="/robot-study.svg" width="460" height="230" alt="SO101 机械臂与 FishBot 移动机器人的简洁线稿" />'
+---
+
+import ProjectPaths from '../../components/ProjectPaths.astro';
+import ResourceCatalog from '../../components/ResourceCatalog.astro';
+
+<div className="home-content">
+  <p className="home-intro">先选一条学习路线，或直接查找教程、源码与模型。公开资源链接直达原始来源。</p>
+  <ProjectPaths />
+  <ResourceCatalog />
+  <aside className="home-help" aria-label="使用说明">
+    <div>
+      <h2>第一次接触机器人？</h2>
+      <p>从设备、软件和学习目标开始，先分清每一步要解决什么。</p>
+      <a href="/start-here/">阅读入门说明</a>
+    </div>
+    <div>
+      <h2>核对收到的资料</h2>
+      <p>了解公开链接、整理说明与单独交付内容的区别。</p>
+      <a href="/delivery/">查看资料交付说明</a>
+    </div>
+  </aside>
+  <footer className="home-footer">
+    <p>资料会随上游项目更新。请先核对版本、设备与适用条件。</p>
+    <nav aria-label="资料库说明">
+      <a href="/updates/">更新记录</a>
+      <a href="/sources/">来源与使用边界</a>
+    </nav>
+  </footer>
+</div>

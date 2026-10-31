@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+import importlib.util
+import unittest
+from pathlib import Path
+
+
+MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "so101_leader_input_bridge.py"
+
+
+def load_module():
+    spec = importlib.util.spec_from_file_location("so101_leader_input_bridge", MODULE_PATH)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+class So101LeaderInputBridgeTests(unittest.TestCase):
+    def test_normalize_joint_names_falls_back_to_default_order(self):
+        module = load_module()
+        self.assertEqual(module.DEFAULT_LEADER_JOINT_NAMES, module.normalize_joint_names([]))
+
+    def test_classify_bridge_state_marks_uncalibrated_as_calibrating(self):
+        module = load_module()
+        reading = module.LeaderReading(
+            joint_names=list(module.DEFAULT_LEADER_JOINT_NAMES),
+            positions_rad=[0.0] * len(module.DEFAULT_LEADER_JOINT_NAMES),
+            connected=True,
+            calibrated=False,
+        )
+        state, detail = module.classify_bridge_state(
+            reading,
+            expected_joint_names=module.DEFAULT_LEADER_JOINT_NAMES,
+        )
+        self.assertEqual("CALIBRATING", state)
+        self.assertIn("标定", detail)
+
+    def test_classify_bridge_state_marks_latency_spike_as_degraded(self):
+        module = load_module()
+        reading = module.LeaderReading(
+            joint_names=list(module.DEFAULT_LEADER_JOINT_NAMES),
+            positions_rad=[0.0] * len(module.DEFAULT_LEADER_JOINT_NAMES),
+            connected=True,
+            calibrated=True,
+            read_latency_ms=500.0,
+        )
+        state, detail = module.classify_bridge_state(
+            reading,
+            expected_joint_names=module.DEFAULT_LEADER_JOINT_NAMES,
+            degraded_latency_ms=250.0,
+        )
+        self.assertEqual("DEGRADED", state)
+        self.assertIn("延迟", detail)
+
+    def test_build_status_payload_keeps_ready_state_fields(self):
+        module = load_module()
+        payload = module.build_status_payload(
+            state="READY",
+            connected=True,
+            calibrated=True,
+            publishing=True,
+            hz=29.8,
+            last_frame_age_ms=14.2,
+            last_error="",
+            device_label="SO101 leader",
+            stamp_text="2026-04-07 15:30:00 +0800",
+            detail="leader 输入稳定可用",
+        )
+        self.assertTrue(payload["connected"])
+        self.assertTrue(payload["calibrated"])
+        self.assertEqual("READY", payload["state"])
+        self.assertEqual("SO101 leader", payload["deviceLabel"])
+
+    def test_create_adapter_mock_returns_mock_adapter(self):
+        module = load_module()
+        adapter = module.create_leader_adapter(
+            driver_backend="mock",
+            leader_type="so101_leader",
+            port="",
+            calibration_path="",
+            joint_names=module.DEFAULT_LEADER_JOINT_NAMES,
+        )
+        self.assertEqual("MockLeaderAdapter", type(adapter).__name__)
+
+
+if __name__ == "__main__":
+    unittest.main()

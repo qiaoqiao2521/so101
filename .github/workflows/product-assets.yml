@@ -1,0 +1,56 @@
+name: Product assets
+
+on:
+  pull_request:
+    paths:
+      - "workspaces/so101_ws/mes_frontend/**"
+      - "apps/resources/**"
+      - ".github/workflows/product-assets.yml"
+  push:
+    branches: ["master"]
+    paths:
+      - "workspaces/so101_ws/mes_frontend/**"
+      - "apps/resources/**"
+      - ".github/workflows/product-assets.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: workspaces/so101_ws/mes_frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  resources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/resources
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run check:content
+      - run: npm run build
+      - run: npm run check:build

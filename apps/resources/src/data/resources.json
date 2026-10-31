@@ -1,0 +1,410 @@
+[
+  {
+    "id": "so101-hardware",
+    "title": "SO101 硬件总入口",
+    "description": "查看物料清单、打印说明和官方扩展件。先分清 SO100、SO101，以及主臂与从臂。",
+    "project": "SO101",
+    "category": "硬件",
+    "format": "文档",
+    "level": "入门",
+    "url": "https://github.com/TheRobotStudio/SO-ARM100",
+    "source": "The Robot Studio",
+    "tags": [
+      "SO101",
+      "BOM",
+      "打印"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "so101-assembly",
+    "title": "SO101 装配与校准",
+    "description": "Hugging Face 官方分步指南，包含电机配置、机械装配和校准。按自己的控制板与电机版本核对。",
+    "project": "SO101",
+    "category": "入门",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://huggingface.co/docs/lerobot/so101",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "装配",
+      "校准",
+      "Feetech"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "so101-stl",
+    "title": "SO101 STL 打印零件",
+    "description": "官方 SO101 网格文件目录。分清单独零件、整板排版与装配参考模型，再选择打印文件。",
+    "project": "SO101",
+    "category": "硬件",
+    "format": "模型",
+    "level": "入门",
+    "url": "https://github.com/TheRobotStudio/SO-ARM100/tree/main/STL/SO101",
+    "source": "The Robot Studio",
+    "tags": [
+      "STL",
+      "3D打印",
+      "零件"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "so101-step",
+    "title": "SO101 STEP 结构文件",
+    "description": "官方 STEP 文件目录，适合查看结构与尺寸关系。加工或改件前仍需核对具体零件和版本。",
+    "project": "SO101",
+    "category": "硬件",
+    "format": "模型",
+    "level": "进阶",
+    "url": "https://github.com/TheRobotStudio/SO-ARM100/tree/main/STEP/SO101",
+    "source": "The Robot Studio",
+    "tags": [
+      "STEP",
+      "CAD",
+      "结构"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "so101-simulation",
+    "title": "SO101 官方仿真文件说明",
+    "description": "官方说明列出 SO101 的 URDF 与 MJCF 文件入口。模型可用范围、依赖和运行方式以原仓库为准。",
+    "project": "SO101",
+    "category": "模型与仿真",
+    "format": "模型",
+    "level": "进阶",
+    "url": "https://github.com/TheRobotStudio/SO-ARM100/blob/main/Simulation/README.md",
+    "source": "The Robot Studio",
+    "tags": [
+      "URDF",
+      "MJCF",
+      "仿真"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "lerobot-repository",
+    "title": "LeRobot 源码",
+    "description": "查看机器人接入、数据集与策略训练的官方实现。使用文档时对齐源码版本。",
+    "project": "通用",
+    "category": "软件环境",
+    "format": "源码",
+    "level": "进阶",
+    "url": "https://github.com/huggingface/lerobot",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "LeRobot",
+      "Python",
+      "模仿学习"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "lerobot-installation",
+    "title": "LeRobot 安装指南",
+    "description": "按官方说明准备 Python 环境与所需硬件依赖。先完成基础安装，再添加实际需要的策略依赖。",
+    "project": "通用",
+    "category": "软件环境",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://huggingface.co/docs/lerobot/installation",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "安装",
+      "Python",
+      "依赖"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "lerobot-workflow",
+    "title": "LeRobot 真机模仿学习流程",
+    "description": "了解遥操作、录制、回放、训练与评估的关系。示例命令需替换成自己的机器人、相机与数据集配置。",
+    "project": "通用",
+    "category": "入门",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://huggingface.co/docs/lerobot/il_robots",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "遥操作",
+      "数据集",
+      "评估"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "lerobot-act",
+    "title": "ACT 策略文档",
+    "description": "了解 Action Chunking with Transformers 及其在 LeRobot 中的使用方式。该文档不是已适配任意 SO101 场景的成品权重。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://huggingface.co/docs/lerobot/act",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "ACT",
+      "模仿学习",
+      "策略"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "lerobot-smolvla",
+    "title": "SmolVLA 策略文档",
+    "description": "查看 SmolVLA 的数据准备、微调和评估说明。基础模型仍需核对动作空间、相机配置与具体任务适配。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://huggingface.co/docs/lerobot/smolvla",
+    "source": "Hugging Face · LeRobot",
+    "tags": [
+      "SmolVLA",
+      "VLA",
+      "微调"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "mujoco-overview",
+    "title": "MuJoCo 入门概览",
+    "description": "理解物理引擎、MJCF、状态与控制的基本关系，适合进入机械臂接触仿真前阅读。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "文档",
+    "level": "入门",
+    "url": "https://mujoco.readthedocs.io/en/stable/overview.html",
+    "source": "MuJoCo",
+    "tags": [
+      "MuJoCo",
+      "物理仿真",
+      "MJCF"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "mujoco-modeling",
+    "title": "MuJoCo 建模指南",
+    "description": "查阅几何、关节、惯性和接触等建模方法。用于理解模型参数，不替代机器人实物参数测量。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://mujoco.readthedocs.io/en/stable/modeling.html",
+    "source": "MuJoCo",
+    "tags": [
+      "建模",
+      "碰撞",
+      "惯性"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "ompl",
+    "title": "OMPL 运动规划库",
+    "description": "采样式运动规划的官方入口。接入机器人时，需要另行提供状态空间、约束与碰撞有效性检查。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://ompl.kavrakilab.org/",
+    "source": "OMPL",
+    "tags": [
+      "路径规划",
+      "采样规划",
+      "碰撞检测"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "fishbot-modeling",
+    "title": "FishBot 建模与仿真源码",
+    "description": "鱼香 ROS 的课程配套仓库。先阅读分支说明，按所用 ROS 版本选择对应内容。",
+    "project": "FishBot",
+    "category": "入门",
+    "format": "源码",
+    "level": "入门",
+    "url": "https://github.com/fishros/fishbot",
+    "source": "鱼香 ROS",
+    "tags": [
+      "FishBot",
+      "建模",
+      "仿真"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "fishbot-navigation",
+    "title": "FishBot 建图与导航源码",
+    "description": "鱼香 ROS 的 FishBot 上位机仓库。阅读 README 和分支信息，再核对机器人型号与 ROS 发行版。",
+    "project": "FishBot",
+    "category": "软件环境",
+    "format": "源码",
+    "level": "进阶",
+    "url": "https://github.com/fishros/fishbot_nav",
+    "source": "鱼香 ROS",
+    "tags": [
+      "Nav2",
+      "建图",
+      "上位机"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "fishbot-firmware",
+    "title": "FishBot micro-ROS 运动控制源码",
+    "description": "用于了解配套控制板的固件结构。原 README 明示非授权禁止商用；本站仅导航，不打包分发。",
+    "project": "FishBot",
+    "category": "硬件",
+    "format": "源码",
+    "level": "进阶",
+    "url": "https://github.com/fishros/fishbot_motion_control_microros",
+    "source": "鱼香 ROS",
+    "tags": [
+      "固件",
+      "ESP32",
+      "micro-ROS"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "nav2-start",
+    "title": "Nav2 Jazzy 学习入口",
+    "description": "从官方导航概念与仿真示例理解 Nav2。示例机器人不等于 FishBot，需要单独核对驱动和配置。",
+    "project": "FishBot",
+    "category": "入门",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.nav2.org/jazzy/getting_started/",
+    "source": "Nav2",
+    "tags": [
+      "Jazzy",
+      "导航",
+      "规划"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "nav2-tuning",
+    "title": "Nav2 Jazzy 调参指南",
+    "description": "理解机器人轮廓、代价地图和规划控制参数。先核对模型与传感器数据，再调整参数。",
+    "project": "FishBot",
+    "category": "学习工具",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://docs.nav2.org/jazzy/configuration_and_development/tuning_guide/",
+    "source": "Nav2",
+    "tags": [
+      "调参",
+      "footprint",
+      "代价地图"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "microros-architecture",
+    "title": "micro-ROS 架构与特性",
+    "description": "理解微控制器、客户端与 Agent 如何连接 ROS 2。具体板卡、固件和通信方式仍需按配套说明核对。",
+    "project": "FishBot",
+    "category": "软件环境",
+    "format": "文档",
+    "level": "进阶",
+    "url": "https://micro.vulcanexus.org/docs/overview/features/",
+    "source": "micro-ROS",
+    "tags": [
+      "MCU",
+      "Agent",
+      "通信"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "ros2-jazzy-install",
+    "title": "ROS 2 Jazzy 安装",
+    "description": "Ubuntu 二进制安装官方说明。请先核对操作系统与 CPU 架构，已有项目优先保持配套版本。",
+    "project": "通用",
+    "category": "软件环境",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html",
+    "source": "ROS 2",
+    "tags": [
+      "ROS2",
+      "Jazzy",
+      "Ubuntu"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "ros2-jazzy-tutorials",
+    "title": "ROS 2 Jazzy 基础教程",
+    "description": "按节点、话题、服务、动作与工作空间逐步学习，适合补齐阅读机器人源码所需的基础。",
+    "project": "通用",
+    "category": "入门",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.ros.org/en/jazzy/Tutorials.html",
+    "source": "ROS 2",
+    "tags": [
+      "节点",
+      "话题",
+      "工作空间"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "rviz-guide",
+    "title": "RViz 用户指南",
+    "description": "学习显示机器人模型、坐标系与传感器消息。RViz 展示消息，不负责代替物理仿真。",
+    "project": "通用",
+    "category": "学习工具",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.ros.org/en/jazzy/Tutorials/Intermediate/RViz/RViz-User-Guide/RViz-User-Guide.html",
+    "source": "ROS 2 · RViz",
+    "tags": [
+      "RViz",
+      "可视化",
+      "TF"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "urdf-tutorial",
+    "title": "URDF 机器人描述教程",
+    "description": "学习连杆、关节、外观与碰撞模型的描述方式，为阅读机械臂和移动机器人模型打基础。",
+    "project": "通用",
+    "category": "模型与仿真",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html",
+    "source": "ROS 2",
+    "tags": [
+      "URDF",
+      "关节",
+      "模型"
+    ],
+    "checkedAt": "2026-10-18"
+  },
+  {
+    "id": "rosbag2-tutorial",
+    "title": "rosbag2 录制与回放教程",
+    "description": "了解 ROS 2 消息的记录和回放。历史消息可用于排查问题，但回放画面不证明机器人正在运行。",
+    "project": "通用",
+    "category": "学习工具",
+    "format": "教程",
+    "level": "入门",
+    "url": "https://docs.ros.org/en/jazzy/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html",
+    "source": "ROS 2",
+    "tags": [
+      "rosbag2",
+      "数据记录",
+      "回放"
+    ],
+    "checkedAt": "2026-10-18"
+  }
+]

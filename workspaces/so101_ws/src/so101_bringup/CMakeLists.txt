@@ -12,6 +12,14 @@ install(PROGRAMS
   scripts/task_executor.py
   scripts/mock_yolo_node.py
   scripts/sync_action_template_mapping.py
+  scripts/so101_leader_input_bridge.py
+  scripts/leader_state_recorder.py
+  scripts/leader_recording_replay.py
+  scripts/leader_recording_trajectory_player.py
+  scripts/leader_joint_state_mirror.py
+  scripts/joint_trajectory_controller_state_recorder.py
+  scripts/vision_episode_recorder_node.py
+  scripts/vision_overlay_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

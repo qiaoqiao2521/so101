@@ -9,8 +9,9 @@ SO101 统一在 [qiaoqiao2521/so101](https://github.com/qiaoqiao2521/so101) 开�
 - `experiments/colab-twin/`：MuJoCo 抓放、IK/OMPL、视觉定位和工位执行器；当前进展见 [项目状态](PROJECT.md) 与 [工位产品化计划](plans/workcell-productization-20261024/task_plan.md)。
 - `mint_follower_demo/`：轻量跟随器终端；本地尚未提交的改动需独立核验，不因仓库整理自动发布。
 - `workspaces/so101_ws/`：已收纳的 ROS/MoveIt、Java MES 与场景资产。
+- `apps/resources/`：资料导航与学习站，独立构建发布，源码在本仓库维护。
 
-旧仓库 `so101_ws`、`so101-ros2-arm` 已归档，仅作历史查询，不再作为开发远端。未重新导入旧快照；FishBot 和资料导航站仍各自独立。本地多个 Git 工作树共用本仓库，不是多个项目。已否决的 `codex/multilink-safety-20261001` 继续独立保留，不合入正式入口。
+旧仓库 `so101_ws`、`so101-ros2-arm` 已归档，不再作为开发远端。此次按文件恢复缺失的前端与兼容源码，并将资料站纳入候选；旧仓库删除、私有来源可见性、完整构建和部署验收以 [四仓合并审查](docs/consolidation/2026-10-31.md) 为准，不能仅凭归档状态认定完成。FishBot 工作台仍是独立产品依赖。本地多个 Git 工作树共用本仓库，不是多个项目。已否决的 `codex/multilink-safety-20261001` 继续独立保留，不合入正式入口。
 
 ## 当前方向：选择大于努力
 
