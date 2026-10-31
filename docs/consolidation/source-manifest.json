@@ -1,5 +1,5 @@
 {
-  "status": "published_in_public_master",
+  "status": "published_consolidated_legacy_repositories_deleted",
   "base_repository": "qiaoqiao2521/so101",
   "base_commit": "ec3d45a34275ae099989b03c1d912a9ad95ec035",
   "requires_private_source_visibility_decision": false,
@@ -1204,5 +1204,15 @@
     "commit": "78991ce7c4cfe1aee5936721c2c6d83354214c51",
     "repository": "qiaoqiao2521/so101",
     "site_release": "so101-78991ce-20261101"
+  },
+  "legacy_retirement": {
+    "date": "2026-11-01",
+    "repositories": [
+      "qiaoqiao2521/so101_ws",
+      "qiaoqiao2521/so101-ros2-arm",
+      "qiaoqiao2521/robot-resource-site"
+    ],
+    "backup": "Private Git bundles, metadata, recordings and pinned SO-ARM100 snapshot retained locally.",
+    "verification": "Authenticated DELETE succeeded and authenticated readback returned404 for each; retained main remains public."
   }
 }

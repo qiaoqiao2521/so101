@@ -35,7 +35,7 @@ python3 -m unittest discover -s mint_follower_demo/tests
 标定、串口配置和用户日志应在部署机器本地配置，不能套用他人的标定驱动机械臂。
 
 本轮同步本机安全整改与回归测试；Humble依赖尚未整体迁至Jazzy，
-离线测试不代表仿真或实机验收。旧so101_ws、so101-ros2-arm远端仍归档保留历史。
+离线测试不代表仿真或实机验收。旧so101_ws、so101-ros2-arm远端已退役，完整Git历史和必要模型／录制保留在私有备份中。
 
 ## Colab 数字孪生实验
 

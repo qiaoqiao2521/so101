@@ -10,7 +10,7 @@
 4. 补齐历史备份与网站部署后，按2026-11-01授权删除三个旧仓：so101_ws、so101-ros2-arm、robot-resource-site。
 
 ## 状态
-本地整合与构建验收 complete；公开发布和三旧库删除已获用户授权；公开发布与部署 complete；三个旧仓删除 awaiting_github_authorization。
+本地整合与构建验收 complete；公开发布和三旧库删除已获用户授权；公开发布、资料站部署、历史保全与三个旧仓删除 complete。
 
 ## Next Step
-用户完成GitHub官方CLI删仓权限授权后，删除三个指定旧仓并独立回读；保持so101公开和资料站来源不变。
+日常维护统一使用so101/master；资料站从apps/resources独立构建。需要历史资料时按私有备份README恢复。

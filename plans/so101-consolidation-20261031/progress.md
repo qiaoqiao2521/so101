@@ -1,7 +1,7 @@
 # 进度
 
 ## Current
-2026-11-01：用户明确授权so101保持公开，发布清理源码，并删除三个旧仓。根Codex负责串行发布与退役，原始数据和历史备份继续私有。
+2026-11-01：公开单仓整合、资料站部署和三个旧仓删除全部完成。so101/master为唯一SO101开发远端，原始数据和历史备份继续私有。
 
 ## Done
 安全展开候选包；本地补丁检查与应用成功。未推送私有来源、未改可见性、未部署、未删库、未启动实体或仿真。
@@ -43,3 +43,11 @@ ROS选定两包 `colcon build --packages-select so101_bringup yolov8_detector` �
 三旧库refs与bundle一致，无新提交。GitHub Issues/PR/Releases/Tags/Actions artifacts/Deployments/Milestones/runs/Hooks/workflows均为0，每库10个labels已另存。Wiki认证Git128且公网wiki重定向主页，未发现当前可访问Wiki，原始响应留存。SO-ARM100固定2ca36d9完整快照87,257,688bytes已保全，229文件逐路径／blob／大小一致，含全部CAD与图片，补齐原gitlink文件树；不冒充整个上游Git历史。
 
 剩余真实阻塞：当前gh OAuth只有repo/workflow等scope，没有delete_repo；日常Chrome未登录GitHub。已启动官方CLI设备授权等待用户授予删仓技术权限；不在源码记录设备码或凭据。三个旧仓尚未删除，授权后直接完成，不再次询问删除意图。
+
+
+## 2026-11-01 — 三旧仓删除完成
+用户完成GitHub官方CLI授权后，根核验同一qiaoqiao2521/238822818身份和delete_repo作用域。逐库重新核对仓库全名、admin权限、当前main与已备份Git提交一致，然后仅删除so101_ws、so101-ros2-arm、robot-resource-site。三次DELETE均成功，三次已认证GET均返回404，so101再次读取为public/master。详细回执在私有备份的deletion-receipt-20261101.json；不提交OAuth设备码或凭据。
+
+本地旧资料站克隆源码和私有运维配置保留，移除其已删除的origin，原URL与操作回执留在私有备份，避免后续仍向旧仓推送。Mint脏工作树、FishBot仓库／工作台分支、其他GitHub仓库均未改动。
+
+源码来源记录与README已更新为单仓实际状态。切换后的公网浏览器30项全部通过，隔离浏览器和本轮临时GitHub登录页已关闭。新构建静态文件保留作当前发布产物；旧线上版本保留回滚，未批量清理其他工作。完整算法、50Hz、实体与ROS运行验收边界不因合仓改变。
