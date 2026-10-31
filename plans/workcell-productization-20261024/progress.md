@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-10-31 — R165实际完成：GC两原物理pass，X17抓取面板通过
+
+Done：Kaggle staged-gc-grid v1已COMPLETE，固定95ca4a5，同X224／同步阶段相机／双规划进程，仅GC false→true。原抓放、释放脱离回位2/2pass，246×3／fresh205／285对／1mm及worker清理保留；独立307项与根原reader均通过。[结果、失败与复跑](staged-admission-results.md)。
+
+Result：deferred控制期GC为0；automatic捕获149次，含32.303ms gen2与transport控制拍重合。wall P99 20.014→19.072ms，慢拍38→31、发令迟到45→34。process CPU仍35→28拍≥20ms，最大约48.76ms，D007软实时及旧完整50Hz均未过；不把旧87.79ms自动归因GC，不切默认或宣称普遍整程提速。
+
+X17：固定Y−.130m、X224–256mm每2mm，三阶段IK／五组抓取全扫17/17通过，preclose／closure各246。17条start→approach直连诊断均失败并保留，仍依赖原绕障规划；没有17新物理或连续域证明。
+
+Next：停止R164 inline A/B及新增算术微优化。阶段准入复用原job生命周期，补整段jaw＋跟踪偏差包络；未覆盖不放行。另明确静态目标按需采图和经原认证的失败撤退；开发行为切片通过后冻结20＋20，不能用换计时分类交付硬实时。Owner=根Codex；Knowledge=already_covered。
+
+Cleanup：R165整组终态并完成两路回读后，仅删除已停止R164及完成R165中可重建的自有bytecode，释放110592分配字节，可用空间33501732864→33501847552B；其它空间变化不归因本轮。原TGZ、视频／模型原件、失败、配置、接受源码与读回保留，未展开模型／帧。收据output/staged-gc-grid-20261031/cleanup.json。255个本地文档链接和diff检查通过，随后串行提交推送。
+
 ## 2026-10-31 — 按用户决定停止R164，转阶段准入与产品收口
 
 Current：保留现有栈，R164周期内A/B取消，未发云；27项纯/mock和私有源码保留，仅为未采用候选，不当物理交付。原完整50Hz失败不改写，新增云端软实时profile另列进程CPU全部<20ms／wall P99<20ms及主线程CPU、准备和端到端成本。

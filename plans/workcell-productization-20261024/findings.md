@@ -1,5 +1,11 @@
 # SO101 工位产品化：事实、决定与待证项
 
+## 2026-10-31 — R165已观测GC代价，延期仍未满足软实时
+
+同机原物理2/2pass，开已有GC延期后控制期GC149→0；对照的32.303ms gen2与transport控制段重合。wall P99 20.014→19.072ms，但process CPU还有28拍≥20ms，最大48.761ms；不能称软实时或旧完整50Hz通过。原全部扫掠／释放／回位与307项独立核验保持。[原报告](staged-admission-results.md)。
+
+X224–256mm每2mm的17点，三IK阶段及抓取full sweep全过；原17条直接start→approach诊断路径仍失败，not_admitted_points=17保留。它支持统一工艺的离线抓取覆盖，不支持17点无障碍直连或连续域保证。R164未派云，纯原型保留，不继续该inline A/B。
+
 ## 2026-10-31 — 收口方向与已存在的运行时能力
 
 用户停止R164周期内A/B，保留现有栈，转阶段准入。`episode_gc.py:16–63`已有禁用自动循环GC及清理后collect／恢复；R161实际未开。正常逐拍轨迹和释放记录已在内存append，结束后批量落盘；外部callback／异常截图／视频仍需分别计时。既有EpisodeTiming已记录perf／thread CPU。
