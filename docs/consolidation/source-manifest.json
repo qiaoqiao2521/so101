@@ -1,8 +1,8 @@
 {
-  "status": "local_integrated_validated_not_published",
+  "status": "publication_authorized_cleaned_source",
   "base_repository": "qiaoqiao2521/so101",
   "base_commit": "ec3d45a34275ae099989b03c1d912a9ad95ec035",
-  "requires_private_source_visibility_decision": true,
+  "requires_private_source_visibility_decision": false,
   "is_full_repository_backup": false,
   "files": [
     {
@@ -1194,5 +1194,9 @@
       "note": "Preserve useful recorder/vision implementation and paired tests; no runtime claim."
     }
   ],
-  "local_integration_note": "Original candidate/source blob fields retain import provenance. Local follow-up adds action_msgs and rcl_interfaces declarations plus validation documentation. Public visibility decision remains pending."
+  "local_integration_note": "Original candidate/source blob fields retain import provenance. Local follow-up adds action_msgs and rcl_interfaces declarations plus validation documentation. Public visibility decision remains pending.",
+  "publication_authorization": {
+    "date": "2026-11-01",
+    "scope": "User approved publishing cleaned retained source into public qiaoqiao2521/so101; raw recordings, calibration, credentials, private operations and backup bundles remain private."
+  }
 }

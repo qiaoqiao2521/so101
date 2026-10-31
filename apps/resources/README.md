@@ -38,6 +38,6 @@ python3 tests/browser_acceptance.py http://127.0.0.1:5192 --label local
 
 本站继续以现有域名根路径部署，保留 `/so101/`、`/fishbot/`、`/delivery/`、`/sources/` 与 `/pagefind/`。Git 目录改为 `apps/resources/` 不意味着网站 URL 增加 `/resources/`；若将来改变 URL 前缀，必须同时调整 Astro base、全部根路径链接、静态资源、搜索索引和浏览器验收。
 
-源仓库：`qiaoqiao2521/robot-resource-site`，源提交 `d2149d0e7a72016be86c91be55b0aed4df253dbf`。源代码当前为私有；此目录只是本地迁移候选，尚未发布或授权改变其可见性。
+源仓库：`qiaoqiao2521/robot-resource-site`，源提交 `d2149d0e7a72016be86c91be55b0aed4df253dbf`。原仓库为私有；用户于2026-11-01明确允许将经过清理的保留源码发布到公开主仓库。原始录制、标定、运维信息和历史备份继续保留在私有位置。
 
 保留 [THIRD_PARTY.md](THIRD_PARTY.md) 的上游来源说明，不新增或推定原创内容许可证。部署模板见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
