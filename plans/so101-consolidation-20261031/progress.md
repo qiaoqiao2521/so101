@@ -23,3 +23,9 @@ ROS选定两包 `colcon build --packages-select so101_bringup yolov8_detector` �
 - 根YOLO复跑目录笔误已改正；最终3项通过。
 - CMake首轮用户Python3.11不含catkin_pkg；改选系统Python3.12后成功。
 - Vite大分块、Astro默认i18n/404与CMake未使用变量提示仍保留，不改阈值隐藏警告。
+
+
+## 本地交接与空间收尾
+本地整合提交 `63ec08f` 包含113文件（原候选109、额外YOLO依赖声明和三份本轮计划），工作树源码已保存。未推送公开远端，未改默认分支／可见性／线上部署，旧仓仍保留。
+已关闭本轮预览与隔离浏览器，删除自建重复候选files、隔离colcon build/install共3833856 allocated bytes。保留下载ZIP、patch、来源／审查／构建日志、Git历史bundle和浏览器证据；dist与依赖保留供可见性选择后的本地复核。磁盘free前后 24151904256/24156278784，不把其他任务变化归因本轮。
+最短接续：先接收用户公开／私有选择；选定分支为 codex/so101-consolidation-20261031。完整ROS运行缺lerobot/ultralytics不自动安装；Wiki与子模块保全、资料站部署仍由根Codex接续，不能提前删库。
