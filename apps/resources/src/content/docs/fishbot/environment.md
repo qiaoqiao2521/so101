@@ -16,11 +16,15 @@ description: 对齐系统、ROS 发行版、源码分支与硬件版本。
 | 机器人 | 底盘型号、控制板与固件版本 |
 | 传感器 | 雷达、相机或 IMU 的型号与驱动 |
 
-[FishBot 导航仓库](https://github.com/fishros/fishbot_nav)使用 ROS 发行版对应的分支作为安装入口。分支是否存在、所含依赖是否适用于当前套件，需要到仓库核对。不要把发行版名称直接替换进另一版命令就视为完成迁移。
+2026-11-02 核对时，[FishBot 建模仓库](https://github.com/fishros/fishbot)默认分支为 `humble`，没有 `jazzy` 分支。[FishBot 导航仓库](https://github.com/fishros/fishbot_nav)公开分支只有 `main`；README 仍给出 `-b $ROS_DISTRO` 的克隆写法，与当前分支情况不符，不能直接照搬。
+
+先核对实际分支、套件教程和依赖，再选择环境。将源码下载到本地不等于已适配另一 ROS 发行版。
 
 ## 新学 ROS 2 从哪里开始
 
-[ROS 2 Jazzy 官方安装页](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)说明其支持的 Ubuntu 二进制安装环境。已有套件若配套其他发行版，应先保持配套环境，再评估升级。
+[ROS 2 Jazzy 官方安装页](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)说明其支持的 Ubuntu 二进制安装环境。Jazzy 的 Ubuntu 二进制包对应 Ubuntu 24.04，支持 amd64 与 arm64。已有套件若配套其他发行版，应先保持配套环境，再评估升级。
+
+Jazzy 是支持至 2029 年 5 月的 LTS，已不是最新发行版；[官方发行表](https://docs.ros.org/en/rolling/Releases.html)已列出 2026 年 5 月发布的 Lyrical。本站保留 Jazzy 作为明确版本的学习入口，不代表 FishBot 全部源码支持 Jazzy，也不要求已有套件追新。
 
 安装基础环境后，按 [Jazzy 基础教程](https://docs.ros.org/en/jazzy/Tutorials.html)学习命令行、工作空间和包。进入 FishBot 源码前，先理解发布者与订阅者如何交换消息。
 

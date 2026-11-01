@@ -6,7 +6,7 @@ export default defineConfig({
   site: 'https://robot.muqiao.fyi',
   integrations: [
     starlight({
-      title: '沐桥机器人资料库',
+      title: '木乔机器人资料库',
       description: 'SO101 与 FishBot 的学习路线、官方资源和资料交付说明。',
       favicon: '/favicon.svg',
       defaultLocale: 'root',

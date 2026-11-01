@@ -14,7 +14,7 @@
       "BOM",
       "打印"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "so101-assembly",
@@ -31,12 +31,12 @@
       "校准",
       "Feetech"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "so101-stl",
     "title": "SO101 STL 打印零件",
-    "description": "官方 SO101 网格文件目录。分清单独零件、整板排版与装配参考模型，再选择打印文件。",
+    "description": "官方 SO101 打印文件目录，分为 Follower、Leader 与 Individual。先区分主臂、从臂和单独零件，再选择文件。",
     "project": "SO101",
     "category": "硬件",
     "format": "模型",
@@ -48,7 +48,7 @@
       "3D打印",
       "零件"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "so101-step",
@@ -65,12 +65,12 @@
       "CAD",
       "结构"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "so101-simulation",
     "title": "SO101 官方仿真文件说明",
-    "description": "官方说明列出 SO101 的 URDF 与 MJCF 文件入口。模型可用范围、依赖和运行方式以原仓库为准。",
+    "description": "官方 URDF 与 MJCF 入口。新旧校准零位、底座碰撞模型和夹爪数值约定存在差异，加载前先读 SO101 专项说明。",
     "project": "SO101",
     "category": "模型与仿真",
     "format": "模型",
@@ -82,12 +82,12 @@
       "MJCF",
       "仿真"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "lerobot-repository",
     "title": "LeRobot 源码",
-    "description": "查看机器人接入、数据集与策略训练的官方实现。使用文档时对齐源码版本。",
+    "description": "查看机器人接入、数据集与策略训练的官方实现。本次核对最新发布为 v0.6.1；使用文档时对齐源码版本。",
     "project": "通用",
     "category": "软件环境",
     "format": "源码",
@@ -99,24 +99,24 @@
       "Python",
       "模仿学习"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "lerobot-installation",
     "title": "LeRobot 安装指南",
-    "description": "按官方说明准备 Python 环境与所需硬件依赖。先完成基础安装，再添加实际需要的策略依赖。",
+    "description": "固定到 v0.6.1 的官方安装指南，Python 至少为 3.12。按录制、训练和 Feetech 电机接入选择所需依赖。",
     "project": "通用",
     "category": "软件环境",
     "format": "教程",
     "level": "入门",
-    "url": "https://huggingface.co/docs/lerobot/installation",
+    "url": "https://huggingface.co/docs/lerobot/v0.6.1/en/installation",
     "source": "Hugging Face · LeRobot",
     "tags": [
       "安装",
       "Python",
       "依赖"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "lerobot-workflow",
@@ -133,7 +133,7 @@
       "数据集",
       "评估"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "lerobot-act",
@@ -150,12 +150,12 @@
       "模仿学习",
       "策略"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "lerobot-smolvla",
     "title": "SmolVLA 策略文档",
-    "description": "查看 SmolVLA 的数据准备、微调和评估说明。基础模型仍需核对动作空间、相机配置与具体任务适配。",
+    "description": "含官方 smolvla_base 预训练模型入口、数据准备和微调说明。先核对动作空间、相机与任务适配，再决定是否训练。",
     "project": "通用",
     "category": "模型与仿真",
     "format": "文档",
@@ -167,7 +167,7 @@
       "VLA",
       "微调"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "mujoco-overview",
@@ -184,7 +184,7 @@
       "物理仿真",
       "MJCF"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "mujoco-modeling",
@@ -201,7 +201,7 @@
       "碰撞",
       "惯性"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "ompl",
@@ -218,12 +218,12 @@
       "采样规划",
       "碰撞检测"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "fishbot-modeling",
     "title": "FishBot 建模与仿真源码",
-    "description": "鱼香 ROS 的课程配套仓库。先阅读分支说明，按所用 ROS 版本选择对应内容。",
+    "description": "鱼香 ROS 的 FishBot 建模与仿真源码。本次核对默认分支为 Humble，无 Jazzy 分支；按套件版本选择环境。",
     "project": "FishBot",
     "category": "入门",
     "format": "源码",
@@ -235,12 +235,12 @@
       "建模",
       "仿真"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "fishbot-navigation",
     "title": "FishBot 建图与导航源码",
-    "description": "鱼香 ROS 的 FishBot 上位机仓库。阅读 README 和分支信息，再核对机器人型号与 ROS 发行版。",
+    "description": "FishBot 建图与导航源码。本次核对仅有 main 分支；README 的发行版分支克隆命令需先核对，不能直接照搬。",
     "project": "FishBot",
     "category": "软件环境",
     "format": "源码",
@@ -252,7 +252,7 @@
       "建图",
       "上位机"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "fishbot-firmware",
@@ -269,7 +269,7 @@
       "ESP32",
       "micro-ROS"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "nav2-start",
@@ -286,7 +286,7 @@
       "导航",
       "规划"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "nav2-tuning",
@@ -303,7 +303,7 @@
       "footprint",
       "代价地图"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "microros-architecture",
@@ -320,7 +320,7 @@
       "Agent",
       "通信"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "ros2-jazzy-install",
@@ -337,7 +337,7 @@
       "Jazzy",
       "Ubuntu"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "ros2-jazzy-tutorials",
@@ -354,7 +354,7 @@
       "话题",
       "工作空间"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "rviz-guide",
@@ -371,7 +371,7 @@
       "可视化",
       "TF"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "urdf-tutorial",
@@ -388,7 +388,7 @@
       "关节",
       "模型"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   },
   {
     "id": "rosbag2-tutorial",
@@ -405,6 +405,6 @@
       "数据记录",
       "回放"
     ],
-    "checkedAt": "2026-10-18"
+    "checkedAt": "2026-11-02"
   }
 ]
