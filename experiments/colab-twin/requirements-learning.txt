@@ -6,16 +6,16 @@
 # env -u PYTHONPATH -u PYTHONHOME uv pip install --no-sources --python "$SO101_LEARNING_VENV/bin/python" -r experiments/colab-twin/requirements-learning.txt
 # The pinned upstream checkout's tool.uv.sources defaults to cu128; --no-sources
 # preserves the explicit, locally tested cu126 wheel selection above.
-torch==2.7.1+cu126
-torchvision==0.22.1+cu126
-numpy==2.2.6
-h5py==3.14.0
+torch==2.14.1
+torchvision==0.29.1
+numpy==2.5.4
+h5py==3.16.0
 # Keep simulator versions aligned without inheriting a future NumPy pin from
 # the separate planning/data environment (official LeRobot requires NumPy<2.3).
-mujoco==3.3.7
-mink==1.1.0
+mujoco==3.17.0
+mink==1.3.0
 ompl==2.0.1
-imageio==2.37.0
+imageio==2.38.1
 imageio-ffmpeg==0.6.0
 scipy==1.18.1
 # The experiment imports official ACT only; do not install training/hardware extras.
