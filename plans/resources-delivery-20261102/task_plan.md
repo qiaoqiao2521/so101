@@ -7,7 +7,7 @@
 在现有 Astro 资料站的 /delivery/ 增加轻量领取区，沿用样式和现有部署，不增加注册、随机码、订单绑定、次数限制或新后端。这是用户接受可分享的便捷入口，不宣称商业机密防护。
 
 ## Status
-链接转录 complete；领取界面 complete；本地浏览器42项通过；公网发布 pending。
+链接转录 complete；领取界面 complete；本地／公网各42项通过；发布与清理 complete。
 
 ## Next Step
-将已验证领取页提交并发布到现有域名，独立复核公网。
+本轮完成。用户可在闲鱼发送 https://robot.muqiao.fyi/delivery/ 与固定兑换码；换链接时修改独立清单并按现有流程重建发布。
