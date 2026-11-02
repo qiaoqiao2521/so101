@@ -197,6 +197,72 @@ def main():
                all(row['href'].startswith('https://') for row in links['resources']))
         record('homepage has only search and reset buttons', links['controls'],
                set(links['controls']) <= {'搜索CtrlK', '取消', 'Clear', '重置筛选', '查看全部资料'})
+
+        bb('open', args.url.rstrip('/') + '/delivery/')
+        ev("localStorage.removeItem('muqiao-resource-delivery-v1')")
+        bb('reload')
+        bb('wait', '[data-delivery-form]:not([hidden])')
+        record('delivery starts locked with no generated resource links',
+               ev("document.querySelectorAll('[data-delivery-item] a').length"),
+               ev("document.querySelectorAll('[data-delivery-item] a').length") == 0)
+        bb('fill', '#delivery-code', 'wrong-code')
+        bb('click', '[data-delivery-form] button')
+        wrong = ev('''({error:document.querySelector('[data-delivery-message]').textContent,
+          hidden:document.querySelector('[data-delivery-result]').hidden,
+          links:document.querySelectorAll('[data-delivery-item] a').length})''')
+        record('wrong code shows error and reveals no links', wrong,
+               '不正确' in wrong['error'] and wrong['hidden'] and wrong['links'] == 0)
+        bb('fill', '#delivery-code', ' jide1 ')
+        bb('press', 'Enter')
+        bb('wait', '[data-delivery-result]:not([hidden])')
+        delivered = ev('''[...document.querySelectorAll('[data-delivery-item]')].map(e=>({
+          id:e.dataset.deliveryItem,href:e.querySelector('.delivery-open')?.href,
+          text:e.textContent}))''')
+        configured = json.loads((ROOT/'src/data/delivery-links.json').read_text())
+        record('fixed code reveals each configured resource', delivered,
+               len(delivered) == len(configured) and all(
+                   row['href'].startswith(source['url']) for row, source in
+                   zip(delivered, configured) if source['url']))
+        model = next(row for row in delivered if row['id'] == 'so101-models')
+        record('Baidu link includes extraction code and visible code', model,
+               'pwd=hfki' in model['href'] and '提取码：hfki' in model['text'])
+        box = geometry()
+        record('unlocked delivery fits small mobile 320', box,
+               box['documentWidth'] == box['width'])
+        record('unlocked delivery screenshot', capture('delivery-unlocked'))
+        bb('reload')
+        bb('wait', '[data-delivery-result]:not([hidden])')
+        record('delivery remembers this browser after refresh',
+               ev("document.querySelector('[data-delivery-form]').hidden"),
+               ev("document.querySelector('[data-delivery-form]').hidden"))
+        # Observe copy requests without reading the user's system clipboard.
+        ev('''Object.defineProperty(navigator,'clipboard',{configurable:true,
+          value:{writeText:async text=>{window.__deliveryCopied=text}}})''')
+        bb('click', '[data-delivery-item="so101-models"] .delivery-copy')
+        copied = ev('window.__deliveryCopied')
+        record('copy link requests the complete Baidu URL', copied,
+               copied == model['href'])
+        bb('click', '[data-delivery-item="so101-models"] .delivery-copy:last-child')
+        copied = ev('window.__deliveryCopied')
+        record('copy extraction code requests hfki', copied, copied == 'hfki')
+        ev('''navigator.clipboard.writeText=async()=>{throw new Error('test-denied')}''')
+        bb('click', '[data-delivery-item="so101-models"] .delivery-copy')
+        fallback = ev("document.querySelector('[data-delivery-message]').textContent")
+        record('clipboard denial offers manual copy fallback', fallback,
+               '长按' in fallback)
+        bb('click', '[data-delivery-reset]')
+        bb('reload')
+        bb('wait', '[data-delivery-form]:not([hidden])')
+        record('reset clears remembered access and removes links',
+               ev("document.querySelectorAll('[data-delivery-item]').length"),
+               ev("document.querySelectorAll('[data-delivery-item]').length") == 0)
+        private_search = ev('''(async()=>{
+          const search=await import('/pagefind/pagefind.js');
+          const code=await search.search('jide1'), extraction=await search.search('hfki');
+          return {code:code.results.length,extraction:extraction.results.length};
+        })()''')
+        record('Pagefind excludes redemption and extraction codes', private_search,
+               private_search == {'code': 0, 'extraction': 0})
         errors = bb('errors')
         record('no browser page errors', errors.get('errors', []), not errors.get('errors'))
         console = bb('console')

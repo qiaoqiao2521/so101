@@ -1,0 +1,163 @@
+<section class="delivery" data-delivery data-pagefind-ignore aria-label="资料领取">
+  <form class="delivery-form" data-delivery-form>
+    <label for="delivery-code">兑换码</label>
+    <div class="delivery-input-row">
+      <input id="delivery-code" name="code" type="text" placeholder="输入收到的兑换码" autocomplete="off" autocapitalize="none" spellcheck="false" aria-describedby="delivery-message" required />
+      <button type="submit">领取资料</button>
+    </div>
+    <p class="delivery-hint">兑换码见原闲鱼会话。</p>
+  </form>
+  <p id="delivery-message" class="delivery-message" data-delivery-message role="status" aria-live="polite"></p>
+  <div data-delivery-result hidden tabindex="-1">
+    <div class="delivery-result-heading">
+      <div>
+        <h2>你的资料入口</h2>
+        <p>打开资料，或复制链接保存。</p>
+      </div>
+      <button class="delivery-reset" type="button" data-delivery-reset>重新输入兑换码</button>
+    </div>
+    <ul class="delivery-list" data-delivery-list></ul>
+  </div>
+  <noscript>请启用浏览器的 JavaScript，再输入兑换码领取资料。</noscript>
+</section>
+
+<script>
+  import resources from '../data/delivery-links.json';
+
+  // A shareable convenience code, explicitly requested by the site owner.
+  // This static UI is not server authentication or protection for confidential files.
+  const redemptionCode = 'jide1';
+  const storageKey = 'muqiao-resource-delivery-v1';
+  const root = document.querySelector<HTMLElement>('[data-delivery]');
+  const form = root?.querySelector<HTMLFormElement>('[data-delivery-form]');
+  const input = root?.querySelector<HTMLInputElement>('#delivery-code');
+  const result = root?.querySelector<HTMLElement>('[data-delivery-result]');
+  const list = root?.querySelector<HTMLUListElement>('[data-delivery-list]');
+  const message = root?.querySelector<HTMLElement>('[data-delivery-message]');
+  const reset = root?.querySelector<HTMLButtonElement>('[data-delivery-reset]');
+
+  if (form && input && result && list && message && reset) {
+    const announce = (text: string) => { message.textContent = text; };
+    const copy = async (text: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        announce('已复制，可以粘贴到聊天或备忘录。');
+      } catch {
+        announce('未能自动复制，请长按资料链接复制；提取码可直接选中。');
+      }
+    };
+    const makeCopyButton = (label: string, text: string) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'delivery-copy';
+      button.textContent = label;
+      button.addEventListener('click', () => { void copy(text); });
+      return button;
+    };
+    const unlock = (focus = false) => {
+      list.replaceChildren();
+      for (const resource of resources) {
+        const item = document.createElement('li');
+        item.dataset.deliveryItem = resource.id;
+        const source = document.createElement('p');
+        source.className = 'delivery-source';
+        source.textContent = resource.source;
+        const title = document.createElement('h3');
+        title.textContent = resource.title;
+        const description = document.createElement('p');
+        description.textContent = resource.description;
+        item.append(source, title, description);
+        if (resource.url) {
+          const url = new URL(resource.url);
+          if (resource.extractionCode) url.searchParams.set('pwd', resource.extractionCode);
+          const actions = document.createElement('div');
+          actions.className = 'delivery-actions';
+          const link = document.createElement('a');
+          link.href = url.href;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.className = 'delivery-open';
+          link.textContent = '打开资料';
+          link.setAttribute('aria-label', `打开${resource.title}（新窗口）`);
+          actions.append(link, makeCopyButton('复制链接', url.href));
+          if (resource.extractionCode) {
+            const code = document.createElement('span');
+            code.className = 'delivery-extraction';
+            code.textContent = `提取码：${resource.extractionCode}`;
+            actions.append(code, makeCopyButton('复制提取码', resource.extractionCode));
+          }
+          const address = document.createElement('a');
+          address.className = 'delivery-address';
+          address.href = url.href;
+          address.target = '_blank';
+          address.rel = 'noopener noreferrer';
+          address.textContent = url.href;
+          item.append(actions, address);
+        } else {
+          const pending = document.createElement('p');
+          pending.className = 'delivery-pending';
+          pending.textContent = '链接核对中，可在原闲鱼会话索取。';
+          item.append(pending);
+        }
+        list.append(item);
+      }
+      form.hidden = true;
+      result.hidden = false;
+      input.value = '';
+      input.removeAttribute('aria-invalid');
+      announce('领取成功，资料链接如下。');
+      try { localStorage.setItem(storageKey, '1'); } catch { /* Links remain usable without storage. */ }
+      if (focus) result.focus();
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (input.value.trim().toLowerCase() !== redemptionCode) {
+        input.setAttribute('aria-invalid', 'true');
+        announce('兑换码不正确，请核对原闲鱼会话中的兑换码。');
+        input.focus();
+        return;
+      }
+      unlock(true);
+    });
+    reset.addEventListener('click', () => {
+      try { localStorage.removeItem(storageKey); } catch { /* Reset still works for this page. */ }
+      list.replaceChildren();
+      result.hidden = true;
+      form.hidden = false;
+      announce('已返回兑换码输入。');
+      input.focus();
+    });
+    try { if (localStorage.getItem(storageKey) === '1') unlock(); } catch { /* Start with the normal form. */ }
+  }
+</script>
+
+<style is:global>
+  .delivery { margin-block: 1.8rem; padding: clamp(1rem, 3vw, 1.6rem); border: 1px solid var(--line); border-top: 3px solid var(--cobalt); border-radius: 10px; background: var(--surface); }
+  .delivery [hidden] { display: none !important; }
+  .delivery :is(p, h2, h3, ul, li, form) { margin: 0; }
+  .delivery-form label { display: block; margin-bottom: .55rem; color: var(--ink); font-weight: 700; }
+  .delivery-input-row { display: flex; gap: .65rem; }
+  .delivery-input-row input { width: 100%; min-width: 0; padding: .65rem .8rem; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+  .delivery-input-row input[aria-invalid] { border-color: #ae293e; }
+  .delivery button, .delivery-open { min-height: 44px; padding: .5rem .85rem; border: 1px solid var(--cobalt); border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; }
+  .delivery-input-row button, .delivery-open { flex-shrink: 0; background: var(--cobalt); color: white; }
+  .delivery .delivery-open { color: white; }
+  .delivery .delivery-hint, .delivery-result-heading p { margin-top: .45rem; color: var(--muted); font-size: .9rem; }
+  .delivery .delivery-message:not(:empty) { margin-block: .9rem; color: var(--ink); font-size: .9rem; }
+  .delivery-result-heading { display: flex; flex-wrap: wrap; align-items: start; gap: .8rem; justify-content: space-between; }
+  .delivery-result-heading h2 { font-size: 1.4rem; line-height: 1.5; }
+  .delivery .delivery-reset { border-color: transparent; padding-inline: 0; background: transparent; color: var(--cobalt); font-size: .85rem; text-decoration: underline; text-underline-offset: .2em; }
+  .delivery .delivery-list { padding: 0; list-style: none; }
+  .delivery-list li { padding-block: 1.25rem; border-bottom: 1px solid var(--line); }
+  .delivery-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .delivery .delivery-source { font-size: .8rem; color: var(--muted); }
+  .delivery-list h3 { margin-block: .2rem .35rem; color: var(--ink); font-size: 1.1rem; }
+  .delivery-list p { font-size: .9rem; }
+  .delivery-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .8rem; }
+  .delivery .delivery-copy { background: var(--paper); color: var(--cobalt); }
+  .delivery-extraction { margin-inline: .3rem; color: var(--ink); }
+  .delivery-address { display: block; margin-top: .7rem; overflow-wrap: anywhere; font-size: .8rem; }
+  .delivery .delivery-pending { margin-top: .75rem; color: var(--muted); }
+  @media (max-width: 380px) { .delivery-input-row { flex-direction: column; } }
+</style>

@@ -30,7 +30,7 @@ export default defineConfig({
         ] },
         { label: '查阅与交付', items: [
           { label: '常用术语', slug: 'common/glossary' },
-          { label: '资料交付说明', slug: 'delivery' },
+          { label: '兑换码领取资料', slug: 'delivery' },
           { label: '更新记录', slug: 'updates' },
           { label: '来源与使用边界', slug: 'sources' },
         ] },

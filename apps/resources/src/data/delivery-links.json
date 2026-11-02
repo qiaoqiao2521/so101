@@ -1,0 +1,34 @@
+[
+  {
+    "id": "robot-wiki",
+    "title": "机器人学习资料",
+    "source": "飞书文档",
+    "description": "视觉、建模与数据训练等资料入口。",
+    "url": "https://tcnppips4y7o.feishu.cn/wiki/BuCow3dCWiAAI0kStxjcYddlncc",
+    "extractionCode": null
+  },
+  {
+    "id": "so101-models",
+    "title": "SO101 建模文件",
+    "source": "百度网盘",
+    "description": "建模文件分享，文件清单与格式以网盘内容为准。",
+    "url": "https://pan.baidu.com/s/1ab4eSO2ruJAbR23TWb4rpA",
+    "extractionCode": "hfki"
+  },
+  {
+    "id": "waveshare-guide",
+    "title": "微雪 SO-ARM100／101 教程",
+    "source": "微雪电子",
+    "description": "装配、环境配置、校准与使用说明。",
+    "url": "https://www.waveshare.net/wiki/SO-ARM100/101",
+    "extractionCode": null
+  },
+  {
+    "id": "waveshare-video",
+    "title": "微雪机械臂装配视频",
+    "source": "哔哩哔哩",
+    "description": "微雪官方组装演示，与教程中的套件组装章节配套。",
+    "url": "https://www.bilibili.com/video/BV1bBmxBuEAt/",
+    "extractionCode": null
+  }
+]

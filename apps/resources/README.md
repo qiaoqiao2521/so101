@@ -31,6 +31,8 @@ python3 tests/browser_acceptance.py http://127.0.0.1:5192 --label local
 
 - 资源记录在 `src/data/resources.json`；保留官方来源与核查日期。
 - 指南、更新、来源与交付说明在 `src/content/docs/`。
+- `/delivery/` 为固定兑换码领取入口；链接和网盘提取码在 `src/data/delivery-links.json`，便捷码在 `src/components/DeliveryLinks.astro` 的 `redemptionCode`。
+- 领取状态仅在本浏览器记住，可重新输入。此静态入口按用户要求允许分享，不作为机密材料的服务端鉴权；链接展示区不进入 Pagefind 索引。
 - 修改目录时同步 `astro.config.mjs`，然后运行内容检查和构建。
 - 私人记录、地图、标定、日志与付费文件不放入公开内容。
 
