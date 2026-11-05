@@ -365,3 +365,13 @@ X=.2555m名义60mm IK解高位余量仅.001181rad，预收口可修复名义下�
 [第二放置工位原3/3](m1a-x-input-bias-results.md#r138第二放置工位)：同两个原RGB偏差，只换蓝盘(.20,.20)m，409项读回无失败／unknown；原抓放、完整扫掠、释放脱离回位全部通过。11921条20ms实际q6中最小腕余量约.838772°在运输，原R135名义和本轮零对照也同量级，不能以抓取端点余量替代全程，也不能只怪新增偏差。完整50Hz仍未过，普通合同／默认／连续域与20＋20不变。
 
 M2接续只读核实（工作台6f532492快照）：Carry UI/API/原标记物理链已存在，原station-execution.cjs缺活动waiting后的resume/cancel点击分支。下一片扩现QA并做真实网页整链；不重造UI/API，不将静态准备冒充新通过，实施前复核共享树边界。
+
+
+## 2026-11-05 — 基础闭环与专项成熟度校准
+用户要求按空地臂／无人机／FishBot当前“全要素最小闭环、产品展示和认知升级”方向校准机械臂计划。统一配方四物理锚点、R141两例网页新请求、配方交换及真实Grasp证据已经有结果；旧M1a/M4同时包含连续域／卸货等更大目标，整体in_progress不能代表基础抓放未完成。来源分别为m1a-x-unified-recipe-results.md、m1a-x-linked-request-results.md、m4-recipe-results.md、m2-grasp-evidence-results.md。
+
+R165已完成X17离散面板，旧PROJECT仍列为下一前序；计划尾部多个历史“当前下一步”竞争。现统一为A路线，旧M表只记录专项状态。50Hz／D007软实时未过、20＋20未运行、连续域与同世界卸货未证保持，不放松原安全判据；它们不再成为所有展示任务的统一前置。
+
+当前回合MCAP绑定优先做存量核查，不能因合仓审查曾未核到就断言现有代码不存在；先复用，确有缺口再薄接。知识采用Wiki/开发协作接入.md的项目状态归项目、知识不扩张授权约定；本轮不写capmesh或新增全局记忆。
+
+源码补查：工作台现有工作树HEAD 9bfa685。apps/fishbot-control-station/so101-runtime.cjs仅创建通用runtime并开启resumeCarry；task-runtime.cjs默认artifactKinds为report/video；SO101 station_executor.py当前仅登记report/trajectory/resolved_station及可选video/image/localization，无MCAP。workbench-preview.cjs历史入口读固定records/so101.mcap，EpisodeReview读当前播放器消息，不按新task自动打开。故A2是实际接线缺口，非仅凭旧文档推断。相邻drone-runtime.cjs已有artifactKinds/ensureArtifacts/onTaskFinished可复用；根与独立审查均只读核对，未修改FishBot工作树或运行任务。
