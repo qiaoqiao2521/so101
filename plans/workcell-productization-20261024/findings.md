@@ -385,3 +385,11 @@ R165已完成X17离散面板，旧PROJECT仍列为下一前序；计划尾部多
 现有StationVideo只有fps/帧数/完整性，没有逐帧sim_time_s。不能由479帧与6.25fps自行声称与MCAP精确同步；采用已有结果页inline视频＋专用三维任务回放布局，删去无图像数据的Image面板。详见[a2-task-replay-results.md](a2-task-replay-results.md)。
 
 历史回看刷新还暴露一个实际入口缺口：固定layoutUrl会在刷新时重新导入模板，覆盖已保存executionTaskId。原新任务提交已删除该模板参数，历史选择漏做；复用相同的URL清模板处理，无新增localStorage协议或第二套状态管理。原布局保存完成再刷新仍失败的反例已保留，修复用真实历史选择／刷新复验。
+
+## A3.1 两个已有工位（2026-11-06）
+
+复用workspaceStationSample与已跟踪workspace-station/recipe输入，不新建场景参数副本。x-minus20：红盘中心(235,-130)mm、目标(220,-130,10)mm，目标相对红盘X=-15mm；蓝盘(200,200)mm、高位60mm。x-plus20：红盘／目标XY=(260,-130)mm、蓝盘(240,140)mm、高位54mm。两者未声明pickup_open_jaw_rad，沿默认0.5rad；原八步与固定障碍保持。不能套用后来的统一54mm／0.35rad配方而仍称“原样复用”。
+
+对应recipes/station_recipe_v1-x-*.json的station与workspace-station/x-*.json全等。原网页plus6e86ec73、minusf7c265d5均原物理pass/grasp/place/done，分别78.02sim/59.131wall与78.08/58.445，安全停止与障碍接触为0；来源见[m1a-station-entry.md](m1a-station-entry.md)。这些是场景来源证据，不能代替本轮新网页两回合。
+
+A3.1只将已有加载器提升为用户可读选择／当前布局识别，改动执行相关字段后应显示自定义草稿，不继承旧验收。沿用已有STATION_SAMPLE与STATION_SINGLE_RUN验网页点击／导出／唯一POST，再扩展原A2只读QA接受明确终态任务列表；不新增物理调度器或重复播放器。
