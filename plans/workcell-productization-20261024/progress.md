@@ -801,3 +801,5 @@ README 已标明唯一仓库、模块入口和归档边界。本地三个工作�
 2026-11-05文档验收：四份更新文档252个本地链接目标存在（支持文件链接的:行号格式），git diff --check通过；首轮检查器误把4个:行号视作文件名，修正检查器解析后通过，未为此改旧链接。无新仿真／物理通过宣称。独立只读GPT核实基础成果与MCAP接线缺口，根回读对应runtime片段一致。
 
 2026-11-06环境恢复：原.cache/so101-graspgenx/upstream/.venv已不存在，5186实际runtime.ready=false。使用uv在.cache/ros2-factory/so101-a2-venv新建隔离Python3.12，只安装仿真／回放直接依赖，固定声明见requirements-station-runtime.txt；未下载训练权重。station_executor --describe-json可用、原28项Station测试通过，run_visual_grasp语法通过。该准备不计物理通过。新object_rotation仅增加记录，不进入控制器。
+
+2026-11-06首次新回合c792ef86在simulation_s=0因缺cv2退出，原失败记录保留，不计物理通过。补齐opencv-python-headless并核run_visual_grasp全入口导入；--describe-json和轻量测试没有覆盖运行时视觉模块导入，不能替代真实派发。随后重试使用新UUID。
