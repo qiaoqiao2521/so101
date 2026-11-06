@@ -462,6 +462,7 @@ def _run_physical_episode(source, out, protocol, case, deadline, *, video=False,
             row=diagnostics(model,data,checker)
             row.update(stage=last['stage'],elapsed_s=float(data.time)-time0,
                        q6=data.qpos[:6].tolist(),command=command.tolist(),
+                       object_rotation=data.xmat[model.body('grasp_target').id].reshape(3,3).tolist(),
                        qvel6=data.qvel[:6].tolist(),controller_done=last['done'],
                        policy_command=np.asarray(last['command']).tolist(),perturbation=injected,
                        geometric_reference=np.asarray(last['geometric_reference']).tolist(),

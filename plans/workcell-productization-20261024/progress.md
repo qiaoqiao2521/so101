@@ -1,5 +1,17 @@
 # SO101 产品化进度
 
+## 2026-11-06 — A2实施中：逐任务产物与原生回放
+
+Owner：根Codex；工作台实现回到FishBot现有workbench工作树，原drone-showcase／preview／浏览器测试dirty已识别保留，不覆盖或混入提交。外部agent-link只读请求15s超时，已改内置分工，不以外部通道阻塞。
+
+Current：复用createTaskRuntime与无人机ensureArtifacts/onTaskFinished，SO101新增每任务MCAP产物；结果页复用报告／视频／证据并打开自身记录。既有转换器只接受旧实验NPZ，将补--task-dir模式，旧路径保持；无内容hash执行锁。
+
+发现：新Station轨迹已记录关节、位置和力，但没有目标物体朝向。为真实回放最小新增object_rotation记录（原mj_forward后读取data.xmat），不改控制、积分、接触或评分。旧记录缺朝向须明示，不能伪造成真实旋转。
+
+Next：组件转换与UUID隔离检查 → 构建／浏览器 → 同一原入口一个新正常及一个取消／失败回合。当前尚未新增物理或A2通过成绩。本轮仅本地软件／仿真，不触实体／Mint；当前未发现占用评测或渲染进程，实际物理仍串行。
+
+Knowledge=pending：根收尾核定本次产物关联是否有新增可复用经验；先回写项目，不能把实现准备当验收。
+
 ## 2026-11-05 — SO101主线校准完成（文档切片）
 
 Current：A0基础物理抓放与A1网页／配方基础入口标记completed（各限已验固定场景）。下一优先是A2当前回合结果与独立三维回放接线（缺口已核，尚未实施），再到A3多场景与感知对照、A4有限恢复、A5成熟能力体验。单仓和资料站另已交付。
@@ -787,3 +799,5 @@ README 已标明唯一仓库、模块入口和归档边界。本地三个工作�
 仅整合既有 CI 文件与入口文档，未改控制器、评分器或运行配置，未启动仿真或实体。验收检查合并来源、非文档执行代码等值、变更链接、YAML 语法及 `git diff --check`；无需重跑物理抓放。Knowledge=no_reusable_delta：本次是仓库入口整理，无新增算法或跨项目知识结论。
 
 2026-11-05文档验收：四份更新文档252个本地链接目标存在（支持文件链接的:行号格式），git diff --check通过；首轮检查器误把4个:行号视作文件名，修正检查器解析后通过，未为此改旧链接。无新仿真／物理通过宣称。独立只读GPT核实基础成果与MCAP接线缺口，根回读对应runtime片段一致。
+
+2026-11-06环境恢复：原.cache/so101-graspgenx/upstream/.venv已不存在，5186实际runtime.ready=false。使用uv在.cache/ros2-factory/so101-a2-venv新建隔离Python3.12，只安装仿真／回放直接依赖，固定声明见requirements-station-runtime.txt；未下载训练权重。station_executor --describe-json可用、原28项Station测试通过，run_visual_grasp语法通过。该准备不计物理通过。新object_rotation仅增加记录，不进入控制器。
