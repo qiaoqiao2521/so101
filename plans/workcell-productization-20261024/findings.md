@@ -375,3 +375,13 @@ R165已完成X17离散面板，旧PROJECT仍列为下一前序；计划尾部多
 当前回合MCAP绑定优先做存量核查，不能因合仓审查曾未核到就断言现有代码不存在；先复用，确有缺口再薄接。知识采用Wiki/开发协作接入.md的项目状态归项目、知识不扩张授权约定；本轮不写capmesh或新增全局记忆。
 
 源码补查：工作台现有工作树HEAD 9bfa685。apps/fishbot-control-station/so101-runtime.cjs仅创建通用runtime并开启resumeCarry；task-runtime.cjs默认artifactKinds为report/video；SO101 station_executor.py当前仅登记report/trajectory/resolved_station及可选video/image/localization，无MCAP。workbench-preview.cjs历史入口读固定records/so101.mcap，EpisodeReview读当前播放器消息，不按新task自动打开。故A2是实际接线缺口，非仅凭旧文档推断。相邻drone-runtime.cjs已有artifactKinds/ensureArtifacts/onTaskFinished可复用；根与独立审查均只读核对，未修改FishBot工作树或运行任务。
+
+## A2实现与真实记录（2026-11-06）
+
+复用工作台原drone-runtime的onTaskFinished/ensureArtifacts与同UUID产物URL；SO101补writeRecording与原converter的--task-dir分支，通用runtime只增加可选ensureArtifactsOnList=false，其他平台默认保持。历史列表只读列举，结束或选择单任务才生成MCAP，避免加载列表触发全部历史转换。
+
+原run_visual_grasp只新增object_rotation记录；回放用保存模型正运动学投影，不向控制策略输入物体真值。MCAP保留原report、skill_evidence、取消状态，独立验收声明available=false；来源指纹沿用旧展示schema，但不新增内容哈希执行锁。旧缺旋转的记录明确降级。
+
+现有StationVideo只有fps/帧数/完整性，没有逐帧sim_time_s。不能由479帧与6.25fps自行声称与MCAP精确同步；采用已有结果页inline视频＋专用三维任务回放布局，删去无图像数据的Image面板。详见[a2-task-replay-results.md](a2-task-replay-results.md)。
+
+历史回看刷新还暴露一个实际入口缺口：固定layoutUrl会在刷新时重新导入模板，覆盖已保存executionTaskId。原新任务提交已删除该模板参数，历史选择漏做；复用相同的URL清模板处理，无新增localStorage协议或第二套状态管理。原布局保存完成再刷新仍失败的反例已保留，修复用真实历史选择／刷新复验。
