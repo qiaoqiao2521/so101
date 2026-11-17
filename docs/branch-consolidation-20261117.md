@@ -9,3 +9,6 @@
 - Vite/plugin-vue、better-sqlite3、webpack-cli、Spring Boot 升级存在分支冲突，待同一主线进行兼容调整与构建。Maven 当前不可用，尚无后端编译证据。
 
 仅静态与离线测试，无设备动作、GPU、服务器部署。
+
+
+2026-11-17 补充：Vite 8.3.8 与 plugin-vue 6 合并解决锁文件冲突；前端 npm test 47/47 通过，生产构建通过（单块 572 KB 警告保留）。初轮缺依赖已解决。未做浏览器/机械臂验收。
