@@ -43,3 +43,4 @@ dist/
 
 # GR00T downloads, models and private evidence
 /experiments/gr00t-libero/output/
+/experiments/multilink-safety/output/
