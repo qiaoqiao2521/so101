@@ -1,0 +1,42 @@
+[
+  {
+    "id": "login_20260625_124146_000",
+    "ts_ms": 1782362506051,
+    "time": "2026-06-25 12:41:46",
+    "role": "employee",
+    "operator": "张三",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+  },
+  {
+    "id": "login_20260625_164700_001",
+    "ts_ms": 1782377220297,
+    "time": "2026-06-25 16:47:00",
+    "role": "admin",
+    "operator": "管理员",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+  },
+  {
+    "id": "login_20260626_094117_002",
+    "ts_ms": 1782438077164,
+    "time": "2026-06-26 09:41:17",
+    "role": "admin",
+    "operator": "管理员",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+  },
+  {
+    "id": "login_20260630_111716_003",
+    "ts_ms": 1782789436871,
+    "time": "2026-06-30 11:17:16",
+    "role": "admin",
+    "operator": "管理员",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+  },
+  {
+    "id": "login_20260630_112108_004",
+    "ts_ms": 1782789668787,
+    "time": "2026-06-30 11:21:08",
+    "role": "admin",
+    "operator": "管理员",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+  }
+]
