@@ -58,6 +58,24 @@ def fixed_tray_workspace_station(cube_x, *, pickup_hover_z_m=.06, **options):
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_execution_boundary_distinguishes_preview_from_admitted_program(self):
+        boundary = describe()['execution_boundary']
+        self.assertTrue(boundary['preview_only_edits_allowed'])
+        self.assertFalse(boundary['preview_is_execution_validation'])
+        self.assertEqual(boundary['base_position_m'], [0, 0, 0])
+        self.assertEqual(boundary['program']['atomic_step_count'], 8)
+        self.assertEqual(boundary['program']['segment_sequence'], ['pick', 'transfer', 'place'])
+        self.assertFalse(boundary['program']['seconds_is_duration'])
+        value = station()
+        self.assertEqual(len(validate_station(value)['program']['steps']), 8)
+        value['nodes'][0]['position'][0] = .1
+        with self.assertRaisesRegex(UnsupportedStation, 'base'):
+            validate_station(value)
+        value = station()
+        value['program'][0]['seconds'] = 2
+        with self.assertRaisesRegex(UnsupportedStation, 'seconds'):
+            validate_station(value)
+
     def test_carry_control_is_explicit_and_unsupported_modes_are_not_silently_automatic(self):
         self.assertNotIn('skill_control', validate_station(station()))
         value = station()

@@ -3,8 +3,17 @@ set -euo pipefail
 ROOT="$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")"
 case "${1:-help}" in
   help|-h|--help)
-    echo 'SO101: ./so101.sh check | follower'
-    echo 'check is offline. follower starts the web application; no automatic serial connection is requested.'
+    echo 'SO101: ./so101.sh workbench [doctor|start|help] | doctor | check | follower'
+    echo 'workbench opens the existing simulation workbench; doctor checks its environment without starting a task.'
+    echo 'check only checks the offline file layout. follower is the separate hardware web application.'
+    ;;
+  workbench)
+    shift
+    exec bash "$ROOT/tools/workbench.sh" "$@"
+    ;;
+  doctor)
+    shift
+    exec bash "$ROOT/tools/workbench.sh" doctor "$@"
     ;;
   check) exec /usr/bin/python3 "$ROOT/tools/check_layout.py" ;;
   follower)

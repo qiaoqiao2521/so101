@@ -39,9 +39,22 @@ WORKSPACE_TARGET_REGION = [[.21, .27], [-.16, -.10]]
 def describe():
     return {
         'executor': 'so101-mujoco-visual-grasp', 'simulation_only': True,
-        'message': '已接入本机 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
+        'message': '已接入当前环境的 MuJoCo、视觉定位、IK/OMPL 和原抓放控制器',
+        'execution_boundary': {
+            'version': 1,
+            'preview_only_edits_allowed': True,
+            'preview_is_execution_validation': False,
+            'base_position_m': FIXED_NODES['base'][1].copy(),
+            'frame_transform': 'translation-only',
+            'program': {'atomic_step_count': len(TEMPLATE),
+                        'segment_sequence': list(SUPPORTED_SEGMENTS),
+                        'seconds_value': 1, 'seconds_is_duration': False},
+            'object': {'id': 'cube', 'size_m': [.018, .018, .016], 'world_z_m': .01},
+            'additional_obstacle': {'shape': 'axis-aligned-box',
+                                    'size_m': [2*x for x in OBSTACLE_HALF_SIZE]},
+        },
         'capabilities': ['按 pick → transfer → place 动作段组合搬运任务', '八步原程序仍可直接运行',
-                         '蓝盘放置 XY 和底座高度可修改，逐任务检查规划', '默认工位方块 XY 各 ±10mm',
+                         '蓝盘放置 XY 和蓝盘底座高度可修改，逐任务检查规划', '默认工位方块 XY 各 ±10mm',
                          '固定尺寸附加障碍', '限时等待后继续搬运', '协作停止', '新回合录像和物理报告'],
         'skill_control_modes': {
             'hold-before-carry': {

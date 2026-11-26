@@ -1,5 +1,15 @@
 # SO101 产品化进度
 
+## 2026-11-26 — 默认工位入口与编辑执行边界
+
+沿用已验收工位，新增 `./so101.sh workbench doctor|start|help` 和 `./so101.sh doctor`。工作台从显式 `WORKBENCH_ROOT`／`FISHBOT_ROOT` 或相邻 FishBot 仓库定位，显式错误不回退到其他环境；路径有空格和相对配置可用。入口以当前 checkout 作为 `SO101_ROOT`，保留 `SO101_PYTHON`，子进程参数和退出码原样传递。`follower` 保持独立，没有连接串口或自动派发任务。
+
+README 先引导 SO101 工位的选择、调整、运行、回看，Sawyer SmolVLA 演示独立标明机器人和判据。`station_executor.describe()` 新增版本化 `execution_boundary`，明确预览不等于执行验证、底座固定、平移坐标系、原八步／三段顺序、`seconds=1` 模板含义与物体／障碍尺寸。前端可直接消费声明，未改原执行器动作、准入区域、限位、碰撞或物理评分，也未禁止草稿编辑。
+
+验证：`python3 -m unittest discover -s tools -p test_workbench_launcher.py -v` 8/8；真实 bash 子进程在临时 checkout 夹具里覆盖仓库发现、显式配置优先级、无环境错误、带空格参数、Python 配置及退出码转发。`python3 -m unittest discover -s experiments/colab-twin -p test_station_executor.py -v` 29/29；新增声明与实际固定底座／时长拒绝一致性检查，既有输入与取消测试保持。`bash -n so101.sh tools/workbench.sh` 通过。
+
+本轮结果只证明入口及合同保持，不是新 MuJoCo 回合、网页全链或实机验收；跨仓启动与前端集成由 FishBot 本轮一起核对。A0–A3.1 的原物理证据继续保留，2026-11-07 封存专项继续封存。
+
 ## 2026-11-06 — A3.1完成：两工位选择、两次新抓放与独立回看
 
 根已回读两个新原物理报告、独立数据审计与真实网页截图。工位A／x-minus20：42460e66-aab5-4c60-bda9-39ddf5d80245，78.02sim/52.8662report-wall；工位B／x-plus20：4ddaf8b6-3f72-42ec-a943-51419a036cba，77.76sim/45.1246report-wall。两者完整抓取、放置、释放、脱离、回位原裁决通过，安全停机／障碍接触0，自由物体／weld0／mocap0。不是算法提速对照，未放宽原安全或成功标准。详见[a3-selectable-scenes-results.md](a3-selectable-scenes-results.md)。
